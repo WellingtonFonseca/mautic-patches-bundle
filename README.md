@@ -54,12 +54,21 @@ New fixes get added as new rows here, not by rescoping this list.
 |---|---|---|---|
 | Clicking "Locate" on a Jump to Event campaign action shows a full-canvas overlay to spotlight the source/target nodes, but the overlay has no click handler of its own — any other click is swallowed until the same "Locate" link is clicked again, and even then the toggle can end up a step out of sync (needing a second click to take effect) | Campaign Builder | `EventListener/CampaignBuilderOverlaySubscriber.php` | Mautic 5.2 |
 
+## Additions to Mautic (not fixes)
+
+The bundle also holds small additions to Mautic's own behaviour, such as API endpoints, when core has no way to do it. Same rule: no core file is edited.
+
+| Addition | Where | Code |
+|---|---|---|
+| `POST /api/segments/{id}/rebuild` recalculates one segment now, like `mautic:segments:update --list-id={id}`, instead of waiting for the cron. It starts the real command in the background and answers `202` at once; progress is the segment's last built date. Errors: 404 no segment, 403 no edit access, 409 segment not published. | REST API | `Controller/Api/SegmentRebuildApiController.php`, `Service/SegmentRebuildLauncher.php`, route in `Config/config.php` |
+
 ## Adding a new fix
 
 1. One `EventListener/*Subscriber.php` class per fix, hooking into a core
    event (`CoreEvents::VIEW_INJECT_CUSTOM_CONTENT` for injecting JS/CSS
    into existing pages, or whatever event fits the bug being patched).
 2. A unit test under `Tests/Unit/EventListener/`.
+   (A class with a plain `string` constructor argument must not sit in a folder Mautic autowires: declare it in `Config/services.php`, as `SegmentRebuildLauncher` is.)
 3. A new row in the "Fixes included" table above.
 
 ## Running the test suite
