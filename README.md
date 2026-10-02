@@ -62,6 +62,7 @@ The bundle also holds small additions to Mautic's own behaviour, such as API end
 |---|---|---|
 | `POST /api/segments/{id}/rebuild` recalculates one segment now, like `mautic:segments:update --list-id={id}`, instead of waiting for the cron. It starts the real command in the background and answers `202` at once; progress is the segment's last built date. Errors: 404 no segment, 403 no edit access, 409 segment not published. | REST API | `Controller/Api/SegmentRebuildApiController.php`, `Service/SegmentRebuildLauncher.php`, route in `Config/config.php` |
 | "Update" in the three-dots menu of each row of the segment list (next to Edit/Clone/Delete): recalculates that segment now. Shown only when the user may edit the segment and it is published. It POSTs (ajax, with Mautic's CSRF token) to `/s/segment-rebuild/{id}` and shows a flash message. | Segment list | `EventListener/SegmentListButtonSubscriber.php`, `Controller/SegmentRebuildController.php`, `Service/SegmentRebuilder.php` (shared with the API) |
+| Under each segment's name in the segment list: "Updated on <date>" (the segment's last built date, in the user's time zone) or "Not updated yet". The list had no such information, so nothing in the table said whether an Update had run. | Segment list | `EventListener/SegmentLastBuiltSubscriber.php`, `Resources/views/Segment/last_built.html.twig` (via core's `customContent('segment.name')`) |
 
 ## Adding a new fix
 

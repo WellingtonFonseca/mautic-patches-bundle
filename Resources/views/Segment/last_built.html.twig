@@ -1,0 +1,10 @@
+{# Under the name of a segment in the segment list. item = the segment (LeadList). #}
+<div class="text-muted mt-4 segment-last-built">
+    <small>
+        {% if item.lastBuiltDate is not null %}
+            {{ 'mautic.patches.segment.last_built'|trans({'%date%': dateToFull(item.lastBuiltDate)}) }}
+        {% else %}
+            {{ 'mautic.patches.segment.never_built'|trans }}
+        {% endif %}
+    </small>
+</div>
