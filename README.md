@@ -54,12 +54,23 @@ New fixes get added as new rows here, not by rescoping this list.
 |---|---|---|---|
 | Clicking "Locate" on a Jump to Event campaign action shows a full-canvas overlay to spotlight the source/target nodes, but the overlay has no click handler of its own — any other click is swallowed until the same "Locate" link is clicked again, and even then the toggle can end up a step out of sync (needing a second click to take effect) | Campaign Builder | `EventListener/CampaignBuilderOverlaySubscriber.php` | Mautic 5.2 |
 
+## Additions to Mautic (not fixes)
+
+The bundle also holds small additions to Mautic's own behaviour, such as API endpoints, when core has no way to do it. Same rule: no core file is edited.
+
+| Addition | Where | Code |
+|---|---|---|
+| `POST /api/segments/{id}/rebuild` recalculates one segment now, like `mautic:segments:update --list-id={id}`, instead of waiting for the cron. It starts the real command in the background and answers `202` at once; progress is the segment's last built date. Errors: 404 no segment, 403 no edit access, 409 segment not published. | REST API | `Controller/Api/SegmentRebuildApiController.php`, `Service/SegmentRebuildLauncher.php`, route in `Config/config.php` |
+| "Update" in the three-dots menu of each row of the segment list (next to Edit/Clone/Delete) and in the dropdown of the segment's own page (next to Clone/Delete): recalculates that segment now. Shown only when the user may edit the segment and it is published. It POSTs (ajax, with Mautic's CSRF token) to `/s/segment-rebuild/{id}` and shows a flash message; from the segment's own page it stays on that page (`?return=view`). | Segment list | `EventListener/SegmentListButtonSubscriber.php`, `Controller/SegmentRebuildController.php`, `Service/SegmentRebuilder.php` (shared with the API) |
+| Under each segment's name in the segment list: "Updated on <date>" (the segment's last built date, in the user's time zone) or "Not updated yet". The list had no such information, so nothing in the table said whether an Update had run. | Segment list | `EventListener/SegmentLastBuiltSubscriber.php`, `Resources/views/Segment/last_built.html.twig` (via core's `customContent('segment.name')`) |
+
 ## Adding a new fix
 
 1. One `EventListener/*Subscriber.php` class per fix, hooking into a core
    event (`CoreEvents::VIEW_INJECT_CUSTOM_CONTENT` for injecting JS/CSS
    into existing pages, or whatever event fits the bug being patched).
 2. A unit test under `Tests/Unit/EventListener/`.
+   (A class with a plain `string` constructor argument must not sit in a folder Mautic autowires: declare it in `Config/services.php`, as `SegmentRebuildLauncher` is.)
 3. A new row in the "Fixes included" table above.
 
 ## Running the test suite
