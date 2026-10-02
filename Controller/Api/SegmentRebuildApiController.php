@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Controller\Api;
 
-use Mautic\CoreBundle\Security\Permissions\CorePermissions;
-use Mautic\LeadBundle\Model\ListModel;
-use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuildLauncher;
+use MauticPlugin\MauticPatchesBundle\DTO\SegmentRebuildResult;
+use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuilder;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,7 +15,8 @@ use Symfony\Component\HttpFoundation\Response;
  * (what `mautic:segments:update --list-id={id}` does) instead of waiting for
  * the cron. Mautic's own API only has the command for that. The rebuild runs in
  * the background: the answer is 202 as soon as it was started, and progress is
- * the segment's "last built" date (GET /api/segments/{id}).
+ * the segment's "last built" date (GET /api/segments/{id}). The rules are in
+ * SegmentRebuilder.
  *
  *   202 started          404 no such segment
  *   403 no edit access   409 segment is not published (the command skips those)
@@ -24,43 +24,30 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class SegmentRebuildApiController extends AbstractController
 {
-    public function __construct(
-        private ListModel $listModel,
-        private CorePermissions $security,
-        private SegmentRebuildLauncher $launcher
-    ) {
+    private const HTTP_CODE_BY_STATUS = [
+        SegmentRebuildResult::NOT_FOUND     => Response::HTTP_NOT_FOUND,
+        SegmentRebuildResult::FORBIDDEN     => Response::HTTP_FORBIDDEN,
+        SegmentRebuildResult::NOT_PUBLISHED => Response::HTTP_CONFLICT,
+        SegmentRebuildResult::FAILED        => Response::HTTP_INTERNAL_SERVER_ERROR,
+    ];
+
+    public function __construct(private SegmentRebuilder $rebuilder)
+    {
     }
 
     public function rebuildAction(int $id): JsonResponse
     {
-        $segment = $this->listModel->getEntity($id);
+        $result = $this->rebuilder->request($id);
 
-        if (null === $segment) {
-            return $this->error(Response::HTTP_NOT_FOUND, "Segment {$id} was not found.");
-        }
+        if (SegmentRebuildResult::DISPATCHED !== $result->status) {
+            $code = self::HTTP_CODE_BY_STATUS[$result->status];
 
-        if (!$this->security->hasEntityAccess('lead:lists:editown', 'lead:lists:editother', $segment->getCreatedBy())) {
-            return $this->error(Response::HTTP_FORBIDDEN, 'You do not have permission to edit this segment.');
-        }
-
-        if (!$segment->isPublished()) {
-            return $this->error(Response::HTTP_CONFLICT, "Segment {$id} is not published, so it is not rebuilt.");
-        }
-
-        try {
-            $this->launcher->launch($id);
-        } catch (\RuntimeException $e) {
-            return $this->error(Response::HTTP_INTERNAL_SERVER_ERROR, $e->getMessage());
+            return new JsonResponse(['errors' => [['code' => $code, 'message' => $result->message]]], $code);
         }
 
         return new JsonResponse(
-            ['segment' => ['id' => $segment->getId(), 'name' => $segment->getName()], 'status' => 'dispatched'],
+            ['segment' => ['id' => $result->segment->getId(), 'name' => $result->segment->getName()], 'status' => 'dispatched'],
             Response::HTTP_ACCEPTED
         );
-    }
-
-    private function error(int $code, string $message): JsonResponse
-    {
-        return new JsonResponse(['errors' => [['code' => $code, 'message' => $message]]], $code);
     }
 }
