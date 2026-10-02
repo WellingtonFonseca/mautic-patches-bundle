@@ -38,6 +38,25 @@ class SegmentRebuildController extends CommonController
 
         [$type, $message] = self::FLASH_BY_STATUS[$result->status];
         $page             = $request->getSession()->get('mautic.segment.page', 1);
+        $flashes          = [[
+            'type'    => $type,
+            'msg'     => $message,
+            'msgVars' => ['%id%' => $id, '%name%' => $result->segment?->getName() ?? '', '%error%' => $result->message],
+        ]];
+
+        // Clicked on the segment's own page (?return=view): stay there. Otherwise back to the list.
+        if ('view' === $request->query->get('return') && null !== $result->segment) {
+            return $this->postActionRedirect([
+                'returnUrl'       => $this->generateUrl('mautic_segment_action', ['objectAction' => 'view', 'objectId' => $id]),
+                'viewParameters'  => ['objectId' => $id],
+                'contentTemplate' => 'Mautic\LeadBundle\Controller\ListController::viewAction',
+                'passthroughVars' => [
+                    'activeLink'    => '#mautic_segment_index',
+                    'mauticContent' => 'list',
+                ],
+                'flashes' => $flashes,
+            ]);
+        }
 
         return $this->postActionRedirect([
             'returnUrl'       => $this->generateUrl('mautic_segment_index', ['page' => $page]),
@@ -47,11 +66,7 @@ class SegmentRebuildController extends CommonController
                 'activeLink'    => '#mautic_segment_index',
                 'mauticContent' => 'lead',
             ],
-            'flashes' => [[
-                'type'    => $type,
-                'msg'     => $message,
-                'msgVars' => ['%id%' => $id, '%name%' => $result->segment?->getName() ?? '', '%error%' => $result->message],
-            ]],
+            'flashes' => $flashes,
         ]);
     }
 }

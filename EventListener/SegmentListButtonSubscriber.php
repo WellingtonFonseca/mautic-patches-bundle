@@ -15,9 +15,11 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Adds "Update" (recalculate the segment now) to the three-dots menu of each
- * row of the segment list, next to Edit / Clone / Delete. The button POSTs to
+ * row of the segment list and to the dropdown of the segment detail page (the
+ * one with Clone / Delete), next to the core's own options. The button POSTs to
  * SegmentRebuildController, which uses the same SegmentRebuilder as the API.
  * It is only offered when the user may edit the segment and it is published.
+ * From the detail page the controller returns to that page (?return=view).
  */
 class SegmentListButtonSubscriber implements EventSubscriberInterface
 {
@@ -39,10 +41,22 @@ class SegmentListButtonSubscriber implements EventSubscriberInterface
     {
         $segment = $event->getItem();
 
-        if (ButtonHelper::LOCATION_LIST_ACTIONS !== $event->getLocation()
-            || 'mautic_segment_index' !== $event->getRoute()
-            || !$segment instanceof LeadList
-            || !$this->rebuilder->canRebuild($segment)) {
+        if (!$segment instanceof LeadList || !$this->rebuilder->canRebuild($segment)) {
+            return;
+        }
+
+        $location = $event->getLocation();
+        $route    = $event->getRoute();
+        $params   = ['id' => $segment->getId()];
+
+        if (ButtonHelper::LOCATION_LIST_ACTIONS === $location && 'mautic_segment_index' === $route) {
+            $priority = 150; // row menu of the segment list, among Edit / Clone / Delete
+        } elseif (ButtonHelper::LOCATION_PAGE_ACTIONS === $location
+            && 'mautic_segment_action' === $route
+            && 'view' === $event->getRequest()->attributes->get('objectAction')) {
+            $priority = 150; // dropdown of the segment detail page, next to Clone / Delete
+            $params['return'] = 'view'; // come back to this page, not to the list
+        } else {
             return;
         }
 
@@ -51,13 +65,13 @@ class SegmentListButtonSubscriber implements EventSubscriberInterface
                 'attr' => [
                     'data-toggle' => 'ajax',
                     'data-method' => 'POST',
-                    'href'        => $this->router->generate('mautic_patches_segment_rebuild', ['id' => $segment->getId()]),
+                    'href'        => $this->router->generate('mautic_patches_segment_rebuild', $params),
                 ],
                 'btnText'   => $this->translator->trans('mautic.patches.segment.rebuild'),
                 'iconClass' => 'ri-refresh-line',
-                'priority'  => 150,
+                'priority'  => $priority,
             ],
-            ButtonHelper::LOCATION_LIST_ACTIONS
+            $location
         );
     }
 }
