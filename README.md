@@ -53,6 +53,7 @@ New fixes get added as new rows here, not by rescoping this list.
 | Fix | Where | Subscriber | Confirmed on |
 |---|---|---|---|
 | Clicking "Locate" on a Jump to Event campaign action shows a full-canvas overlay to spotlight the source/target nodes, but the overlay has no click handler of its own — any other click is swallowed until the same "Locate" link is clicked again, and even then the toggle can end up a step out of sync (needing a second click to take effect) | Campaign Builder | `EventListener/CampaignBuilderOverlaySubscriber.php` | Mautic 5.2 |
+| In the Dark theme, hovering or pressing "Save & Close" or "Cancel" turns the button white with white text. Core styles the second primary button of a row (and a secondary after two primaries) as "tertiary" by position, with a hard-coded white text on hover/pressed, over the dark theme's light background (contrast 1.1:1 and 1.7:1). Only the Dark theme is affected; it now gets the theme's dark text color on those states (never on disabled buttons). Also fixes other plugins that use the same buttons. | Every admin form | `EventListener/DarkThemeButtonSubscriber.php` | Mautic 5.2 |
 
 ## Additions to Mautic (not fixes)
 
