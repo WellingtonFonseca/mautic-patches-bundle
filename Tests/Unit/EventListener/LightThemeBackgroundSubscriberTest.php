@@ -95,4 +95,22 @@ class LightThemeBackgroundSubscriberTest extends TestCase
         $this->assertStringNotContainsString('.switch input~.switch{', $css);
         $this->assertStringNotContainsString(':checked~.switch{background', str_replace(':not(:checked)', '', $css));
     }
+
+    public function testTableLinesAreDarkerThanTheHoveredRowSoTheyDoNotVanish(): void
+    {
+        $css = $this->css();
+
+        // the hovered row is --layer-hover-01 (#d4d4d4) and the plain borders #d2d2d2: the line must be clearly darker than both
+        $this->assertMatchesRegularExpression('/--table-line:#b0b0b0;/', $css);
+        $this->assertLessThan(hexdec('d2d2d2'), hexdec('b0b0b0'));
+
+        foreach ([
+            ':root[theme="light"] .table>tbody>tr>td{border-top-color:var(--table-line)}',
+            ':root[theme="light"] .table>tbody>tr>th{border-top-color:var(--table-line)}',
+            ':root[theme="light"] .table>tfoot>tr>td{border-top-color:var(--table-line)}',
+            ':root[theme="light"] .table>thead>tr>th{border-bottom-color:var(--table-line)}',
+        ] as $rule) {
+            $this->assertStringContainsString($rule, $css);
+        }
+    }
 }

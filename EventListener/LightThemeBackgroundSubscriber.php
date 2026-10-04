@@ -50,6 +50,7 @@ class LightThemeBackgroundSubscriber implements EventSubscriberInterface
         '--field-hover-02'           => '#e8e8e8', // #e8e8e8
         '--border-subtle-01'         => '#d2d2d2', // #e0e0e0
         '--border-subtle-02'         => '#bcbcbc', // #c6c6c6
+        '--table-line'               => '#b0b0b0', // (new) the lines between table rows
     ];
 
     /**
@@ -58,7 +59,11 @@ class LightThemeBackgroundSubscriber implements EventSubscriberInterface
      * rows (#fafafa), the breadcrumb (#f5f5f5), the toggle switch's track
      * (#fafafa, with a #e5e5e5 ring) and the menu divider (#e5e5e5). They take
      * the theme's own layer / border variables instead. The switch rule is for
-     * the unchecked state only, so the checked color is not overridden.
+     * the unchecked state only, so the checked color is not overridden. The
+     * table lines (the contact's History, every list) are the core's faint
+     * --border-subtle, which is almost the color of a hovered row here
+     * (#d2d2d2 on #d4d4d4) and vanished on hover: they take --table-line, a
+     * step darker than both.
      */
     private const RULES = [
         '.table-striped>tbody>tr:nth-of-type(odd)'         => 'background-color:var(--layer-01)',
@@ -68,6 +73,10 @@ class LightThemeBackgroundSubscriber implements EventSubscriberInterface
         '.switch input:not(:checked)~.switch'              => 'background-color:var(--layer-01);box-shadow:inset 0 0 0 1px var(--border-subtle-02)',
         '.switch input:not(:checked)~.switch:after'        => 'border-color:var(--border-subtle-02)',
         '.nav .nav-divider'                                => 'background-color:var(--border-subtle)',
+        '.table>tbody>tr>td'                               => 'border-top-color:var(--table-line)',
+        '.table>tbody>tr>th'                               => 'border-top-color:var(--table-line)',
+        '.table>tfoot>tr>td'                               => 'border-top-color:var(--table-line)',
+        '.table>thead>tr>th'                               => 'border-bottom-color:var(--table-line)',
     ];
 
     public static function getSubscribedEvents(): array
