@@ -17,11 +17,11 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  *
  * After a click on a segment's Update, the button of THAT segment (not the
  * others, which can be updated meanwhile) is locked for LOCK_MS: shown
- * disabled with a spinner in place of its icon (and on the row's dropdown
- * toggle, since the link sits in a menu that is closed), and any further click
- * on it is swallowed. When the time is up the list (or the segment's page) is
- * reloaded, which refreshes "N contacts" and "Updated on", and the button is
- * free again.
+ * disabled (its icon unchanged), and any further click on it is swallowed. In
+ * the list, the "Updated on ..." line of that segment
+ * (SegmentLastBuiltSubscriber) becomes "<spinner> Updating..." meanwhile. When
+ * the time is up the list (or the segment's page) is reloaded, which refreshes
+ * "N contacts" and "Updated on", and the button is free again.
  *
  * The click's own answer redirects to the list, which replaces the page, so the
  * lock lives in a script variable and is applied again after every Mautic ajax
@@ -60,14 +60,19 @@ class SegmentUpdateLockSubscriber implements EventSubscriberInterface
             .'var locked={};'
             .'var re=/\/s\/segment-rebuild\/(\d+)/;'
             .'function idOf(a){var m=re.exec(a.getAttribute("href")||"");return m?m[1]:null;}'
-            .'function spin($i){if(!$i.data("mauticPatchesIcon")){$i.data("mauticPatchesIcon",$i.attr("class"));}$i.attr("class","ri-loader-3-line ri-spin ri-fw");}'
             .'function decorate(){'
+            // The button: only disabled, its icon stays as it is.
             .'mQuery("a[href*=\"/s/segment-rebuild/\"]").each(function(){'
             .'var id=idOf(this);if(!id||!locked[id]){return;}'
-            .'var $a=mQuery(this);'
-            .'$a.addClass("disabled").attr("aria-disabled","true").css("pointer-events","none");'
-            .'spin($a.find("i").first());'
-            .'spin($a.closest(".dropdown-menu").siblings(".dropdown-toggle").find("i").first());'
+            .'mQuery(this).addClass("disabled").attr("aria-disabled","true").css("pointer-events","none");'
+            .'});'
+            // The "Updated on ..." line of that segment becomes "<spinner> Updating...". The spinner is a bordered circle, not an icon-font glyph (those wobbled): it turns on its own center wherever it sits.
+            .'mQuery(".segment-last-built").each(function(){'
+            .'var $line=mQuery(this),id=String($line.data("segment-id"));'
+            .'if(!locked[id]||$line.data("mauticPatchesUpdating")){return;}'
+            .'$line.data("mauticPatchesUpdating",true);'
+            .'var $spinner=mQuery("<span></span>").attr("style","display:inline-block;box-sizing:border-box;width:10px;height:10px;margin-right:4px;vertical-align:-1px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:ri-spin .8s linear infinite;");'
+            .'$line.empty().append(mQuery("<small></small>").append($spinner).append(document.createTextNode($line.data("updating-text"))));'
             .'});'
             .'}'
             // Capture phase: runs before core's ajax link handler, so a click on a locked link never reaches it.

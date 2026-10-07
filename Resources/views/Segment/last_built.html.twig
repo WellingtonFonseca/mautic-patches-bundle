@@ -1,5 +1,5 @@
-{# Under the name of a segment in the segment list. item = the segment (LeadList), builtText = its last built date written for the user (null if never built). #}
-<div class="text-muted mt-4 segment-last-built">
+{# Under the name of a segment in the segment list. item = the segment (LeadList), builtText = its last built date written for the user (null if never built). The data attributes are for SegmentUpdateLockSubscriber, which swaps the text for "Updating..." while the segment's Update is locked. #}
+<div class="text-muted mt-4 segment-last-built" data-segment-id="{{ item.id }}" data-updating-text="{{ 'mautic.patches.segment.updating'|trans }}">
     <small>
         {% if builtText is not null %}
             {{ 'mautic.patches.segment.last_built'|trans({'%date%': builtText}) }}
