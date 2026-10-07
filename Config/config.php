@@ -28,11 +28,6 @@ return [
                 'path'       => '/performance',
                 'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\PerformanceController::indexAction',
             ],
-            'mautic_patches_performance_diagnose' => [
-                'path'       => '/performance/diagnose',
-                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\PerformanceController::diagnoseAction',
-                'method'     => 'POST',
-            ],
         ],
         'api' => [
             'mautic_patches_api_segment_rebuild' => [
