@@ -46,13 +46,25 @@ class SegmentUpdateLockSubscriberTest extends TestCase
         $this->assertStringContainsString('},true);', $this->content(), 'capture phase');
     }
 
-    public function testLockedLinkIsDisabledWithASpinnerOnItAndOnTheRowToggle(): void
+    public function testTheLockedButtonIsOnlyDisabledAndKeepsItsIcon(): void
     {
         $js = $this->content();
 
         $this->assertStringContainsString('addClass("disabled")', $js);
-        $this->assertStringContainsString('ri-loader-3-line ri-spin', $js);
-        $this->assertStringContainsString('.siblings(".dropdown-toggle")', $js);
+        $this->assertStringNotContainsString('ri-loader', $js);
+        $this->assertStringNotContainsString('ri-fw', $js);
+        $this->assertStringNotContainsString('.dropdown-toggle', $js);
+    }
+
+    public function testTheUpdatedOnLineOfTheClickedSegmentBecomesUpdating(): void
+    {
+        $js = $this->content();
+
+        $this->assertStringContainsString('mQuery(".segment-last-built")', $js);
+        $this->assertStringContainsString('if(!locked[id]||$line.data("mauticPatchesUpdating")){return;}', $js);
+        $this->assertStringContainsString('$line.data("updating-text")', $js);
+        $this->assertStringContainsString('border-radius:50%', $js, 'a bordered circle that turns on its own center');
+        $this->assertStringContainsString('animation:ri-spin', $js, "core's own keyframes");
     }
 
     public function testTheLockIsAppliedAgainAfterEveryAjaxPageLoad(): void
