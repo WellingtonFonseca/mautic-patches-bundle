@@ -60,7 +60,7 @@ New fixes get added as new rows here, not by rescoping this list.
 | Not a bug, a layout choice: on a campaign's page the statistics / map block comes before the journey preview, which ends up far down the page. The preview (with its Actions and Contacts tabs) now comes first and the statistics block after it. A script moves the core's `.stats-menu` and `.stats-menu__content` nodes (keeping their ids and handlers) after the preview on the first load and after every Mautic ajax page load, then fires a window resize for the charts; it only acts on a page that has `#preview-container`. | Campaign page | `EventListener/CampaignViewOrderSubscriber.php` | Mautic 5.2 |
 | Not a bug, a usability choice: on a contact's page the "Details" block (the contact's fields) starts closed and needs a click every time. It now opens as soon as the page is in place; the toggler still closes and opens it. A script adds the `in` class to `#lead-details` and drops `collapsed` from the toggler on the first load and after every Mautic ajax page load, once per block (so it never reopens one the user closed); pages without `#lead-details` are not affected. | Contact page | `EventListener/ContactViewDetailsOpenSubscriber.php` | Mautic 5.2 |
 | Not a bug, a layout choice: on a contact's page the right column (points, contact data, address...) takes a quarter of the screen. A button at the top of the middle column hides and shows it, and the middle column uses the whole width while it is hidden. The column ALWAYS starts hidden: the choice is never remembered (no localStorage, cookie or session). A script on the first load and after every Mautic ajax page load finds the page by `#lead-details`, hides the `.col-md-3` next to it and adds the button, once per loaded page; other pages are not affected. | Contact page | `EventListener/ContactViewSidePanelSubscriber.php` | Mautic 5.2 |
-| Not a bug, a safeguard: the segment's "Update" (this bundle's rebuild button) answers at once while the rebuild runs in the background, so a user can click it again and again and get a notification each time. After a click, the Update button of THAT segment (the others stay free) is locked for 10 seconds: disabled (its icon unchanged), and further clicks are swallowed before core's ajax handler. In the list, that segment's "Updated on ..." line shows "<spinner> Updating..." meanwhile, bold, in the theme's link color and pulsing softly (a fade, not switched off by the reduced-motion setting) (core's loader icon drawn as an inline SVG, not through the icon font, whose glyph sat off-center and wobbled). When the time is up, the list (or the segment's page, if still on it) reloads, which refreshes "N contacts" and "Updated on". Applied again after every ajax page load; nothing is stored in the browser. The server's own per-segment lock stays the real protection. | Segment list and segment page | `EventListener/SegmentUpdateLockSubscriber.php` | Mautic 5.2 |
+| Not a bug, a safeguard: the segment's "Update" (this bundle's rebuild button) answers at once while the rebuild runs in the background, so a user can click it again and again and get a notification each time. After a click, the Update button of THAT segment (the others stay free) is locked until the rebuild is DONE: disabled (its icon unchanged), and further clicks are swallowed before core's ajax handler. In the list, that segment's "Updated on ..." line shows "<spinner> Updating..." meanwhile, bold, in the theme's link color and pulsing softly (a fade, not switched off by the reduced-motion setting) (core's loader icon drawn as an inline SVG, not through the icon font, whose glyph sat off-center and wobbled). When the time is up, the list (or the segment's page, if still on it) reloads, which refreshes "N contacts" and "Updated on". Applied again after every ajax page load; nothing is stored in the browser. The server's own per-segment lock stays the real protection. | Segment list and segment page | `EventListener/SegmentUpdateLockSubscriber.php` | Mautic 5.2 |
 
 ## Additions to Mautic (not fixes)
 
@@ -90,3 +90,27 @@ docker exec mautic-mautic_web-1 sh -c "cd /var/www/html/docroot/plugins/MauticPa
 Requires `phpunit/phpunit` as a dev dependency on the image — see
 [wiki/docker-mautic5.md](../wiki/docker-mautic5.md) ("PHPUnit / automated
 tests") for how that's set up in this project's Docker stack.
+
+### JavaScript tests (Node, no extra dependencies)
+
+The scripts these subscribers put on the page are also run for real, against a small
+fake browser (a fake DOM and `mQuery`, fake timers, a recorder for the ajax calls).
+`Tests/js/segment-update-lock.test.js` takes the script straight from the PHP class
+(through `php -r`), so it tests exactly what the page gets: the click, the lock, the
+polling every 3 s, the unlock, the reload only on the same page, the 2-minute limit, a
+failed check retried, several segments at once, the lock put back after the page is replaced.
+
+```bash
+docker exec mautic-mautic_web-1 sh -c "cd /var/www/html/docroot/plugins/MauticPatchesBundle && node --test 'Tests/js/*.test.js'"
+```
+
+### Live test (real server)
+
+`mautic/scripts/test-segment-update-status.sh` logs in like a browser and checks the
+`/s/segment-rebuild/{id}/status` route (answer, 404s, login redirect, GET only), what the
+segment list carries for the script, and the whole round trip: baseline date, the click, the
+date changing, and it being the one in the database. Run it with the stack up.
+
+When core changes (for example the move to Mautic 7), run all three: PHPUnit, the Node tests and
+the live script. The live one is what tells whether the routes, the permissions and the markup the
+scripts depend on (`.segment-last-built`, `a[href*="/s/segment-rebuild/"]`) still exist.

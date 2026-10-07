@@ -16,12 +16,19 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * lock), so this is about the screen: no pile of notifications.
  *
  * After a click on a segment's Update, the button of THAT segment (not the
- * others, which can be updated meanwhile) is locked for LOCK_MS: shown
- * disabled (its icon unchanged), and any further click on it is swallowed. In
- * the list, the "Updated on ..." line of that segment
- * (SegmentLastBuiltSubscriber) becomes "<spinner> Updating..." meanwhile. When
- * the time is up the list (or the segment's page) is reloaded, which refreshes
- * "N contacts" and "Updated on", and the button is free again.
+ * others, which can be updated meanwhile) is locked until the rebuild is DONE:
+ * shown disabled (its icon unchanged), and any further click on it is
+ * swallowed. In the list, the "Updated on ..." line of that segment
+ * (SegmentLastBuiltSubscriber) becomes "<spinner> Updating..." meanwhile.
+ *
+ * "Done" is read from the server: every POLL_MS the script asks
+ * SegmentRebuildController::statusAction for the segment's last built date.
+ * The command writes that date when it ENDS, so the first answer (taken at the
+ * click, long before the command can end) is the baseline and a different date
+ * means it finished. Then the list (or the segment's page) is reloaded, which
+ * refreshes "N contacts" and "Updated on", and the button is free again. If no
+ * end is seen within MAX_WAIT_MS (a very large segment, a failed start) it is
+ * freed and reloaded anyway.
  *
  * The click's own answer redirects to the list, which replaces the page, so the
  * lock lives in a script variable and is applied again after every Mautic ajax
@@ -34,7 +41,11 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class SegmentUpdateLockSubscriber implements EventSubscriberInterface
 {
-    public const LOCK_MS = 10000;
+    /** How often the screen asks whether the rebuild is done. */
+    public const POLL_MS = 3000;
+
+    /** The longest the button stays locked waiting for it (a rebuild that never reports an end must not lock it forever). */
+    public const MAX_WAIT_MS = 120000;
 
     // The "Updating..." text: bold, in the theme's link color (--link-primary, readable in light and dark), breathing softly. It is a fade (opacity), not movement, so it also runs for people who ask the system to reduce motion (on Windows, "Show animations" off): behind that setting it never showed.
     private const STYLE = '@keyframes mauticPatchesPulse{0%,100%{opacity:1}50%{opacity:.35}}'
@@ -57,11 +68,11 @@ class SegmentUpdateLockSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $customContentEvent->addContent('<script>'.self::script(self::LOCK_MS).'</script>');
+        $customContentEvent->addContent('<script>'.self::script(self::POLL_MS, self::MAX_WAIT_MS).'</script>');
         $customContentEvent->addContent('<style>'.self::STYLE.'</style>');
     }
 
-    public static function script(int $lockMs): string
+    public static function script(int $pollMs, int $maxWaitMs): string
     {
         return '(function(){'
             .'if(window.mauticPatchesSegmentUpdateLock){return;}'
@@ -92,11 +103,25 @@ class SegmentUpdateLockSubscriber implements EventSubscriberInterface
             .'if(locked[id]){event.preventDefault();event.stopImmediatePropagation();return;}'
             .'locked[id]=true;'
             .'var where=window.location.pathname+window.location.search;'
-            .'setTimeout(decorate,0);'
-            .'setTimeout(function(){'
+            .'var statusUrl=(a.getAttribute("href")||"").split("?")[0]+"/status";'
+            .'var started=Date.now(),baseline;'
+            // Done: free the button and, if the user is still on the same page, reload it (new "N contacts" and "Updated on").
+            .'function finish(){'
             .'delete locked[id];'
             .'if(window.location.pathname+window.location.search===where){Mautic.loadContent(where);}'
-            .'},'.$lockMs.');'
+            .'}'
+            .'function next(){if(Date.now()-started>='.$maxWaitMs.'){finish();return;}setTimeout(check,'.$pollMs.');}'
+            // The rebuild writes the segment's last built date when it ENDS: the first answer (taken at the click, long before the
+            // command can end) is the baseline, a different date after it means the rebuild is done.
+            .'function check(){'
+            .'mQuery.ajax({url:statusUrl,dataType:"json",global:false}).done(function(r){'
+            .'if(baseline===undefined){baseline=r.lastBuilt;next();return;}'
+            .'if(r.lastBuilt!==baseline){finish();return;}'
+            .'next();'
+            .'}).fail(next);'
+            .'}'
+            .'setTimeout(decorate,0);'
+            .'check();'
             .'},true);'
             .'var original=Mautic.onPageLoad;'
             .'Mautic.onPageLoad=function(){var result=original.apply(this,arguments);decorate();return result;};'
