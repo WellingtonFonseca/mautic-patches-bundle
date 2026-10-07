@@ -63,7 +63,8 @@ class SegmentUpdateLockSubscriberTest extends TestCase
         $this->assertStringContainsString('mQuery(".segment-last-built")', $js);
         $this->assertStringContainsString('if(!locked[id]||$line.data("mauticPatchesUpdating")){return;}', $js);
         $this->assertStringContainsString('$line.data("updating-text")', $js);
-        $this->assertStringContainsString('border-radius:50%', $js, 'a bordered circle that turns on its own center');
+        $this->assertStringContainsString('<svg viewBox="0 0 24 24"', $js, 'an inline SVG, symmetric around its center');
+        $this->assertStringContainsString('M3.05469 13H5.07065', $js, 'the loader-3-line shape');
         $this->assertStringContainsString('animation:ri-spin', $js, "core's own keyframes");
     }
 
