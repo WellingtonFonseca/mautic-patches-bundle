@@ -87,15 +87,17 @@
                 <th>{{ 'mautic.patches.perf.col.sql'|trans }}</th>
                 <th>{{ 'mautic.patches.perf.col.queries'|trans }}</th>
                 <th>{{ 'mautic.patches.perf.col.memory'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.size'|trans }}</th>
             </tr></thead>
             <tbody>
             {% for e in report.slowest %}
                 <tr>
                     <td>{{ e.t|date('d/m H:i:s') }}</td><td>{{ e.m }} {{ e.p }}</td><td>{{ e.s }}</td>
                     <td>{{ e.ms }}</td><td>{{ e.db }}</td><td>{{ e.q }}</td><td>{{ e.mem|default('-') }}</td>
+                    <td>{{ e.kb is defined ? e.kb : '-' }}{% if e.qs is defined and e.qs %}<div class="text-muted">?{{ e.qs|join(', ') }}</div>{% endif %}</td>
                 </tr>
                 {% if e.slow is defined and e.slow %}
-                <tr><td></td><td colspan="6">
+                <tr><td></td><td colspan="7">
                     {% for q in e.slow %}<div class="text-muted"><code>{{ q.ms }} ms</code> {{ q.sql }}</div>{% endfor %}
                 </td></tr>
                 {% endif %}
