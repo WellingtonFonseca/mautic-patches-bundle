@@ -14,7 +14,7 @@ class PerformanceConfigTest extends TestCase
 
         $this->assertSame('admin', $config['menu']['admin']['mautic.patches.perf.menu']['access']);
         $this->assertSame('/performance', $config['routes']['main']['mautic_patches_performance']['path']);
-        $this->assertSame('POST', $config['routes']['main']['mautic_patches_performance_diagnose']['method']);
+        $this->assertArrayNotHasKey('mautic_patches_performance_diagnose', $config['routes']['main']);
     }
 
     public function testEveryPerformanceKeyExistsInBothLanguages(): void

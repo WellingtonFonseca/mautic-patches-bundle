@@ -1,8 +1,7 @@
 {#
   Settings > Performance. Top: a verdict on where the API time goes. Then the
   totals, one row per route, the slowest requests (with their heaviest SQL),
-  and the live diagnostics (a button that asks diagnoseAction and fills the
-  table). Numbers come from PerformanceReport; see PerformanceController.
+  and the live diagnostics (a button that refreshes the screen with ?diagnose=1). Numbers come from PerformanceReport; see PerformanceController.
 #}
 {% extends '@MauticCore/Default/content.html.twig' %}
 
@@ -108,25 +107,22 @@
 
     <h4>{{ 'mautic.patches.perf.diagnose'|trans }}</h4>
     <p class="text-muted">{{ 'mautic.patches.perf.diagnose.intro'|trans }}</p>
-    <button type="button" class="btn btn-primary" id="perf-diagnose-btn"
-            data-url="{{ path('mautic_patches_performance_diagnose') }}"
-            data-running="{{ 'mautic.patches.perf.diagnose.running'|trans }}"
-            data-label="{{ 'mautic.patches.perf.diagnose.run'|trans }}"
-            onclick="(function (b) {
-                var out = document.getElementById('perf-diagnose-result');
-                b.disabled = true; b.textContent = b.dataset.running;
-                fetch(b.dataset.url, {method: 'POST', credentials: 'same-origin', headers: {'X-Requested-With': 'XMLHttpRequest'}})
-                    .then(function (r) { return r.json(); })
-                    .then(function (d) {
-                        var cls = {ok: 'success', warn: 'warning', fail: 'danger', info: 'default'};
-                        var esc = function (s) { var e = document.createElement('div'); e.textContent = s; return e.innerHTML; };
-                        out.innerHTML = '<table class=&quot;table table-striped&quot;><tbody>' + (d.checks || []).map(function (c) {
-                            return '<tr><td><span class=&quot;label label-' + cls[c.status] + '&quot;>' + esc(c.status.toUpperCase()) + '</span></td><td>' + esc(c.label) + '</td><td>' + esc(c.value) + (c.hintText ? '<div class=&quot;text-muted&quot;>' + esc(c.hintText) + '</div>' : '') + '</td></tr>';
-                        }).join('') + '</tbody></table>';
-                    })
-                    .catch(function () { out.textContent = 'Error'; })
-                    .then(function () { b.disabled = false; b.textContent = b.dataset.label; });
-            })(this)">{{ 'mautic.patches.perf.diagnose.run'|trans }}</button>
-    <div id="perf-diagnose-result" style="margin-top: 15px;"></div>
+    {# Same idea as the segment "Update" button: locked while it runs (not with the 'disabled' class: Mautic's ajax link then ignores the click), then the screen is refreshed (the ajax page load replaces it, numbers included). #}
+    <a href="{{ path('mautic_patches_performance', {hours: hours, diagnose: 1}) }}" data-toggle="ajax" class="btn btn-primary"
+       onclick="if (this.dataset.busy) { return false; } this.dataset.busy = 1; this.style.pointerEvents = 'none'; this.style.opacity = '.65'; this.textContent = this.dataset.running;"
+       data-running="{{ 'mautic.patches.perf.diagnose.running'|trans }}">{{ 'mautic.patches.perf.diagnose.run'|trans }}</a>
+    {% if checks is not null %}
+    <table class="table table-striped" style="margin-top: 15px;">
+        <tbody>
+        {% for c in checks %}
+            <tr>
+                <td><span class="label label-{{ {ok: 'success', warn: 'warning', fail: 'danger', info: 'default'}[c.status] }}">{{ c.status|upper }}</span></td>
+                <td>{{ ('mautic.patches.perf.check.' ~ c.key)|trans }}</td>
+                <td>{{ c.value }}{% if c.hint %}<div class="text-muted">{{ c.hint|trans }}</div>{% endif %}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
 </div>
 {% endblock %}
