@@ -93,6 +93,9 @@ class ApiTimingSubscriber implements EventSubscriberInterface
             'db'  => round($measure['db'], 1),
             'q'   => $measure['q'],
             'mem' => round(memory_get_peak_usage(true) / 1048576, 1),
+            // Which filters the caller sent (names only: the values can be personal data) and how big the answer was.
+            'qs'  => array_slice(array_keys($request->query->all()), 0, 10),
+            'kb'  => round(strlen((string) $event->getResponse()->getContent()) / 1024, 1),
         ];
 
         if ($measure['ms'] >= PerformanceReport::slowLimit()) {
