@@ -49,6 +49,26 @@ class SegmentRebuilder
     }
 
     /**
+     * When the segment was last (fully) rebuilt, as the screen's "is it done?"
+     * check reads it: the command writes the date when it ENDS, so a date that
+     * differs from the one seen before the click means the rebuild finished.
+     * Null when the segment does not exist or the user may not rebuild it (the
+     * same answer for both, so it does not tell whether a segment exists).
+     *
+     * @return array{lastBuilt: ?string}|null lastBuilt is ISO 8601 (UTC offset kept), null if never built
+     */
+    public function lastBuilt(int $segmentId): ?array
+    {
+        $segment = $this->listModel->getEntity($segmentId);
+
+        if (null === $segment || !$this->hasEditAccess($segment)) {
+            return null;
+        }
+
+        return ['lastBuilt' => $segment->getLastBuiltDate()?->format(\DateTimeInterface::ATOM)];
+    }
+
+    /**
      * Whether request() could start this segment: edit access and published.
      */
     public function canRebuild(LeadList $segment): bool

@@ -107,4 +107,39 @@ class SegmentRebuilderTest extends TestCase
         $this->assertTrue($this->rebuilder->canRebuild($this->segment()));
         $this->assertFalse($this->rebuilder->canRebuild($this->segment(false)));
     }
+
+    public function testLastBuiltIsNullForAnUnknownSegment(): void
+    {
+        $this->listModel->method('getEntity')->with(7)->willReturn(null);
+
+        $this->assertNull($this->rebuilder->lastBuilt(7));
+    }
+
+    public function testLastBuiltIsNullWithoutEditAccessSoItDoesNotTellIfTheSegmentExists(): void
+    {
+        $this->listModel->method('getEntity')->willReturn($this->segment());
+        $this->security->method('hasEntityAccess')->willReturn(false);
+
+        $this->assertNull($this->rebuilder->lastBuilt(7));
+    }
+
+    public function testLastBuiltIsTheDateWhenTheRebuildEnded(): void
+    {
+        $segment = $this->segment();
+        $segment->method('getLastBuiltDate')->willReturn(new \DateTime('2026-10-07 12:30:05', new \DateTimeZone('UTC')));
+        $this->listModel->method('getEntity')->willReturn($segment);
+        $this->security->method('hasEntityAccess')->willReturn(true);
+
+        $this->assertSame(['lastBuilt' => '2026-10-07T12:30:05+00:00'], $this->rebuilder->lastBuilt(7));
+    }
+
+    public function testLastBuiltIsNullInsideTheAnswerForASegmentNeverBuilt(): void
+    {
+        $segment = $this->segment();
+        $segment->method('getLastBuiltDate')->willReturn(null);
+        $this->listModel->method('getEntity')->willReturn($segment);
+        $this->security->method('hasEntityAccess')->willReturn(true);
+
+        $this->assertSame(['lastBuilt' => null], $this->rebuilder->lastBuilt(7));
+    }
 }

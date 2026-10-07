@@ -16,6 +16,13 @@ return [
                 'method'       => 'POST',
                 'requirements' => ['id' => '\\d+'],
             ],
+            // The segment's last built date, polled by the Update button's script to know when the rebuild is done.
+            'mautic_patches_segment_rebuild_status' => [
+                'path'         => '/segment-rebuild/{id}/status',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\SegmentRebuildController::statusAction',
+                'method'       => 'GET',
+                'requirements' => ['id' => '\\d+'],
+            ],
         ],
         'api' => [
             'mautic_patches_api_segment_rebuild' => [

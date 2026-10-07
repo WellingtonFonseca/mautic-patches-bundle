@@ -94,18 +94,33 @@ class SegmentUpdateLockSubscriberTest extends TestCase
         $this->assertStringContainsString('Mautic.onPageLoad=function(){var result=original.apply(this,arguments);decorate();return result;}', $this->content());
     }
 
-    public function testUnlocksAndReloadsAfterTheTimeOnlyOnTheSamePage(): void
+    public function testAsksTheServerWhetherTheRebuildIsDoneAndComparesWithTheDateSeenAtTheClick(): void
     {
         $js = $this->content();
 
-        $this->assertStringContainsString('},'.SegmentUpdateLockSubscriber::LOCK_MS.');', $js);
-        $this->assertStringContainsString('delete locked[id];', $js);
-        $this->assertStringContainsString('if(window.location.pathname+window.location.search===where){Mautic.loadContent(where);}', $js);
+        $this->assertStringContainsString('var statusUrl=(a.getAttribute("href")||"").split("?")[0]+"/status";', $js);
+        $this->assertStringContainsString('mQuery.ajax({url:statusUrl,dataType:"json",global:false})', $js);
+        $this->assertStringContainsString('if(baseline===undefined){baseline=r.lastBuilt;next();return;}', $js);
+        $this->assertStringContainsString('if(r.lastBuilt!==baseline){finish();return;}', $js);
     }
 
-    public function testTenSeconds(): void
+    public function testPollsEveryThreeSecondsAndGivesUpAfterTwoMinutes(): void
     {
-        $this->assertSame(10000, SegmentUpdateLockSubscriber::LOCK_MS);
+        $js = $this->content();
+
+        $this->assertSame(3000, SegmentUpdateLockSubscriber::POLL_MS);
+        $this->assertSame(120000, SegmentUpdateLockSubscriber::MAX_WAIT_MS);
+        $this->assertStringContainsString('setTimeout(check,3000)', $js);
+        $this->assertStringContainsString('Date.now()-started>=120000', $js);
+    }
+
+    public function testWhenDoneOrGivenUpItUnlocksAndReloadsOnlyOnTheSamePage(): void
+    {
+        $js = $this->content();
+
+        $this->assertStringContainsString('delete locked[id];', $js);
+        $this->assertStringContainsString('if(window.location.pathname+window.location.search===where){Mautic.loadContent(where);}', $js);
+        $this->assertStringContainsString('.fail(next)', $js, 'a failed check is retried, not a dead end');
     }
 
     public function testNothingIsStoredInTheBrowser(): void

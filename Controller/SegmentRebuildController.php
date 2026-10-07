@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Controller;
 use Mautic\CoreBundle\Controller\CommonController;
 use MauticPlugin\MauticPatchesBundle\DTO\SegmentRebuildResult;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuilder;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -23,6 +24,22 @@ class SegmentRebuildController extends CommonController
         SegmentRebuildResult::NOT_PUBLISHED => ['error', 'mautic.patches.segment.rebuild.not_published'],
         SegmentRebuildResult::FAILED        => ['error', 'mautic.patches.segment.rebuild.failed'],
     ];
+
+    /**
+     * GET /s/segment-rebuild/{id}/status: the segment's last built date, which the
+     * Update button's script polls to know when the background rebuild is done
+     * (see SegmentUpdateLockSubscriber). Session login, like the click.
+     */
+    public function statusAction(SegmentRebuilder $rebuilder, int $id): JsonResponse
+    {
+        $status = $rebuilder->lastBuilt($id);
+
+        if (null === $status) {
+            return new JsonResponse(['error' => 'Segment not found.'], Response::HTTP_NOT_FOUND);
+        }
+
+        return new JsonResponse($status);
+    }
 
     public function rebuildAction(Request $request, SegmentRebuilder $rebuilder, int $id): Response
     {
