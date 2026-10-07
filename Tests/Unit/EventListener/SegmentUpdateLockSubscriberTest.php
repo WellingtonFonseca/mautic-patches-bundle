@@ -27,7 +27,7 @@ class SegmentUpdateLockSubscriberTest extends TestCase
     public function testInjectsAScriptOnPageHeaderLeftOnly(): void
     {
         $this->assertStringStartsWith('<script>', $this->content());
-        $this->assertStringEndsWith('</script>', $this->content());
+        $this->assertStringEndsWith('</style>', $this->content());
         $this->assertSame('', $this->content('something.else'));
     }
 
@@ -66,6 +66,27 @@ class SegmentUpdateLockSubscriberTest extends TestCase
         $this->assertStringContainsString('<svg viewBox="0 0 24 24"', $js, 'an inline SVG, symmetric around its center');
         $this->assertStringContainsString('M3.05469 13H5.07065', $js, 'the loader-3-line shape');
         $this->assertStringContainsString('animation:ri-spin', $js, "core's own keyframes");
+    }
+
+    public function testTheUpdatingTextIsBoldInTheThemesLinkColorAndPulses(): void
+    {
+        $event = new CustomContentEvent('some_view', 'page.header.left');
+        (new SegmentUpdateLockSubscriber())->injectViewCustomContent($event);
+        $all = implode('', $event->getContent());
+
+        $this->assertStringContainsString('<small class=\\"mautic-patches-updating\\">', $all);
+        $this->assertStringContainsString('<span class=\\"mautic-patches-updating-text\\">', $all);
+        $this->assertStringContainsString('.mautic-patches-updating{color:var(--link-primary);font-weight:600}', $all);
+        $this->assertStringContainsString('@keyframes mauticPatchesPulse', $all);
+        $this->assertStringContainsString('.mautic-patches-updating-text{display:inline-block;animation:mauticPatchesPulse 1.2s ease-in-out infinite}', $all);
+    }
+
+    public function testThePulseIsNotSwitchedOffByTheReducedMotionSetting(): void
+    {
+        $event = new CustomContentEvent('some_view', 'page.header.left');
+        (new SegmentUpdateLockSubscriber())->injectViewCustomContent($event);
+
+        $this->assertStringNotContainsString('prefers-reduced-motion', implode('', $event->getContent()));
     }
 
     public function testTheLockIsAppliedAgainAfterEveryAjaxPageLoad(): void
