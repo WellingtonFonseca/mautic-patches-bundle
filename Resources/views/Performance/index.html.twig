@@ -1,0 +1,132 @@
+{#
+  Settings > Performance. Top: a verdict on where the API time goes. Then the
+  totals, one row per route, the slowest requests (with their heaviest SQL),
+  and the live diagnostics (a button that asks diagnoseAction and fills the
+  table). Numbers come from PerformanceReport; see PerformanceController.
+#}
+{% extends '@MauticCore/Default/content.html.twig' %}
+
+{% block mauticContent %}patchesPerformance{% endblock %}
+
+{% block headerTitle %}{{ 'mautic.patches.perf.header'|trans }}{% endblock %}
+
+{% block content %}
+{% set total = report.total %}
+{% set verdictClass = {
+    'healthy': 'success', 'no_data': 'info', 'db_slow_queries': 'danger', 'db_many_queries': 'danger', 'app': 'warning', 'mixed': 'warning'
+}[report.verdict] %}
+<div class="panel panel-default bdr-t-wdh-0" style="padding: 15px;">
+
+    <form method="get" action="{{ path('mautic_patches_performance') }}" class="form-inline" style="margin-bottom: 15px;">
+        <label class="control-label" for="perf-hours">{{ 'mautic.patches.perf.period'|trans }}</label>
+        <select id="perf-hours" name="hours" class="form-control" onchange="this.form.submit()">
+            {% for p in periods %}
+                <option value="{{ p }}"{{ p == hours ? ' selected' : '' }}>{{ ('mautic.patches.perf.period.' ~ p)|trans }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <div class="alert alert-{{ verdictClass }}">
+        <strong>{{ ('mautic.patches.perf.verdict.' ~ report.verdict)|trans }}</strong><br>
+        {{ ('mautic.patches.perf.verdict.' ~ report.verdict ~ '.detail')|trans({'%slow%': slowMs}) }}
+    </div>
+
+    {% if total.count > 0 %}
+    <div class="row" style="margin-bottom: 15px;">
+        {% for item in [
+            {label: 'requests', value: total.count},
+            {label: 'avg', value: total.avg ~ ' ms'},
+            {label: 'p95', value: total.p95 ~ ' ms'},
+            {label: 'max', value: total.max ~ ' ms'},
+            {label: 'sql_share', value: (total.dbShare * 100)|round ~ '%'},
+            {label: 'queries', value: total.avgQueries},
+            {label: 'slow', value: total.slow},
+            {label: 'errors', value: total.errors},
+        ] %}
+        <div class="col-xs-6 col-md-3" style="margin-bottom: 10px;">
+            <div class="panel panel-default" style="margin: 0; padding: 10px;">
+                <div class="text-muted">{{ ('mautic.patches.perf.card.' ~ item.label)|trans({'%slow%': slowMs}) }}</div>
+                <div class="fs-24 fw-sb">{{ item.value }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h4>{{ 'mautic.patches.perf.routes'|trans }}</h4>
+    <div class="table-responsive">
+        <table class="table table-hover table-striped">
+            <thead><tr>
+                <th>{{ 'mautic.patches.perf.col.route'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.requests'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.avg'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.p95'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.max'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.sql'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.queries'|trans }}</th>
+            </tr></thead>
+            <tbody>
+            {% for r in report.routes|slice(0, 30) %}
+                <tr>
+                    <td>{{ r.name }}</td><td>{{ r.count }}</td><td>{{ r.avg }}</td>
+                    <td{% if r.p95 >= slowMs %} class="text-danger fw-sb"{% endif %}>{{ r.p95 }}</td>
+                    <td>{{ r.max }}</td><td>{{ r.avgDb }}</td>
+                    <td{% if r.avgQueries >= 50 %} class="text-danger fw-sb"{% endif %}>{{ r.avgQueries }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h4>{{ 'mautic.patches.perf.slowest'|trans }}</h4>
+    <div class="table-responsive">
+        <table class="table table-hover table-striped">
+            <thead><tr>
+                <th>{{ 'mautic.patches.perf.col.when'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.route'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.status'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.total'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.sql'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.queries'|trans }}</th>
+                <th>{{ 'mautic.patches.perf.col.memory'|trans }}</th>
+            </tr></thead>
+            <tbody>
+            {% for e in report.slowest %}
+                <tr>
+                    <td>{{ e.t|date('d/m H:i:s') }}</td><td>{{ e.m }} {{ e.p }}</td><td>{{ e.s }}</td>
+                    <td>{{ e.ms }}</td><td>{{ e.db }}</td><td>{{ e.q }}</td><td>{{ e.mem|default('-') }}</td>
+                </tr>
+                {% if e.slow is defined and e.slow %}
+                <tr><td></td><td colspan="6">
+                    {% for q in e.slow %}<div class="text-muted"><code>{{ q.ms }} ms</code> {{ q.sql }}</div>{% endfor %}
+                </td></tr>
+                {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <h4>{{ 'mautic.patches.perf.diagnose'|trans }}</h4>
+    <p class="text-muted">{{ 'mautic.patches.perf.diagnose.intro'|trans }}</p>
+    <button type="button" class="btn btn-primary" id="perf-diagnose-btn"
+            data-url="{{ path('mautic_patches_performance_diagnose') }}"
+            data-running="{{ 'mautic.patches.perf.diagnose.running'|trans }}"
+            data-label="{{ 'mautic.patches.perf.diagnose.run'|trans }}"
+            onclick="(function (b) {
+                var out = document.getElementById('perf-diagnose-result');
+                b.disabled = true; b.textContent = b.dataset.running;
+                fetch(b.dataset.url, {method: 'POST', credentials: 'same-origin', headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) {
+                        var cls = {ok: 'success', warn: 'warning', fail: 'danger', info: 'default'};
+                        var esc = function (s) { var e = document.createElement('div'); e.textContent = s; return e.innerHTML; };
+                        out.innerHTML = '<table class=&quot;table table-striped&quot;><tbody>' + (d.checks || []).map(function (c) {
+                            return '<tr><td><span class=&quot;label label-' + cls[c.status] + '&quot;>' + esc(c.status.toUpperCase()) + '</span></td><td>' + esc(c.label) + '</td><td>' + esc(c.value) + (c.hintText ? '<div class=&quot;text-muted&quot;>' + esc(c.hintText) + '</div>' : '') + '</td></tr>';
+                        }).join('') + '</tbody></table>';
+                    })
+                    .catch(function () { out.textContent = 'Error'; })
+                    .then(function () { b.disabled = false; b.textContent = b.dataset.label; });
+            })(this)">{{ 'mautic.patches.perf.diagnose.run'|trans }}</button>
+    <div id="perf-diagnose-result" style="margin-top: 15px;"></div>
+</div>
+{% endblock %}

@@ -23,6 +23,16 @@ return [
                 'method'       => 'GET',
                 'requirements' => ['id' => '\\d+'],
             ],
+            // Settings > Performance: where the time of the API goes, and the live diagnostics.
+            'mautic_patches_performance' => [
+                'path'       => '/performance',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\PerformanceController::indexAction',
+            ],
+            'mautic_patches_performance_diagnose' => [
+                'path'       => '/performance/diagnose',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\PerformanceController::diagnoseAction',
+                'method'     => 'POST',
+            ],
         ],
         'api' => [
             'mautic_patches_api_segment_rebuild' => [
@@ -30,6 +40,16 @@ return [
                 'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\Api\\SegmentRebuildApiController::rebuildAction',
                 'method'       => 'POST',
                 'requirements' => ['id' => '\\d+'],
+            ],
+        ],
+    ],
+    'menu' => [
+        'admin' => [
+            'mautic.patches.perf.menu' => [
+                'route'     => 'mautic_patches_performance',
+                'iconClass' => 'ri-speed-up-line',
+                'access'    => 'admin',
+                'priority'  => 5,
             ],
         ],
     ],
