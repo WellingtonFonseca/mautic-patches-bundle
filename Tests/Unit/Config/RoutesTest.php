@@ -50,6 +50,10 @@ class RoutesTest extends TestCase
     {
         foreach (['main', 'api'] as $firewall) {
             foreach ($this->config()['routes'][$firewall] as $name => $route) {
+                if (!str_contains($route['path'], '{id}')) {
+                    continue; // e.g. the Performance screen: no id at all
+                }
+
                 $this->assertSame(['id' => '\\d+'], $route['requirements'], $name);
             }
         }
