@@ -1,0 +1,70 @@
+{#
+  Body of the "Ver" modal of the contact list: the Details table of the contact page (one tab per field group, the
+  same rows as LeadBundle's lead.html.twig), nothing else. Core's shared modal is narrow by default, so only a
+  modal holding this body is widened (:has), every other use of the shared modal keeps its size.
+#}
+<style>
+    .modal-dialog:has(.mautic-patches-contact-details) {
+        width: 1100px;
+        max-width: 95vw;
+    }
+</style>
+<div class="mautic-patches-contact-details">
+    {% set groups = fields|keys %}
+    <ul class="nav nav-tabs nav-tabs-contained" role="tablist">
+        {% for g in groups %}
+            {% if fields[g] is not empty %}
+                <li class="{% if loop.first %}active{% endif %}">
+                    <a href="#patches-contact-{{ g }}" class="group" data-toggle="tab">{{ ('mautic.lead.field.group.'~g)|trans }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+
+    <div class="tab-content pa-md">
+        {% for group in groups %}
+            {% if fields[group] is not empty %}
+                <div class="tab-pane fade {% if loop.first %}in active{% endif %} bdr-w-0" id="patches-contact-{{ group }}">
+                    <div class="panel shd-none mb-0">
+                        <table class="table table-hover mb-0">
+                            <tbody>
+                            {% if 'core' == group %}
+                                {{ include('@MauticCore/Helper/details.html.twig', {'entity': lead}) }}
+                            {% endif %}
+                            {% set no_result = true %}
+                            {% for field in fields[group] %}
+                                {% if field.value is not empty %}
+                                    {% set no_result = false %}
+                                    <tr>
+                                        <td width="30%"><span class="fw-b textTitle">{{ field.label|purify }}</span></td>
+                                        <td>
+                                            {% if 'multiselect' == field.type %}
+                                                {% if field.value is iterable %}
+                                                    {{ field.value|join(', ') }}
+                                                {% else %}
+                                                    {{ field.normalizedValue|purify|replace({'|': ', '}) }}
+                                                {% endif %}
+                                            {% elseif 'url' == field.type %}
+                                                <a href="{{ field.value|purify }}" target="_blank" rel="noopener">{{ field.value }}</a>
+                                            {% elseif 'html' == field.type %}
+                                                <div style="resize: vertical; overflow: auto">{{ field.value|e }}</div>
+                                            {% elseif 'datetime' == field.type %}
+                                                {{ dateToFullConcat(field.value, 'UTC') }}
+                                            {% else %}
+                                                {{ field.normalizedValue|purify }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                            {% if no_result %}
+                                <tr><td colspan="2">{{ 'mautic.lead.field.group.no_data'|trans }}</td></tr>
+                            {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
