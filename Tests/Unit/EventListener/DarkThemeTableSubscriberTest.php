@@ -86,4 +86,26 @@ class DarkThemeTableSubscriberTest extends TestCase
 
         $this->assertSame([], $event->getContent());
     }
+
+    /**
+     * @dataProvider darkThemes
+     */
+    public function testHighlightedNewRowsGetADarkTintInTheDarkThemes(string $theme): void
+    {
+        $css = $this->css();
+
+        $this->assertStringContainsString(':root[theme="'.$theme.'"] .table>tbody>tr.warning>td', $css);
+        $this->assertStringContainsString(':root[theme="'.$theme.'"] .table>tbody>tr>td.warning', $css);
+        $this->assertStringContainsString(':root[theme="'.$theme.'"] .table-hover>tbody>tr.warning:hover>td', $css);
+        $this->assertStringContainsString('{background-color:color-mix(in srgb,var(--support-warning) 16%,var(--layer-01))}', $css);
+        $this->assertStringContainsString('{background-color:color-mix(in srgb,var(--support-warning) 26%,var(--layer-01))}', $css);
+    }
+
+    public function testTheLightThemesKeepTheCorePaleYellowRow(): void
+    {
+        $css = $this->css();
+
+        $this->assertStringNotContainsString('theme="light"', $css);
+        $this->assertStringNotContainsString('tr.warning>td{background-color:#', $css);
+    }
 }
