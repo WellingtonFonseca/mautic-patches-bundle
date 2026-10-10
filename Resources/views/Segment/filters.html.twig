@@ -1,0 +1,27 @@
+{# The "Filtros" tab of the segment page: the filters the segment applies, read-only. rows = SegmentFilterPresenter::present(). #}
+{% if rows|length > 0 %}
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 segment-filters-table">
+            <thead>
+                <tr>
+                    <th style="width: 6%"></th>
+                    <th>{{ 'mautic.patches.segment.filters.field'|trans }}</th>
+                    <th>{{ 'mautic.patches.segment.filters.operator'|trans }}</th>
+                    <th>{{ 'mautic.core.value'|trans }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td class="text-muted">{% if not loop.first %}{{ ('mautic.core.'~row.glue)|trans }}{% endif %}</td>
+                        <td>{{ row.field }}</td>
+                        <td>{{ row.operator }}</td>
+                        <td>{{ row.value }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p class="text-muted mb-0">{{ 'mautic.patches.segment.filters.none'|trans }}</p>
+{% endif %}
