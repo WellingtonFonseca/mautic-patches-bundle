@@ -1,0 +1,75 @@
+{#
+  The contacts tab of a segment or campaign as the contact list table: same columns, same order (Configuration > Contact
+  Settings), same row (checkbox, three-dots menu) as /s/contacts. Core shows cards here (Lead/grid.html.twig).
+  `container` is the selector of the tab pane (#contacts-container on a segment, #leads-container on a campaign).
+  Variables: items, columns, permissions, security, noContactList, totalItems, page, limit, tmpl, baseUrl, sessionVar, container.
+  The rows are included with_context = false: core's row menu builds its links from `route`, `tmpl` and `objectId`
+  when they exist in the context, and here they mean the segment's tab, not the contact.
+#}
+{% extends '@MauticCore/Default/raw_output.html.twig' %}
+
+{% block content %}
+{% if items|length > 0 %}
+    {# The first cell (checkbox and three-dots menu) is hidden by CSS: the segment's table is for reading. #}
+    <style>{{ container }} #leadTable > thead > tr > :first-child, {{ container }} #leadTable > tbody > tr > :first-child { display: none; }</style>
+    <div class="table-responsive">
+        <table class="table table-hover" id="leadTable">
+            <thead>
+                <tr>
+                    {{ include('@MauticCore/Helper/tableheader.html.twig', {
+                        'checkall': 'true',
+                        'target': '#leadTable',
+                        'langVar': 'lead.lead',
+                        'routeBase': 'contact',
+                        'tooltip': 'mautic.lead.list.checkall.help'|trans,
+                    }) }}
+                    {% for column, label in columns %}
+                        {% if column == 'name' %}
+                            {% set orderBy = 'l.lastname, l.firstname, l.company, l.email' %}
+                        {% elseif column == 'location' %}
+                            {% set orderBy = 'l.city, l.state' %}
+                        {% elseif column == 'stage' %}
+                            {% set orderBy = 'l.stage_id' %}
+                        {% else %}
+                            {% set orderBy = 'l.'~column %}
+                        {% endif %}
+                        {{ include('@MauticCore/Helper/tableheader.html.twig', {
+                            'sessionVar': sessionVar,
+                            'orderBy': orderBy,
+                            'text': label,
+                            'class': 'col-lead-'~column~' hidden-xs',
+                            'tmpl': tmpl,
+                            'target': container,
+                            'baseUrl': baseUrl,
+                        }) }}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {{ include('@MauticLead/Lead/_list_rows.html.twig', {
+                    'items': items,
+                    'columns': columns,
+                    'security': security,
+                    'currentList': null,
+                    'permissions': permissions,
+                    'noContactList': noContactList,
+                }, with_context = false) }}
+            </tbody>
+        </table>
+    </div>
+    <div class="panel-footer">
+        {{ include('@MauticCore/Helper/pagination.html.twig', {
+            'totalItems': totalItems,
+            'page': page,
+            'limit': limit,
+            'baseUrl': baseUrl,
+            'tmpl': tmpl,
+            'sessionVar': sessionVar,
+            'target': container,
+        }) }}
+    </div>
+{% else %}
+    {{ include('@MauticCore/Helper/noresults.html.twig', {'header': 'mautic.lead.grid.noresults.header', 'message': 'mautic.lead.grid.noresults.message'}) }}
+    <div class="clearfix"></div>
+{% endif %}
+{% endblock %}
