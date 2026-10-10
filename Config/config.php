@@ -40,6 +40,13 @@ return [
                 'path'       => '/campaigns/view/{objectId}/contact/{page}',
                 'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignContactsController::contactsAction',
             ],
+            // The "Filtros" tab of the segment page: the filters the segment applies, read-only.
+            'mautic_patches_segment_filters' => [
+                'path'         => '/segment-filters/{id}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\SegmentFiltersController::filtersAction',
+                'method'       => 'GET',
+                'requirements' => ['id' => '\\d+'],
+            ],
             // Settings > Performance: where the time of the API goes, and the live diagnostics.
             'mautic_patches_performance' => [
                 'path'       => '/performance',
