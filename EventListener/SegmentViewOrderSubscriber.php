@@ -17,7 +17,9 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * Same technique as CampaignViewOrderSubscriber: core's template is not touched, a script moves the node on the
  * first load and after every Mautic ajax page load (it wraps Mautic.onPageLoad, so core's scripts have already run
  * on it) and fires a window resize so the chart fits. Moving a node keeps its ids and handlers, so the date range
- * keeps working. It only acts on a page that has `#contacts-container` and the chart block outside the tabs'
+ * keeps working. The contacts filter above the tabs (`#segment-contact-filters`, the event types select: it filters the
+ * contacts, not the chart) is moved to the very end, below the chart, by request; the form keeps its id and handlers.
+ * It only acts on a page that has `#contacts-container` and the chart block outside the tabs'
  * content, so no other page is affected, and it does nothing if the chart is already below.
  *
  * Injected the same way as the other page scripts (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left').
@@ -49,10 +51,13 @@ class SegmentViewOrderSubscriber implements EventSubscriberInterface
             .'var $tabs=mQuery("#contacts-container").closest(".tab-content");'
             .'var $chart=mQuery(".ri-line-chart-fill").first().closest(".pa-md");'
             .'if(!$tabs.length||!$chart.length||$tabs[0].contains($chart[0])){return;}'
+            .'var moved=false;'
             // already below the contacts: nothing to do
-            .'if($chart[0].compareDocumentPosition($tabs[0])&Node.DOCUMENT_POSITION_PRECEDING){return;}'
-            .'$tabs.after($chart);'
-            .'window.dispatchEvent(new Event("resize"));'
+            .'if(!($chart[0].compareDocumentPosition($tabs[0])&Node.DOCUMENT_POSITION_PRECEDING)){$tabs.after($chart);moved=true;}'
+            // the contacts filter (event types) goes to the very end, below the chart
+            .'var $form=mQuery("#segment-contact-filters");'
+            .'if($form.length&&!($form[0].compareDocumentPosition($chart[0])&Node.DOCUMENT_POSITION_PRECEDING)){$chart.after($form);moved=true;}'
+            .'if(moved){window.dispatchEvent(new Event("resize"));}'
             .'}'
             .'var original=Mautic.onPageLoad;'
             .'Mautic.onPageLoad=function(){var result=original.apply(this,arguments);reorder();return result;};'

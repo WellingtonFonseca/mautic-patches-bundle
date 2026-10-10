@@ -40,6 +40,15 @@ class SegmentViewOrderSubscriberTest extends TestCase
         $this->assertStringContainsString('$tabs.after($chart)', $js);
     }
 
+    public function testMovesTheContactsFilterBelowTheChart(): void
+    {
+        $js = $this->content();
+
+        $this->assertStringContainsString('mQuery("#segment-contact-filters")', $js);
+        $this->assertStringContainsString('$chart.after($form)', $js);
+        $this->assertStringContainsString('if($form.length&&!($form[0].compareDocumentPosition($chart[0])&Node.DOCUMENT_POSITION_PRECEDING))', $js);
+    }
+
     public function testOnlyActsOnTheSegmentPageWithTheChartOutsideTheTabs(): void
     {
         $this->assertStringContainsString('if(!$tabs.length||!$chart.length||$tabs[0].contains($chart[0])){return;}', $this->content());
