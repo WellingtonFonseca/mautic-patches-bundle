@@ -30,6 +30,16 @@ return [
                 'method'       => 'GET',
                 'requirements' => ['id' => '\\d+'],
             ],
+            // The contacts tab of a segment as a table. Same name and path as core's route, which it replaces.
+            'mautic_segment_contacts' => [
+                'path'       => '/segment/view/{objectId}/contact/{page}',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\SegmentContactsController::contactsAction',
+            ],
+            // The contacts tab of a campaign as a table, same idea.
+            'mautic_campaign_contacts' => [
+                'path'       => '/campaigns/view/{objectId}/contact/{page}',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignContactsController::contactsAction',
+            ],
             // Settings > Performance: where the time of the API goes, and the live diagnostics.
             'mautic_patches_performance' => [
                 'path'       => '/performance',
