@@ -21,7 +21,7 @@ function script(file, cls, args = '') {
 }
 
 const FIELD  = script('SegmentPrefixFieldSubscriber.php', 'SegmentPrefixFieldSubscriber');
-const COLUMN = script('SegmentPrefixColumnSubscriber.php', 'SegmentPrefixColumnSubscriber', "'Prefixo'");
+const COLUMN = script('SegmentPrefixColumnSubscriber.php', 'SegmentPrefixColumnSubscriber', "'Prefixo', 'Ordenar por Prefixo crescente', 'Ordenar por Prefixo decrescente'");
 
 // A tiny element with the few jQuery calls the scripts use.
 function el(props = {}) {
@@ -60,19 +60,20 @@ test('field: nothing happens on a page without the fields', () => {
     vm.runInNewContext(FIELD, {mQuery, Mautic: {onPageLoad() {}}, window: {}});
 });
 
-function listPage(prefixes) {
+function listPage(prefixes, sort = 'none') {
     const created = [];
     const head = el();
     const rows = prefixes.map((p) => {
         const nameCell = el();
-        const mark = el({'data-prefix': p}); mark.closestNode = nameCell;
+        const mark = el({'data-prefix': p, 'data-sort': sort}); mark.closestNode = nameCell;
         const row = el(); row.found['.segment-prefix-data'] = mark.api;
 
-        return {row, nameCell};
+        return {row, nameCell, mark};
     });
     const table = el();
     table.found['th.col-leadlist-prefix'] = {length: 0};
     table.found['th.col-leadlist-name'] = head.api;
+    table.found['.segment-prefix-data'] = {first: () => rows[0].mark.api};
     table.found['tbody tr'] = {each: (fn) => rows.forEach((r) => fn.call(r.row.api))};
     const mQuery = (a, props) => {
         if (typeof a === 'function') { a(); return; }
@@ -86,16 +87,35 @@ function listPage(prefixes) {
     return {created, head, rows, table, Mautic};
 }
 
-test('column: a header before Nome and a cell before each row name, with the prefix as a label', () => {
+const tagged = (created, tag, cls) => created.filter((c) => c.tag === tag && c.node.props.class === cls);
+
+test('column: a sortable header before Nome and plain text cells before each row name', () => {
     const {created, head, rows} = listPage(['Compras', '']);
 
     assert.ok(head.before, 'header added before the Nome header');
-    const title = created.find((c) => c.tag === '<span>' && c.node.props.class === 'pa-md');
-    assert.strictEqual(title.node.text, 'Prefixo');
+    const th = created.find((c) => c.tag === '<th>');
+    assert.strictEqual(th.node.props['aria-sort'], 'none');
+    assert.strictEqual(tagged(created, '<span>', 'fw-b')[0].node.text, 'Prefixo');
+    const sorter = created.find((c) => c.tag === '<a>').node.props;
+    assert.strictEqual(sorter.onclick, "Mautic.reorderTableData('lead.list','segment_prefix','list','.page-list');");
+    assert.strictEqual(sorter['aria-label'], 'Ordenar por Prefixo crescente');
+    assert.match(created.find((c) => c.tag === '<i>').node.props.class, /ri-arrow-up-down-line/);
+
+    const cells = tagged(created, '<td>', 'col-leadlist-prefix');
+    assert.deepStrictEqual(cells.map((c) => c.node.text), ['Compras', '']);
     assert.ok(rows.every((r) => r.nameCell.before), 'a cell before every name cell');
-    const labels = created.filter((c) => c.tag === '<span>' && c.node.props.class === 'label label-gray');
-    assert.strictEqual(labels.length, 1, 'a row with no prefix gets an empty cell');
-    assert.strictEqual(labels[0].node.text, 'Compras');
+    assert.strictEqual(tagged(created, '<span>', 'label label-gray').length, 0, 'no badge');
+});
+
+test('column: the header shows the order the list has', () => {
+    const asc = listPage(['Compras'], 'ascending').created;
+    assert.strictEqual(asc.find((c) => c.tag === '<th>').node.props['aria-sort'], 'ascending');
+    assert.strictEqual(asc.find((c) => c.tag === '<a>').node.props['aria-label'], 'Ordenar por Prefixo decrescente');
+    assert.match(asc.find((c) => c.tag === '<i>').node.props.class, /ri-arrow-up-line/);
+
+    const desc = listPage(['Compras'], 'descending').created;
+    assert.strictEqual(desc.find((c) => c.tag === '<th>').node.props['aria-sort'], 'descending');
+    assert.match(desc.find((c) => c.tag === '<i>').node.props.class, /ri-arrow-down-line/);
 });
 
 test('column: once per drawn table, and acts again after an ajax page load', () => {
