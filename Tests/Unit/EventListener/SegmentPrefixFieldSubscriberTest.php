@@ -8,21 +8,13 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentPrefixFieldSubscriber;
 use PHPUnit\Framework\TestCase;
-use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixes;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 class SegmentPrefixFieldSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left'): string
     {
-        $translator = $this->createMock(TranslatorInterface::class);
-        $translator->method('trans')->willReturnCallback(static fn (string $key) => 'T:'.$key);
-
-        $prefixes = $this->createMock(SegmentPrefixes::class);
-        $prefixes->method('all')->willReturn(['Compras', 'Vendas']);
-
         $event = new CustomContentEvent('some_view', $context);
-        (new SegmentPrefixFieldSubscriber($translator, $prefixes))->injectViewCustomContent($event);
+        (new SegmentPrefixFieldSubscriber())->injectViewCustomContent($event);
 
         return implode('', $event->getContent());
     }
@@ -38,28 +30,12 @@ class SegmentPrefixFieldSubscriberTest extends TestCase
         $this->assertSame('', $this->content('something.else'));
     }
 
-    public function testScriptUsesTheTranslatedTexts(): void
+    public function testScriptMovesTheRealFieldBeforeTheName(): void
     {
         $js = $this->content();
 
-        $this->assertStringContainsString('"T:mautic.patches.segment.prefix.placeholder"', $js);
-        $this->assertStringContainsString('"T:mautic.patches.segment.prefix"', $js);
-    }
-
-    public function testPrefixIsASelectWithTheRegisteredPrefixes(): void
-    {
-        $js = $this->content();
-
-        $this->assertStringContainsString('mQuery("<select>"', $js);
-        $this->assertStringContainsString('var list=["Compras","Vendas"];', $js);
-    }
-
-    public function testScriptKeepsTheRealNameInputAndWrapsPageLoad(): void
-    {
-        $js = $this->content();
-
-        $this->assertStringContainsString('mQuery("#leadlist_name")', $js);
-        $this->assertStringContainsString('$full.hide().after($row)', $js);
+        $this->assertStringContainsString('mQuery("#leadlist_prefix")', $js);
+        $this->assertStringContainsString('insertBefore($name.closest(".form-group"))', $js);
         $this->assertStringContainsString('Mautic.onPageLoad=function()', $js);
     }
 }
