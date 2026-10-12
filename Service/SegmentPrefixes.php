@@ -7,7 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Service;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 
 /**
- * The Prefixes a segment name can start with: the "Prefixos" box in Configurações (parameter
+ * The prefixes a segment can have: the "Prefixos" box in Configurações (parameter
  * `segment_prefixes`, one prefix per line).
  */
 class SegmentPrefixes
