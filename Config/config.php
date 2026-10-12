@@ -72,5 +72,9 @@ return [
             ],
         ],
     ],
+    'parameters'  => [
+        // The Prefixes a segment name can start with (Configurações > Prefixos), one string per prefix.
+        'segment_prefixes' => [],
+    ],
     'author'      => 'Wellington Fonseca',
 ];

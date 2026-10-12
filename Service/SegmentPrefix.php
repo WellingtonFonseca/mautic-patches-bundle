@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Service;
 
 /**
- * The IES prefix of a segment name: "PUCPR_POS | Onboarding" is the prefix "PUCPR_POS" and the name "Onboarding".
+ * The prefix of a segment name: "Compras | Onboarding" is the prefix "Compras" and the name "Onboarding".
  *
  * The prefix is not a column of its own (a segment has no custom fields): it is the start of the name, so lists,
  * campaign pickers, the API and the dispatch plugin all show it with no change.
