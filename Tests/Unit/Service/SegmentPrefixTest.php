@@ -20,9 +20,9 @@ class SegmentPrefixTest extends TestCase
     public static function validNames(): array
     {
         return [
-            ['PUCPR_POS | Onboarding'],
-            ['ESPM_POS | Onboarding'],
-            ['IES1 | Nome com | barra'],
+            ['Compras | Onboarding'],
+            ['Vendas | Onboarding'],
+            ['Setor1 | Nome com | barra'],
             ['ÁGORA | Matrícula'],
         ];
     }
@@ -41,18 +41,18 @@ class SegmentPrefixTest extends TestCase
             [null],
             [''],
             ['Onboarding'],
-            ['PUCPR_POS |Onboarding'],
-            ['PUCPR_POS| Onboarding'],
+            ['Compras |Onboarding'],
+            ['Compras| Onboarding'],
             [' | Onboarding'],
-            ['PUCPR_POS | '],
-            ['PUCPR POS | Onboarding'],
-            ['Copy of PUCPR_POS | Onboarding'],
+            ['Compras | '],
+            ['Nova Compra | Onboarding'],
+            ['Copy of Compras | Onboarding'],
         ];
     }
 
     public function testSplit(): void
     {
-        $this->assertSame(['prefix' => 'PUCPR_POS', 'name' => 'Onboarding'], SegmentPrefix::split('PUCPR_POS | Onboarding'));
+        $this->assertSame(['prefix' => 'Compras', 'name' => 'Onboarding'], SegmentPrefix::split('Compras | Onboarding'));
         $this->assertSame(['prefix' => 'A', 'name' => 'B | C'], SegmentPrefix::split('A | B | C'));
     }
 
@@ -63,7 +63,7 @@ class SegmentPrefixTest extends TestCase
 
     public function testJoinTrimsAndRoundTrips(): void
     {
-        $this->assertSame('PUCPR_POS | Onboarding', SegmentPrefix::join(' PUCPR_POS ', ' Onboarding '));
+        $this->assertSame('Compras | Onboarding', SegmentPrefix::join(' Compras ', ' Onboarding '));
         $this->assertSame(['prefix' => 'X', 'name' => 'Y'], SegmentPrefix::split(SegmentPrefix::join('X', 'Y')));
     }
 }

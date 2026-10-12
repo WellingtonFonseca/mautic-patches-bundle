@@ -15,7 +15,7 @@ const AUTOLOAD   = process.env.AUTOLOAD || '/var/www/html/vendor/autoload.php';
 const CLASS_FILE = path.resolve(__dirname, '../../EventListener/SegmentPrefixFieldSubscriber.php');
 
 const SCRIPT = execFileSync('php', ['-r',
-    `require ${JSON.stringify(AUTOLOAD)}; require ${JSON.stringify(CLASS_FILE)}; echo MauticPlugin\\MauticPatchesBundle\\EventListener\\SegmentPrefixFieldSubscriber::script('Prefixo', 'Prefixo, ex.: PUCPR_POS');`,
+    `require ${JSON.stringify(AUTOLOAD)}; require ${JSON.stringify(CLASS_FILE)}; echo MauticPlugin\\MauticPatchesBundle\\EventListener\\SegmentPrefixFieldSubscriber::script('Prefixo', 'Selecione o prefixo', ['Compras', 'Vendas']);`,
 ], {encoding: 'utf8'});
 
 // A tiny jQuery stand-in: elements are plain objects, mQuery(...) wraps them.
@@ -39,28 +39,32 @@ function load(initialName, {present = true} = {}) {
     const full = makeEl({id: 'leadlist_name'});
     full.value = initialName;
     const inputs = {};
+    const options = [];
     const mQuery = (arg, attrs) => {
         if (typeof arg === 'function') { arg(); return; }
         if (arg === '#leadlist_name') { return present ? full.api : {length: 0}; }
+        if (arg === '<option>') { const el = makeEl(attrs); options.push(attrs.value); return el.api; }
+        if (arg === '<select>') { const el = makeEl(attrs); inputs[attrs.id] = el; created.push(el); return el.api; }
         if (arg === '<input>') { const el = makeEl(attrs); inputs[attrs.id] = el; created.push(el); return el.api; }
         return makeEl(attrs).api;
     };
+    mQuery.each = (arr, fn) => arr.forEach((v, i) => fn(i, v));
     mQuery.trim = (s) => String(s).trim();
     const Mautic = {onPageLoad() { return 'loaded'; }};
     const context = {mQuery, Mautic, window: {}};
     vm.runInNewContext(SCRIPT, context);
 
-    const type = (id, value) => { inputs[id].value = value; inputs[id].handlers.input.forEach((fn) => fn()); };
+    const type = (id, value) => { inputs[id].value = value; (inputs[id].handlers.input || inputs[id].handlers.change).forEach((fn) => fn()); };
 
-    return {full, inputs, created, Mautic, context, type};
+    return {full, inputs, created, options, Mautic, context, type};
 }
 
 test('splits a name with prefix into the two inputs', () => {
-    const {full, inputs} = load('PUCPR_POS | Onboarding');
-    assert.strictEqual(inputs.leadlist_name_prefix.value, 'PUCPR_POS');
+    const {full, inputs} = load('Compras | Onboarding');
+    assert.strictEqual(inputs.leadlist_name_prefix.value, 'Compras');
     assert.strictEqual(inputs.leadlist_name_rest.value, 'Onboarding');
     assert.strictEqual(full.hidden, true);
-    assert.strictEqual(full.value, 'PUCPR_POS | Onboarding');
+    assert.strictEqual(full.value, 'Compras | Onboarding');
 });
 
 test('a name with no prefix stays whole in Nome and the prefix is empty', () => {
@@ -72,9 +76,9 @@ test('a name with no prefix stays whole in Nome and the prefix is empty', () => 
 
 test('typing in either input updates the real name input', () => {
     const {full, type} = load('');
-    type('leadlist_name_prefix', ' ESPM_POS ');
+    type('leadlist_name_prefix', 'Vendas');
     type('leadlist_name_rest', 'Onboarding');
-    assert.strictEqual(full.value, 'ESPM_POS | Onboarding');
+    assert.strictEqual(full.value, 'Vendas | Onboarding');
 });
 
 test('only the name typed gives a value that the server refuses (no prefix)', () => {
@@ -98,4 +102,15 @@ test('does nothing on a page without the name input, and acts again after an aja
     assert.strictEqual(created.length, 2);
     assert.strictEqual(Mautic.onPageLoad(), 'loaded');
     assert.strictEqual(created.length, 2, 'the same input is not split twice');
+});
+
+test('the select has an empty option and the registered prefixes', () => {
+    const {options} = load('');
+    assert.deepStrictEqual(options, ['', 'Compras', 'Vendas']);
+});
+
+test('a prefix of the segment that is no longer registered stays as an option', () => {
+    const {options, inputs} = load('Entregas | Onboarding');
+    assert.deepStrictEqual(options, ['', 'Compras', 'Vendas', 'Entregas']);
+    assert.strictEqual(inputs.leadlist_name_prefix.value, 'Entregas');
 });
