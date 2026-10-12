@@ -6,6 +6,7 @@ namespace MauticPlugin\MauticPatchesBundle\Form\Extension;
 
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Form\Type\ListType;
+use MauticPlugin\MauticPatchesBundle\Service\SegmentAlias;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixes;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
 use Symfony\Component\Form\AbstractTypeExtension;
@@ -21,6 +22,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * and the segments API (POST/PATCH/PUT /api/segments, key "prefix") both use ListType, so one field covers both. Core's
  * template does not list it, but form_end() renders it at the end of the form; SegmentPrefixFieldSubscriber's script
  * moves it before the name. Core is not touched.
+ *
+ * It also gives the segment an alias made of prefix and name, letters and numbers only, when none was typed (SegmentAlias).
  *
  * The value is not a column of the segment: it is read from, and (after the segment is saved) written to, the plugin's
  * own table by SegmentPrefixStore. A prefix the segment already has but that is no longer registered stays valid for
@@ -74,6 +77,15 @@ class SegmentPrefixFormExtension extends AbstractTypeExtension
 
             if ($segment instanceof LeadList && $field->isSubmitted() && is_string($field->getData()) && '' !== $field->getData()) {
                 $this->store->remember($segment, $field->getData());
+            }
+
+            // No alias typed: prefix and name, letters and numbers only. An alias that was typed is left as it is.
+            if ($segment instanceof LeadList && '' === trim((string) $segment->getAlias())) {
+                $prefix = is_string($field->getData()) && '' !== $field->getData() ? $field->getData() : $this->store->get($segment->getId());
+                $alias  = SegmentAlias::generate((string) $prefix, (string) $segment->getName());
+                if (null !== $prefix && '' !== $alias) {
+                    $segment->setAlias($alias);
+                }
             }
         });
     }

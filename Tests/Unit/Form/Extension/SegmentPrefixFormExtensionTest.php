@@ -46,6 +46,7 @@ class SegmentPrefixFormExtensionTest extends TestCase
         $factory = Forms::createFormFactoryBuilder()->addExtension(new ValidatorExtension(Validation::createValidator()))->getFormFactory();
         $builder = $factory->createBuilder(FormType::class, $segment, ['data_class' => LeadList::class]);
         $builder->add('name', TextType::class);
+        $builder->add('alias', TextType::class, ['required' => false]);
         (new SegmentPrefixFormExtension($translator, $prefixes, $store))->buildForm($builder, ['data' => $segment]);
 
         return $builder->getForm();
@@ -123,6 +124,33 @@ class SegmentPrefixFormExtensionTest extends TestCase
 
         $this->assertSame([], $this->errors($form));
         $this->assertSame([$segment, 'Entregas'], $this->remembered);
+    }
+
+    public function testNoAliasTypedGetsPrefixAndNameInLettersAndNumbersOnly(): void
+    {
+        $segment = new LeadList();
+        $form    = $this->form($segment);
+        $form->submit(['name' => 'nome - do meu segmento', 'alias' => '', 'prefix' => 'Compras']);
+
+        $this->assertSame('comprasnomedomeusegmento', $segment->getAlias());
+    }
+
+    public function testATypedAliasIsKept(): void
+    {
+        $segment = new LeadList();
+        $form    = $this->form($segment);
+        $form->submit(['name' => 'Onboarding', 'alias' => 'meu-alias_1', 'prefix' => 'Compras']);
+
+        $this->assertSame('meu-alias_1', $segment->getAlias());
+    }
+
+    public function testApiWithoutAliasFieldAlsoGetsTheGeneratedAlias(): void
+    {
+        $segment = new LeadList();
+        $form    = $this->form($segment);
+        $form->submit(['name' => 'Onboarding', 'prefix' => 'Vendas'], false);
+
+        $this->assertSame('vendasonboarding', $segment->getAlias());
     }
 
     public function testAPatchWithoutThePrefixKeepsWhatIsStored(): void
