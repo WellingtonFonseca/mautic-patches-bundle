@@ -21,6 +21,9 @@ class SegmentFilterPresenter
     /** Operators that take no value. */
     private const NO_VALUE = ['empty', '!empty'];
 
+    /** Operators whose value is a list of values: shown one by one (a string holds them joined with |). */
+    private const MANY_VALUES = ['in', '!in'];
+
     /** Relative date values the segment form offers, as stored => translation key (core's RelativeDate). */
     private const RELATIVE_DATES = [
         'today'      => 'mautic.lead.list.today',
@@ -46,7 +49,7 @@ class SegmentFilterPresenter
      * @param array<int, array<string, mixed>>                $filters
      * @param array<string, array<string, array<string, mixed>>> $choices
      *
-     * @return list<array{glue: string, field: string, operator: string, value: string}>
+     * @return list<array{glue: string, field: string, operator: string, value: string, values: list<string>}>
      */
     public function present(array $filters, array $choices): array
     {
@@ -62,6 +65,7 @@ class SegmentFilterPresenter
                 'field'    => (string) ($choice['label'] ?? $alias),
                 'operator' => $this->operatorLabel($operator, $choice['operators'] ?? []),
                 'value'    => in_array($operator, self::NO_VALUE, true) ? '' : $this->value($filter, $choice['properties']['list'] ?? []),
+                'values'   => in_array($operator, self::MANY_VALUES, true) ? $this->values($filter, $choice['properties']['list'] ?? []) : [],
             ];
         }
 
@@ -76,6 +80,37 @@ class SegmentFilterPresenter
         $label = array_search($operator, $operators, true);
 
         return false === $label ? $operator : (string) $label;
+    }
+
+    /**
+     * The values of an including / excluding filter, one by one: the items of a list, or the parts of a text joined
+     * with |. Empty when a lookup's display text is shown instead.
+     *
+     * @param array<string, mixed> $filter
+     * @param mixed                $list   [value => label] of a select-like field
+     *
+     * @return list<string>
+     */
+    private function values(array $filter, $list): array
+    {
+        $display = $filter['display'] ?? ($filter['properties']['display'] ?? null);
+        if (is_string($display) && '' !== $display) {
+            return [];
+        }
+
+        $value = $filter['properties']['filter'] ?? ($filter['filter'] ?? '');
+        $list  = is_array($list) ? $list : [];
+        $parts = is_array($value) ? $value : explode('|', is_scalar($value) ? (string) $value : '');
+
+        $labels = [];
+        foreach ($parts as $part) {
+            $label = $this->label(is_string($part) ? trim($part) : $part, $list);
+            if ('' !== $label && !in_array($label, $labels, true)) {
+                $labels[] = $label;
+            }
+        }
+
+        return $labels;
     }
 
     /**

@@ -16,7 +16,7 @@
                         <td class="text-muted">{% if not loop.first %}{{ ('mautic.core.'~row.glue)|trans }}{% endif %}</td>
                         <td>{{ row.field }}</td>
                         <td>{{ row.operator }}</td>
-                        <td>{{ row.value }}</td>
+                        <td>{% if row.values|length > 0 %}{% for value in row.values %}<span class="label label-gray segment-filter-badge" style="display: inline-block; margin: 0 4px 4px 0; padding: 4px 8px; font-size: 12px; font-weight: normal; white-space: normal; text-align: left;">{{ value }}</span>{% endfor %}{% else %}{{ row.value }}{% endif %}</td>
                     </tr>
                 {% endfor %}
             </tbody>

@@ -35,7 +35,7 @@ class SegmentFilterPresenterTest extends TestCase
             ['glue' => 'and', 'object' => 'lead', 'field' => 'email', 'operator' => '=', 'properties' => ['filter' => 'a@b.com']],
         ], self::CHOICES);
 
-        $this->assertSame([['glue' => 'and', 'field' => 'Email', 'operator' => 'é igual a', 'value' => 'a@b.com']], $rows);
+        $this->assertSame([['glue' => 'and', 'field' => 'Email', 'operator' => 'é igual a', 'value' => 'a@b.com', 'values' => []]], $rows);
     }
 
     public function testNoValueForEmptyOperators(): void
@@ -86,11 +86,73 @@ class SegmentFilterPresenterTest extends TestCase
             ['object' => 'lead', 'field' => 'gone', 'operator' => 'zzz', 'filter' => 'x'],
         ], self::CHOICES);
 
-        $this->assertSame([['glue' => 'and', 'field' => 'gone', 'operator' => 'zzz', 'value' => 'x']], $rows);
+        $this->assertSame([['glue' => 'and', 'field' => 'gone', 'operator' => 'zzz', 'value' => 'x', 'values' => []]], $rows);
     }
 
     public function testNoFiltersNoRows(): void
     {
         $this->assertSame([], $this->presenter()->present([], self::CHOICES));
+    }
+
+    public function testIncludingWithSeveralValuesGivesOneEntryPerValue(): void
+    {
+        $rows = $this->presenter()->present([
+            ['glue' => 'and', 'object' => 'custom_object', 'field' => 'cmf_14', 'operator' => 'in', 'properties' => ['filter' => 'Disciplina 01.1 (C)|Disciplina 01.2 (F)|teste']],
+            ['glue' => 'and', 'object' => 'lead', 'field' => 'email', 'operator' => '!in', 'properties' => ['filter' => 'a@b.com|c@d.com']],
+        ], self::CHOICES);
+
+        $this->assertSame(['Disciplina 01.1 (C)', 'Disciplina 01.2 (F)', 'teste'], $rows[0]['values']);
+        $this->assertSame(['a@b.com', 'c@d.com'], $rows[1]['values']);
+        $this->assertSame('Disciplina 01.1 (C)|Disciplina 01.2 (F)|teste', $rows[0]['value'], 'the text stays as it was');
+    }
+
+    public function testEmptyPartsAndRepeatsAreDroppedAndSpacesTrimmed(): void
+    {
+        $rows = $this->presenter()->present([
+            ['glue' => 'and', 'object' => 'lead', 'field' => 'email', 'operator' => 'in', 'properties' => ['filter' => ' A ||B|A| ']],
+        ], self::CHOICES);
+
+        $this->assertSame(['A', 'B'], $rows[0]['values']);
+    }
+
+    public function testAListOfOptionsGivesOneEntryPerLabel(): void
+    {
+        $rows = $this->presenter()->present([
+            ['glue' => 'and', 'object' => 'lead', 'field' => 'estado', 'operator' => 'in', 'properties' => ['filter' => ['sp', 'rj']]],
+        ], self::CHOICES);
+
+        $this->assertSame(['São Paulo', 'Rio de Janeiro'], $rows[0]['values']);
+    }
+
+    public function testTextValuesOfAnIncludingOnAListAreWrittenAsTheirLabels(): void
+    {
+        $rows = $this->presenter()->present([
+            ['glue' => 'and', 'object' => 'lead', 'field' => 'estado', 'operator' => 'in', 'properties' => ['filter' => 'sp|rj']],
+        ], self::CHOICES);
+
+        $this->assertSame(['São Paulo', 'Rio de Janeiro'], $rows[0]['values']);
+    }
+
+    public function testOtherOperatorsHaveNoEntries(): void
+    {
+        $rows = $this->presenter()->present([
+            ['glue' => 'and', 'object' => 'lead', 'field' => 'email', 'operator' => '=', 'properties' => ['filter' => 'a|b']],
+            ['glue' => 'and', 'object' => 'lead', 'field' => 'email', 'operator' => 'regexp', 'properties' => ['filter' => '^(a|b)$']],
+            ['glue' => 'and', 'object' => 'lead', 'field' => 'email', 'operator' => 'empty', 'properties' => ['filter' => 'a|b']],
+        ], self::CHOICES);
+
+        $this->assertSame([], $rows[0]['values'], 'a | in an equals is part of the text');
+        $this->assertSame([], $rows[1]['values'], 'a | in a regexp is part of the expression');
+        $this->assertSame([], $rows[2]['values']);
+    }
+
+    public function testADisplayedValueIsNotSplit(): void
+    {
+        $rows = $this->presenter()->present([
+            ['glue' => 'and', 'object' => 'lead', 'field' => 'email', 'operator' => 'in', 'display' => 'Maria | João', 'properties' => ['filter' => '1|2']],
+        ], self::CHOICES);
+
+        $this->assertSame([], $rows[0]['values']);
+        $this->assertSame('Maria | João', $rows[0]['value']);
     }
 }
