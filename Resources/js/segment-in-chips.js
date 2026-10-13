@@ -81,7 +81,7 @@
         function draw() {
             $box.children('.segment-in-chip').remove();
             values.forEach(function (value, i) {
-                var $chip = $('<span class="label label-default segment-in-chip" style="font-size:12px;padding:4px 6px;font-weight:normal"></span>').text(value + ' ');
+                var $chip = $('<span class="label label-gray segment-in-chip" style="font-size:12px;padding:4px 6px;font-weight:normal;display:inline-flex;align-items:center;gap:4px"></span>').text(value);
                 $('<a href="#" style="color:inherit;text-decoration:none" title="×">×</a>').on('click', function (e) {
                     e.preventDefault();
                     values = remove(values, i);
