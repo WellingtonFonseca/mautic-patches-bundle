@@ -80,6 +80,9 @@ The bundle also holds small additions to Mautic's own behaviour, such as API end
 | A **Prefixo** column in the segment list, before Nome: plain text, sortable like the other headers (arrow up = ascending, A to Z). The sort is done by the server: the plugin puts its own repository class (extends core's `LeadListRepository`) on the segment entity, which sorts by a hidden sub-select of the prefix table. The repository is a service tagged `doctrine.repository_service`. | Segment list | `EventListener/SegmentPrefixColumnSubscriber.php`, `Resources/views/Segment/prefix_marker.html.twig`, `Entity/SegmentListRepository.php`, `Doctrine/SegmentRepositoryListener.php`, `Config/services.php` |
 | The alias of a new segment, when none is typed: prefix + name, lower case letters and numbers only (`PUCPR` + `nome - do meu segmento` = `pucprnomedomeusegmento`), instead of core's `nome---do-meu-segmento`. A typed alias is kept (core still cleans it; a repeated alias gets core's number suffix). | Segment form, API | `Service/SegmentAlias.php` (called by `SegmentPrefixFormExtension`) |
 | The public name of a segment is always `PREFIX - Name` (e.g. `Compras - Onboarding`), whatever is typed in the public name field; rewritten on every save, also through the API. | Segment form, API | `Service/SegmentPublicName.php` (called by `SegmentPrefixFormExtension`) |
+| Including / excluding (`in` / `!in`) on the text fields of a contact or company in the segment filters: several values in ONE criterion (`A|B|C`) instead of one criterion per value joined by OR. The value input becomes chips (Enter adds a typed value, paste of a column adds several, suggestions from the values already stored); the stored value is the same `A|B|C` string, so the segment query and saved segments do not change. Custom Object fields get the operators and their suggestions from the Custom Objects plugin; without it those fields simply have no suggestions. | Segment form | `EventListener/SegmentTextInOperatorSubscriber.php`, `EventListener/SegmentInChipsSubscriber.php`, `Resources/js/segment-in-chips.js`, `Controller/SegmentFilterValuesController.php` (`GET /s/segment-filter-values`), `Service/SegmentFilterValues.php` | Mautic 5.2 |
+| In the "Filtros" tab of the segment page, the values of an including / excluding filter are shown one by one as badges, not as a text joined with `|`. | Segment page | `Service/SegmentFilterPresenter.php`, `Resources/views/Segment/filters.html.twig` | Mautic 5.2 |
+| Not a bug, a clarity choice: the live mode button of the contact list only toggled a class that barely changes how the button looks, so there was no way to tell if it was on. While on, its icon is the spinning loader of the segment's Update line; off, the normal icon. | Contact list | `EventListener/ContactLiveModeSubscriber.php` | Mautic 5.2 |
 
 ## Adding a new fix
 
@@ -116,6 +119,8 @@ docker exec mautic-mautic_web-1 sh -c "cd /var/www/html/docroot/plugins/MauticPa
 ### Live test (real server)
 
 `mautic/scripts/test-contacts-tables.sh` checks the segment and campaign contact tables (table not cards, columns as in Contact Settings, custom field value, hidden first cell, sorting).
+
+`mautic/scripts/test-segment-in-chips.sh` checks including / excluding on text fields: the operators offered (contact, company and Custom Object fields), both suggestion routes (contact/company here, Custom Objects in its plugin), the chips script on the segment form, and real segments filtering with `A|B`. It prints counts only. The chips' look and keys are checked by hand in the browser.
 
 `mautic/scripts/test-segment-update-status.sh` logs in like a browser and checks the
 `/s/segment-rebuild/{id}/status` route (answer, 404s, login redirect, GET only), what the
