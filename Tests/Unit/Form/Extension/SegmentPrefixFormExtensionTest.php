@@ -161,4 +161,31 @@ class SegmentPrefixFormExtensionTest extends TestCase
         $this->assertSame([], $this->errors($form));
         $this->assertNull($this->remembered);
     }
+
+    public function testThePublicNameIsAlwaysPrefixAndName(): void
+    {
+        $segment = new LeadList();
+        $form    = $this->form($segment);
+        $form->submit(['name' => 'Onboarding', 'publicName' => 'qualquer coisa', 'prefix' => 'Compras']);
+
+        $this->assertSame('Compras - Onboarding', $segment->getPublicName());
+    }
+
+    public function testNoPublicNameTypedAlsoGetsPrefixAndName(): void
+    {
+        $segment = new LeadList();
+        $form    = $this->form($segment);
+        $form->submit(['name' => 'Onboarding', 'prefix' => 'Vendas'], false);
+
+        $this->assertSame('Vendas - Onboarding', $segment->getPublicName());
+    }
+
+    public function testAPatchWithoutThePrefixUsesTheStoredOne(): void
+    {
+        $segment = new LeadList();
+        $form    = $this->form($segment, ['Compras'], 'Compras');
+        $form->submit(['name' => 'Outro nome'], false);
+
+        $this->assertSame('Compras - Outro nome', $segment->getPublicName());
+    }
 }
