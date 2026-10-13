@@ -8,6 +8,7 @@ use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Form\Type\ListType;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentAlias;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixes;
+use MauticPlugin\MauticPatchesBundle\Service\SegmentPublicName;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -22,6 +23,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * and the segments API (POST/PATCH/PUT /api/segments, key "prefix") both use ListType, so one field covers both. Core's
  * template does not list it, but form_end() renders it at the end of the form; SegmentPrefixFieldSubscriber's script
  * moves it before the name. Core is not touched.
+ *
+ * The public name is always "prefix - name" (SegmentPublicName), whatever was typed there.
  *
  * It also gives the segment an alias made of prefix and name, letters and numbers only, when none was typed (SegmentAlias).
  *
@@ -77,6 +80,14 @@ class SegmentPrefixFormExtension extends AbstractTypeExtension
 
             if ($segment instanceof LeadList && $field->isSubmitted() && is_string($field->getData()) && '' !== $field->getData()) {
                 $this->store->remember($segment, $field->getData());
+            }
+
+            // The public name is always "prefix - name", whatever was typed.
+            if ($segment instanceof LeadList) {
+                $prefix = is_string($field->getData()) && '' !== $field->getData() ? $field->getData() : $this->store->get($segment->getId());
+                if (null !== $prefix && '' !== $prefix) {
+                    $segment->setPublicName(SegmentPublicName::generate($prefix, (string) $segment->getName()));
+                }
             }
 
             // No alias typed: prefix and name, letters and numbers only. An alias that was typed is left as it is.
