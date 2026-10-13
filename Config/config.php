@@ -47,6 +47,12 @@ return [
                 'method'       => 'GET',
                 'requirements' => ['id' => '\\d+'],
             ],
+            // The suggestions of the including / excluding chips of the segment form, for a contact or company text field.
+            'mautic_patches_segment_filter_values' => [
+                'path'       => '/segment-filter-values',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\SegmentFilterValuesController::valuesAction',
+                'method'     => 'GET',
+            ],
             // Settings > Performance: where the time of the API goes, and the live diagnostics.
             'mautic_patches_performance' => [
                 'path'       => '/performance',
