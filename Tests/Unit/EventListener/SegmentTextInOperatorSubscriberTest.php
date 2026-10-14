@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\LeadBundle\Event\LeadListFiltersChoicesEvent;
 use Mautic\LeadBundle\LeadEvents;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentTextInOperatorSubscriber;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -24,9 +25,7 @@ class SegmentTextInOperatorSubscriberTest extends TestCase
         return $event->getChoices();
     }
 
-    /**
-     * @dataProvider textTypes
-     */
+    #[DataProvider('textTypes')]
     public function testContactAndCompanyTextFieldsGetIncludingAndExcludingAfterNotLike(string $object, string $type): void
     {
         $choices = $this->choicesAfter([$object => ['f' => ['properties' => ['type' => $type], 'operators' => self::TEXT]]]);

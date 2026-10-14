@@ -6,6 +6,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
 use Doctrine\DBAL\Connection;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentFilterValues;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -53,9 +54,7 @@ class SegmentFilterValuesTest extends TestCase
         $this->values->find('lead', 'email', 'a%_b', 9999);
     }
 
-    /**
-     * @dataProvider notTextTypes
-     */
+    #[DataProvider('notTextTypes')]
     public function testAFieldThatIsNotTextIsRefused(?string $type): void
     {
         $this->connection->method('fetchOne')->willReturn($type ?? false);

@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\DarkThemeTableSubscriber;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class DarkThemeTableSubscriberTest extends TestCase
@@ -40,9 +41,7 @@ class DarkThemeTableSubscriberTest extends TestCase
         return ['dark' => ['dark'], 'solarized dark' => ['solarized-dark']];
     }
 
-    /**
-     * @dataProvider darkThemes
-     */
+    #[DataProvider('darkThemes')]
     public function testStripedOddRowsFollowTheThemeInDarkThemes(string $theme): void
     {
         $this->assertStringContainsString(
@@ -51,9 +50,7 @@ class DarkThemeTableSubscriberTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider darkThemes
-     */
+    #[DataProvider('darkThemes')]
     public function testHoverOfStripedRowsFollowsTheThemeAndComesAfterTheOddRule(string $theme): void
     {
         $css  = $this->css();
@@ -87,9 +84,7 @@ class DarkThemeTableSubscriberTest extends TestCase
         $this->assertSame([], $event->getContent());
     }
 
-    /**
-     * @dataProvider darkThemes
-     */
+    #[DataProvider('darkThemes')]
     public function testHighlightedNewRowsGetADarkTintInTheDarkThemes(string $theme): void
     {
         $css = $this->css();

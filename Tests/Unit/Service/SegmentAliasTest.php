@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
 use MauticPlugin\MauticPatchesBundle\Service\SegmentAlias;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class SegmentAliasTest extends TestCase
 {
-    /**
-     * @dataProvider cases
-     */
+    #[DataProvider('cases')]
     public function testGenerate(string $prefix, string $name, string $expected): void
     {
         $this->assertSame($expected, SegmentAlias::generate($prefix, $name));
