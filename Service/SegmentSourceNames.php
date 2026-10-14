@@ -19,13 +19,18 @@ final class SegmentSourceNames
     public static function apply(array $names, array $prefixes): array
     {
         foreach ($names as $id => $name) {
-            $prefix = $prefixes[(int) $id] ?? '';
-            if ('' !== $prefix) {
-                $names[$id] = $prefix.' - '.$name;
-            }
+            $names[$id] = self::label($name, $prefixes[(int) $id] ?? '');
         }
         asort($names);
 
         return $names;
+    }
+
+    /**
+     * One name: "PREFIX - Name", or the name itself when the segment has no prefix.
+     */
+    public static function label(string $name, string $prefix): string
+    {
+        return '' === $prefix ? $name : $prefix.' - '.$name;
     }
 }
