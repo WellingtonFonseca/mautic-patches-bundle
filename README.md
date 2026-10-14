@@ -121,19 +121,15 @@ docker exec mautic-mautic_web-1 sh -c "cd /var/www/html/docroot/plugins/MauticPa
 
 ### Live test (real server)
 
-`mautic/scripts/test-contacts-tables.sh` checks the segment and campaign contact tables (table not cards, columns as in Contact Settings, custom field value, hidden first cell, sorting).
+`mautic/scripts/5/test-contacts-tables.sh` checks the segment and campaign contact tables (table not cards, columns as in Contact Settings, custom field value, hidden first cell, sorting).
 
-`mautic/scripts/test-segment-in-chips.sh` checks including / excluding on text fields: the operators offered (contact, company and Custom Object fields), both suggestion routes (contact/company here, Custom Objects in its plugin), the chips script on the segment form, and real segments filtering with `A|B`. It prints counts only. The chips' look and keys are checked by hand in the browser.
+`mautic/scripts/5/test-segment-in-chips.sh` checks including / excluding on text fields: the operators offered (contact, company and Custom Object fields), both suggestion routes (contact/company here, Custom Objects in its plugin), the chips script on the segment form, and real segments filtering with `A|B`. It prints counts only. The chips' look and keys are checked by hand in the browser.
 
-`mautic/scripts/test-segment-update-status.sh` logs in like a browser and checks the
+`mautic/scripts/5/test-segment-update-status.sh` logs in like a browser and checks the
 `/s/segment-rebuild/{id}/status` route (answer, 404s, login redirect, GET only), what the
 segment list carries for the script, and the whole round trip: baseline date, the click, the
 date changing, and it being the one in the database. Run it with the stack up.
 
-When core changes (for example the move to Mautic 7), run all three: PHPUnit, the Node tests and
+When core changes, run all three: PHPUnit, the Node tests and
 the live script. The live one is what tells whether the routes, the permissions and the markup the
 scripts depend on (`.segment-last-built`, `a[href*="/s/segment-rebuild/"]`) still exist.
-
-## Mautic 7
-
-Not ported yet: the bundle does not load on Mautic 7 (the unit and Node tests pass there, the plugin itself breaks the container). Three things stop it: `CampaignContactsController::contactsAction` needs the `: Response` return type; `SegmentContactsController` extends core's `ListController`, which is `final` in Mautic 7; `onPluginUpdate` takes `MauticFactory`, which no longer exists. Every patch also has to be checked in the browser on 7, since the core may have fixed some of them.

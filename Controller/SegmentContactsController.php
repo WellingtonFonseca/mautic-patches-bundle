@@ -5,21 +5,18 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Controller;
 
 use Mautic\CoreBundle\Factory\PageHelperFactoryInterface;
-use Mautic\CoreBundle\Controller\FormController;
 use Mautic\CoreBundle\Helper\InputHelper;
 use Mautic\LeadBundle\Controller\ListController;
 use Mautic\LeadBundle\Security\Permissions\LeadPermissions;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The contacts tab of a segment's page as the contact list table (see ContactsTableTrait). It takes over core's route
  * `mautic_segment_contacts` (same path, same name, so the tab's data-target-url, the pagination and the filter form
  * keep working): the plugin's routes load after core's and a route name is unique, so this one wins. The filter
- * logic is a copy of ListController::contactsAction. It extends FormController, not ListController, which is final
- * in Mautic 7.
+ * logic is a copy of ListController::contactsAction.
  */
-class SegmentContactsController extends FormController
+class SegmentContactsController extends ListController
 {
     use ContactsTableTrait;
 
@@ -27,7 +24,7 @@ class SegmentContactsController extends FormController
      * @param int $objectId
      * @param int $page
      */
-    public function contactsAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, $objectId, $page = 1): Response
+    public function contactsAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, $objectId, $page = 1)
     {
         $session = $request->getSession();
         $session->set('mautic.segment.contact.page', $page);
