@@ -30,6 +30,11 @@
         return result;
     }
 
+    // What the copy button puts in the clipboard: one value per line (a column), which add() reads back.
+    function lines(values) {
+        return values.join('\n');
+    }
+
     function remove(values, index) {
         return values.filter(function (_, i) { return i !== index; });
     }
@@ -54,7 +59,7 @@
         return (operator === 'in' || operator === '!in') && inputType === 'text';
     }
 
-    var api = {parse: parse, join: join, add: add, remove: remove, suggestions: suggestions, url: url, wants: wants};
+    var api = {parse: parse, join: join, lines: lines, add: add, remove: remove, suggestions: suggestions, url: url, wants: wants};
 
     // ---- the widget (DOM; mQuery is Mautic's jQuery) ----
     function enhance($, input, cfg) {
@@ -67,12 +72,16 @@
         var $box     = $('<div class="form-control segment-in-chips" style="height:auto;min-height:34px;padding:3px 6px;position:relative;cursor:text"></div>');
         var $typing  = $('<input type="text" autocomplete="off" style="border:0;outline:0;background:transparent;color:inherit;min-width:140px;width:auto;flex:1">');
         var $menu    = $('<ul class="dropdown-menu" style="display:none;max-height:240px;overflow:auto;width:100%;left:0;top:100%"></ul>');
+        var $copy    = $('<span class="input-group-addon postaddon" title="Copiar" style="cursor:pointer"><i class="ri-file-copy-line"></i></span>');
+        var $group   = $('<div class="input-group" style="display:flex"></div>');
         var request  = null;
         var timer    = null;
         var active   = -1;
 
-        $input.hide().attr('data-in-chips', '1').after($box);
-        $box.css({display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center'});
+        $input.hide().attr('data-in-chips', '1').after($group);
+        $group.append($box).append($copy);
+        $box.css({display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center', flex: '1'});
+        $copy.css({display: 'flex', alignItems: 'center', width: 'auto'});
 
         function store() {
             $input.val(join(values)).trigger('change');
@@ -90,6 +99,22 @@
                 }).appendTo($chip);
                 $chip.insertBefore($typing);
             });
+        }
+
+        function copy() {
+            var text = lines(values);
+            var done = function () {
+                $copy.attr('title', 'Copiado').find('i').attr('class', 'ri-check-line');
+                setTimeout(function () { $copy.attr('title', 'Copiar').find('i').attr('class', 'ri-file-copy-line'); }, 1500);
+            };
+            if (root.navigator && root.navigator.clipboard && root.isSecureContext) {
+                root.navigator.clipboard.writeText(text).then(done);
+                return;
+            }
+            var $area = $('<textarea style="position:fixed;opacity:0"></textarea>').val(text).appendTo('body');
+            $area[0].select();
+            try { if (root.document.execCommand('copy')) { done(); } } catch (e) { /* nothing to do: the clipboard is blocked */ }
+            $area.remove();
         }
 
         function close() {
@@ -158,6 +183,7 @@
             commit($typing.val());
         });
 
+        $copy.on('click', function (e) { e.preventDefault(); copy(); });
         $box.on('click', function () { $typing.focus(); }).append($typing).append($menu);
         draw();
     }

@@ -47,6 +47,12 @@ test('remove: takes one value out by its position', () => {
     assert.deepStrictEqual(chips.remove(['A'], 5), ['A']);
 });
 
+test('lines: the values to copy, one per line; pasting them back gives the same values', () => {
+    assert.strictEqual(chips.lines(['A', 'B', 'C']), 'A\nB\nC');
+    assert.strictEqual(chips.lines([]), '');
+    assert.deepStrictEqual(chips.add([], chips.lines(['A', 'B x', 'C'])), ['A', 'B x', 'C']);
+});
+
 test('suggestions: hide what is already chosen and keep the order', () => {
     assert.deepStrictEqual(chips.suggestions(['a', 'b', 'c'], ['b']), ['a', 'c']);
 });
