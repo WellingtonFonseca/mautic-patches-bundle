@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle;
 use Doctrine\DBAL\Schema\Schema;
 use Mautic\PluginBundle\Bundle\PluginBundleBase;
 use Mautic\PluginBundle\Entity\Plugin;
+use MauticPlugin\MauticPatchesBundle\Entity\CampaignPrefixValue;
 use MauticPlugin\MauticPatchesBundle\Entity\SegmentPrefixValue;
 
 class MauticPatchesBundle extends PluginBundleBase
@@ -23,6 +24,10 @@ class MauticPatchesBundle extends PluginBundleBase
     {
         if (!empty($metadata[SegmentPrefixValue::class]) && (null === $installedSchema || !$installedSchema->hasTable(SegmentPrefixValue::TABLE_NAME))) {
             self::installPluginSchema([$metadata[SegmentPrefixValue::class]], $factory);
+        }
+        // The campaign prefix table, added in 0.5.0.
+        if (!empty($metadata[CampaignPrefixValue::class]) && (null === $installedSchema || !$installedSchema->hasTable(CampaignPrefixValue::TABLE_NAME))) {
+            self::installPluginSchema([$metadata[CampaignPrefixValue::class]], $factory);
         }
     }
 }

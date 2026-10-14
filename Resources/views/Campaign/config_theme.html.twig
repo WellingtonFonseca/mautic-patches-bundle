@@ -1,0 +1,18 @@
+{# Core's theme of the campaign settings tab lists its fields one by one, so the Prefixos box is added after them. #}
+{% extends '@MauticCampaign/FormTheme/Config/_config_campaignconfig_widget.html.twig' %}
+
+{% block _config_campaignconfig_widget %}
+{{ parent() }}
+<div class="panel panel-primary">
+    <div class="panel-heading">
+        <h3 class="panel-title">{{ 'mautic.patches.campaign.prefixes.label'|trans }}</h3>
+    </div>
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-6">
+                {{ form_row(form.campaign_prefixes) }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
