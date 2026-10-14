@@ -8,7 +8,6 @@ use Mautic\CoreBundle\Factory\PageHelperFactoryInterface;
 use Mautic\LeadBundle\Entity\LeadRepository;
 use Mautic\LeadBundle\Services\ContactColumnsDictionary;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Service\Attribute\Required;
 
 /**
@@ -40,7 +39,7 @@ trait ContactsTableTrait
      *     orderBy: string
      * } $spec container = the selector of the tab pane the table is loaded into (the target of sorting/paging)
      */
-    private function contactsTable(Request $request, PageHelperFactoryInterface $pageHelperFactory, array $spec): Response
+    private function contactsTable(Request $request, PageHelperFactoryInterface $pageHelperFactory, array $spec)
     {
         $sessionVar = $spec['sessionVar'];
         $route      = $spec['route'];
