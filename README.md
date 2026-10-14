@@ -26,7 +26,7 @@ plugin's bundle class name.
    `docker-compose.yml`:
    ```yaml
    volumes:
-     - ../mautic-patches-bundle:/var/www/html/docroot/plugins/MauticPatchesBundle:z
+     - ../mautic-patches-bundle-5:/var/www/html/docroot/plugins/MauticPatchesBundle:z
    ```
    applied to `mautic_web`, `mautic_cron`, and `mautic_worker` (all three
    need the code, not just the web container).
