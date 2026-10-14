@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Controller;
 use Mautic\CampaignBundle\Controller\CampaignController;
 use Mautic\CoreBundle\Factory\PageHelperFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The contacts tab of a campaign's page as the contact list table (see ContactsTableTrait). It takes over core's
@@ -27,9 +28,9 @@ class CampaignContactsController extends CampaignController
         $objectId,
         $page = 1,
         $count = null,
-        \DateTimeInterface $dateFrom = null,
-        \DateTimeInterface $dateTo = null
-    ) {
+        ?\DateTimeInterface $dateFrom = null,
+        ?\DateTimeInterface $dateTo = null
+    ): Response {
         $request->getSession()->set('mautic.campaign.contact.page', $page);
 
         return $this->contactsTable($request, $pageHelperFactory, [
