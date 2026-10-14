@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Mautic\CoreBundle\DependencyInjection\MauticCoreExtension;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Entity\CampaignRepository;
+use Mautic\CampaignBundle\Model\CampaignModel;
+use MauticPlugin\MauticPatchesBundle\Model\CampaignPrefixModel;
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Entity\LeadListRepository;
 use MauticPlugin\MauticPatchesBundle\Entity\CampaignPrefixRepository;
@@ -50,6 +52,12 @@ return function (ContainerConfigurator $configurator): void {
     $services->set(CampaignRepository::class, CampaignPrefixRepository::class)
         ->args([service('doctrine'), Campaign::class])
         ->tag('doctrine.repository_service');
+
+    // The campaign model names the segments of the contact source "PREFIX - Name": core's service id becomes ours.
+    $services->set(CampaignModel::class, CampaignPrefixModel::class)
+        ->autowire()
+        ->autoconfigure()
+        ->public();
 
     // A plain string argument cannot be autowired.
     $services->set(SegmentRebuildLauncher::class)
