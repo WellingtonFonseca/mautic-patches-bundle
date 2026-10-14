@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\DarkThemeButtonSubscriber;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class DarkThemeButtonSubscriberTest extends TestCase
@@ -45,9 +46,7 @@ class DarkThemeButtonSubscriberTest extends TestCase
         return ['hover' => [':hover'], 'active' => [':active'], 'focus' => [':focus']];
     }
 
-    /**
-     * @dataProvider states
-     */
+    #[DataProvider('states')]
     public function testTheLightButtonsGetDarkTextInTheDarkTheme(string $state): void
     {
         $css = $this->css();
@@ -65,9 +64,7 @@ class DarkThemeButtonSubscriberTest extends TestCase
         $this->assertStringContainsString(':root[theme="dark"] .btn-primary+.btn-primary:not(.dropdown-toggle):not([disabled]):not(.disabled):hover i', $this->css());
     }
 
-    /**
-     * @dataProvider otherThemes
-     */
+    #[DataProvider('otherThemes')]
     public function testOnlyTheDarkThemeIsTouched(string $theme): void
     {
         // The other themes keep a readable pair (contrast checked against core's own variables).

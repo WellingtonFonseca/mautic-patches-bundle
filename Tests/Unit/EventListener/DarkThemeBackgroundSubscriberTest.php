@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\DarkThemeBackgroundSubscriber;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class DarkThemeBackgroundSubscriberTest extends TestCase
@@ -44,9 +45,7 @@ class DarkThemeBackgroundSubscriberTest extends TestCase
         return ['dark' => ['dark'], 'solarized dark' => ['solarized-dark']];
     }
 
-    /**
-     * @dataProvider darkThemes
-     */
+    #[DataProvider('darkThemes')]
     public function testWhiteUtilityClassesFollowTheThemeAndKeepImportant(string $theme): void
     {
         $css = $this->css();
@@ -59,9 +58,7 @@ class DarkThemeBackgroundSubscriberTest extends TestCase
         }
     }
 
-    /**
-     * @dataProvider darkThemes
-     */
+    #[DataProvider('darkThemes')]
     public function testTheModalRuleOfTheCoreIsBeatenToo(string $theme): void
     {
         $this->assertStringContainsString(':root[theme="'.$theme.'"] .modal .box-layout .bg-auto{', $this->css());

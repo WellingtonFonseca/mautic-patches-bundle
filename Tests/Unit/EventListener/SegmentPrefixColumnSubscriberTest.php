@@ -9,6 +9,7 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentPrefixColumnSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -70,9 +71,7 @@ class SegmentPrefixColumnSubscriberTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider sortStates
-     */
+    #[DataProvider('sortStates')]
     public function testTheMarkerCarriesTheSortStateOfTheListsSessionOrder(array $session, string $expected): void
     {
         $event = new CustomContentEvent('some_view', 'segment.name', ['item' => new LeadList()]);

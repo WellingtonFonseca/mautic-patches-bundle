@@ -10,6 +10,7 @@ use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentListButtonSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuilder;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -109,9 +110,7 @@ class SegmentListButtonSubscriberTest extends TestCase
         return ['edit' => ['edit'], 'clone' => ['clone'], 'new' => ['new']];
     }
 
-    /**
-     * @dataProvider otherSegmentActions
-     */
+    #[DataProvider('otherSegmentActions')]
     public function testNoDetailButtonOnTheOtherSegmentScreens(string $action): void
     {
         $this->rebuilder->method('canRebuild')->willReturn(true);
@@ -146,9 +145,7 @@ class SegmentListButtonSubscriberTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider otherPlaces
-     */
+    #[DataProvider('otherPlaces')]
     public function testNothingElsewhere(string $location, string $route): void
     {
         $this->rebuilder->method('canRebuild')->willReturn(true);

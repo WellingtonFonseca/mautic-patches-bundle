@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Resources;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -40,9 +41,7 @@ class LastBuiltTemplateTest extends TestCase
         return [['en_US'], ['pt_BR']];
     }
 
-    /**
-     * @dataProvider languages
-     */
+    #[DataProvider('languages')]
     public function testTheUpdatingTextExistsInEveryLanguage(string $locale): void
     {
         $ini = (string) file_get_contents(__DIR__.'/../../../Translations/'.$locale.'/messages.ini');

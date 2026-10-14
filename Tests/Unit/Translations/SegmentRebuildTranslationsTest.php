@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Translations;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class SegmentRebuildTranslationsTest extends TestCase
@@ -19,9 +20,7 @@ class SegmentRebuildTranslationsTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider startedMessages
-     */
+    #[DataProvider('startedMessages')]
     public function testStartedMessageIsShortAndTranslated(string $locale, string $line): void
     {
         $file = file_get_contents(__DIR__.'/../../../Translations/'.$locale.'/flashes.ini');

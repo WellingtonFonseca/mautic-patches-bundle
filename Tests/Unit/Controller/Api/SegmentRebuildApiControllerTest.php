@@ -8,6 +8,7 @@ use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\Controller\Api\SegmentRebuildApiController;
 use MauticPlugin\MauticPatchesBundle\DTO\SegmentRebuildResult;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuilder;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -36,9 +37,7 @@ class SegmentRebuildApiControllerTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider statuses
-     */
+    #[DataProvider('statuses')]
     public function testErrorStatusesBecomeTheHttpCodeWithTheMessage(string $status, int $code): void
     {
         $this->rebuilder->method('request')->with(7)->willReturn(new SegmentRebuildResult($status, null, 'the message'));
