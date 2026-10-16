@@ -204,6 +204,8 @@
         root.mauticPatchesInChips = true;
 
         var run = function () { scan($, cfg); };
+        // a filter copied by segment-filter-duplicate.js asks for the same scan
+        root.mauticPatchesInChipsScan = run;
         var original = Mautic.onPageLoad;
         Mautic.onPageLoad = function () { var result = original.apply(this, arguments); run(); return result; };
         // The value input is replaced by an ajax answer whenever the operator, the field or the filter changes.
