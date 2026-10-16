@@ -8,6 +8,7 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignBuilderWaitLabelSubscriber;
 use PHPUnit\Framework\TestCase;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class CampaignBuilderWaitLabelSubscriberTest extends TestCase
 {
@@ -17,6 +18,20 @@ class CampaignBuilderWaitLabelSubscriberTest extends TestCase
         (new CampaignBuilderWaitLabelSubscriber())->injectViewCustomContent($event);
 
         return implode('', $event->getContent());
+    }
+
+    public function testTurnsTheInactionTextBackToTheWaitTextAfterAConditionOnly(): void
+    {
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')->willReturnCallback(static fn (string $key): string => $key);
+        $rewrites = (new CampaignBuilderWaitLabelSubscriber($translator))->rewrites();
+
+        $this->assertSame('mautic.campaign.connection.trigger.interval.label_inaction', $rewrites[0]['from']);
+        $this->assertSame('mautic.campaign.connection.trigger.interval.label', $rewrites[0]['to']);
+        $this->assertSame('mautic.campaign.connection.trigger.date.label_inaction', $rewrites[1]['from']);
+        $js = CampaignBuilderWaitLabelSubscriber::script($rewrites);
+        $this->assertStringContainsString('getAttribute("data-type")=="condition"', $js);
+        $this->assertSame([], (new CampaignBuilderWaitLabelSubscriber())->rewrites());
     }
 
     public function testSubscribesToCustomContentEvent(): void

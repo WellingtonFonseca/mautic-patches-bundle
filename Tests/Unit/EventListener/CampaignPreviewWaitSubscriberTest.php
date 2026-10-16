@@ -74,6 +74,28 @@ class CampaignPreviewWaitSubscriberTest extends TestCase
         $this->assertStringStartsWith('mautic.campaign.connection.trigger.interval.label_inaction ', $label);
     }
 
+    public function testTheNoPathOfAConditionWaitsLikeAnyEvent(): void
+    {
+        $condition = new Event();
+        $condition->setEventType(Event::TYPE_CONDITION);
+        $child = $this->event(1, Event::TRIGGER_MODE_INTERVAL, 1, 'd', Event::PATH_INACTION);
+        $child->setParent($condition);
+
+        $label = $this->subscriber()->label($child);
+
+        $this->assertStringStartsWith('mautic.campaign.connection.trigger.interval.label ', $label);
+    }
+
+    public function testTheNoPathOfADecisionKeepsTheInactionText(): void
+    {
+        $decision = new Event();
+        $decision->setEventType(Event::TYPE_DECISION);
+        $child = $this->event(1, Event::TRIGGER_MODE_INTERVAL, 1, 'd', Event::PATH_INACTION);
+        $child->setParent($decision);
+
+        $this->assertStringStartsWith('mautic.campaign.connection.trigger.interval.label_inaction ', $this->subscriber()->label($child));
+    }
+
     public function testAnImmediateEventHasNoText(): void
     {
         $this->assertSame('', $this->subscriber()->label($this->event(1, Event::TRIGGER_MODE_IMMEDIATE)));

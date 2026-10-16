@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * The wait of a campaign event ("esperar 2 dias") in the Campaign Builder, shown as a strip on top of the node it
@@ -34,6 +35,10 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class CampaignBuilderWaitLabelSubscriber implements EventSubscriberInterface
 {
+    public function __construct(private ?TranslatorInterface $translator = null)
+    {
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -47,7 +52,7 @@ class CampaignBuilderWaitLabelSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $customContentEvent->addContent('<script>'.self::script().'</script>');
+        $customContentEvent->addContent('<script>'.self::script($this->rewrites()).'</script>');
     }
 
     /** The strip is attached to the card: the card loses its top corners, the strip has them. */
@@ -56,7 +61,30 @@ class CampaignBuilderWaitLabelSubscriber implements EventSubscriberInterface
         .'border:2px solid var(--border-strong-01,var(--border-subtle));border-bottom:0;border-radius:8px 8px 0 0}'
         .'.campaign-event-wait+.campaign-event-content{border-top-left-radius:0;border-top-right-radius:0}';
 
-    public static function script(): string
+    /**
+     * Core's text for an event on the no path ("entre 1 dia") is a deadline that only makes sense after a decision. After
+     * a condition the event simply waits, so the script turns the inaction text back into the plain one. Both texts come
+     * from the translator with their placeholders (%number%, %unit%, %full%...), so any language works.
+     *
+     * @return list<array{from: string, to: string}>
+     */
+    public function rewrites(): array
+    {
+        if (null === $this->translator) {
+            return [];
+        }
+
+        $rewrites = [];
+        foreach (['interval', 'date'] as $mode) {
+            $key = 'mautic.campaign.connection.trigger.'.$mode.'.label';
+            $rewrites[] = ['from' => $this->translator->trans($key.'_inaction'), 'to' => $this->translator->trans($key)];
+        }
+
+        return $rewrites;
+    }
+
+    /** @param list<array{from: string, to: string}> $rewrites */
+    public static function script(array $rewrites = []): string
     {
         return '(function(){'
             .'if(window.mauticPatchesWaitLabel){return;}'
@@ -98,8 +126,31 @@ class CampaignBuilderWaitLabelSubscriber implements EventSubscriberInterface
             .'window.mauticPatchesSetWait(document.querySelector("#preview-container #"+id),waits[id]);'
             .'});'
             .'};'
+            // after a condition the no path waits like any event: the inaction text is turned back into the plain one
+            .'var rewrites='.json_encode($rewrites, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP).';'
+            .'function plain(label){'
+            .'for(var i=0;i<rewrites.length;i++){'
+            .'var from=rewrites[i].from,parts=from.split(/%\w+%/),names=(from.match(/%\w+%/g)||[]).map(function(n){return n.slice(1,-1);});'
+            .'if(!names.length||label.indexOf(parts[0])!==0){continue;}'
+            .'var pos=parts[0].length,vals=[],ok=true;'
+            .'for(var k=0;k<names.length&&ok;k++){'
+            .'var tail=parts[k+1],end=(k===names.length-1)?(tail===""?label.length:label.lastIndexOf(tail)):label.indexOf(tail,pos);'
+            .'if(end<pos){ok=false;break;}'
+            .'vals.push(label.slice(pos,end));pos=end+tail.length;'
+            .'}'
+            .'if(!ok||pos!==label.length){continue;}'
+            .'return rewrites[i].to.replace(/%(\w+)%/g,function(x,n){var at=names.indexOf(n);return at<0?x:vals[at];});'
+            .'}'
+            .'return label;'
+            .'}'
+            .'function fromCondition(conns){'
+            .'var yes=false;'
+            .'conns.each(function(c){var s=document.getElementById(c.sourceId);if(s&&s.getAttribute("data-type")=="condition"){yes=true;}});'
+            .'return yes;'
+            .'}'
             .'function updateLabel(domEventId){'
             .'var label=typeof Mautic.campaignBuilderLabels[domEventId]=="undefined"?"":Mautic.campaignBuilderLabels[domEventId];'
+            .'if(label&&fromCondition(Mautic.campaignBuilderInstance.select({target:domEventId}))){label=plain(label);}'
             // the balloon on the lines that end at the node: gone, whatever jsPlumb returns
             .'Mautic.campaignBuilderInstance.select({target:domEventId}).each(function(conn){'
             .'var overlays=conn.getOverlays();'
