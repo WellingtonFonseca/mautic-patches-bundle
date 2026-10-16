@@ -96,6 +96,12 @@ class DarkThemeTableSubscriberTest extends TestCase
         $this->assertStringContainsString('{background-color:color-mix(in srgb,var(--support-warning) 26%,var(--layer-01))}', $css);
     }
 
+    #[DataProvider('darkThemes')]
+    public function testATableInsideATableIsNotWhiteInTheDarkThemes(string $theme): void
+    {
+        $this->assertStringContainsString(':root[theme="'.$theme.'"] .table .table{background-color:transparent}', $this->css());
+    }
+
     public function testTheLightThemesKeepTheCorePaleYellowRow(): void
     {
         $css = $this->css();

@@ -28,6 +28,10 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * dark tint of the theme's own warning color (--support-warning) over the row
  * layer, so the row still stands out and the text keeps its color.
  *
+ * And for a table inside a table (the details of an Audit row on the contact page, once expanded): core hard-codes
+ * `.table .table { background-color: #fff }`, a white block with the theme's light text. In the dark themes it is
+ * transparent, so the row it sits in shows through.
+ *
  * Injected the same way as CampaignBuilderOverlaySubscriber
  * (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left', rendered on
  * every admin page). The :root[theme=...] prefix makes these rules more
@@ -64,6 +68,10 @@ class DarkThemeTableSubscriber implements EventSubscriberInterface
                 .':root[theme="'.$theme.'"] .table-hover>tbody>tr:hover>.warning';
             $css .= $cell.'{background-color:color-mix(in srgb,var(--support-warning) 16%,var(--layer-01))}'
                 .$cellHover.'{background-color:color-mix(in srgb,var(--support-warning) 26%,var(--layer-01))}';
+        }
+
+        foreach (self::DARK_THEMES as $theme) {
+            $css .= ':root[theme="'.$theme.'"] .table .table{background-color:transparent}';
         }
 
         $customContentEvent->addContent('<style>'.$css.'</style>');
