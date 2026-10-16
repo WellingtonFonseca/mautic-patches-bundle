@@ -53,14 +53,19 @@
     function addButton($, $filter) {
         var $group = $filter.find('.segment-button').first();
         if (!$group.length || $group.find('.segment-filter-duplicate').length) { return; }
-        var $button = $('<a href="javascript: void(0);" class="btn btn-ghost btn-icon btn-nospin segment-filter-duplicate" size="sm" role="button"></a>')
+        var $button = $('<a href="javascript: void(0);" class="btn btn-ghost btn-icon btn-nospin segment-filter-duplicate" size="md" role="button"></a>')
             .attr({'aria-label': LABEL, title: LABEL})
             .append('<i class="ri-add-box-line" aria-hidden="true"></i>');
         $group.prepend($button);
     }
 
+    /** The three buttons of a filter (duplicate, core's copy, remove) at the size of the Custom Objects field buttons: md, large icon. */
+    function enlarge($filter) {
+        $filter.find('.segment-button .btn').attr('size', 'md').find('i').addClass('ri-lg');
+    }
+
     function scan($) {
-        $(FILTERS + ' .segment-filter').each(function () { addButton($, $(this)); });
+        $(FILTERS + ' .segment-filter').each(function () { addButton($, $(this)); enlarge($(this)); });
     }
 
     function install($, Mautic) {
@@ -84,7 +89,7 @@
         }
     }
 
-    var api = {install: install, copyOf: copyOf, addButton: addButton, LABEL: LABEL};
+    var api = {install: install, copyOf: copyOf, addButton: addButton, enlarge: enlarge, LABEL: LABEL};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
