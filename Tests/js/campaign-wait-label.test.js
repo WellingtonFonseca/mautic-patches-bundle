@@ -52,6 +52,8 @@ function load(conn, labels, node) {
         onPageLoad() { return 'core'; },
     };
     const ready = [];
+    const frames = [];
+    const flush = () => { while (frames.length) frames.shift()(); };
     const document = {
         head: {appendChild() {}},
         createElement() {
@@ -62,10 +64,10 @@ function load(conn, labels, node) {
         },
         getElementById: () => node.node,
     };
-    vm.runInNewContext(script(), {Mautic, window: {}, document, mQuery: (fn) => ready.push(fn)});
+    vm.runInNewContext(script(), {Mautic, window: {}, document, mQuery: (fn) => ready.push(fn), requestAnimationFrame: (fn) => frames.push(fn)});
     ready.forEach((fn) => fn());
 
-    return {Mautic, revalidated};
+    return {Mautic, revalidated, flush};
 }
 
 const strips = (node) => node.type.children.filter((c) => c.className === 'campaign-event-wait');
@@ -97,18 +99,53 @@ test('overlays given as an array are handled too', () => {
 
 test('the wait goes in one strip, before the card, and is reused when it changes', () => {
     const n = fakeNode();
-    const {Mautic, revalidated} = load(connection({}), {CampaignEvent_1: 'esperar 2 dias'}, n);
+    const {Mautic, revalidated, flush} = load(connection({}), {CampaignEvent_1: 'esperar 2 dias'}, n);
 
     Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    flush();
     assert.strictEqual(strips(n).length, 1);
     assert.strictEqual(n.type.children[0].className, 'campaign-event-wait');
     assert.strictEqual(n.type.children[0].lastChild.textContent, 'esperar 2 dias');
 
     Mautic.campaignBuilderLabels.CampaignEvent_1 = 'esperar 3 dias';
     Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    flush();
     assert.strictEqual(strips(n).length, 1);
     assert.strictEqual(strips(n)[0].lastChild.textContent, 'esperar 3 dias');
     assert.strictEqual(revalidated.length, 2);
+
+    // the same text again (core calls the function once per connection when the canvas opens): nothing to redo
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    flush();
+    assert.strictEqual(revalidated.length, 2);
+});
+
+test('many nodes changed in one moment are revalidated together, once each, on the next frame', () => {
+    const a = fakeNode();
+    const {Mautic, revalidated, flush} = load(connection({}), {CampaignEvent_1: 'esperar 2 dias', CampaignEvent_2: 'esperar 2 dias'}, a);
+    // the fake document answers every id with the same node: three updates, one real change
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_2');
+    Mautic.campaignBuilderLabels.CampaignEvent_1 = 'esperar 5 dias';
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    assert.strictEqual(revalidated.length, 0, 'nothing is laid out before the frame');
+    flush();
+    assert.strictEqual(revalidated.length, 1, 'the same node is revalidated once');
+});
+
+test('the helper of the Preview tab puts the strip on a given node', () => {
+    const n = fakeNode();
+    const ctx = {Mautic: {campaignBuilderLabels: {}, campaignBuilderInstance: null, onPageLoad() {}}};
+    const document = {head: {appendChild() {}}, createElement() { const el = {className: '', lastChild: {textContent: ''}, remove() {}}; Object.defineProperty(el, 'innerHTML', {set() {}}); return el; }, getElementById: () => null};
+    const window = {};
+    vm.runInNewContext(script(), {...ctx, window, document, mQuery: () => {}});
+
+    window.mauticPatchesSetWait(n.node, 'esperar 1 minuto');
+
+    assert.strictEqual(strips(n).length, 1);
+    assert.strictEqual(strips(n)[0].lastChild.textContent, 'esperar 1 minuto');
 });
 
 test('no wait: the strip is removed', () => {
@@ -134,4 +171,23 @@ test('the page load of core still runs, and the patch holds after it', () => {
 
     assert.strictEqual(Mautic.onPageLoad(), 'core');
     assert.doesNotThrow(() => Mautic.campaignBuilderUpdateLabel('CampaignEvent_1'));
+});
+
+test('the texts of the Preview tab are put on the nodes now and after every Mautic page load, and a new campaign replaces them', () => {
+    const preview = fakeNode();
+    const win = {};
+    const document = {head: {appendChild() {}}, createElement() { const el = {className: '', lastChild: {textContent: ''}, remove() { preview.type.children.splice(preview.type.children.indexOf(el), 1); }}; Object.defineProperty(el, 'innerHTML', {set() {}}); return el; },
+        getElementById: () => null, querySelector: (sel) => (sel === '#preview-container #CampaignEvent_172' ? preview.node : null)};
+    const Mautic = {campaignBuilderLabels: {}, campaignBuilderInstance: null, onPageLoad() { return 'core'; }};
+    vm.runInNewContext(script(), {Mautic, window: win, document, mQuery: () => {}});
+
+    win.mauticPatchesPreviewWaits = {CampaignEvent_172: 'esperar 1 minuto'};
+    // the node is not in the page yet (ajax): nothing to do, nothing breaks
+    assert.doesNotThrow(() => win.mauticPatchesApplyWaits());
+    assert.strictEqual(strips(preview).length, 1, 'now');
+
+    // a Mautic page load applies them again: unchanged, still one strip
+    assert.strictEqual(Mautic.onPageLoad(), 'core');
+    assert.strictEqual(strips(preview).length, 1);
+    assert.strictEqual(strips(preview)[0].lastChild.textContent, 'esperar 1 minuto');
 });

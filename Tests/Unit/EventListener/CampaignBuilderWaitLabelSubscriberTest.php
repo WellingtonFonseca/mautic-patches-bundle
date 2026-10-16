@@ -52,7 +52,16 @@ class CampaignBuilderWaitLabelSubscriberTest extends TestCase
         $this->assertStringContainsString('campaign-event-wait', $js);
         $this->assertStringContainsString('ri-time-line', $js);
         $this->assertStringContainsString('type.insertBefore(strip,type.firstChild)', $js);
-        $this->assertStringContainsString('Mautic.campaignBuilderInstance.revalidate(node)', $js);
+        $this->assertStringContainsString('i.revalidate(n)', $js);
+        $this->assertStringContainsString('requestAnimationFrame(', $js);
+    }
+
+    public function testSharesTheStripHelperAndSkipsAnUnchangedStrip(): void
+    {
+        $js = $this->content();
+
+        $this->assertStringContainsString('window.mauticPatchesSetWait=function(node,label)', $js);
+        $this->assertStringContainsString('else if(strip.lastChild.textContent===label){return;}', $js);
     }
 
     public function testTheStripUsesTheThemeVariablesAndJoinsTheCard(): void
@@ -66,7 +75,7 @@ class CampaignBuilderWaitLabelSubscriberTest extends TestCase
     {
         $js = $this->content();
 
-        $this->assertStringContainsString('Mautic.onPageLoad=function(){patch();return original.apply(this,arguments);}', $js);
+        $this->assertStringContainsString('Mautic.onPageLoad=function(){patch();var result=original.apply(this,arguments);window.mauticPatchesApplyWaits();return result;}', $js);
         $this->assertStringContainsString('mQuery(patch);', $js);
         $this->assertStringContainsString('if(window.mauticPatchesWaitLabel){return;}', $js);
     }
