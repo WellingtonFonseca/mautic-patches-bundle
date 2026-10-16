@@ -13,9 +13,9 @@ const {execFileSync} = require('node:child_process');
 
 const AUTOLOAD = process.env.AUTOLOAD || '/var/www/html/vendor/autoload.php';
 
-function script() {
+function script(rewrites = []) {
     return execFileSync('php', ['-r',
-        `require ${JSON.stringify(AUTOLOAD)}; require ${JSON.stringify(path.resolve(__dirname, '../../EventListener/CampaignBuilderWaitLabelSubscriber.php'))}; echo MauticPlugin\\MauticPatchesBundle\\EventListener\\CampaignBuilderWaitLabelSubscriber::script();`,
+        `require ${JSON.stringify(AUTOLOAD)}; require ${JSON.stringify(path.resolve(__dirname, '../../EventListener/CampaignBuilderWaitLabelSubscriber.php'))}; echo MauticPlugin\\MauticPatchesBundle\\EventListener\\CampaignBuilderWaitLabelSubscriber::script(json_decode(${JSON.stringify(JSON.stringify(rewrites))}, true));`,
     ], {encoding: 'utf8'});
 }
 
@@ -38,12 +38,12 @@ function fakeNode() {
         get firstChild() { return children[0]; },
         insertBefore(el, ref) { children.splice(children.indexOf(ref), 0, el); },
     };
-    const node = {querySelector: () => type};
+    const node = {querySelector: () => type, getAttribute: () => 'action'};
 
     return {node, type};
 }
 
-function load(conn, labels, node) {
+function load(conn, labels, node, rewrites = []) {
     const revalidated = [];
     const Mautic = {
         campaignBuilderLabels: labels,
@@ -64,7 +64,7 @@ function load(conn, labels, node) {
         },
         getElementById: () => node.node,
     };
-    vm.runInNewContext(script(), {Mautic, window: {}, document, mQuery: (fn) => ready.push(fn), requestAnimationFrame: (fn) => frames.push(fn)});
+    vm.runInNewContext(script(rewrites), {Mautic, window: {}, document, mQuery: (fn) => ready.push(fn), requestAnimationFrame: (fn) => frames.push(fn)});
     ready.forEach((fn) => fn());
 
     return {Mautic, revalidated, flush};
@@ -160,7 +160,7 @@ test('no wait: the strip is removed', () => {
 });
 
 test('a source (no .campaign-event-type) is left alone', () => {
-    const n = {node: {querySelector: () => null}, type: {children: []}};
+    const n = {node: {querySelector: () => null, getAttribute: () => 'source'}, type: {children: []}};
     const {Mautic} = load(connection({}), {CampaignEvent_1: 'x'}, n);
 
     assert.doesNotThrow(() => Mautic.campaignBuilderUpdateLabel('CampaignEvent_1'));
@@ -190,4 +190,49 @@ test('the texts of the Preview tab are put on the nodes now and after every Maut
     assert.strictEqual(Mautic.onPageLoad(), 'core');
     assert.strictEqual(strips(preview).length, 1);
     assert.strictEqual(strips(preview)[0].lastChild.textContent, 'esperar 1 minuto');
+});
+
+const REWRITES = [
+    {from: 'entre %number% %unit%', to: 'esperar %number% %unit%'},
+    {from: 'por %full%', to: 'esperar até %full%'},
+];
+
+test('after a condition the inaction text ("entre 1 dia") is turned back into the plain one', () => {
+    const n = fakeNode();
+    n.node.getAttribute = () => 'condition';
+    const {Mautic} = load(connection({}), {CampaignEvent_1: 'entre 1 dia'}, n, REWRITES);
+
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    assert.strictEqual(strips(n)[0].lastChild.textContent, 'esperar 1 dia');
+});
+
+test('the date text of the no path after a condition is turned back too', () => {
+    const n = fakeNode();
+    n.node.getAttribute = () => 'condition';
+    const {Mautic} = load(connection({}), {CampaignEvent_1: 'por 10 de outubro de 2026 às 09:00'}, n, REWRITES);
+
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    assert.strictEqual(strips(n)[0].lastChild.textContent, 'esperar até 10 de outubro de 2026 às 09:00');
+});
+
+test('after a decision the inaction text stays: it is a deadline there', () => {
+    const n = fakeNode();
+    n.node.getAttribute = () => 'decision';
+    const {Mautic} = load(connection({}), {CampaignEvent_1: 'entre 1 dia'}, n, REWRITES);
+
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    assert.strictEqual(strips(n)[0].lastChild.textContent, 'entre 1 dia');
+});
+
+test('a text that is not the inaction one is left alone after a condition', () => {
+    const n = fakeNode();
+    n.node.getAttribute = () => 'condition';
+    const {Mautic} = load(connection({}), {CampaignEvent_1: 'esperar 2 dias'}, n, REWRITES);
+
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    assert.strictEqual(strips(n)[0].lastChild.textContent, 'esperar 2 dias');
 });

@@ -56,10 +56,21 @@ class CampaignPreviewWaitSubscriber implements EventSubscriberInterface
         $customContentEvent->addContent('<script>'.self::script($labels).'</script>');
     }
 
-    /** The same text as core's builder: '' when the event runs at once. */
+    /**
+     * Core's "_inaction" text ("entre 1 dia", "within") is a deadline for a DECISION: the no path only runs if the contact
+     * did not act in time. A condition is evaluated once, at once, and its no path waits like any other event, so it
+     * keeps the plain "esperar" text. The builder does the same in CampaignBuilderWaitLabelSubscriber.
+     */
+    public static function isInactionWait(Event $event): bool
+    {
+        return Event::PATH_INACTION === $event->getDecisionPath()
+            && Event::TYPE_CONDITION !== $event->getParent()?->getEventType();
+    }
+
+    /** The same text as core's builder (except after a condition, see isInactionWait): '' when the event runs at once. */
     public function label(Event $event): string
     {
-        $inaction = Event::PATH_INACTION === $event->getDecisionPath() ? '_inaction' : '';
+        $inaction = self::isInactionWait($event) ? '_inaction' : '';
 
         if (Event::TRIGGER_MODE_INTERVAL === $event->getTriggerMode()) {
             $interval = $event->getTriggerInterval();
