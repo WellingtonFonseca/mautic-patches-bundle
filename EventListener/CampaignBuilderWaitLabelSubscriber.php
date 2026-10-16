@@ -1,0 +1,118 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MauticPlugin\MauticPatchesBundle\EventListener;
+
+use Mautic\CoreBundle\CoreEvents;
+use Mautic\CoreBundle\Event\CustomContentEvent;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+
+/**
+ * The wait of a campaign event ("esperar 2 dias") in the Campaign Builder, shown as a strip on top of the node it
+ * belongs to, instead of the balloon core draws on the connection line.
+ *
+ * Why not the balloon: it is a jsPlumb overlay at 65% of the line, so it hides behind other nodes, and core's
+ * Mautic.campaignBuilderUpdateLabel (campaign.js) has a bug: to drop the old balloon it loops over
+ * `conn.getOverlays().length`, but the jsPlumb that ships with Mautic (2.15.6) returns an object keyed by overlay
+ * id, not an array. `length` is undefined, nothing is removed, a second balloon (same id) is drawn and the old one is
+ * no longer tracked by jsPlumb, so it stays frozen when the node moves.
+ *
+ * This replaces that function. It removes every Label overlay of the connections that end at the node (through
+ * Object.keys, which works for an object and for an array) and puts the text core already computed
+ * (Mautic.campaignBuilderLabels[domEventId]) in a `.campaign-event-wait` strip at the top of the node's
+ * `.campaign-event-type`, with the clock icon (window.mauticPatchesSetWait, also used by the Preview tab of the campaign
+ * page, see CampaignPreviewWaitSubscriber). No text: the strip is removed. The node grows taller by the strip, so
+ * jsPlumb revalidates it to bring the endpoints and lines to the new size, but only when the strip changed (core calls
+ * the function once per connection when the canvas opens, so an unchanged strip costs nothing) and all the nodes of a
+ * moment together on the next animation frame (one layout, not one per node). The strip belongs to the node, so it
+ * follows it when it is dragged, copied or edited. The function is replaced on the first load and after every Mautic
+ * ajax page load (it wraps Mautic.onPageLoad), because campaign.js may load after this script.
+ *
+ * Injected the same way as CampaignBuilderOverlaySubscriber
+ * (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left').
+ */
+class CampaignBuilderWaitLabelSubscriber implements EventSubscriberInterface
+{
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            CoreEvents::VIEW_INJECT_CUSTOM_CONTENT => 'injectViewCustomContent',
+        ];
+    }
+
+    public function injectViewCustomContent(CustomContentEvent $customContentEvent): void
+    {
+        if ('page.header.left' !== $customContentEvent->getContext()) {
+            return;
+        }
+
+        $customContentEvent->addContent('<script>'.self::script().'</script>');
+    }
+
+    /** The strip is attached to the card: the card loses its top corners, the strip has them. */
+    public const STYLE = '.campaign-event-wait{display:flex;align-items:center;gap:6px;padding:4px 12px;font-size:14px;'
+        .'line-height:20px;white-space:nowrap;background:var(--layer-01);color:var(--text-secondary);'
+        .'border:2px solid var(--border-strong-01,var(--border-subtle));border-bottom:0;border-radius:8px 8px 0 0}'
+        .'.campaign-event-wait+.campaign-event-content{border-top-left-radius:0;border-top-right-radius:0}';
+
+    public static function script(): string
+    {
+        return '(function(){'
+            .'if(window.mauticPatchesWaitLabel){return;}'
+            .'window.mauticPatchesWaitLabel=true;'
+            .'var style=document.createElement("style");style.textContent='.json_encode(self::STYLE).';document.head.appendChild(style);'
+            // jsPlumb brings the lines to the new height of the node. Only when the strip really changed, and all the nodes
+            // of a moment in one go on the next frame: revalidating each one right after its strip is written makes the
+            // browser lay the page out again every time (a campaign of 150 waits opened 50% slower).
+            .'var pending=[],queued=false;'
+            .'function revalidate(node){'
+            .'if(!Mautic.campaignBuilderInstance){return;}'
+            .'if(pending.indexOf(node)<0){pending.push(node);}'
+            .'if(queued){return;}'
+            .'queued=true;'
+            .'requestAnimationFrame(function(){'
+            .'queued=false;var list=pending;pending=[];var i=Mautic.campaignBuilderInstance;'
+            .'if(!i){return;}'
+            .'list.forEach(function(n){try{i.revalidate(n);}catch(e){}});'
+            .'});'
+            .'}'
+            // the strip on a node: created, rewritten or removed; the preview of the campaign page uses it too
+            .'window.mauticPatchesSetWait=function(node,label){'
+            .'var type=node?node.querySelector(".campaign-event-type"):null;'
+            .'if(!type){return;}'
+            .'var strip=type.querySelector(":scope > .campaign-event-wait");'
+            .'if(!label){if(strip){strip.remove();revalidate(node);}return;}'
+            .'if(!strip){strip=document.createElement("div");strip.className="campaign-event-wait";'
+            .'strip.innerHTML=\'<i class="ri-time-line"></i><span></span>\';type.insertBefore(strip,type.firstChild);}'
+            .'else if(strip.lastChild.textContent===label){return;}'
+            .'strip.lastChild.textContent=label;'
+            .'revalidate(node);'
+            .'};'
+            // the Preview tab of the campaign page (CampaignPreviewWaitSubscriber) leaves its texts in
+            // window.mauticPatchesPreviewWaits; they are put on the nodes now and after every Mautic page load, because the
+            // content that comes over ajax is not in the page yet when its own inline script runs
+            .'window.mauticPatchesApplyWaits=function(){'
+            .'var waits=window.mauticPatchesPreviewWaits||{};'
+            .'Object.keys(waits).forEach(function(id){'
+            .'window.mauticPatchesSetWait(document.querySelector("#preview-container #"+id),waits[id]);'
+            .'});'
+            .'};'
+            .'function updateLabel(domEventId){'
+            .'var label=typeof Mautic.campaignBuilderLabels[domEventId]=="undefined"?"":Mautic.campaignBuilderLabels[domEventId];'
+            // the balloon on the lines that end at the node: gone, whatever jsPlumb returns
+            .'Mautic.campaignBuilderInstance.select({target:domEventId}).each(function(conn){'
+            .'var overlays=conn.getOverlays();'
+            .'Object.keys(overlays).forEach(function(key){'
+            .'if(overlays[key]&&overlays[key].type=="Label"){conn.removeOverlay(overlays[key].id);}'
+            .'});'
+            .'});'
+            .'window.mauticPatchesSetWait(document.getElementById(domEventId),label);'
+            .'}'
+            .'function patch(){if(Mautic.campaignBuilderUpdateLabel&&Mautic.campaignBuilderUpdateLabel!==updateLabel){Mautic.campaignBuilderUpdateLabel=updateLabel;}}'
+            .'var original=Mautic.onPageLoad;'
+            .'Mautic.onPageLoad=function(){patch();var result=original.apply(this,arguments);window.mauticPatchesApplyWaits();return result;};'
+            .'mQuery(patch);'
+            .'})();';
+    }
+}
