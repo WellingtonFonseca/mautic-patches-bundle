@@ -40,6 +40,28 @@ class CampaignBuilderWaitLabelSubscriberTest extends TestCase
         $this->assertStringContainsString('conn.removeOverlay(overlays[key].id)', $js);
     }
 
+    public function testNoBalloonIsDrawnOnTheLine(): void
+    {
+        $this->assertStringNotContainsString('addOverlay', $this->content());
+    }
+
+    public function testPutsTheWaitInAStripOnTopOfTheNode(): void
+    {
+        $js = $this->content();
+
+        $this->assertStringContainsString('campaign-event-wait', $js);
+        $this->assertStringContainsString('ri-time-line', $js);
+        $this->assertStringContainsString('type.insertBefore(strip,type.firstChild)', $js);
+        $this->assertStringContainsString('Mautic.campaignBuilderInstance.revalidate(node)', $js);
+    }
+
+    public function testTheStripUsesTheThemeVariablesAndJoinsTheCard(): void
+    {
+        $this->assertStringContainsString('var(--layer-01)', CampaignBuilderWaitLabelSubscriber::STYLE);
+        $this->assertStringContainsString('var(--text-secondary)', CampaignBuilderWaitLabelSubscriber::STYLE);
+        $this->assertStringContainsString('.campaign-event-wait+.campaign-event-content{border-top-left-radius:0', CampaignBuilderWaitLabelSubscriber::STYLE);
+    }
+
     public function testPatchesOnFirstLoadAndAfterEveryAjaxPageLoad(): void
     {
         $js = $this->content();

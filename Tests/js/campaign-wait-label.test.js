@@ -1,5 +1,5 @@
 // Runs the REAL script that CampaignBuilderWaitLabelSubscriber puts on every admin page (it replaces core's
-// Mautic.campaignBuilderUpdateLabel) against a fake jsPlumb connection whose getOverlays() returns an object keyed by id,
+// Mautic.campaignBuilderUpdateLabel: the wait goes in a strip on the node) against a fake jsPlumb connection whose getOverlays() returns an object keyed by id,
 // like jsPlumb 2.15.6 does.
 //
 //   docker exec mautic-mautic_web-1 sh -c "cd /var/www/html/docroot/plugins/MauticPatchesBundle && node --test 'Tests/js/*.test.js'"
@@ -21,51 +21,66 @@ function script() {
 
 // A connection like jsPlumb 2.15.6: overlays kept in an object by id; removeOverlay deletes the entry.
 function connection(overlays) {
-    const conn = {
+    return {
         sourceId: 'src', targetId: 'CampaignEvent_1', overlays: {...overlays},
         getOverlays() { return this.overlays; },
         removeOverlay(id) { delete this.overlays[id]; },
-        addOverlay([type, opts]) { this.overlays[opts.id] = {type, id: opts.id, label: opts.label}; },
+        addOverlay() { throw new Error('no balloon must be drawn on the line'); },
     };
-
-    return conn;
 }
 
-function load(conn, labels) {
+// A node: .campaign-event-type holding a first child (the card); a strip is created with createElement and inserted before it.
+function fakeNode() {
+    const children = [{className: 'campaign-event-content'}];
+    const type = {
+        children,
+        querySelector(sel) { return sel.includes('campaign-event-wait') ? children.find((c) => c.className === 'campaign-event-wait') || null : null; },
+        get firstChild() { return children[0]; },
+        insertBefore(el, ref) { children.splice(children.indexOf(ref), 0, el); },
+    };
+    const node = {querySelector: () => type};
+
+    return {node, type};
+}
+
+function load(conn, labels, node) {
+    const revalidated = [];
     const Mautic = {
         campaignBuilderLabels: labels,
-        campaignBuilderInstance: {select: () => ({each: (fn) => [conn].forEach(fn)})},
+        campaignBuilderInstance: {select: () => ({each: (fn) => [conn].forEach(fn)}), revalidate: (n) => revalidated.push(n)},
         campaignBuilderUpdateLabel() { throw new Error('core version must have been replaced'); },
         onPageLoad() { return 'core'; },
     };
     const ready = [];
-    vm.runInNewContext(script(), {Mautic, window: {}, mQuery: (fn) => ready.push(fn)});
+    const document = {
+        head: {appendChild() {}},
+        createElement() {
+            const el = {className: '', lastChild: {textContent: ''}, remove() { node.type.children.splice(node.type.children.indexOf(el), 1); }};
+            Object.defineProperty(el, 'innerHTML', {set(v) { el.html = v; }});
+
+            return el;
+        },
+        getElementById: () => node.node,
+    };
+    vm.runInNewContext(script(), {Mautic, window: {}, document, mQuery: (fn) => ready.push(fn)});
     ready.forEach((fn) => fn());
 
-    return Mautic;
+    return {Mautic, revalidated};
 }
 
-test('the old label is removed and the new one drawn: one label per connection', () => {
+const strips = (node) => node.type.children.filter((c) => c.className === 'campaign-event-wait');
+
+test('the balloon of the line is removed (overlays as an object) and nothing is drawn on the line', () => {
     const conn = connection({
-        'src_CampaignEvent_1_connectionLabel': {type: 'Label', id: 'src_CampaignEvent_1_connectionLabel', label: 'wait 2 days'},
+        'src_CampaignEvent_1_connectionLabel': {type: 'Label', id: 'src_CampaignEvent_1_connectionLabel'},
+        arrow: {type: 'Arrow', id: 'arrow'},
     });
-    const Mautic = load(conn, {CampaignEvent_1: 'wait 3 days'});
-
-    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
-    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
-
-    const labels = Object.values(conn.overlays).filter((o) => o.type === 'Label');
-    assert.strictEqual(labels.length, 1);
-    assert.strictEqual(labels[0].label, 'wait 3 days');
-});
-
-test('an empty label removes the old one and draws nothing', () => {
-    const conn = connection({a: {type: 'Label', id: 'a', label: 'wait 2 days'}, b: {type: 'Arrow', id: 'b'}});
-    const Mautic = load(conn, {});
+    const n = fakeNode();
+    const {Mautic} = load(conn, {CampaignEvent_1: 'esperar 2 dias'}, n);
 
     Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
 
-    assert.deepStrictEqual(Object.keys(conn.overlays), ['b']);
+    assert.deepStrictEqual(Object.keys(conn.overlays), ['arrow']);
 });
 
 test('overlays given as an array are handled too', () => {
@@ -73,16 +88,49 @@ test('overlays given as an array are handled too', () => {
     conn.getOverlays = () => [{type: 'Label', id: 'a'}];
     let removed = null;
     conn.removeOverlay = (id) => { removed = id; };
-    const Mautic = load(conn, {});
+    const {Mautic} = load(conn, {}, fakeNode());
 
     Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
 
     assert.strictEqual(removed, 'a');
 });
 
+test('the wait goes in one strip, before the card, and is reused when it changes', () => {
+    const n = fakeNode();
+    const {Mautic, revalidated} = load(connection({}), {CampaignEvent_1: 'esperar 2 dias'}, n);
+
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    assert.strictEqual(strips(n).length, 1);
+    assert.strictEqual(n.type.children[0].className, 'campaign-event-wait');
+    assert.strictEqual(n.type.children[0].lastChild.textContent, 'esperar 2 dias');
+
+    Mautic.campaignBuilderLabels.CampaignEvent_1 = 'esperar 3 dias';
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    assert.strictEqual(strips(n).length, 1);
+    assert.strictEqual(strips(n)[0].lastChild.textContent, 'esperar 3 dias');
+    assert.strictEqual(revalidated.length, 2);
+});
+
+test('no wait: the strip is removed', () => {
+    const n = fakeNode();
+    const {Mautic} = load(connection({}), {CampaignEvent_1: 'esperar 2 dias'}, n);
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    Mautic.campaignBuilderLabels.CampaignEvent_1 = '';
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    assert.strictEqual(strips(n).length, 0);
+});
+
+test('a source (no .campaign-event-type) is left alone', () => {
+    const n = {node: {querySelector: () => null}, type: {children: []}};
+    const {Mautic} = load(connection({}), {CampaignEvent_1: 'x'}, n);
+
+    assert.doesNotThrow(() => Mautic.campaignBuilderUpdateLabel('CampaignEvent_1'));
+});
+
 test('the page load of core still runs, and the patch holds after it', () => {
-    const conn = connection({});
-    const Mautic = load(conn, {});
+    const {Mautic} = load(connection({}), {}, fakeNode());
 
     assert.strictEqual(Mautic.onPageLoad(), 'core');
     assert.doesNotThrow(() => Mautic.campaignBuilderUpdateLabel('CampaignEvent_1'));
