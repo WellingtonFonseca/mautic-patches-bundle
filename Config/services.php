@@ -14,6 +14,7 @@ use MauticPlugin\MauticPatchesBundle\Entity\SegmentListRepository;
 use MauticPlugin\MauticPatchesBundle\Doctrine\CampaignRepositoryListener;
 use MauticPlugin\MauticPatchesBundle\Doctrine\SegmentRepositoryListener;
 use MauticPlugin\MauticPatchesBundle\Service\Performance\PerformanceLog;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignRebuildLauncher;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuildLauncher;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
@@ -62,6 +63,10 @@ return function (ContainerConfigurator $configurator): void {
     // A plain string argument cannot be autowired.
     $services->set(SegmentRebuildLauncher::class)
         ->args(['%kernel.project_dir%', null]);
+
+    // The marker files of the running campaign updates go to a folder in Mautic's logs dir (writable by the web user).
+    $services->set(CampaignRebuildLauncher::class)
+        ->args(['%kernel.project_dir%', '%kernel.logs_dir%/campaign-rebuild', null]);
 
     // The day files of the API timing, next to Mautic's own logs.
     $services->set(PerformanceLog::class)

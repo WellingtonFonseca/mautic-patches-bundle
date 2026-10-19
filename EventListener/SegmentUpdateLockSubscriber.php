@@ -48,7 +48,7 @@ class SegmentUpdateLockSubscriber implements EventSubscriberInterface
     public const MAX_WAIT_MS = 120000;
 
     // The "Updating..." text: bold, in the theme's link color (--link-primary, readable in light and dark), breathing softly. It is a fade (opacity), not movement, so it also runs for people who ask the system to reduce motion (on Windows, "Show animations" off): behind that setting it never showed.
-    private const STYLE = '@keyframes mauticPatchesPulse{0%,100%{opacity:1}50%{opacity:.35}}'
+    public const STYLE = '@keyframes mauticPatchesPulse{0%,100%{opacity:1}50%{opacity:.35}}'
         .'.mautic-patches-updating{color:var(--link-primary);font-weight:600}'
         .'.mautic-patches-updating-text{display:inline-block;animation:mauticPatchesPulse 1.2s ease-in-out infinite}';
 
@@ -72,23 +72,32 @@ class SegmentUpdateLockSubscriber implements EventSubscriberInterface
         $customContentEvent->addContent('<style>'.self::STYLE.'</style>');
     }
 
-    public static function script(int $pollMs, int $maxWaitMs): string
+    /**
+     * The page script. $kind picks what it locks: 'segment' (the default; done = the segment's last built date changed) or
+     * 'campaign' (CampaignUpdateLockSubscriber; a campaign has no such date, so done = the status says it is no longer running,
+     * and the first question waits one poll so the click's request has started the update).
+     */
+    public static function script(int $pollMs, int $maxWaitMs, string $kind = 'segment'): string
     {
+        $campaign = 'campaign' === $kind;
+        $link     = 'a[href*=\"/s/'.$kind.'-rebuild/\"]';
+        $line     = $campaign ? '.campaign-updating-line' : '.segment-last-built';
+
         return '(function(){'
-            .'if(window.mauticPatchesSegmentUpdateLock){return;}'
-            .'window.mauticPatchesSegmentUpdateLock=true;'
+            .'if(window.mauticPatches'.ucfirst($kind).'UpdateLock){return;}'
+            .'window.mauticPatches'.ucfirst($kind).'UpdateLock=true;'
             .'var locked={};'
-            .'var re=/\/s\/segment-rebuild\/(\d+)/;'
+            .'var re=/\/s\/'.$kind.'-rebuild\/(\d+)/;'
             .'function idOf(a){var m=re.exec(a.getAttribute("href")||"");return m?m[1]:null;}'
             .'function decorate(){'
             // The button: only disabled, its icon stays as it is.
-            .'mQuery("a[href*=\"/s/segment-rebuild/\"]").each(function(){'
+            .'mQuery("'.$link.'").each(function(){'
             .'var id=idOf(this);if(!id||!locked[id]){return;}'
             .'mQuery(this).addClass("disabled").attr("aria-disabled","true").css("pointer-events","none");'
             .'});'
             // The "Updated on ..." line of that segment becomes "<spinner> Updating...". The spinner is core's own loader icon (Remix Icon loader-3-line, same shape as ri-loader-3-line) drawn as an inline SVG instead of through the icon font: the font glyph sat off-center in the box core gives it and wobbled when turned. An SVG in a square 24x24 viewBox turns on its center; core's own 'ri-spin' keyframes do the turning.
-            .'mQuery(".segment-last-built").each(function(){'
-            .'var $line=mQuery(this),id=String($line.data("segment-id"));'
+            .'mQuery("'.$line.'").each(function(){'
+            .'var $line=mQuery(this),id=String($line.data("'.$kind.'-id"));'
             .'if(!locked[id]||$line.data("mauticPatchesUpdating")){return;}'
             .'$line.data("mauticPatchesUpdating",true);'
             .'var $spinner=mQuery(\''.self::SPINNER_SVG.'\');'
@@ -97,14 +106,14 @@ class SegmentUpdateLockSubscriber implements EventSubscriberInterface
             .'}'
             // Capture phase: runs before core's ajax link handler, so a click on a locked link never reaches it.
             .'document.addEventListener("click",function(event){'
-            .'var a=event.target.closest?event.target.closest("a[href*=\"/s/segment-rebuild/\"]"):null;'
+            .'var a=event.target.closest?event.target.closest("'.$link.'"):null;'
             .'if(!a){return;}'
             .'var id=idOf(a);if(!id){return;}'
             .'if(locked[id]){event.preventDefault();event.stopImmediatePropagation();return;}'
             .'locked[id]=true;'
             .'var where=window.location.pathname+window.location.search;'
             .'var statusUrl=(a.getAttribute("href")||"").split("?")[0]+"/status";'
-            .'var started=Date.now(),baseline;'
+            .'var started=Date.now(),baseline,asked=false;'
             // Done: free the button and, if the user is still on the same page, reload it (new "N contacts" and "Updated on").
             .'function finish(){'
             .'delete locked[id];'
@@ -114,14 +123,17 @@ class SegmentUpdateLockSubscriber implements EventSubscriberInterface
             // The rebuild writes the segment's last built date when it ENDS: the first answer (taken at the click, long before the
             // command can end) is the baseline, a different date after it means the rebuild is done.
             .'function check(){'
+            // The click's own answer sends the page to the list core builds (/s/campaigns/1, the search filter kept in the session), so the page of a campaign is read again at the first question, after the answer.
+            .($campaign ? "if(!asked){asked=true;where=window.location.pathname+window.location.search;}" : '')
             .'mQuery.ajax({url:statusUrl,dataType:"json",global:false}).done(function(r){'
-            .'if(baseline===undefined){baseline=r.lastBuilt;next();return;}'
-            .'if(r.lastBuilt!==baseline){finish();return;}'
+            .($campaign
+                ? 'if(r.running===false){finish();return;}'
+                : 'if(baseline===undefined){baseline=r.lastBuilt;next();return;}if(r.lastBuilt!==baseline){finish();return;}')
             .'next();'
             .'}).fail(next);'
             .'}'
             .'setTimeout(decorate,0);'
-            .'check();'
+            .($campaign ? 'next();' : 'check();')
             .'},true);'
             .'var original=Mautic.onPageLoad;'
             .'Mautic.onPageLoad=function(){var result=original.apply(this,arguments);decorate();return result;};'
