@@ -56,7 +56,8 @@ class SegmentFiltersTabSubscriber implements EventSubscriberInterface
             .'window.mauticPatchesSegmentFiltersTab=true;'
             .'function addTab(){'
             .'var $contacts=mQuery("#contacts-container");'
-            .'if(!$contacts.length||mQuery("#segment-filters-container").length){return;}'
+            // Not in the details modal of the segment list (SegmentListClickSubscriber): it has its own Filtros tab.
+            .'if(!$contacts.length||mQuery("#segment-filters-container").length||$contacts.closest(".mautic-patches-segment-details").length){return;}'
             .'var m=/\/segment\/view\/(\d+)\/contact/.exec($contacts.attr("data-target-url")||"");'
             .'var $nav=mQuery("a[href=\"#contacts-container\"]").closest("ul");'
             .'if(!m||!$nav.length){return;}'
