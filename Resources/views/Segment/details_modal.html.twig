@@ -3,7 +3,7 @@
   only a modal holding this body is widened (:has). The Contacts pane has the id and data-target-url of the page's one
   (core's own loader and the table's pagination use that id); it and the campaign shares are filled when their tab is first
   shown (SegmentListClickSubscriber). The buttons are a `.bottom-form-buttons` block, which core copies into the modal's
-  footer (1a.content.js): Close, Details (the segment's page) and Edit (only for who may edit).
+  footer (1a.content.js): Edit (btn-primary, only for who may edit), Details (the segment's page, btn-secondary) and Close (btn-tertiary btn-cancel, the transparent one). Only one .btn-primary: core's CSS draws a second one, and a btn-secondary after two, as outlined by position, so keep a single primary.
 #}
 <style>
     .modal-dialog:has(.mautic-patches-segment-details) {
@@ -75,10 +75,10 @@
     </div>
 
     <div class="bottom-form-buttons">
-        <button type="button" id="patches-segment-details-close" class="btn btn-outline btn-cancel" data-dismiss="modal">{{ 'mautic.core.close'|trans }}<i class="ri-close-line"></i></button>
-        <button type="button" id="patches-segment-details-page" class="btn btn-secondary" onclick="mQuery('#MauticSharedModal').modal('hide'); Mautic.loadContent('{{ path('mautic_segment_action', {'objectAction': 'view', 'objectId': list.id})|e('js') }}');">{{ 'mautic.core.details'|trans }}<i class="ri-file-list-line"></i></button>
         {% if canEdit %}
-            <button type="button" id="patches-segment-details-edit" class="btn btn-primary" onclick="mQuery('#MauticSharedModal').modal('hide'); Mautic.loadContent('{{ path('mautic_segment_action', {'objectAction': 'edit', 'objectId': list.id})|e('js') }}');">{{ 'mautic.core.form.edit'|trans }}<i class="ri-edit-line"></i></button>
+        <button type="button" id="patches-segment-details-edit" class="btn btn-primary" onclick="mQuery('#MauticSharedModal').modal('hide'); Mautic.loadContent('{{ path('mautic_segment_action', {'objectAction': 'edit', 'objectId': list.id})|e('js') }}');">{{ 'mautic.core.form.edit'|trans }}<i class="ri-edit-line"></i></button>
         {% endif %}
+        <button type="button" id="patches-segment-details-page" class="btn btn-secondary" onclick="mQuery('#MauticSharedModal').modal('hide'); Mautic.loadContent('{{ path('mautic_segment_action', {'objectAction': 'view', 'objectId': list.id})|e('js') }}');">{{ 'mautic.core.details'|trans }}<i class="ri-file-list-line"></i></button>
+        <button type="button" id="patches-segment-details-close" class="btn btn-tertiary btn-cancel" data-dismiss="modal">{{ 'mautic.core.close'|trans }}<i class="ri-close-line"></i></button>
     </div>
 </div>
