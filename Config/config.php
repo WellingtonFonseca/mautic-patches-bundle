@@ -36,6 +36,13 @@ return [
                 'method'       => 'GET',
                 'requirements' => ['id' => '\\d+'],
             ],
+            // The details modal of the segment list: the tabs of the segment page.
+            'mautic_patches_segment_details' => [
+                'path'         => '/segment-details/{id}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\SegmentDetailsController::detailsAction',
+                'method'       => 'GET',
+                'requirements' => ['id' => '\\d+'],
+            ],
             // The "Ver" modal of the contact list: the contact's Details table, nothing else.
             'mautic_patches_contact_details' => [
                 'path'         => '/contact-details/{id}',
