@@ -36,6 +36,17 @@ class RoutesTest extends TestCase
         );
     }
 
+    public function testTheCampaignRoutesMirrorTheSegmentOnes(): void
+    {
+        $routes = $this->config()['routes']['main'];
+
+        $this->assertSame('POST', $routes['mautic_patches_campaign_rebuild']['method']);
+        $this->assertSame('/campaign-rebuild/{id}', $routes['mautic_patches_campaign_rebuild']['path']);
+        $this->assertSame('GET', $routes['mautic_patches_campaign_rebuild_status']['method']);
+        $this->assertSame($routes['mautic_patches_campaign_rebuild']['path'].'/status', $routes['mautic_patches_campaign_rebuild_status']['path']);
+        $this->assertSame(['id' => '\\d+'], $routes['mautic_patches_campaign_rebuild_status']['requirements']);
+    }
+
     public function testTheClickRouteStaysPostOnly(): void
     {
         $this->assertSame('POST', $this->config()['routes']['main']['mautic_patches_segment_rebuild']['method']);
