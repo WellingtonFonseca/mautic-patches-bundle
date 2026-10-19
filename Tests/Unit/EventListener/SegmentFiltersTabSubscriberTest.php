@@ -62,7 +62,7 @@ class SegmentFiltersTabSubscriberTest extends TestCase
     {
         $js = $this->content();
 
-        $this->assertStringContainsString('if(!$contacts.length||mQuery("#segment-filters-container").length){return;}', $js);
+        $this->assertStringContainsString('if(!$contacts.length||mQuery("#segment-filters-container").length||$contacts.closest(".mautic-patches-segment-details").length){return;}', $js);
         $this->assertStringContainsString('if(window.mauticPatchesSegmentFiltersTab){return;}', $js);
     }
 
@@ -72,5 +72,11 @@ class SegmentFiltersTabSubscriberTest extends TestCase
 
         $this->assertStringContainsString('Mautic.onPageLoad=function(){var result=original.apply(this,arguments);addTab();return result;}', $js);
         $this->assertStringContainsString('mQuery(addTab);', $js);
+    }
+
+    public function testItLeavesTheDetailsModalOfTheSegmentListAlone(): void
+    {
+        // the modal has its own Filtros tab and its own #contacts-container
+        $this->assertStringContainsString('.closest(".mautic-patches-segment-details").length', $this->content());
     }
 }
