@@ -23,6 +23,19 @@ return [
                 'method'       => 'GET',
                 'requirements' => ['id' => '\\d+'],
             ],
+            // Session-authenticated target of the "Update" button of the campaign list and page, and its status poll.
+            'mautic_patches_campaign_rebuild' => [
+                'path'         => '/campaign-rebuild/{id}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignRebuildController::rebuildAction',
+                'method'       => 'POST',
+                'requirements' => ['id' => '\\d+'],
+            ],
+            'mautic_patches_campaign_rebuild_status' => [
+                'path'         => '/campaign-rebuild/{id}/status',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignRebuildController::statusAction',
+                'method'       => 'GET',
+                'requirements' => ['id' => '\\d+'],
+            ],
             // The "Ver" modal of the contact list: the contact's Details table, nothing else.
             'mautic_patches_contact_details' => [
                 'path'         => '/contact-details/{id}',
