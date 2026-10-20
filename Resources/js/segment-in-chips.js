@@ -215,20 +215,31 @@
         scanCondition($, cfg);
     }
 
-    // The Custom Objects campaign condition: each criterion row has .co-criterion-field (a Custom Field id, or "name" for
-    // the item name), .co-criterion-operator and .co-criterion-value. The plugin replaces the value input whenever the
-    // field or the operator changes, which leaves the old chips behind: they are removed and the new input is decorated.
-    function scanCondition($, cfg) {
-        $('form[name=campaignevent] .co-criterion').each(function () {
+    // The campaign conditions with rows of criteria. Each row has a field select, an operator select and a value input; the
+    // plugin / the page script replaces the value input whenever the field or the operator changes, which leaves the old chips
+    // behind: they are removed and the new input is decorated.
+    //   Custom Objects ("<object> field value"): .co-criterion, the field is a Custom Field id or "name" (the item name)
+    //   Contact fields (lead.field_values):       .cf-criterion, the field is an alias, its option says lead or company
+    function scanRows($, cfg, rows, context) {
+        $('form[name=campaignevent] ' + rows.row).each(function () {
             var $row   = $(this);
-            var $input = $row.find('input.co-criterion-value');
-            if (!$input.length) { return; }
-            if ($input.attr('data-in-chips')) { return; }
+            var $input = $row.find('input' + rows.value);
+            if (!$input.length || $input.attr('data-in-chips')) { return; }
             $row.find('.in-chips-part').remove();
-            if (!wants($row.find('.co-criterion-operator').val(), $input.attr('type'))) { return; }
-            var picked = $row.find('.co-criterion-field').val();
-            var object = $('form[name=campaignevent] input[name$="[customObjectId]"]').val();
-            enhance($, $input[0], cfg, {object: 'custom_object', field: conditionField(picked, object), inline: $input.parent().hasClass('input-group')});
+            if (!wants($row.find(rows.operator).val(), $input.attr('type'))) { return; }
+            var ctx = context($row);
+            ctx.inline = $input.parent().hasClass('input-group');
+            enhance($, $input[0], cfg, ctx);
+        });
+    }
+
+    function scanCondition($, cfg) {
+        var object = function () { return $('form[name=campaignevent] input[name$="[customObjectId]"]').val(); };
+        scanRows($, cfg, {row: '.co-criterion', value: '.co-criterion-value', operator: '.co-criterion-operator'}, function ($row) {
+            return {object: 'custom_object', field: conditionField($row.find('.co-criterion-field').val(), object())};
+        });
+        scanRows($, cfg, {row: '.cf-criterion', value: '.cf-criterion-value', operator: '.cf-criterion-operator'}, function ($row) {
+            return {object: $row.find('.cf-criterion-field option:selected').attr('data-object'), field: $row.find('.cf-criterion-field').val()};
         });
     }
 
@@ -244,7 +255,7 @@
         // The value input is replaced by an ajax answer whenever the operator, the field or the filter changes.
         $(document).ajaxComplete(run);
         // the Custom Objects condition replaces the value input of a row without an ajax call
-        $(document).on('co:criterion-updated', run);
+        $(document).on('co:criterion-updated cf:criterion-updated', run);
         $(run);
     }
 
