@@ -55,19 +55,24 @@
         return null;
     }
 
+    // the alias the Custom Objects route reads: cmo_<object id> is the item name, cmf_<field id> a field
+    function conditionField(picked, objectId) {
+        return picked === 'name' ? 'cmo_' + objectId : 'cmf_' + picked;
+    }
+
     function wants(operator, inputType) {
         return (operator === 'in' || operator === '!in') && inputType === 'text';
     }
 
-    var api = {parse: parse, join: join, lines: lines, add: add, remove: remove, suggestions: suggestions, url: url, wants: wants};
+    var api = {conditionField: conditionField, parse: parse, join: join, lines: lines, add: add, remove: remove, suggestions: suggestions, url: url, wants: wants};
 
     // ---- the widget (DOM; mQuery is Mautic's jQuery) ----
-    function enhance($, input, cfg) {
+    // ctx = {object, field, inline}: inline is a condition row whose input already sits in a core input-group (the added rows,
+    // with the remove addon), so the chips box and the copy addon join it instead of making a group of their own.
+    function enhance($, input, cfg, ctx) {
         var $input   = $(input);
-        var id       = $input.attr('id') || '';
-        var row      = /^(leadlist_filters_\d+)_properties_filter$/.exec(id);
-        var object   = $('#' + row[1] + '_object').val();
-        var field    = $('#' + row[1] + '_field').val();
+        var object   = ctx.object;
+        var field    = ctx.field;
         var values   = parse($input.val());
         var $box     = $('<div class="form-control segment-in-chips" style="height:auto;min-height:34px;padding:3px 6px;position:relative;cursor:text"></div>');
         var $typing  = $('<input type="text" autocomplete="off" style="border:0;outline:0;background:transparent;color:inherit;min-width:140px;width:auto;flex:1">');
@@ -78,8 +83,18 @@
         var timer    = null;
         var active   = -1;
 
-        $input.hide().attr('data-in-chips', '1').after($group);
-        $group.append($box).append($copy);
+        $input.hide().attr('data-in-chips', '1');
+        $box.addClass('in-chips-part');
+        $copy.addClass('in-chips-part');
+        if (ctx.inline) {
+            $input.parent().css('display', 'flex');
+            $input.after($box);
+            $box.after($copy);
+            $input.parent().children('.input-group-addon').css({display: 'flex', alignItems: 'center', width: 'auto'});
+        } else {
+            $input.after($group);
+            $group.append($box).append($copy);
+        }
         $box.css({display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center', flex: '1'});
         $copy.css({display: 'flex', alignItems: 'center', width: 'auto'});
 
@@ -194,8 +209,26 @@
             var row    = /^(leadlist_filters_\d+)_properties_filter$/.exec($input.attr('id') || '');
             if (!row || $input.attr('data-in-chips')) { return; }
             if (wants($('#' + row[1] + '_operator').val(), $input.attr('type'))) {
-                enhance($, this, cfg);
+                enhance($, this, cfg, {object: $('#' + row[1] + '_object').val(), field: $('#' + row[1] + '_field').val(), inline: false});
             }
+        });
+        scanCondition($, cfg);
+    }
+
+    // The Custom Objects campaign condition: each criterion row has .co-criterion-field (a Custom Field id, or "name" for
+    // the item name), .co-criterion-operator and .co-criterion-value. The plugin replaces the value input whenever the
+    // field or the operator changes, which leaves the old chips behind: they are removed and the new input is decorated.
+    function scanCondition($, cfg) {
+        $('form[name=campaignevent] .co-criterion').each(function () {
+            var $row   = $(this);
+            var $input = $row.find('input.co-criterion-value');
+            if (!$input.length) { return; }
+            if ($input.attr('data-in-chips')) { return; }
+            $row.find('.in-chips-part').remove();
+            if (!wants($row.find('.co-criterion-operator').val(), $input.attr('type'))) { return; }
+            var picked = $row.find('.co-criterion-field').val();
+            var object = $('form[name=campaignevent] input[name$="[customObjectId]"]').val();
+            enhance($, $input[0], cfg, {object: 'custom_object', field: conditionField(picked, object), inline: $input.parent().hasClass('input-group')});
         });
     }
 
@@ -210,6 +243,8 @@
         Mautic.onPageLoad = function () { var result = original.apply(this, arguments); run(); return result; };
         // The value input is replaced by an ajax answer whenever the operator, the field or the filter changes.
         $(document).ajaxComplete(run);
+        // the Custom Objects condition replaces the value input of a row without an ajax call
+        $(document).on('co:criterion-updated', run);
         $(run);
     }
 
