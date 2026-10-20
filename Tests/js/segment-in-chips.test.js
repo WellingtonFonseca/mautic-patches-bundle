@@ -83,3 +83,8 @@ test('wants: only the including / excluding operators on a plain text input', ()
     assert.strictEqual(chips.wants('=', 'text'), false);
     assert.strictEqual(chips.wants('regexp', 'text'), false);
 });
+
+test('conditionField: the campaign condition asks the item name as cmo_<object> and a field as cmf_<id>', () => {
+    assert.strictEqual(chips.conditionField('name', '7'), 'cmo_7');
+    assert.strictEqual(chips.conditionField('14', '7'), 'cmf_14');
+});
