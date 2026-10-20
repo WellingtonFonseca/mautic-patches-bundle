@@ -1,0 +1,35 @@
+{#
+  The campaign condition "Contact fields": the first criterion (field, operator, value) and the additional ones. The contact
+  has to satisfy ALL of them. The rows are added, removed and kept in step with their field by contact-fields-condition.js.
+#}
+{% macro criterion(row) %}
+    <div class="row cf-criterion" style="margin-bottom: 5px;">
+        <div class="col-xs-4">{{ form_widget(row.field) }}</div>
+        <div class="col-xs-3">{{ form_widget(row.operator) }}</div>
+        <div class="col-xs-5">
+            <div class="input-group">
+                {{ form_widget(row.value) }}
+                <span class="input-group-addon cf-criterion-remove" style="cursor: pointer;" title="{{ 'mautic.patches.condition.contact_fields.remove'|trans }}" onclick="mauticPatchesContactFields.remove(this)"><i class="ri-close-line"></i></span>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+{% block _campaignevent_properties_row %}
+    {% import _self as cf %}
+    <div id="cf-criteria" data-index="{{ form.additionalCriteria|length }}" data-prototype="{{ cf.criterion(form.additionalCriteria.vars.prototype)|e('html_attr') }}">
+        <div class="row cf-criterion" style="margin-bottom: 5px;">
+            <div class="col-xs-4">{{ form_label(form.field) }}{{ form_widget(form.field) }}</div>
+            <div class="col-xs-3">{{ form_label(form.operator) }}{{ form_widget(form.operator) }}</div>
+            <div class="col-xs-5">{{ form_label(form.value) }}{{ form_widget(form.value) }}</div>
+        </div>
+        <div id="cf-criteria-extra">
+            {% for row in form.additionalCriteria %}
+                {{ cf.criterion(row) }}
+            {% endfor %}
+        </div>
+    </div>
+    <p class="help-block">{{ 'mautic.patches.condition.contact_fields.help'|trans }}</p>
+    <a href="javascript:void(0);" class="btn btn-tertiary btn-sm btn-add-item btn-nospin" onclick="mauticPatchesContactFields.add()"><i class="ri-add-line"></i> {{ 'mautic.patches.condition.contact_fields.add'|trans }}</a>
+    <script>mauticPatchesContactFields.init();</script>
+{% endblock %}
