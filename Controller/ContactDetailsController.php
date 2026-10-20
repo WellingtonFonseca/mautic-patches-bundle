@@ -28,7 +28,11 @@ class ContactDetailsController extends CommonController
         }
 
         return $this->delegateView([
-            'viewParameters'  => ['lead' => $contact, 'fields' => $contact->getFields()],
+            'viewParameters'  => [
+                'lead'    => $contact,
+                'fields'  => $contact->getFields(),
+                'canEdit' => $this->security->hasEntityAccess('lead:leads:editown', 'lead:leads:editother', $contact->getPermissionUser()),
+            ],
             'contentTemplate' => '@MauticPatches/Contact/details.html.twig',
             'passthroughVars' => ['route' => false],
         ]);
