@@ -32,6 +32,9 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * `.table .table { background-color: #fff }`, a white block with the theme's light text. In the dark themes it is
  * transparent, so the row it sits in shows through.
  *
+ * The three dots of the header (bulk actions, once rows are selected) is a `.btn-info` icon button whose
+ * color core fixes at a dark blue-gray, almost the header's own color; in the dark themes it takes --text-primary.
+ *
  * Injected the same way as CampaignBuilderOverlaySubscriber
  * (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left', rendered on
  * every admin page). The :root[theme=...] prefix makes these rules more
@@ -72,6 +75,13 @@ class DarkThemeTableSubscriber implements EventSubscriberInterface
 
         foreach (self::DARK_THEMES as $theme) {
             $css .= ':root[theme="'.$theme.'"] .table .table{background-color:transparent}';
+        }
+
+        // The three dots of a list's header (bulk actions, shown once rows are selected): core draws the
+        // .btn-info icon button with a fixed dark blue-gray (#3c4650) that is about the header's own color.
+        foreach (self::DARK_THEMES as $theme) {
+            $dots = ':root[theme="'.$theme.'"] th.col-actions .dropdown-toggle.btn-icon';
+            $css .= $dots.','.$dots.' i{color:var(--text-primary)}';
         }
 
         $customContentEvent->addContent('<style>'.$css.'</style>');
