@@ -28,7 +28,7 @@ return function (ContainerConfigurator $configurator): void {
         ->public();
 
     $services->load('MauticPlugin\\MauticPatchesBundle\\', '../')
-        ->exclude('../{'.implode(',', MauticCoreExtension::DEFAULT_EXCLUDES).'}');
+        ->exclude('../{'.implode(',', MauticCoreExtension::DEFAULT_EXCLUDES).',Loader}');
 
     // The segment entity gets the repository that sorts by prefix (SegmentListRepository).
     $services->set(SegmentRepositoryListener::class)
