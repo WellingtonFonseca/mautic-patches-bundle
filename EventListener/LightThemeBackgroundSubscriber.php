@@ -51,6 +51,7 @@ class LightThemeBackgroundSubscriber implements EventSubscriberInterface
         '--border-subtle-01'         => '#d2d2d2', // #e0e0e0
         '--border-subtle-02'         => '#bcbcbc', // #c6c6c6
         '--table-line'               => '#b0b0b0', // (new) the lines between table rows
+        '--campaign-line'            => '#8d8d8d', // (new) the gray lines and circles of the campaign builder (core: --border-subtle)
     ];
 
     /**
@@ -63,7 +64,11 @@ class LightThemeBackgroundSubscriber implements EventSubscriberInterface
      * table lines (the contact's History, every list) are the core's faint
      * --border-subtle, which is almost the color of a hovered row here
      * (#d2d2d2 on #d4d4d4) and vanished on hover: they take --table-line, a
-     * step darker than both.
+     * step darker than both. The gray lines and circles of the campaign builder and of the
+     * Preview tab (jsPlumb paints them with stroke / fill="var(--border-subtle)",
+     * the attribute is what the selector matches; the yes / no and contact source
+     * ones have their own colors) are #d2d2d2 on the #f2f2f2 page, almost
+     * invisible: they take --campaign-line.
      */
     private const RULES = [
         '.table-striped>tbody>tr:nth-of-type(odd)'         => 'background-color:var(--layer-01)',
@@ -77,6 +82,8 @@ class LightThemeBackgroundSubscriber implements EventSubscriberInterface
         '.table>tbody>tr>th'                               => 'border-top-color:var(--table-line)',
         '.table>tfoot>tr>td'                               => 'border-top-color:var(--table-line)',
         '.table>thead>tr>th'                               => 'border-bottom-color:var(--table-line)',
+        '.jtk-connector path[stroke="var(--border-subtle)"]' => 'stroke:var(--campaign-line)',
+        '.jtk-endpoint circle[fill="var(--border-subtle)"]'  => 'fill:var(--campaign-line)',
     ];
 
     public static function getSubscribedEvents(): array
