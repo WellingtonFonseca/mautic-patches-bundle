@@ -8,6 +8,9 @@
  * The button sits above the lines (core gives their svg z-index 1000). It is a jsPlumb "Custom" overlay (core only removes the overlays of type Label, see
  * Mautic.campaignBuilderUpdateLabel), so it follows the line when a node moves.
  *
+ * The circle above a node (where its line comes in) shows a second trash, just above the circle, when the mouse is over the circle:
+ * it disconnects the line that comes into that node, so the line does not have to be aimed at where other lines cross.
+ *
  * The line is 2 px thick and hard to hit: a transparent copy of its path, 16 px thick, is the area that shows the button, and
  * it is kept in step with the line by watching the line's `d` attribute. The button stays while the mouse is over the area
  * or over the button itself, and goes away a moment after the mouse leaves both.
@@ -18,34 +21,67 @@
     var OVERLAY_ID = 'mauticPatchesTrash';
     var HIT_WIDTH  = 16;
     var HIDE_AFTER = 250;
+    var ABOVE      = 2;
 
     var shown = null;
+    var circleShown = false;
+
+    function makeButton(title) {
+        var button = root.document.createElement('a');
+        button.href = 'javascript:void(0);';
+        button.className = 'btn btn-danger btn-xs btn-nospin mautic-patches-trash';
+        button.title = title;
+        button.innerHTML = '<i class="ri-delete-bin-line ri-lg"></i>';
+        button.style.cssText = 'display:none;position:absolute;z-index:1100;color:#fff;padding:4px 8px;line-height:1;cursor:pointer;transition:none;margin:0';
+
+        return button;
+    }
+
+    // one button at a time: the one of a line the mouse just crossed goes as the next one shows. `before` runs when the button
+    // is about to show and can refuse (false) or place it; the button stays while the mouse is over it, and goes a moment after.
+    // The button of a circle (`circle`) sits on its own line, so while it is shown the lines do not take its place.
+    function bindHover(button, before, circle) {
+        var timer = null;
+        function hideNow() { clearTimeout(timer); button.style.display = 'none'; if (circle) { circleShown = false; } }
+        function show() {
+            if (!circle && circleShown) { return; }
+            clearTimeout(timer);
+            if (button.style.display === 'none' && before) {
+                button.style.display = 'block';
+                if (before() === false) { button.style.display = 'none'; return; }
+            }
+            if (shown && shown !== hideNow) { shown(); }
+            shown = hideNow;
+            if (circle) { circleShown = true; }
+            button.style.display = '';
+        }
+        function hide() { clearTimeout(timer); timer = setTimeout(hideNow, HIDE_AFTER); }
+        button.addEventListener('mouseenter', show);
+        button.addEventListener('mouseleave', hide);
+
+        return {show: show, hide: hide};
+    }
+
+    function bindClick(button, action) {
+        button.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            action();
+        });
+    }
 
     // the line is decorated once; a line made later (a new connection) is decorated by the 'connection' event
     function decorate(instance, connection, title) {
         if (connection.mauticPatchesTrash || !connection.canvas) { return; }
         connection.mauticPatchesTrash = true;
 
-        var doc    = root.document;
-        var button = doc.createElement('a');
-        button.href = 'javascript:void(0);';
-        button.className = 'btn btn-danger btn-xs btn-nospin mautic-patches-trash';
-        button.title = title;
-        button.innerHTML = '<i class="ri-delete-bin-line ri-lg"></i>';
-        button.style.cssText = 'display:none;position:absolute;z-index:1100;color:#fff;padding:4px 8px;line-height:1;cursor:pointer';
+        var button = makeButton(title);
 
         connection.addOverlay(['Custom', {id: OVERLAY_ID, location: 0.5, create: function () { return button; }}]);
 
-        var timer = null;
-        function hideNow() { clearTimeout(timer); button.style.display = 'none'; }
-        // one button at a time: the one of a line the mouse just crossed goes as the next one shows
-        function show() {
-            clearTimeout(timer);
-            if (shown && shown !== hideNow) { shown(); }
-            shown = hideNow;
-            button.style.display = '';
-        }
-        function hide() { clearTimeout(timer); timer = setTimeout(hideNow, HIDE_AFTER); }
+        var hover = bindHover(button);
+        var show = hover.show, hide = hover.hide;
 
         // the path of the line is drawn after the connection is made: wait for it
         function attachHit(line) {
@@ -75,20 +111,44 @@
             });
             waiting.observe(connection.canvas, {childList: true, subtree: true});
         }
-        button.addEventListener('mouseenter', show);
-        button.addEventListener('mouseleave', hide);
-        button.addEventListener('mousedown', function (e) { e.stopPropagation(); });
-        button.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            instance.deleteConnection(connection);
-        });
+        bindClick(button, function () { instance.deleteConnection(connection); });
+
+        decorateEndpoint(instance, connection, title);
+    }
+
+    // the button of the circle where the line comes in: above the circle, shown while the mouse is over the circle or the button
+    function decorateEndpoint(instance, connection, title) {
+        var endpoint = connection.endpoints && connection.endpoints[1];
+        var circle   = endpoint && endpoint.canvas;
+        if (!circle || !circle.parentNode) { return; }
+
+        var button = makeButton(title);
+        button.className += ' mautic-patches-trash-endpoint';
+        circle.parentNode.appendChild(button);
+
+        var hover = bindHover(button, function () {
+            // the circle outlives the line: a line that is gone (or one replaced by a new line) shows nothing
+            if (instance.getAllConnections().indexOf(connection) === -1) { return false; }
+            button.style.left = (circle.offsetLeft + circle.offsetWidth / 2 - button.offsetWidth / 2) + 'px';
+            button.style.top  = (circle.offsetTop - button.offsetHeight - ABOVE) + 'px';
+
+            return true;
+        }, true);
+        circle.addEventListener('mouseenter', hover.show);
+        circle.addEventListener('mouseleave', hover.hide);
+        bindClick(button, function () { instance.deleteConnection(connection); });
+        // a later line into the same circle gets its own button: this one goes with its line
+        connection.mauticPatchesCircleTrash = button;
     }
 
     function instrument(instance, title) {
         if (!instance.mauticPatchesTrashBound) {
             instance.mauticPatchesTrashBound = true;
             instance.bind('connection', function (info) { decorate(instance, info.connection, title); });
+            instance.bind('connectionDetached', function (info) {
+                var button = info.connection.mauticPatchesCircleTrash;
+                if (button) { button.remove(); }
+            });
         }
         instance.getAllConnections().forEach(function (connection) { decorate(instance, connection, title); });
     }
