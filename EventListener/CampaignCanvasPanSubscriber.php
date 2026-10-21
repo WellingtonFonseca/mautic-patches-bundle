@@ -26,7 +26,11 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class CampaignCanvasPanSubscriber implements EventSubscriberInterface
 {
-    public const STYLE = 'body.mautic-patches-panning,body.mautic-patches-panning #campaign-builder *{cursor:grabbing!important;user-select:none!important}';
+    public const STYLE = '#campaign-builder .builder-content,#campaign-builder #CampaignCanvas,#preview-container{cursor:grab}'
+        .'body.mautic-patches-panning,body.mautic-patches-panning #campaign-builder *{cursor:grabbing!important;user-select:none!important}';
+
+    // What the left button must leave alone: the nodes and their circles, the lines, the panels, the links, buttons and fields.
+    public const NOT_BACKGROUND = '.draggable,.list-campaign-event,.jtk-endpoint,.jtk-connector,.jtk-overlay,.mautic-patches-trash,#CampaignEventPanel,#EventJumpOverlay,a,button,input,textarea,select,label,.chosen-container,.modal';
 
     public static function getSubscribedEvents(): array
     {
@@ -50,7 +54,8 @@ class CampaignCanvasPanSubscriber implements EventSubscriberInterface
             .'if(window.mauticPatchesCanvasPan){return;}'
             .'window.mauticPatchesCanvasPan=true;'
             .'var style=document.createElement("style");style.textContent='.json_encode(self::STYLE).';document.head.appendChild(style);'
-            .'var pan=null;'
+            .'var pan=null,suppress=false;'
+            .'var NOT='.json_encode(self::NOT_BACKGROUND).';'
             .'function onCanvas(e){return e.target&&e.target.closest&&e.target.closest("#campaign-builder");}'
             // the nearest ancestor that really scrolls
             .'function scroller(el){'
@@ -61,22 +66,28 @@ class CampaignCanvasPanSubscriber implements EventSubscriberInterface
             .'return null;'
             .'}'
             .'function stop(){pan=null;document.body.classList.remove("mautic-patches-panning");}'
+            // the middle button drags from anywhere (a node too); the left one only from an empty spot
             .'document.addEventListener("mousedown",function(e){'
-            .'if(e.button!==1||!onCanvas(e)){return;}'
+            .'if(!onCanvas(e)||(e.button!==1&&!(e.button===0&&!e.target.closest(NOT)))){return;}'
             .'var el=scroller(e.target);'
             .'if(!el){return;}'
             .'e.preventDefault();'
-            .'pan={el:el,x:e.clientX,y:e.clientY,left:el.scrollLeft,top:el.scrollTop};'
+            .'pan={el:el,button:e.button,x:e.clientX,y:e.clientY,left:el.scrollLeft,top:el.scrollTop,moved:false};'
             .'document.body.classList.add("mautic-patches-panning");'
             .'},true);'
             .'document.addEventListener("mousemove",function(e){'
             .'if(!pan){return;}'
             // the button was released outside the window: stop
-            .'if(!(e.buttons&4)){stop();return;}'
+            .'if(!(e.buttons&(pan.button===1?4:1))){stop();return;}'
+            .'if(Math.abs(e.clientX-pan.x)>3||Math.abs(e.clientY-pan.y)>3){pan.moved=true;}'
             .'pan.el.scrollLeft=pan.left-(e.clientX-pan.x);'
             .'pan.el.scrollTop=pan.top-(e.clientY-pan.y);'
             .'},true);'
-            .'document.addEventListener("mouseup",function(e){if(e.button===1){stop();}},true);'
+            // a left drag that moved must not end as a click on the canvas
+            .'document.addEventListener("mouseup",function(e){'
+            .'if(pan&&e.button===pan.button){suppress=pan.button===0&&pan.moved;stop();if(suppress){setTimeout(function(){suppress=false;},0);}}'
+            .'},true);'
+            .'document.addEventListener("click",function(e){if(suppress){suppress=false;e.preventDefault();e.stopPropagation();}},true);'
             .'window.addEventListener("blur",stop);'
             .'document.addEventListener("auxclick",function(e){if(e.button===1&&onCanvas(e)){e.preventDefault();}},true);'
             .'})();';

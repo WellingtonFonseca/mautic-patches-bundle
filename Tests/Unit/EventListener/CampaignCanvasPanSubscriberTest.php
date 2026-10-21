@@ -31,11 +31,15 @@ class CampaignCanvasPanSubscriberTest extends TestCase
         $this->assertSame('', $this->content('something.else'));
     }
 
-    public function testOnlyTheMiddleButtonOnTheCanvasStartsIt(): void
+    public function testTheMiddleButtonAnywhereAndTheLeftOneOnAnEmptySpotOfTheCanvasStartIt(): void
     {
         $js = $this->content();
 
-        $this->assertStringContainsString('if(e.button!==1||!onCanvas(e)){return;}', $js);
+        $this->assertStringContainsString('if(!onCanvas(e)||(e.button!==1&&!(e.button===0&&!e.target.closest(NOT)))){return;}', $js);
+        // what the left button leaves alone: nodes, circles, lines, panels, links, buttons, fields
+        foreach (['.draggable', '.jtk-endpoint', '.jtk-connector', '#CampaignEventPanel', 'a', 'button', 'input'] as $selector) {
+            $this->assertContains($selector, explode(',', CampaignCanvasPanSubscriber::NOT_BACKGROUND));
+        }
         $this->assertStringContainsString('closest("#campaign-builder")', $js);
     }
 
@@ -51,6 +55,8 @@ class CampaignCanvasPanSubscriberTest extends TestCase
     {
         $this->assertStringContainsString('cursor:grabbing!important', CampaignCanvasPanSubscriber::STYLE);
         $this->assertStringContainsString('#campaign-builder *', CampaignCanvasPanSubscriber::STYLE);
+        // the open hand over the empty canvas, the builder and the Preview tab
+        $this->assertStringContainsString('#preview-container{cursor:grab}', CampaignCanvasPanSubscriber::STYLE);
     }
 
     public function testRunsOnce(): void

@@ -24,10 +24,13 @@ function page() {
     const body = {classList: {add: (c) => classes.add(c), remove: (c) => classes.delete(c)}, parentElement: null};
     const builder = {id: 'campaign-builder', parentElement: body, scrollWidth: 100, clientWidth: 100, scrollHeight: 100, clientHeight: 100, style: {overflowX: 'visible', overflowY: 'visible'}};
     const content = {parentElement: builder, scrollWidth: 10000, clientWidth: 1600, scrollHeight: 10000, clientHeight: 1000, scrollLeft: 500, scrollTop: 300, style: {overflowX: 'auto', overflowY: 'auto'}};
-    const node = {parentElement: content, style: {overflowX: 'visible', overflowY: 'visible'}};
+    const node = {isNode: true, parentElement: content, style: {overflowX: 'visible', overflowY: 'visible'}};
     const outside = {parentElement: body, style: {overflowX: 'visible', overflowY: 'visible'}};
     for (const el of [builder, content, node, outside]) {
-        el.closest = (sel) => { for (let e = el; e; e = e.parentElement) { if (sel === '#' + e.id) return e; } return null; };
+        el.closest = (sel) => {
+            for (let e = el; e; e = e.parentElement) { if (sel === '#' + e.id || (e.isNode && sel.includes('.draggable'))) return e; }
+            return null;
+        };
     }
     const handlers = {};
     const document = {
@@ -36,7 +39,7 @@ function page() {
     };
     const win = {addEventListener: (type, fn) => { handlers['window:' + type] = fn; }};
     const getComputedStyle = (el) => el.style;
-    vm.runInNewContext(script(), {document, window: win, getComputedStyle});
+    vm.runInNewContext(script(), {document, window: win, getComputedStyle, setTimeout: () => 0});
 
     return {handlers, classes, content, node, outside, builder};
 }
@@ -88,14 +91,48 @@ test('a move without the middle button held (released outside the window) ends i
     assert.ok(!p.classes.has('mautic-patches-panning'));
 });
 
-test('the left button and the right button do nothing', () => {
-    for (const button of [0, 2]) {
+test('the right button does nothing, and the left one on a node is left to the node', () => {
+    for (const [target, button] of [['node', 2], ['node', 0], ['content', 2]]) {
         const p = page();
-        const ev = down(p.node, button);
+        const ev = down(p[target], button);
         p.handlers.mousedown(ev);
         assert.strictEqual(ev.prevented, false);
         assert.ok(!p.classes.has('mautic-patches-panning'));
     }
+});
+
+test('the left button on an empty spot drags the canvas like the middle one, and stops when it is released', () => {
+    const p = page();
+    const ev = down(p.content, 0);
+
+    p.handlers.mousedown(ev);
+    assert.strictEqual(ev.prevented, true);
+    assert.ok(p.classes.has('mautic-patches-panning'));
+
+    p.handlers.mousemove({buttons: 1, clientX: 600, clientY: 450});
+    assert.strictEqual(p.content.scrollLeft, 700);
+    assert.strictEqual(p.content.scrollTop, 350);
+
+    // a move with the button no longer down (released outside the window) ends it
+    p.handlers.mousemove({buttons: 0, clientX: 500, clientY: 400});
+    assert.ok(!p.classes.has('mautic-patches-panning'));
+});
+
+test('a left drag that moved swallows the click that follows it; a left press without a move does not', () => {
+    const dragged = page();
+    dragged.handlers.mousedown(down(dragged.content, 0));
+    dragged.handlers.mousemove({buttons: 1, clientX: 700, clientY: 480});
+    dragged.handlers.mouseup({button: 0});
+    const swallowed = {prevented: false, stopped: false, preventDefault() { this.prevented = true; }, stopPropagation() { this.stopped = true; }};
+    dragged.handlers.click(swallowed);
+    assert.ok(swallowed.prevented && swallowed.stopped);
+
+    const still = page();
+    still.handlers.mousedown(down(still.content, 0));
+    still.handlers.mouseup({button: 0});
+    const kept = {prevented: false, stopped: false, preventDefault() { this.prevented = true; }, stopPropagation() { this.stopped = true; }};
+    still.handlers.click(kept);
+    assert.ok(!kept.prevented && !kept.stopped);
 });
 
 test('a middle press outside the campaign canvas is left alone', () => {
