@@ -16,7 +16,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * A usability change: the active / inactive toggle of the segment list was a small icon right before the name, easy to hit by
  * mistake, with the status told only by its color. Now:
- *  - a label after the name tells the status ("Ativo" green, "Inativo" red); it is only informative, not a link;
+ *  - a label at the start of the name tells the status ("Ativo" green, "Inativo" red); it is only informative, not a link;
  *  - the icon is hidden;
  *  - the three-dots menu of the row has "Desativar" / "Ativar" as its FIRST item (the last one is Delete, which nobody should
  *    reach by mistake). Its hover is red for Desativar and green for Ativar, the color of the status it leads to. Only for who
@@ -28,7 +28,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class SegmentStatusSubscriber implements EventSubscriberInterface
 {
+    // the label is placed at the start of the name by the script; until then it is invisible, so it does not flash at the end
     public const STYLE = 'i[class*="lead-list-publish-icon"]{display:none!important}'
+        .'.segment-status-label{margin-right:var(--spacing-03)}.segment-status-label:not([data-placed]){visibility:hidden}'
         .'a[data-segment-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-segment-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-segment-status-action="activate"]:hover{background-color:var(--support-success)!important}'
@@ -75,7 +77,7 @@ class SegmentStatusSubscriber implements EventSubscriberInterface
 
         $published = $segment->isPublished();
         $customContentEvent->addContent(sprintf(
-            '<span class="label %s segment-status-label" data-segment-id="%d" data-status="%s" style="margin-left:var(--spacing-03)">%s</span>',
+            '<span class="label %s segment-status-label" data-segment-id="%d" data-status="%s">%s</span>',
             $published ? 'label-success' : 'label-danger',
             $segment->getId(),
             $published ? 'published' : 'unpublished',

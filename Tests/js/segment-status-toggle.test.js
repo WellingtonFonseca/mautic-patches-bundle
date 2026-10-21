@@ -34,3 +34,26 @@ test('view: an inactive segment is a red label and the menu offers to activate i
         labelClass: 'label-danger', labelText: 'Inativo', action: 'activate', actionText: 'Ativar', actionIcon: 'ri-checkbox-circle-line',
     });
 });
+
+test('place: a label that is not first in its block is moved to the start, once, and marked', () => {
+    const insertions = [];
+    const block = {firstChild: {name: 'link'}, insertBefore(node, ref) { insertions.push([node.name, ref.name]); this.firstChild = node; }};
+    const label = {name: 'label', parentNode: block, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }};
+    const doc = {querySelectorAll: (sel) => (sel === '.segment-status-label:not([data-placed])' && !label.attrs['data-placed'] ? [label] : [])};
+
+    assert.strictEqual(api.place(doc), 1);
+    assert.deepStrictEqual(insertions, [['label', 'link']]);
+    assert.strictEqual(label.attrs['data-placed'], '1');
+    // a second pass finds nothing to do
+    assert.strictEqual(api.place(doc), 0);
+    assert.strictEqual(insertions.length, 1);
+});
+
+test('place: a label that already starts its block is only marked', () => {
+    const label = {name: 'label', attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }};
+    label.parentNode = {firstChild: label, insertBefore() { throw new Error('moved'); }};
+    const doc = {querySelectorAll: () => [label]};
+
+    assert.strictEqual(api.place(doc), 0);
+    assert.strictEqual(label.attrs['data-placed'], '1');
+});

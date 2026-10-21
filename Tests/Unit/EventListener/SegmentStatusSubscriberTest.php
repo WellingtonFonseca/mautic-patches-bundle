@@ -85,6 +85,8 @@ class SegmentStatusSubscriberTest extends TestCase
     {
         $css = SegmentStatusSubscriber::STYLE;
         $this->assertStringContainsString('i[class*="lead-list-publish-icon"]{display:none!important}', $css);
+        // the script puts the label at the start of the name; until then it is invisible
+        $this->assertStringContainsString('.segment-status-label:not([data-placed]){visibility:hidden}', $css);
         $this->assertStringContainsString('[data-segment-status-action="deactivate"]:hover{background-color:var(--support-error)', $css);
         $this->assertStringContainsString('[data-segment-status-action="activate"]:hover{background-color:var(--support-success)', $css);
     }
