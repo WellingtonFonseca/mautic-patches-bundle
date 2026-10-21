@@ -37,16 +37,15 @@ class CampaignConnectionTrashSubscriberTest extends TestCase
         $this->assertSame('', $this->content('somewhere.else'));
     }
 
-    public function testTheButtonIsAnOverlayThatCoreDoesNotRemoveAndSitsAboveTheLines(): void
+    public function testTheButtonIsOnlyOnTheCircleAndSitsAboveIt(): void
     {
         $script = file_get_contents(__DIR__.'/../../../Resources/js/campaign-connection-trash.js');
 
-        // core's Mautic.campaignBuilderUpdateLabel removes only the overlays of type Label
-        $this->assertStringContainsString("['Custom'", $script);
-        $this->assertStringNotContainsString("['Label'", $script);
-        // core gives the svg of the lines z-index 1000
-        $this->assertMatchesRegularExpression('/z-index:(\d+)/', $script);
+        // no button on the lines: no overlay, no hover area made on the path
+        $this->assertStringNotContainsString('addOverlay', $script);
+        $this->assertStringNotContainsString('mautic-patches-trash-hit', $script);
+        // the circles are at 1011 (CampaignEndpointsOnTopSubscriber)
         preg_match('/z-index:(\d+)/', $script, $m);
-        $this->assertGreaterThan(1000, (int) $m[1]);
+        $this->assertGreaterThan(1011, (int) $m[1]);
     }
 }
