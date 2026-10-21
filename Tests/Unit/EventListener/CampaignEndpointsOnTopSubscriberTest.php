@@ -30,6 +30,14 @@ class CampaignEndpointsOnTopSubscriberTest extends TestCase
         $this->assertLessThan(1100, (int) $m[1]);
     }
 
+    public function testTheScriptThatMovesTheCirclesOutIsOnThePage(): void
+    {
+        $content = $this->content();
+
+        $this->assertStringContainsString('mauticPatchesEndpointsOutside', $content);
+        $this->assertStringContainsString('campaignEndpointDefinitions', $content);
+    }
+
     public function testOnlyThePageHeaderGetsTheStyle(): void
     {
         $this->assertSame('', $this->content('somewhere.else'));
