@@ -1,5 +1,5 @@
 /*
- * A trash button on every line of the campaign builder: moving the mouse over a line (between any two nodes, the contact source
+ * A button on every line (a broken link icon) of the campaign builder: moving the mouse over a line (between any two nodes, the contact source
  * included) shows it in the middle of the line, and a click disconnects the line. Core only disconnects by grabbing the half
  * circle (the endpoint) of the node and dragging the line away.
  *
@@ -8,7 +8,7 @@
  * The button sits above the lines (core gives their svg z-index 1000). It is a jsPlumb "Custom" overlay (core only removes the overlays of type Label, see
  * Mautic.campaignBuilderUpdateLabel), so it follows the line when a node moves.
  *
- * The circle above a node (where its line comes in) shows a second trash, just above the circle, when the mouse is over the circle:
+ * The circle above a node (where its line comes in) shows a second button, just above the circle, when the mouse is over the circle:
  * it disconnects the line that comes into that node, so the line does not have to be aimed at where other lines cross.
  *
  * The line is 2 px thick and hard to hit: a transparent copy of its path, 16 px thick, is the area that shows the button, and
@@ -31,7 +31,7 @@
         button.href = 'javascript:void(0);';
         button.className = 'btn btn-danger btn-xs btn-nospin mautic-patches-trash';
         button.title = title;
-        button.innerHTML = '<i class="ri-delete-bin-line ri-lg"></i>';
+        button.innerHTML = '<i class="ri-link-unlink ri-lg"></i>';
         button.style.cssText = 'display:none;position:absolute;z-index:1100;color:#fff;padding:4px 8px;line-height:1;cursor:pointer;transition:none;margin:0';
 
         return button;
