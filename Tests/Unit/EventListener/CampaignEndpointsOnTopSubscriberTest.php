@@ -25,6 +25,8 @@ class CampaignEndpointsOnTopSubscriberTest extends TestCase
         $this->assertStringStartsWith('<style>', $content);
         // core: node z-index 1010, circle 1005; the trash of the lines is 1100
         $this->assertMatchesRegularExpression('/#CampaignCanvas \.jtk-endpoint\{z-index:(\d+)!important\}/', $content);
+        // the mouse over a circle is a crosshair, also over its svg
+        $this->assertStringContainsString('#CampaignCanvas .jtk-endpoint,#CampaignCanvas .jtk-endpoint *{cursor:crosshair}', $content);
         preg_match('/z-index:(\d+)/', $content, $m);
         $this->assertGreaterThan(1010, (int) $m[1]);
         $this->assertLessThan(1100, (int) $m[1]);

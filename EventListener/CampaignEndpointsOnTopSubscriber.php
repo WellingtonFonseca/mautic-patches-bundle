@@ -16,12 +16,14 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * They also sit 70% outside the node (30% over it) instead of half and half: Resources/js/campaign-endpoints-outside.js moves the
  * offsets of the anchors core keeps in Mautic.campaignEndpointDefinitions.
  *
+ * The mouse over a circle is a crosshair (the point to aim at when drawing a line), also over its svg.
+ *
  * Above the node, below the trash button of the lines (CampaignConnectionTrashSubscriber, 1100). Injected the same way as
  * CampaignEventModalWidthSubscriber (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left').
  */
 class CampaignEndpointsOnTopSubscriber implements EventSubscriberInterface
 {
-    public const STYLE = '#CampaignCanvas .jtk-endpoint{z-index:1011!important}';
+    public const STYLE = '#CampaignCanvas .jtk-endpoint,#CampaignCanvas .jtk-endpoint *{cursor:crosshair}#CampaignCanvas .jtk-endpoint{z-index:1011!important}';
 
     public static function getSubscribedEvents(): array
     {
