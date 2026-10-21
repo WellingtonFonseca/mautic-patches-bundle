@@ -31,6 +31,7 @@ class SegmentStatusSubscriberTest extends TestCase
     {
         $segment = new LeadList();
         $segment->setIsPublished($published);
+        $segment->setAlias('seg-7');
         (new \ReflectionProperty($segment, 'id'))->setValue($segment, 7);
 
         return $segment;
@@ -63,6 +64,8 @@ class SegmentStatusSubscriberTest extends TestCase
             $this->assertStringContainsString($class.' segment-status-label', $html);
             $this->assertStringContainsString('data-status="'.$status.'"', $html);
             $this->assertStringContainsString('data-segment-id="7"', $html);
+            // the alias goes with the label: the script takes "(alias)" off the name
+            $this->assertStringContainsString('data-alias="seg-7"', $html);
             $this->assertStringContainsString('>'.$text.'<', $html);
             $this->assertStringStartsWith('<span', $html);
             $this->assertStringNotContainsString('<a', $html);

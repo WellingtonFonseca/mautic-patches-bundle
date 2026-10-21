@@ -18,7 +18,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * mistake, with the status told only by its color. Now:
  *  - a label at the start of the name tells the status ("Ativo" green, "Inativo" red); it is only informative, not a link; all of
  *    them have the width of "Inativo" (measured by the script), so they line up;
- *  - the icon is hidden;
+ *  - the icon is hidden, and so is the alias after the name ("Name (alias)"), which is long, made from the name and says nothing:
+ *    the label carries it (data-alias) and the script takes it off the text;
  *  - the three-dots menu of the row has "Desativar" / "Ativar" as its FIRST item (the last one is Delete, which nobody should
  *    reach by mistake). Its hover is red for Desativar and green for Ativar, the color of the status it leads to. Only for who
  *    may edit the segment; the server checks it again, as it does for core's icon.
@@ -78,10 +79,11 @@ class SegmentStatusSubscriber implements EventSubscriberInterface
 
         $published = $segment->isPublished();
         $customContentEvent->addContent(sprintf(
-            '<span class="label %s segment-status-label" data-segment-id="%d" data-status="%s">%s</span>',
+            '<span class="label %s segment-status-label" data-segment-id="%d" data-status="%s" data-alias="%s">%s</span>',
             $published ? 'label-success' : 'label-danger',
             $segment->getId(),
             $published ? 'published' : 'unpublished',
+            htmlspecialchars((string) $segment->getAlias(), ENT_QUOTES),
             htmlspecialchars($this->translator->trans($published ? 'mautic.core.form.active' : 'mautic.core.form.inactive'), ENT_QUOTES)
         ));
     }
