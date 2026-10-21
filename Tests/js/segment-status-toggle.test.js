@@ -83,3 +83,14 @@ test('measure: nothing is set when the width cannot be measured (a hidden page)'
     assert.strictEqual(api.measure(doc, cfg), 0);
     assert.deepStrictEqual(props, {});
 });
+
+test('place: a label printed inside the name link (the campaign list) goes to the start of the block, outside the link', () => {
+    const insertions = [];
+    const block = {firstChild: {name: 'link'}, insertBefore(node, ref) { insertions.push([node.name, ref.name]); this.firstChild = node; }};
+    const link = {tagName: 'A', parentNode: block};
+    const label = {name: 'label', parentNode: link, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }};
+    const doc = {querySelectorAll: () => (label.attrs['data-placed'] ? [] : [label])};
+
+    assert.strictEqual(api.place(doc), 1);
+    assert.deepStrictEqual(insertions, [['label', 'link']]);
+});
