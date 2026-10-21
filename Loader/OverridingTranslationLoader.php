@@ -10,10 +10,10 @@ use Symfony\Component\Translation\MessageCatalogue;
 /**
  * Core's translation loader reads the bundles' Translations first and the downloaded packs (translations/<locale>) after them, so a
  * plugin's own `Translations/<locale>/messages.ini` can never replace a text of the pack. This loader reads core's catalogue and then
- * puts on top of it the texts of Resources/translation-overrides/<locale>/messages.ini, for the texts the pack gets wrong:
- *  - pt_BR `mautic.core.close_back` names its placeholder %alvo% while core's templates fill %target%, so every "Back to <list>" button
- *    read "Voltar ao %alvo%".
- * Only the keys of that file are touched. Registered under core's service id in Config/services.php.
+ * puts on top of it the texts of Resources/translation-overrides/<locale>/<domain>.ini (messages, flashes, validators...), for the texts
+ * the pack gets wrong, with a placeholder named differently, malformed or lost: pt_BR `mautic.core.close_back` names its placeholder
+ * %alvo% while core's templates fill %target%, so every "Back to <list>" button read "Voltar ao %alvo%"; `%contato%` for %contact%,
+ * `%ccount%` for %count%, `%id#`... Only the keys of the files are touched. Registered under core's service id in Config/services.php.
  */
 class OverridingTranslationLoader extends TranslationLoader
 {
@@ -23,26 +23,28 @@ class OverridingTranslationLoader extends TranslationLoader
     {
         $catalogue = parent::load($resource, $locale, $domain);
 
-        $overrides = self::overrides($locale);
-        if ([] !== $overrides) {
-            $catalogue->add($overrides, 'messages');
+        foreach (self::overrides($locale) as $domainOfTheFile => $messages) {
+            $catalogue->add($messages, $domainOfTheFile);
         }
 
         return $catalogue;
     }
 
     /**
-     * @return array<string, string>
+     * The overrides of a locale, by domain (the name of the file: messages, flashes, validators...).
+     *
+     * @return array<string, array<string, string>>
      */
     public static function overrides(string $locale, string $dir = self::OVERRIDES_DIR): array
     {
-        $file = $dir.'/'.$locale.'/messages.ini';
-        if (!is_file($file)) {
-            return [];
+        $found = [];
+        foreach (glob($dir.'/'.$locale.'/*.ini') ?: [] as $file) {
+            $messages = parse_ini_string((string) file_get_contents($file), false);
+            if (false !== $messages && [] !== $messages) {
+                $found[basename($file, '.ini')] = array_map('strval', $messages);
+            }
         }
 
-        $messages = parse_ini_string((string) file_get_contents($file), false);
-
-        return false === $messages ? [] : array_map('strval', $messages);
+        return $found;
     }
 }

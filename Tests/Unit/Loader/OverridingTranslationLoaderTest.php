@@ -19,8 +19,28 @@ class OverridingTranslationLoaderTest extends TestCase
         $overrides = OverridingTranslationLoader::overrides('pt_BR');
 
         // core's templates fill %target%; the downloaded pack names it %alvo%
-        $this->assertSame('Voltar ao %target%', $overrides['mautic.core.close_back']);
-        $this->assertStringNotContainsString('%alvo%', implode('', $overrides));
+        $this->assertSame('Voltar ao %target%', $overrides['messages']['mautic.core.close_back']);
+        $this->assertStringNotContainsString('%alvo%', json_encode($overrides));
+    }
+
+    public function testTheOverridesAreByDomainAndKeepTheEnglishPlaceholders(): void
+    {
+        $overrides = OverridingTranslationLoader::overrides('pt_BR');
+
+        $this->assertEqualsCanonicalizing(['flashes', 'messages', 'validators'], array_keys($overrides));
+        $this->assertArrayHasKey('mautic.core.notice.used.field', $overrides['flashes']);
+        $this->assertArrayHasKey('mautic.integration.sync.missing_mautic_field_mappings', $overrides['validators']);
+        // the placeholders of the English texts, named as core fills them (the text of the pack had %contato%, %ccount%, %mensagem%...)
+        $this->assertStringContainsString('%contact%', $overrides['messages']['mautic.email.contact_has_unsubscribed_from_category']);
+        $this->assertStringContainsString('%count%', $overrides['messages']['mautic.campaign.trigger.events_executed']);
+        $this->assertStringContainsString('%message%', $overrides['messages']['mautic.core.command.transifex_error_pulling_data']);
+        $this->assertStringContainsString('%segments%', $overrides['flashes']['mautic.core.notice.used.field']);
+        // no placeholder that is not closed, spaced or in another language in any of them
+        foreach ($overrides as $messages) {
+            foreach ($messages as $key => $text) {
+                $this->assertSame(0, substr_count(preg_replace('/%[A-Za-z_]+%/', '', $text), '%'), $key.': '.$text);
+            }
+        }
     }
 
     public function testALocaleWithoutAnOverridesFileHasNone(): void
@@ -39,6 +59,8 @@ class OverridingTranslationLoaderTest extends TestCase
         $catalogue = (new OverridingTranslationLoader($bundleHelper, $pathsHelper))->load('mautic', 'pt_BR', 'messages');
 
         $this->assertSame('Voltar ao %target%', $catalogue->get('mautic.core.close_back', 'messages'));
+        // another domain of the overrides lands in its own domain
+        $this->assertSame('%name% foi desbloqueado e agora está disponível para edição.', $catalogue->get('mautic.core.action.entity.unlocked', 'flashes'));
     }
 
     public function testThePassReplacesTheClassOfCoresLoaderAndKeepsTheRest(): void
