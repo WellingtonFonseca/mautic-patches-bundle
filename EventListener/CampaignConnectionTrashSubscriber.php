@@ -10,8 +10,8 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * A usability change, not a bug: a trash button on every line of the campaign builder, shown when the mouse is over the line,
- * to disconnect it with a click. Core only disconnects by grabbing the half circle of the node and dragging the line away.
+ * A usability change, not a bug: a broken link button above the circle where a line comes into a node of the campaign builder,
+ * shown when the mouse is over the circle, to disconnect that line with a click. Core only disconnects by grabbing the half circle of the node and dragging the line away.
  * See Resources/js/campaign-connection-trash.js for how.
  *
  * Injected the same way as the other page scripts (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left').
