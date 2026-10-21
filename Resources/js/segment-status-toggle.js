@@ -46,6 +46,19 @@
         });
     }
 
+    /** Moves the labels that are not at the start of their block yet; returns how many it moved. */
+    function place(doc) {
+        var moved = 0;
+        var labels = doc.querySelectorAll('.segment-status-label:not([data-placed])');
+        for (var k = 0; k < labels.length; k++) {
+            var label = labels[k], parent = label.parentNode;
+            if (parent && parent.firstChild !== label) { parent.insertBefore(label, parent.firstChild); moved++; }
+            label.setAttribute('data-placed', '1');
+        }
+
+        return moved;
+    }
+
     function install($, Mautic, cfg) {
         if (!$ || root.mauticPatchesSegmentStatus) { return; }
         root.mauticPatchesSegmentStatus = true;
@@ -53,6 +66,15 @@
         var style = root.document.createElement('style');
         style.textContent = cfg.style;
         root.document.head.appendChild(style);
+
+        // the labels of a list that is in the page, and of every list loaded later
+        place(root.document);
+        var pending = false;
+        new root.MutationObserver(function () {
+            if (pending) { return; }
+            pending = true;
+            root.requestAnimationFrame(function () { pending = false; place(root.document); });
+        }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true});
 
         $(root.document).on('click', 'a[data-segment-status-action]', function (event) {
             event.preventDefault();
@@ -86,7 +108,7 @@
         });
     }
 
-    var api = {install: install, statusOf: statusOf, view: view};
+    var api = {install: install, statusOf: statusOf, view: view, place: place};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
