@@ -59,6 +59,23 @@
         return moved;
     }
 
+    /** The width, in px, of a label with the text of Inativo; sets --segment-status-width. 0 when it cannot be measured (hidden page). */
+    function measure(doc, cfg) {
+        var body = doc.body;
+        if (!body) { return 0; }
+        var probe = doc.createElement('span');
+        probe.className = 'label label-danger segment-status-label';
+        probe.setAttribute('data-placed', '1');
+        probe.style.cssText = 'position:absolute;visibility:hidden;min-width:0;left:-9999px';
+        probe.textContent = cfg.inactive;
+        body.appendChild(probe);
+        var width = probe.getBoundingClientRect().width;
+        body.removeChild(probe);
+        if (width > 0) { doc.documentElement.style.setProperty('--segment-status-width', width + 'px'); }
+
+        return width;
+    }
+
     function install($, Mautic, cfg) {
         if (!$ || root.mauticPatchesSegmentStatus) { return; }
         root.mauticPatchesSegmentStatus = true;
@@ -66,6 +83,9 @@
         var style = root.document.createElement('style');
         style.textContent = cfg.style;
         root.document.head.appendChild(style);
+
+        measure(root.document, cfg);
+        if (root.document.fonts && root.document.fonts.ready) { root.document.fonts.ready.then(function () { measure(root.document, cfg); }); }
 
         // the labels of a list that is in the page, and of every list loaded later
         place(root.document);
@@ -108,7 +128,7 @@
         });
     }
 
-    var api = {install: install, statusOf: statusOf, view: view, place: place};
+    var api = {install: install, statusOf: statusOf, view: view, place: place, measure: measure};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
