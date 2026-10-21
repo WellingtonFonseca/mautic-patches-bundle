@@ -46,6 +46,27 @@
         });
     }
 
+    /** The text without " (alias)": the exact alias in parentheses (the last one), with the spaces before it. */
+    function withoutAlias(text, alias) {
+        if (!alias) { return text; }
+        var needle = '(' + alias + ')', at = text.lastIndexOf(needle);
+        if (at === -1) { return text; }
+
+        return text.slice(0, at).replace(/[ \t]+$/, '') + text.slice(at + needle.length);
+    }
+
+    /** Takes "(alias)" off the text nodes of a block (deep). */
+    function stripAlias(node, alias) {
+        for (var child = node.firstChild; child; child = child.nextSibling) {
+            if (child.nodeType === 3) {
+                var cleaned = withoutAlias(child.nodeValue, alias);
+                if (cleaned !== child.nodeValue) { child.nodeValue = cleaned; }
+            } else if (child.nodeType === 1) {
+                stripAlias(child, alias);
+            }
+        }
+    }
+
     /** Moves the labels that are not at the start of their block yet; returns how many it moved. */
     function place(doc) {
         var moved = 0;
@@ -55,6 +76,7 @@
             // the campaign list prints the hook inside the name link: the label goes to the start of the block, outside the link
             if (parent && parent.tagName === 'A') { parent = parent.parentNode; }
             if (parent && parent.firstChild !== label) { parent.insertBefore(label, parent.firstChild); moved++; }
+            if (parent && label.getAttribute('data-alias')) { stripAlias(parent, label.getAttribute('data-alias')); }
             label.setAttribute('data-placed', '1');
         }
 
@@ -187,7 +209,7 @@
         }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'data-status']});
     }
 
-    var api = {install: install, installCampaign: installCampaign, statusOf: statusOf, view: view, place: place, measure: measure};
+    var api = {install: install, installCampaign: installCampaign, statusOf: statusOf, view: view, place: place, measure: measure, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

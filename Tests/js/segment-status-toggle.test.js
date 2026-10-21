@@ -38,7 +38,7 @@ test('view: an inactive segment is a red label and the menu offers to activate i
 test('place: a label that is not first in its block is moved to the start, once, and marked', () => {
     const insertions = [];
     const block = {firstChild: {name: 'link'}, insertBefore(node, ref) { insertions.push([node.name, ref.name]); this.firstChild = node; }};
-    const label = {name: 'label', parentNode: block, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }};
+    const label = {name: 'label', parentNode: block, attrs: {}, getAttribute(k) { return this.attrs[k]; }, setAttribute(k, v) { this.attrs[k] = v; }};
     const doc = {querySelectorAll: (sel) => (sel === '.segment-status-label:not([data-placed])' && !label.attrs['data-placed'] ? [label] : [])};
 
     assert.strictEqual(api.place(doc), 1);
@@ -50,7 +50,7 @@ test('place: a label that is not first in its block is moved to the start, once,
 });
 
 test('place: a label that already starts its block is only marked', () => {
-    const label = {name: 'label', attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }};
+    const label = {name: 'label', attrs: {}, getAttribute(k) { return this.attrs[k]; }, setAttribute(k, v) { this.attrs[k] = v; }};
     label.parentNode = {firstChild: label, insertBefore() { throw new Error('moved'); }};
     const doc = {querySelectorAll: () => [label]};
 
@@ -88,9 +88,37 @@ test('place: a label printed inside the name link (the campaign list) goes to th
     const insertions = [];
     const block = {firstChild: {name: 'link'}, insertBefore(node, ref) { insertions.push([node.name, ref.name]); this.firstChild = node; }};
     const link = {tagName: 'A', parentNode: block};
-    const label = {name: 'label', parentNode: link, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }};
+    const label = {name: 'label', parentNode: link, attrs: {}, getAttribute(k) { return this.attrs[k]; }, setAttribute(k, v) { this.attrs[k] = v; }};
     const doc = {querySelectorAll: () => (label.attrs['data-placed'] ? [] : [label])};
 
     assert.strictEqual(api.place(doc), 1);
     assert.deepStrictEqual(insertions, [['label', 'link']]);
+});
+
+test('withoutAlias: "(alias)" and the spaces before it go, whatever is around the text stays', () => {
+    assert.strictEqual(api.withoutAlias('Compras (compras)', 'compras'), 'Compras');
+    assert.strictEqual(api.withoutAlias('\n   Campo texto: nome1 = Disciplina 01 (cftext)\n  ', 'cftext'), '\n   Campo texto: nome1 = Disciplina 01\n  ');
+    assert.strictEqual(api.withoutAlias('Nome (alias)', ''), 'Nome (alias)');
+    assert.strictEqual(api.withoutAlias('Nome', 'alias'), 'Nome');
+});
+
+test('withoutAlias: only the exact alias; a name with its own parentheses keeps them, and the last match is the alias', () => {
+    assert.strictEqual(api.withoutAlias('Vendas (SP) (cfvendas)', 'cfvendas'), 'Vendas (SP)');
+    assert.strictEqual(api.withoutAlias('Vendas (SP)', 'cfvendas'), 'Vendas (SP)');
+    assert.strictEqual(api.withoutAlias('Vendas (cfvendas) (cfvendas)', 'cfvendas'), 'Vendas (cfvendas)');
+});
+
+test('place: the alias is taken off the text of the block when the label carries it', () => {
+    const text = {nodeType: 3, nodeValue: 'Compras (compras)', nextSibling: null};
+    const link = {nodeType: 1, firstChild: text, nextSibling: null};
+    const block = {firstChild: link, insertBefore() {}};
+    const label = {name: 'label', parentNode: block, attrs: {'data-alias': 'compras'}, getAttribute(k) { return this.attrs[k]; }, setAttribute(k, v) { this.attrs[k] = v; }};
+    block.firstChild = label; // already first: nothing to move
+    label.nextSibling = link;
+    const doc = {querySelectorAll: () => [label]};
+
+    api.place(doc);
+
+    assert.strictEqual(text.nodeValue, 'Compras');
+    assert.strictEqual(label.attrs['data-placed'], '1');
 });
