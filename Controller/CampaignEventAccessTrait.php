@@ -16,9 +16,9 @@ use Symfony\Component\HttpFoundation\Response;
 trait CampaignEventAccessTrait
 {
     /**
-     * @return Event|Response the event, or the response to send back
+     * The event, or the response to send back.
      */
-    private function eventOrDeny(int $eventId)
+    private function eventOrDeny(int $eventId): Event|Response
     {
         $event = $this->findEvent($eventId);
 
