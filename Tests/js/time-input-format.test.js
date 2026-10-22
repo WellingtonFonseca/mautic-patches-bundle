@@ -71,3 +71,49 @@ test('complete: a partial date is not touched', () => {
     assert.strictEqual(api.complete('2026-1', 'Y-m-d'), '2026-1');
     assert.strictEqual(api.complete('2026-10-21', 'Y-m-d'), '2026-10-21');
 });
+
+// The date filters of the segment form also take relative values. Core keeps a filter relative only when it is one of its own keywords
+// translated into the language of the user (or starts with a sign); any other text it turns into a fixed date (a field of date and
+// time) or ignores. The page gives a map of every word it accepts (the language of the user and English, in lower case) to the
+// word core keeps relative, and a field is checked as a whole when it loses focus: a valid value stays (English words are swapped for
+// the word of the user's language), any other is cleared.
+const WORDS = {hoje: 'hoje', 'amanhã': 'amanhã', 'ontém': 'ontém', 'esta semana': 'esta semana', today: 'hoje', tomorrow: 'amanhã', yesterday: 'ontém', 'this week': 'esta semana'};
+
+test('isFreeText: a text that starts with a letter or a sign is a relative value being typed, not a date', () => {
+    for (const text of ['h', 'hoje', 'Today', '-', '-1 days', '+2', 'ã', 'esta semana']) { assert.strictEqual(api.isFreeText(text), true, text); }
+    for (const text of ['', '1', '2026-10-21', '14:30', ' ']) { assert.strictEqual(api.isFreeText(text), false, text); }
+});
+
+test('relativeValue: the words of the page, in the language of the user and in English, in any case', () => {
+    for (const text of ['hoje', 'ontém', 'esta semana', 'today', 'yesterday', 'tomorrow', 'this week', 'Today', 'HOJE', 'This Week']) {
+        assert.notStrictEqual(api.relativeValue(text, WORDS), '', text);
+    }
+    for (const text of ['hoj', 'ontem', 'esta', 'last day', 'now', 'abc']) { assert.strictEqual(api.relativeValue(text, WORDS), '', text); }
+});
+
+test('relativeValue: a sign, a number and a unit', () => {
+    for (const text of ['-1 days', '+2 weeks', '-3 months', '-1 day', '+1 year', '-30 minutes', '-2 hours', '-1days', '+10 Days', '-90 seconds',
+        '-1 week +2 days', '+1 month -1 day', '-1 year  -2 months']) {
+        assert.strictEqual(api.relativeValue(text, WORDS), text, text);
+    }
+    for (const text of ['-', '-1', '-1 ', '-1 d', '-1 foo', '1 days', '- 1 days', '-1 days ago', '+days', '--1 days']) {
+        assert.strictEqual(api.relativeValue(text, WORDS), '', text);
+    }
+});
+
+test('relativeValue: without the map of the page only the signed offsets are valid', () => {
+    assert.strictEqual(api.relativeValue('hoje', undefined), '');
+    assert.strictEqual(api.relativeValue('-1 days', undefined), '-1 days');
+});
+
+test('relativeValue: what the field keeps when it loses focus', () => {
+    assert.strictEqual(api.relativeValue('yesterday', WORDS), 'ontém', 'English is swapped for the word of the user');
+    assert.strictEqual(api.relativeValue('This Week', WORDS), 'esta semana');
+    assert.strictEqual(api.relativeValue('TODAY', WORDS), 'hoje');
+    assert.strictEqual(api.relativeValue('hoje', WORDS), 'hoje');
+    assert.strictEqual(api.relativeValue('  ontém ', WORDS), 'ontém', 'blanks around it are dropped');
+    assert.strictEqual(api.relativeValue('-1 days', WORDS), '-1 days');
+    assert.strictEqual(api.relativeValue('ontem', WORDS), '', 'not a word of core: cleared');
+    assert.strictEqual(api.relativeValue('abc', WORDS), '');
+    assert.strictEqual(api.relativeValue('-1', WORDS), '');
+});

@@ -14,6 +14,7 @@ use MauticPlugin\MauticPatchesBundle\Entity\SegmentListRepository;
 use MauticPlugin\MauticPatchesBundle\Doctrine\CampaignRepositoryListener;
 use MauticPlugin\MauticPatchesBundle\Doctrine\SegmentRepositoryListener;
 use MauticPlugin\MauticPatchesBundle\Service\Performance\PerformanceLog;
+use MauticPlugin\MauticPatchesBundle\EventListener\TimeInputFormatSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignRebuildLauncher;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuildLauncher;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -59,6 +60,11 @@ return function (ContainerConfigurator $configurator): void {
         ->autowire()
         ->autoconfigure()
         ->public();
+
+    // Core's relative date service has the id `mautic.lead.model.relative_date`, not its class name, so it is not autowired (the translator
+    // gives the same keywords in English).
+    $services->set(TimeInputFormatSubscriber::class)
+        ->args([service('mautic.lead.model.relative_date'), service('translator')]);
 
     // A plain string argument cannot be autowired.
     $services->set(SegmentRebuildLauncher::class)
