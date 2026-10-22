@@ -14,7 +14,7 @@
  * a field of date and only today, tomorrow and yesterday, so they are accepted here and, when the field loses focus, swapped for the
  * word of the user's language. The page gives the map in window.mauticPatchesRelativeDates: every word it accepts (the language of
  * the user and English, in lower case) to the word core keeps relative. A text that starts with a letter or a sign is left as typed
- * while it is typed (no digits-only rule) and, when the field loses focus, checked as a whole: a valid value stays (swapped when it
+ * while it is typed (no digits-only rule) and, when it is committed (leaving the field, Enter), checked as a whole, only if a person typed it (a stored value that was already there is never touched): a valid value stays (swapped when it
  * is an English word), any other is cleared. A text that starts with a digit is a date and is formatted as above. Time fields and
  * the dates of other forms keep the digits-only rule.
  *
@@ -108,16 +108,10 @@
         return /^[A-Za-z\u00C0-\u024F+-]/.test(String(text === null || text === undefined ? '' : text));
     }
 
-    var SIGNED = /^[+-]\d+\s?(minute|hour|day|week|month|year)s?$/i;
+    // one or more terms (`-1 days`, `-1 week +2 days`): core keeps anything that starts with a sign and reads it as an interval
+    var SIGNED = /^([+-]\d+\s?(second|minute|hour|day|week|month|year)s?\s*)+$/i;
 
     function has(map, key) { return !!map && Object.prototype.hasOwnProperty.call(map, key); }
-
-    /** Whether the text is a relative value: one of the words of the page (any case), or a sign, a number and a unit (`-1 days`). */
-    function isRelative(text, map) {
-        text = String(text === null || text === undefined ? '' : text);
-
-        return has(map, text.toLowerCase()) || SIGNED.test(text);
-    }
 
     /** What the field keeps when it loses focus: the word core keeps relative for a word of the page, a signed offset as it is, else ''. */
     function relativeValue(text, map) {
@@ -126,6 +120,9 @@
 
         return SIGNED.test(text) ? text : '';
     }
+
+    /** Marks a free text field as typed in by a person: only that is checked when it is committed, never a value that was already there. */
+    var TOUCHED = 'data-patches-relative-typed';
 
     /** Relative values are typed in the date filters of the segment form only, in a field whose format has a date part. */
     function relativeAllowed(el, fmt) {
@@ -155,9 +152,12 @@
         doc.addEventListener('input', function (e) {
             var el = e.target;
             if (!el || el.tagName !== 'INPUT') { return; }
+            // typed by a person: marked at once, before the format is known (the picker starts ~100 ms after the focus, and a fast
+            // typist is done by then); the check itself is made when the value is committed (the change event, below)
+            if (el.closest && el.closest('.segment-filter') && isFreeText(el.value)) { el.setAttribute(TOUCHED, '1'); }
             var fmt = formatOf($, el);
             if (!fmt || !tokens(fmt)) { return; }
-            // a relative value is typed as it is, and checked when the field loses focus
+            // a relative value is typed as it is, with no digits-only rule
             if (relativeAllowed(el, fmt) && isFreeText(el.value)) { return; }
             var deleting = /^delete/.test(e.inputType || '');
             var before = el.value;
@@ -179,24 +179,29 @@
             if (!el || el.tagName !== 'INPUT') { return; }
             var fmt = formatOf($, el);
             if (!fmt || !tokens(fmt)) { return; }
-            if (relativeAllowed(el, fmt) && isFreeText(el.value)) {
-                var valid = relativeValue(el.value, root.mauticPatchesRelativeDates);
-                if (valid !== el.value) {
-                    el.value = valid;
-                    $(el).trigger('change');
-                }
-
-                return;
-            }
+            // a relative value is not a time to complete: it is checked when it is committed (the change event, below)
+            if (relativeAllowed(el, fmt) && isFreeText(el.value)) { return; }
             var done = complete(el.value, fmt);
             if (done !== el.value) {
                 el.value = done;
                 $(el).trigger('change');
             }
         }, true);
+
+        // The commit of a value (leaving the field, or Enter, or a script): a relative value that a person typed is checked as a whole,
+        // a valid one stays (an English word is swapped for the word core keeps relative), any other is cleared. Runs before the other
+        // listeners (capture), which then see the final value.
+        doc.addEventListener('change', function (e) {
+            var el = e.target;
+            if (!el || el.tagName !== 'INPUT' || !el.hasAttribute(TOUCHED)) { return; }
+            el.removeAttribute(TOUCHED);
+            var fmt = formatOf($, el);
+            if (!fmt || !tokens(fmt) || !relativeAllowed(el, fmt) || !isFreeText(el.value)) { return; }
+            el.value = relativeValue(el.value, root.mauticPatchesRelativeDates);
+        }, true);
     }
 
-    var api = {install: install, tokens: tokens, format: format, complete: complete, formatOf: formatOf, isFreeText: isFreeText, isRelative: isRelative, relativeValue: relativeValue};
+    var api = {install: install, tokens: tokens, format: format, complete: complete, formatOf: formatOf, isFreeText: isFreeText, relativeValue: relativeValue};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

@@ -13,15 +13,15 @@ use PHPUnit\Framework\TestCase;
 
 class TimeInputFormatSubscriberTest extends TestCase
 {
-    private function content(string $context = 'page.header.left'): string
+    private function content(string $context = 'page.header.left', ?array $english = null, ?array $local = null): string
     {
         $relativeDate = $this->createMock(RelativeDate::class);
-        $relativeDate->method('getRelativeDateStrings')->willReturn(['mautic.lead.list.today' => 'hoje', 'mautic.lead.list.yesterday' => 'ontém', 'mautic.lead.list.week_this' => 'esta semana']);
+        $relativeDate->method('getRelativeDateStrings')->willReturn($local ?? ['mautic.lead.list.today' => 'hoje', 'mautic.lead.list.yesterday' => 'ontém', 'mautic.lead.list.week_this' => 'esta semana']);
 
         // the same keys in English, as the translator gives them for en_US
-        $english    = ['mautic.lead.list.today' => 'today', 'mautic.lead.list.yesterday' => 'yesterday', 'mautic.lead.list.week_this' => 'this week'];
+        $english    = $english ?? ['mautic.lead.list.today' => 'today', 'mautic.lead.list.yesterday' => 'yesterday', 'mautic.lead.list.week_this' => 'this week'];
         $translator = $this->createMock(TranslatorInterface::class);
-        $translator->method('trans')->willReturnCallback(fn (string $key, array $parameters = [], ?string $domain = null, ?string $locale = null) => 'en_US' === $locale ? $english[$key] : $key);
+        $translator->method('trans')->willReturnCallback(fn (string $key, array $parameters = [], ?string $domain = null, ?string $locale = null) => 'en_US' === $locale ? ($english[$key] ?? $key) : $key);
 
         $event = new CustomContentEvent('some_view', $context);
         (new TimeInputFormatSubscriber($relativeDate, $translator))->injectViewCustomContent($event);
@@ -46,11 +46,28 @@ class TimeInputFormatSubscriberTest extends TestCase
     {
         $content = $this->content();
 
-        // the language of the user and English (the official documentation is in English), lower case, each to the word of the user's language
+        // the words of the user's language first, then English (the official documentation is in English), lower case, each to the word of the user's language
         $this->assertStringContainsString(
-            'window.mauticPatchesRelativeDates={"hoje":"hoje","today":"hoje","ont\u00e9m":"ont\u00e9m","yesterday":"ont\u00e9m","esta semana":"esta semana","this week":"esta semana"};',
+            'window.mauticPatchesRelativeDates={"hoje":"hoje","ont\u00e9m":"ont\u00e9m","esta semana":"esta semana","today":"hoje","yesterday":"ont\u00e9m","this week":"esta semana"};',
             $content
         );
         $this->assertLessThan(strpos($content, 'mauticPatchesTimeInputFormatApi.install'), strpos($content, 'mauticPatchesRelativeDates'), 'the map is there before the formatter starts');
+    }
+
+    public function testAMissingEnglishTranslationIsNotAnAcceptedWord(): void
+    {
+        // the translator gives the key back when the string is missing: that key must not become a word the user can type
+        $content = $this->content('page.header.left', ['mautic.lead.list.today' => 'today']);
+
+        $this->assertStringContainsString('"today":"hoje"', $content);
+        $this->assertStringNotContainsString('mautic.lead.list', $content);
+    }
+
+    public function testTheWordOfTheLanguageOfTheUserWinsOverAnEnglishWordThatIsTheSame(): void
+    {
+        // the pt_BR word of one keyword equal to the English word of another: the word of the user's language keeps its own keyword
+        $content = $this->content('page.header.left', ['mautic.lead.list.today' => 'tomorrow', 'mautic.lead.list.tomorrow' => 'today'], ['mautic.lead.list.today' => 'today', 'mautic.lead.list.tomorrow' => 'tomorrow']);
+
+        $this->assertStringContainsString('{"today":"today","tomorrow":"tomorrow"}', $content);
     }
 }
