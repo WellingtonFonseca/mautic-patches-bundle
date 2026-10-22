@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Controller;
 use Mautic\CampaignBundle\Controller\CampaignController;
 use Mautic\LeadBundle\Controller\ListController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignContactsController;
+use MauticPlugin\MauticPatchesBundle\Controller\CampaignPendingContactsController;
 use MauticPlugin\MauticPatchesBundle\Controller\ContactsTableTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\SegmentContactsController;
 use PHPUnit\Framework\TestCase;
@@ -29,6 +30,17 @@ class ContactsTabControllersTest extends TestCase
     {
         $this->assertTrue(is_subclass_of(CampaignContactsController::class, CampaignController::class));
         $this->assertContains(ContactsTableTrait::class, class_uses(CampaignContactsController::class));
+    }
+
+    public function testThePendingTableOfTheCampaignNodeUsesTheSameTrait(): void
+    {
+        $this->assertTrue(is_subclass_of(CampaignPendingContactsController::class, CampaignController::class));
+        $this->assertContains(ContactsTableTrait::class, class_uses(CampaignPendingContactsController::class));
+        $this->assertCount(1, (new \ReflectionMethod(CampaignPendingContactsController::class, 'setColumnsDictionary'))->getAttributes(Required::class));
+
+        $route = (require __DIR__.'/../../../Config/config.php')['routes']['main']['mautic_patches_campaign_event_pending_contacts'];
+        $this->assertSame(CampaignPendingContactsController::class.'::pendingContactsAction', $route['controller']);
+        $this->assertStringContainsString('{objectId}', $route['path'], 'the trait builds its urls with objectId');
     }
 
     /**

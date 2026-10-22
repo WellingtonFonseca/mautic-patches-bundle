@@ -36,8 +36,9 @@ trait ContactsTableTrait
      * @param array{
      *     entityId: int, page: int, sessionVar: string, route: string, container: string,
      *     permission: string|string[], joinTable: string, idColumn: string, contactFilter: array<string, int>,
-     *     orderBy: string
-     * } $spec container = the selector of the tab pane the table is loaded into (the target of sorting/paging)
+     *     orderBy: string, orderByDir?: string, additionalJoins?: array<int, array<string, string>>
+     * } $spec container = the selector of the tab pane the table is loaded into (the target of sorting/paging);
+     *         orderByDir = the direction of the default order (DESC); additionalJoins = extra joins of the query (core's format)
      */
     private function contactsTable(Request $request, PageHelperFactoryInterface $pageHelperFactory, array $spec)
     {
@@ -72,7 +73,7 @@ trait ContactsTableTrait
 
         $pageHelper = $pageHelperFactory->make("mautic.{$sessionVar}", $page);
         $orderBy    = $session->get('mautic.'.$sessionVar.'.contact.orderby', $spec['orderBy']);
-        $orderByDir = $session->get('mautic.'.$sessionVar.'.contact.orderbydir', 'DESC');
+        $orderByDir = $session->get('mautic.'.$sessionVar.'.contact.orderbydir', $spec['orderByDir'] ?? 'DESC');
         $limit      = $session->get('mautic.'.$sessionVar.'.contact.limit', $this->coreParametersHelper->get('default_pagelimit'));
         $start      = max(0, (1 === $page) ? 0 : (($page - 1) * $limit));
         $columns    = $this->columnsDictionary->getColumns();
@@ -92,7 +93,8 @@ trait ContactsTableTrait
             $spec['joinTable'],
             $entityId,
             $spec['contactFilter'],
-            $spec['idColumn']
+            $spec['idColumn'],
+            $spec['additionalJoins'] ?? null
         );
         $count = (int) $contacts['count'];
 

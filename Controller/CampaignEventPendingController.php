@@ -7,19 +7,17 @@ namespace MauticPlugin\MauticPatchesBundle\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Mautic\CampaignBundle\Entity\Event;
 use Mautic\CoreBundle\Controller\CommonController;
-use MauticPlugin\MauticPatchesBundle\Service\CampaignEventPendingContacts;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * GET /s/campaign-pending/{eventId}: the body of the modal the hourglass of a campaign node opens (Preview tab):
- * the contacts waiting at that event, the first LIMIT of them, with the date each is scheduled for. Same access rule as the
- * campaign page (view own / other) plus the right to see contacts.
+ * GET /s/campaign-pending/{eventId}: the body of the modal the hourglass of a campaign node opens (Preview tab): the container of
+ * the contacts waiting there. The table itself is loaded when the modal opens
+ * (CampaignPendingClickSubscriber's script, from CampaignPendingContactsController), so the modal opens at once. Same
+ * access rule as the campaign page (view own / other).
  */
 class CampaignEventPendingController extends CommonController
 {
-    private const LIMIT = 50;
-
-    public function pendingAction(EntityManagerInterface $entityManager, CampaignEventPendingContacts $pending, int $eventId): Response
+    public function pendingAction(EntityManagerInterface $entityManager, int $eventId): Response
     {
         $event = $entityManager->getRepository(Event::class)->find($eventId);
 
@@ -27,24 +25,14 @@ class CampaignEventPendingController extends CommonController
             return $this->notFound();
         }
 
-        $campaign = $event->getCampaign();
-
-        if (!$this->security->hasEntityAccess('campaign:campaigns:viewown', 'campaign:campaigns:viewother', $campaign->getCreatedBy())
-            || !$this->security->isGranted(['lead:leads:viewown', 'lead:leads:viewother'], 'MATCH_ONE')) {
+        if (!$this->security->hasEntityAccess('campaign:campaigns:viewown', 'campaign:campaigns:viewother', $event->getCampaign()->getCreatedBy())) {
             return $this->accessDenied();
         }
 
-        $found = $pending->find($eventId, (int) $campaign->getId(), self::LIMIT);
-
         return $this->delegateView([
-            'viewParameters' => [
-                'event'   => $event,
-                'total'   => $found['total'],
-                'rows'    => $found['rows'],
-                'limit'   => self::LIMIT,
-            ],
+            'viewParameters'  => ['event' => $event],
             'contentTemplate' => '@MauticPatches/Campaign/pending_modal.html.twig',
-            'passthroughVars' => ['route' => false],
+            'passthroughVars' => ['route' => false, 'mauticContent' => 'campaignPending'],
         ]);
     }
 }

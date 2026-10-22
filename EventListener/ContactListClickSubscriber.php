@@ -58,14 +58,17 @@ class ContactListClickSubscriber implements EventSubscriberInterface
             .'if(window.mauticPatchesContactClicks){return;}'
             .'window.mauticPatchesContactClicks=true;'
             .'var re=/^\/s\/contacts\/view\/(\d+)(?:[?#].*)?$/;'
+            .'var listRe=/^\/s\/contacts(?:\/\d+)?$/;'
             // Capture phase: runs before core's ajax link handler, so the click never reaches it.
             .'document.addEventListener("click",function(event){'
             .'var a=event.target.closest?event.target.closest("#leadTable a[href]"):null;'
             .'if(!a||event.button){return;}'
             .'var m=re.exec(a.getAttribute("href")||"");if(!m){return;}'
             .'event.preventDefault();event.stopImmediatePropagation();'
-            // The menu option and a modified click go to the contact page in a new tab.
-            .'if(a.closest(".page-list-actions")||event.ctrlKey||event.metaKey||event.shiftKey){'
+            // The menu option, a modified click and any contact table that is not the contact list (the contacts tab of a
+            // segment or campaign, the tables of the modals over them: the shared modal is taken by that list, a second one
+            // would replace it and closing it would lose it) go to the contact page in a new tab.
+            .'if(a.closest(".page-list-actions")||!listRe.test(window.location.pathname)||event.ctrlKey||event.metaKey||event.shiftKey){'
             .'window.open(a.getAttribute("href"),"_blank","noopener");return;}'
             // The name opens the Details table in the shared modal.
             .'var el=document.createElement("a");'

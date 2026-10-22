@@ -50,6 +50,13 @@ return [
                 'method'       => 'GET',
                 'requirements' => ['eventId' => '\\d+'],
             ],
+            // The contacts table of that modal: the contacts waiting at the event, as the contact list table.
+            'mautic_patches_campaign_event_pending_contacts' => [
+                'path'         => '/campaign-pending/{objectId}/contacts/{page}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignPendingContactsController::pendingContactsAction',
+                'requirements' => ['objectId' => '\\d+', 'page' => '\\d+'],
+                'defaults'     => ['page' => 1],
+            ],
             // The "Ver" modal of the contact list: the contact's Details table, nothing else.
             'mautic_patches_contact_details' => [
                 'path'         => '/contact-details/{id}',
