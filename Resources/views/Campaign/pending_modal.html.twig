@@ -1,8 +1,9 @@
 {#
-  Body of the modal the hourglass of a campaign node opens: the container of the contacts waiting there.
+  Body of the modal the hourglass (pending) and the check (done) of a campaign node open: the container of the contacts.
   The container has the data-target-url of the table (CampaignPendingContactsController); Mautic.campaignPendingOnLoad
   (CampaignPendingClickSubscriber) loads it when the modal opens, as the segment modal does for its Contacts tab. Core's
-  shared modal is narrow by default, so only a modal holding this body is widened (:has), to 95% of the screen: the table has all the columns of the contact list. Variable: event.
+  shared modal is narrow by default, so only a modal holding this body is widened (:has), to 95% of the screen: the table
+  has all the columns of the contact list. Variables: event, tableRoute (the route of the table: pending or done).
 #}
 <style>
     .modal-dialog:has(.mautic-patches-campaign-pending) {
@@ -12,7 +13,7 @@
 </style>
 <div class="mautic-patches-campaign-pending">
     <div class="page-list" id="patches-pending-container"
-         data-target-url="{{ path('mautic_patches_campaign_event_pending_contacts', {'objectId': event.id, 'page': 1}) }}">
+         data-target-url="{{ path(tableRoute, {'objectId': event.id, 'page': 1}) }}">
         <div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>
     </div>
 </div>

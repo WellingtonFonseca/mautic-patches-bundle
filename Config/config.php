@@ -50,10 +50,23 @@ return [
                 'method'       => 'GET',
                 'requirements' => ['eventId' => '\\d+'],
             ],
+            // The same for the check of a node: the contacts that finished the event.
+            'mautic_patches_campaign_event_done' => [
+                'path'         => '/campaign-done/{eventId}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignEventPendingController::doneAction',
+                'method'       => 'GET',
+                'requirements' => ['eventId' => '\\d+'],
+            ],
             // The contacts table of that modal: the contacts waiting at the event, as the contact list table.
             'mautic_patches_campaign_event_pending_contacts' => [
                 'path'         => '/campaign-pending/{objectId}/contacts/{page}',
                 'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignPendingContactsController::pendingContactsAction',
+                'requirements' => ['objectId' => '\\d+', 'page' => '\\d+'],
+                'defaults'     => ['page' => 1],
+            ],
+            'mautic_patches_campaign_event_done_contacts' => [
+                'path'         => '/campaign-done/{objectId}/contacts/{page}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignPendingContactsController::doneContactsAction',
                 'requirements' => ['objectId' => '\\d+', 'page' => '\\d+'],
                 'defaults'     => ['page' => 1],
             ],

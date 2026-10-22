@@ -35,7 +35,7 @@ trait ContactsTableTrait
     /**
      * @param array{
      *     entityId: int, page: int, sessionVar: string, route: string, container: string,
-     *     permission: string|string[], joinTable: string, idColumn: string, contactFilter: array<string, int>,
+     *     permission: string|string[], joinTable: string, idColumn: string, contactFilter: array<int|string, int|array<string, string>>,
      *     orderBy: string, orderByDir?: string, additionalJoins?: array<int, array<string, string>>
      * } $spec container = the selector of the tab pane the table is loaded into (the target of sorting/paging);
      *         orderByDir = the direction of the default order (DESC); additionalJoins = extra joins of the query (core's format)
