@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Service\RelativeWait;
 use Doctrine\DBAL\Connection;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\LeadBundle\Entity\Lead;
+use MauticPlugin\CustomObjectsBundle\Entity\CustomObject;
 use MauticPlugin\CustomObjectsBundle\Exception\NotFoundException;
 use MauticPlugin\CustomObjectsBundle\Model\CustomObjectModel;
 use MauticPlugin\CustomObjectsBundle\Segment\SegmentItemResolver;
@@ -22,6 +23,9 @@ use MauticPlugin\CustomObjectsBundle\Segment\SegmentItemResolver;
  */
 class RelativeWaitItemSelector
 {
+    /** The Custom Object of a field (null: none, or not loadable), by the field id: the same for every contact of a batch. */
+    private array $objects = [];
+
     public function __construct(
         private Connection $connection,
         private ?SegmentItemResolver $itemResolver = null,
@@ -41,18 +45,24 @@ class RelativeWaitItemSelector
             return null;
         }
 
-        $prefix   = defined('MAUTIC_TABLE_PREFIX') ? (string) MAUTIC_TABLE_PREFIX : '';
-        $objectId = $this->connection->fetchOne('SELECT custom_object_id FROM '.$prefix.'custom_field WHERE id = :id', ['id' => (int) $matches[1]]);
-        if (false === $objectId || null === $objectId) {
-            return null;
+        $customObject = $this->customObjectOf((int) $matches[1]);
+
+        return null === $customObject ? null : $this->itemResolver->resolveItemIds($contact, $campaign->getLists(), $customObject);
+    }
+
+    private function customObjectOf(int $fieldId): ?CustomObject
+    {
+        if (!array_key_exists($fieldId, $this->objects)) {
+            $prefix   = defined('MAUTIC_TABLE_PREFIX') ? (string) MAUTIC_TABLE_PREFIX : '';
+            $objectId = $this->connection->fetchOne('SELECT custom_object_id FROM '.$prefix.'custom_field WHERE id = :id', ['id' => $fieldId]);
+
+            try {
+                $this->objects[$fieldId] = false === $objectId || null === $objectId ? null : $this->customObjectModel->fetchEntity((int) $objectId);
+            } catch (NotFoundException) {
+                $this->objects[$fieldId] = null;
+            }
         }
 
-        try {
-            $customObject = $this->customObjectModel->fetchEntity((int) $objectId);
-        } catch (NotFoundException) {
-            return null;
-        }
-
-        return $this->itemResolver->resolveItemIds($contact, $campaign->getLists(), $customObject);
+        return $this->objects[$fieldId];
     }
 }

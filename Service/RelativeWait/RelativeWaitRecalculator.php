@@ -28,7 +28,7 @@ class RelativeWaitRecalculator
     public const NOW       = 'now';
     public const UNCHANGED = 'unchanged';
 
-    private const FORMAT = 'Y-m-d H:i:s';
+    public const FORMAT = 'Y-m-d H:i:s';
 
     public function __construct(
         private Connection $connection,
@@ -45,7 +45,7 @@ class RelativeWaitRecalculator
      */
     public function plan(Event $event, ?\DateTimeImmutable $now = null): array
     {
-        if (RelativeWaitSubscriber::TYPE !== $event->getType()) {
+        if (!RelativeWaitSubscriber::isWait($event)) {
             throw new \InvalidArgumentException('Only a Wait node can be recalculated.');
         }
 

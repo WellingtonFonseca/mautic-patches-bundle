@@ -30,7 +30,7 @@ class RelativeWaitFieldCatalog
         foreach ($this->connection->fetchAllAssociative(
             'SELECT alias, label FROM '.$prefix."lead_fields WHERE object = 'lead' AND is_published = 1 AND type IN ('date', 'datetime') ORDER BY label"
         ) as $field) {
-            $contact[(string) $field['label']] = 'contact:'.$field['alias'];
+            $contact[$this->label($contact, (string) $field['label'], (string) $field['alias'])] = 'contact:'.$field['alias'];
         }
         if ([] !== $contact) {
             $groups[$this->translator->trans('mautic.patches.condition.contact_fields.group.lead')] = $contact;
@@ -45,9 +45,20 @@ class RelativeWaitFieldCatalog
             $rows = []; // the Custom Objects plugin is not installed
         }
         foreach ($rows as $row) {
-            $groups[(string) $row['object']][(string) $row['label']] = 'custom_object:'.$row['id'];
+            $object = (string) $row['object'];
+            $groups[$object][$this->label($groups[$object] ?? [], (string) $row['label'], '#'.$row['id'])] = 'custom_object:'.$row['id'];
         }
 
         return $groups;
+    }
+
+    /**
+     * The choices are keyed by label: a second field with the same label in the same group gets its alias (or id) after it, so both can be chosen.
+     *
+     * @param array<string, string> $group
+     */
+    private function label(array $group, string $label, string $suffix): string
+    {
+        return isset($group[$label]) ? $label.' ('.$suffix.')' : $label;
     }
 }

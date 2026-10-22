@@ -18,6 +18,7 @@ use Mautic\CampaignBundle\Executioner\Scheduler\Mode\Optimized as OptimizedSched
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
+use MauticPlugin\MauticPatchesBundle\Executioner\RelativeWaitDueDate;
 use MauticPlugin\MauticPatchesBundle\Executioner\RelativeWaitScheduler;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitDateResolver;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitItemSelector;
@@ -197,6 +198,36 @@ class RelativeWaitSchedulerTest extends TestCase
 
         $this->expectException(NotSchedulableException::class);
         $scheduler->validateAndScheduleEventForContacts($this->event('email.send'), $this->now, new ArrayCollection([1 => $this->contact(1)]), $this->now);
+    }
+
+    /**
+     * Core's real-time executioner (the children of a decision: "opened the email, wait, send") decides with getExecutionDateTime() and
+     * shouldSchedule() alone and, when it schedules, calls scheduleForContact(): the Wait must take that path too.
+     */
+    public function testAWaitAfterADecisionIsScheduledByTheRealTimePath(): void
+    {
+        $this->resolver->method('resolve')->willReturn(new \DateTimeImmutable('2026-03-13 03:00:00', new \DateTimeZone('UTC')));
+        $scheduler = $this->scheduler();
+        $wait      = $this->event(RelativeWaitSubscriber::TYPE);
+
+        $date = $scheduler->getExecutionDateTime($wait, \DateTime::createFromImmutable($this->now));
+        $this->assertInstanceOf(RelativeWaitDueDate::class, $date);
+        $this->assertSame('2026-03-10 12:00:00', $date->format('Y-m-d H:i:s'), 'the moment itself: nothing is delayed by the mark');
+        $this->assertTrue($scheduler->shouldSchedule($date, $this->now), 'a Wait is always scheduled');
+
+        $scheduler->scheduleForContact($wait, $date, $this->contact(1));
+
+        $this->assertSame('2026-03-13 03:00:00', $this->triggerOf(1), 'the contact has its own date, it did not run at once');
+    }
+
+    public function testEveryOtherEventKeepsCoresExecutionDateAndRule(): void
+    {
+        $scheduler = $this->scheduler();
+        $date      = $scheduler->getExecutionDateTime($this->event('email.send'), \DateTime::createFromImmutable($this->now));
+
+        $this->assertNotInstanceOf(RelativeWaitDueDate::class, $date);
+        $this->assertFalse($scheduler->shouldSchedule($date, $this->now), 'an immediate event runs at once');
+        $this->assertTrue($scheduler->shouldSchedule($this->now->modify('+1 hour'), $this->now), 'a future date is still scheduled');
     }
 
     public function testTheCoreSchedulerIsStillWhatItExtends(): void
