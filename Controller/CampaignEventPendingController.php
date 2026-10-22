@@ -11,23 +11,23 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * GET /s/campaign-pending/{eventId} and /s/campaign-done/{eventId}: the body of the modal the hourglass (pending) and the check
- * (done) of a campaign node open (Preview tab): the search box and the container of the contacts waiting at / done with that event. The table
- * itself is loaded when the modal opens (CampaignPendingClickSubscriber's script, from CampaignPendingContactsController), so
+ * (done) of a campaign node open (Preview tab): the container of the contacts waiting at / done with that event. The table
+ * itself (with its search bar) is loaded when the modal opens (CampaignPendingClickSubscriber's script, from CampaignPendingContactsController), so
  * the modal opens at once. Same access rule as the campaign page (view own / other).
  */
 class CampaignEventPendingController extends CommonController
 {
     public function pendingAction(EntityManagerInterface $entityManager, int $eventId): Response
     {
-        return $this->show($entityManager, $eventId, 'mautic_patches_campaign_event_pending_contacts', 'campaignPending');
+        return $this->show($entityManager, $eventId, 'mautic_patches_campaign_event_pending_contacts');
     }
 
     public function doneAction(EntityManagerInterface $entityManager, int $eventId): Response
     {
-        return $this->show($entityManager, $eventId, 'mautic_patches_campaign_event_done_contacts', 'campaignDone');
+        return $this->show($entityManager, $eventId, 'mautic_patches_campaign_event_done_contacts');
     }
 
-    private function show(EntityManagerInterface $entityManager, int $eventId, string $tableRoute, string $sessionVar): Response
+    private function show(EntityManagerInterface $entityManager, int $eventId, string $tableRoute): Response
     {
         $event = $entityManager->getRepository(Event::class)->find($eventId);
 
@@ -38,10 +38,6 @@ class CampaignEventPendingController extends CommonController
         if (!$this->security->hasEntityAccess('campaign:campaigns:viewown', 'campaign:campaigns:viewother', $event->getCampaign()->getCreatedBy())) {
             return $this->accessDenied();
         }
-
-        // The table keeps its search in the session (ContactsTableTrait): the modal opens with an empty search box, so it opens
-        // with an empty search too.
-        $this->getCurrentRequest()->getSession()->set('mautic.'.$sessionVar.'.contact.filter', '');
 
         return $this->delegateView([
             'viewParameters'  => ['event' => $event, 'tableRoute' => $tableRoute],
