@@ -38,7 +38,7 @@ class RelativeWaitRecalculateCommand extends Command
         $eventId = (int) $input->getOption('event-id');
         $event   = $eventId > 0 ? $this->entityManager->getRepository(Event::class)->find($eventId) : null;
 
-        if (!$event instanceof Event || RelativeWaitSubscriber::TYPE !== $event->getType()) {
+        if (!$event instanceof Event || !RelativeWaitSubscriber::isWait($event)) {
             $output->writeln('<error>--event-id must be the id of a Wait event (type '.RelativeWaitSubscriber::TYPE.').</error>');
 
             return Command::FAILURE;
@@ -56,7 +56,7 @@ class RelativeWaitRecalculateCommand extends Command
 
         if ($input->getOption('list')) {
             foreach ($plan['rows'] as $row) {
-                $output->writeln(sprintf('  contact %d: %s -> %s (%s)', $row['contact'], $row['old']->format('Y-m-d H:i:s'), $row['new']->format('Y-m-d H:i:s'), $row['status']));
+                $output->writeln(sprintf('  contact %d: %s -> %s (%s)', $row['contact'], $row['old']->format(RelativeWaitRecalculator::FORMAT), $row['new']->format(RelativeWaitRecalculator::FORMAT), $row['status']));
             }
         }
 

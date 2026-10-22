@@ -28,7 +28,7 @@ class CampaignEventPendingController extends CommonController
 
         return $this->delegateView([
             // the "Recalculate dates" box is only for a Wait node, and only for who can edit the campaign (the simulation alone is a view)
-            'viewParameters'  => ['event' => $event, 'recalculate' => RelativeWaitSubscriber::TYPE === $event->getType() && $this->canEditCampaign($event)],
+            'viewParameters'  => ['event' => $event, 'recalculate' => RelativeWaitSubscriber::isWait($event) && $this->canEditCampaign($event)],
             'contentTemplate' => '@MauticPatches/Campaign/pending_modal.html.twig',
             'passthroughVars' => ['route' => false, 'mauticContent' => 'campaignPending'],
         ]);

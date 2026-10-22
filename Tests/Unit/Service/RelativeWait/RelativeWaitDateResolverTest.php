@@ -213,4 +213,16 @@ class RelativeWaitDateResolverTest extends TestCase
 
         $this->assertSame('2026-03-13 15:30:00', $this->utc($resolver->resolve(7, $this->config(), [5])));
     }
+
+    public function testTheTypeOfAFieldIsLookedUpOnceForAWholeBatch(): void
+    {
+        $queries  = [];
+        $resolver = $this->resolver(['FROM lead_fields' => 'datetime', 'FROM leads' => '2026-03-01 15:30:00'], $queries);
+        foreach ([1, 2, 3] as $contact) {
+            $resolver->resolve($contact, $this->config());
+        }
+
+        $this->assertCount(1, array_filter($queries, static fn (array $q): bool => str_contains($q[0], 'FROM lead_fields')));
+        $this->assertCount(3, array_filter($queries, static fn (array $q): bool => str_contains($q[0], 'FROM leads')), 'the value is per contact');
+    }
 }

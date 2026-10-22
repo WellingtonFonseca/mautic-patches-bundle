@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\EventListener;
 
 use Mautic\CampaignBundle\CampaignEvents;
+use Mautic\CampaignBundle\Entity\Event;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use MauticPlugin\MauticPatchesBundle\Form\Type\RelativeWaitType;
@@ -20,6 +21,11 @@ class RelativeWaitSubscriber implements EventSubscriberInterface
 {
     public const TYPE       = 'patches.wait_relative';
     public const ON_TRIGGER = 'mautic.patches.on_campaign_trigger_wait_relative';
+
+    public static function isWait(Event $event): bool
+    {
+        return self::TYPE === $event->getType();
+    }
 
     public static function getSubscribedEvents(): array
     {

@@ -91,4 +91,29 @@ class RelativeWaitItemSelectorTest extends TestCase
 
         $this->assertNull($selector->itemIds($this->contact(), new Campaign(), ['dateField' => 'custom_object:33']));
     }
+
+    public function testTheObjectOfTheFieldIsLoadedOnceForAWholeBatch(): void
+    {
+        $model = $this->createMock(CustomObjectModel::class);
+        $model->expects($this->once())->method('fetchEntity')->with(3)->willReturn($this->createMock(CustomObject::class));
+        $connection = $this->createMock(Connection::class);
+        $connection->expects($this->once())->method('fetchOne')->willReturn('3');
+        $resolver = $this->createMock(SegmentItemResolver::class);
+        $resolver->expects($this->exactly(3))->method('resolveItemIds')->willReturn([4]);
+        $selector = new RelativeWaitItemSelector($connection, $resolver, $model);
+
+        foreach ([1, 2, 3] as $i) {
+            $this->assertSame([4], $selector->itemIds($this->contact(), new Campaign(), ['dateField' => 'custom_object:33']));
+        }
+    }
+
+    public function testAnObjectThatCannotBeLoadedIsNotAskedForAgainInTheSameBatch(): void
+    {
+        $model = $this->createMock(CustomObjectModel::class);
+        $model->expects($this->once())->method('fetchEntity')->willThrowException(new NotFoundException('gone'));
+        $selector = new RelativeWaitItemSelector($this->connection('3'), $this->createMock(SegmentItemResolver::class), $model);
+
+        $this->assertNull($selector->itemIds($this->contact(), new Campaign(), ['dateField' => 'custom_object:33']));
+        $this->assertNull($selector->itemIds($this->contact(), new Campaign(), ['dateField' => 'custom_object:33']));
+    }
 }

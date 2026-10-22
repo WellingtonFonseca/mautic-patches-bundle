@@ -25,11 +25,15 @@ use Doctrine\DBAL\Connection;
  */
 class RelativeWaitDateResolver
 {
-    private const UNITS = ['i' => 'M', 'h' => 'H', 'd' => 'D', 'w' => 'W', 'm' => 'M', 'y' => 'Y'];
+    /** The unit => the ISO 8601 duration of an amount of it (i is minutes, m is months). */
+    private const UNITS = ['i' => 'PT%dM', 'h' => 'PT%dH', 'd' => 'P%dD', 'w' => 'P%dW', 'm' => 'P%dM', 'y' => 'P%dY'];
 
     private const DATE_TYPES = ['date', 'datetime'];
 
     private const CUSTOM_TABLES = ['date' => 'custom_field_value_date', 'datetime' => 'custom_field_value_datetime'];
+
+    /** The type of a field, by the key of the lookup: it is the same for every contact of a batch (null: not a field). */
+    private array $fieldTypes = [];
 
     public function __construct(private Connection $connection, private string $timezone = 'UTC')
     {
@@ -53,24 +57,9 @@ class RelativeWaitDateResolver
             return null;
         }
 
-        $interval = $this->interval((int) $amount, $unit);
+        $interval = new \DateInterval(sprintf(self::UNITS[$unit], (int) $amount));
 
         return 'before' === $direction ? $base->sub($interval) : $base->add($interval);
-    }
-
-    private function interval(int $amount, string $unit): \DateInterval
-    {
-        if ('i' === $unit) {
-            return new \DateInterval('PT'.$amount.'M');
-        }
-        if ('h' === $unit) {
-            return new \DateInterval('PT'.$amount.'H');
-        }
-        if ('w' === $unit) {
-            return new \DateInterval('P'.($amount * 7).'D');
-        }
-
-        return new \DateInterval('P'.$amount.self::UNITS[$unit]);
     }
 
     /**
@@ -92,7 +81,8 @@ class RelativeWaitDateResolver
 
     private function contactDate(int $contactId, string $alias): ?\DateTimeImmutable
     {
-        $type = $this->connection->fetchOne(
+        $type = $this->fieldType(
+            'lead:'.$alias,
             'SELECT type FROM '.$this->prefix().'lead_fields WHERE object = :object AND alias = :alias AND is_published = 1',
             ['object' => 'lead', 'alias' => $alias]
         );
@@ -115,7 +105,7 @@ class RelativeWaitDateResolver
         }
         $fieldId = (int) $fieldId;
 
-        $type = $this->connection->fetchOne('SELECT type FROM '.$this->prefix().'custom_field WHERE id = :id', ['id' => $fieldId]);
+        $type = $this->fieldType('custom_object:'.$fieldId, 'SELECT type FROM '.$this->prefix().'custom_field WHERE id = :id', ['id' => $fieldId]);
         if (!is_string($type) || !isset(self::CUSTOM_TABLES[$type])) {
             return null;
         }
@@ -139,6 +129,19 @@ class RelativeWaitDateResolver
         );
 
         return is_array($row) ? $this->parse($row['value'] ?? null, $type) : null;
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function fieldType(string $key, string $sql, array $params): ?string
+    {
+        if (!array_key_exists($key, $this->fieldTypes)) {
+            $type                  = $this->connection->fetchOne($sql, $params);
+            $this->fieldTypes[$key] = is_string($type) ? $type : null;
+        }
+
+        return $this->fieldTypes[$key];
     }
 
     private function parse(mixed $value, string $type): ?\DateTimeImmutable

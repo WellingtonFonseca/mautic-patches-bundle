@@ -59,7 +59,7 @@ class CampaignWaitRecalculateController extends CommonController
     {
         $event = $this->eventOrDeny($eventId);
 
-        if ($event instanceof Event && RelativeWaitSubscriber::TYPE !== $event->getType()) {
+        if ($event instanceof Event && !RelativeWaitSubscriber::isWait($event)) {
             return $this->notFound();
         }
 

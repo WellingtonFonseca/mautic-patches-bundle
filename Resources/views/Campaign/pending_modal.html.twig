@@ -12,7 +12,7 @@
     {# The message on top; below it, ONE row of buttons: Recalculate alone, or (after a simulation that can be applied) Apply and Cancel. While
        the simulation runs the message line is the segment's "<spinner> Updating...", here "<spinner> Recalculating...". #}
     <style>
-        {{ constant('MauticPlugin\\MauticPatchesBundle\\EventListener\\SegmentUpdateLockSubscriber::STYLE')|raw }}
+        {{ constant('MauticPlugin\\MauticPatchesBundle\\Service\\UpdatingIndicator::STYLE')|raw }}
         #patches-wait-recalc [hidden] { display: none !important; }
     </style>
     <div id="patches-wait-recalc" class="mb-md"
@@ -25,7 +25,7 @@
          data-text-nothing="{{ 'mautic.patches.wait_relative.recalculate.nothing'|trans }}"
          data-text-applied="{{ 'mautic.patches.wait_relative.recalculate.applied'|trans }}">
         <div class="patches-wait-recalc-running mb-md" hidden>
-            <small class="mautic-patches-updating">{{ constant('MauticPlugin\\MauticPatchesBundle\\EventListener\\SegmentUpdateLockSubscriber::SPINNER_SVG')|raw }}<span class="mautic-patches-updating-text">{{ 'mautic.patches.wait_relative.recalculate.running'|trans }}</span></small>
+            <small class="mautic-patches-updating">{{ constant('MauticPlugin\\MauticPatchesBundle\\Service\\UpdatingIndicator::SPINNER_SVG')|raw }}<span class="mautic-patches-updating-text">{{ 'mautic.patches.wait_relative.recalculate.running'|trans }}</span></small>
         </div>
         <div class="patches-wait-recalc-result mb-md" hidden></div>
         {# One row. Recalculate and Apply are both btn-primary and never shown together, but the theme draws a SECOND btn-primary of the same

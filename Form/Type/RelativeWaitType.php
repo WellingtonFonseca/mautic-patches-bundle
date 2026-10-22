@@ -30,14 +30,12 @@ class RelativeWaitType extends AbstractType
             'label'       => 'mautic.patches.wait_relative.date_field',
             'choices'     => $this->catalog->choices(),
             'placeholder' => '',
-            'required'    => true,
             'constraints' => [new Assert\NotBlank(['message' => 'mautic.core.value.required'])],
             'attr'        => ['class' => 'form-control', 'tooltip' => 'mautic.patches.wait_relative.date_field.help'],
         ]);
 
         $builder->add('amount', IntegerType::class, [
             'label'       => 'mautic.patches.wait_relative.amount',
-            'required'    => true,
             'data'        => $options['data']['amount'] ?? 1,
             'constraints' => [new Assert\NotBlank(['message' => 'mautic.core.value.required']), new Assert\PositiveOrZero()],
             'attr'        => ['class' => 'form-control'],
@@ -54,7 +52,6 @@ class RelativeWaitType extends AbstractType
                 'mautic.campaign.event.intervalunit.choice.i'  => 'i',
             ],
             'data'     => $options['data']['unit'] ?? 'd',
-            'required' => true,
             'attr'     => ['class' => 'form-control'],
         ]);
 
@@ -65,7 +62,6 @@ class RelativeWaitType extends AbstractType
                 'mautic.patches.wait_relative.direction.before' => 'before',
             ],
             'data'     => $options['data']['direction'] ?? 'after',
-            'required' => true,
             'attr'     => ['class' => 'form-control'],
         ]);
     }
