@@ -41,10 +41,9 @@ class ContactsTabControllersTest extends TestCase
         $route = (require __DIR__.'/../../../Config/config.php')['routes']['main']['mautic_patches_campaign_event_pending_contacts'];
         $this->assertSame(CampaignPendingContactsController::class.'::pendingContactsAction', $route['controller']);
         $this->assertStringContainsString('{objectId}', $route['path'], 'the trait builds its urls with objectId');
-
-        $done = (require __DIR__.'/../../../Config/config.php')['routes']['main']['mautic_patches_campaign_event_done_contacts'];
-        $this->assertSame(CampaignPendingContactsController::class.'::doneContactsAction', $done['controller']);
-        $this->assertStringContainsString('{objectId}', $done['path']);
+        $routes = (require __DIR__.'/../../../Config/config.php')['routes']['main'];
+        $this->assertArrayNotHasKey('mautic_patches_campaign_event_done_contacts', $routes, 'the check (done count) opens nothing');
+        $this->assertArrayNotHasKey('mautic_patches_campaign_event_done', $routes);
     }
 
     /**
