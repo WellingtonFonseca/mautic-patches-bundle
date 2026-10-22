@@ -3,15 +3,10 @@
   comes with the search bar of the contact list (ContactsTableTrait, contacts_table.html.twig). The container has the
   data-target-url of the table (CampaignPendingContactsController); Mautic.campaignPendingOnLoad
   (CampaignPendingClickSubscriber) loads it when the modal opens, as the segment modal does for its Contacts tab. Core's
-  shared modal is narrow by default, so only a modal holding this body is widened (:has), to 95% of the screen: the table
-  has all the columns of the contact list. Variables: event, tableRoute (the route of the table: pending or done).
+  shared modal is narrow by default, so only a modal holding this body is widened (contacts_modal_width.html.twig, shared
+  with the segment's details modal): the table has all the columns of the contact list. Variables: event, tableRoute (the route of the table: pending or done).
 #}
-<style>
-    .modal-dialog:has(.mautic-patches-campaign-pending) {
-        width: 95vw;
-        max-width: 95vw;
-    }
-</style>
+{{ include('@MauticPatches/Contact/contacts_modal_width.html.twig', {'modalClass': 'mautic-patches-campaign-pending'}) }}
 <div class="mautic-patches-campaign-pending">
     <div class="page-list" id="patches-pending-container"
          data-target-url="{{ path(tableRoute, {'objectId': event.id, 'page': 1}) }}">
