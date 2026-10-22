@@ -44,11 +44,18 @@ class TimeInputFormatSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // every word accepted (lower case) to the word core keeps relative: the language of the user, and the same keyword in English
-        $words = [];
-        foreach ($this->relativeDate->getRelativeDateStrings() as $key => $local) {
-            $words[mb_strtolower($local)]                                                     = $local;
-            $words[mb_strtolower($this->translator->trans($key, [], null, 'en_US'))] = $local;
+        // every word accepted (lower case) to the word core keeps relative: the language of the user first, then the same keyword in English
+        // (not when the translation is missing, which gives the key back, and never over a word of the user's language)
+        $strings = $this->relativeDate->getRelativeDateStrings();
+        $words   = [];
+        foreach ($strings as $local) {
+            $words[mb_strtolower($local)] = $local;
+        }
+        foreach ($strings as $key => $local) {
+            $english = $this->translator->trans($key, [], null, 'en_US');
+            if ($english !== $key) {
+                $words += [mb_strtolower($english) => $local];
+            }
         }
         $keywords = json_encode($words, JSON_THROW_ON_ERROR | JSON_FORCE_OBJECT);
 
