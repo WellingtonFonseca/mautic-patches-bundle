@@ -1,5 +1,6 @@
 {#
-  Body of the modal the hourglass (pending) and the check (done) of a campaign node open: the container of the contacts.
+  Body of the modal the hourglass (pending) and the check (done) of a campaign node open: the toolbar with the search box (core's
+  list toolbar, as the contact list has it) and the container of the contacts. The search is core's live search (it posts `search` to the table route, which keeps it in the session).
   The container has the data-target-url of the table (CampaignPendingContactsController); Mautic.campaignPendingOnLoad
   (CampaignPendingClickSubscriber) loads it when the modal opens, as the segment modal does for its Contacts tab. Core's
   shared modal is narrow by default, so only a modal holding this body is widened (:has), to 95% of the screen: the table
@@ -12,8 +13,18 @@
     }
 </style>
 <div class="mautic-patches-campaign-pending">
-    <div class="page-list" id="patches-pending-container"
-         data-target-url="{{ path(tableRoute, {'objectId': event.id, 'page': 1}) }}">
-        <div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>
+    <div class="panel panel-default bdr-t-wdh-0 mb-0">
+        {{ include('@MauticCore/Helper/list_toolbar.html.twig', {
+            'searchId': 'patches-pending-search',
+            'searchValue': '',
+            'action': path(tableRoute, {'objectId': event.id}),
+            'target': '#patches-pending-container',
+            'tmpl': 'campaignPendingContacts',
+            'overlayDisabled': true,
+        }) }}
+        <div class="page-list" id="patches-pending-container"
+             data-target-url="{{ path(tableRoute, {'objectId': event.id, 'page': 1}) }}">
+            <div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>
+        </div>
     </div>
 </div>
