@@ -13,8 +13,14 @@ use Symfony\Contracts\Service\Attribute\Required;
 
 /**
  * The contacts tab of a segment / campaign page as the contact list TABLE (same columns, in the order set in
- * Configuration > Contact Settings) instead of core's cards. Used by SegmentContactsController and
- * CampaignContactsController, which take over core's routes of those tabs.
+ * Configuration > Contact Settings) instead of core's cards, and the contacts list of the campaign node modals. Used by
+ * SegmentContactsController, CampaignContactsController and CampaignPendingContactsController: the one place of this table.
+ *
+ * The first load of the tab (a GET without `tmpl`) comes with the search bar of the contact list over the table
+ * (contacts_table.html.twig), the table in an element of its own; every later request (the live search: a GET with `tmpl`;
+ * sorting, paging, page size: POSTs with `tmpl`; the redirect to the last page: `body`) only brings the table, into that
+ * element, so the bar is not replaced while it is being typed in. The first load starts
+ * with an empty search (the session's search of the last visit is dropped).
  *
  * The query is the one of core's EntityContactsTrait::generateContactsGrid with ONE difference: core limits the
  * select of the segment to id, company, city, state and country (what the cards show), so the custom fields of the
@@ -36,9 +42,10 @@ trait ContactsTableTrait
     /**
      * @param array{
      *     entityId: int, page: int, sessionVar: string, route: string, container: string,
-     *     permission: string|string[], joinTable: string, idColumn: string, contactFilter: array<string, int>,
-     *     orderBy: string
-     * } $spec container = the selector of the tab pane the table is loaded into (the target of sorting/paging)
+     *     permission: string|string[], joinTable: string, idColumn: string, contactFilter: array<int|string, int|array<string, string>>,
+     *     orderBy: string, orderByDir?: string, additionalJoins?: array<int, array<string, string>>
+     * } $spec container = the selector of the tab pane the table is loaded into (the target of sorting/paging);
+     *         orderByDir = the direction of the default order (DESC); additionalJoins = extra joins of the query (core's format)
      */
     private function contactsTable(Request $request, PageHelperFactoryInterface $pageHelperFactory, array $spec): Response
     {
@@ -47,12 +54,23 @@ trait ContactsTableTrait
         $entityId   = $spec['entityId'];
         $page       = $spec['page'];
         $template   = '@MauticPatches/Contact/contacts_table.html.twig';
+        $outer      = $spec['container'];
+        $bodyId     = ltrim($outer, '#').'-table';
+        $baseUrl    = $this->generateUrl($route, ['objectId' => $entityId]);
+        // core's own requests of a list (search, sorting, paging, the page size) all carry `tmpl`; the first load of the tab does not
+        $withBar    = 'GET' === $request->getMethod() && !$request->query->has('tmpl') && !$request->query->has('body');
         $view       = [
             'page'          => $page,
             'tmpl'          => $sessionVar.'Contacts',
-            'baseUrl'       => $this->generateUrl($route, ['objectId' => $entityId]),
+            'baseUrl'       => $baseUrl,
             'sessionVar'    => $sessionVar.'.contact',
-            'container'     => $spec['container'],
+            // the target of sorting, paging and the search: the table's own element, so the search bar stays
+            'container'     => '#'.$bodyId,
+            'outer'         => $outer,
+            'toolbar'       => $withBar,
+            'searchId'      => 'search-'.ltrim($outer, '#'),
+            'searchValue'   => '',
+            'searchAction'  => $baseUrl,
             'noContactList' => [],
             'columns'       => [],
             'permissions'   => [],
@@ -68,18 +86,25 @@ trait ContactsTableTrait
         }
 
         $session = $request->getSession();
-        $search  = $request->get('search', $session->get('mautic.'.$sessionVar.'.contact.filter', ''));
+        $search  = $withBar
+            ? (string) $request->query->get('search', '')
+            : $request->get('search', $session->get('mautic.'.$sessionVar.'.contact.filter', ''));
         $session->set('mautic.'.$sessionVar.'.contact.filter', $search);
+        $view['searchValue'] = $search;
 
         $pageHelper = $pageHelperFactory->make("mautic.{$sessionVar}", $page);
         $orderBy    = $session->get('mautic.'.$sessionVar.'.contact.orderby', $spec['orderBy']);
-        $orderByDir = $session->get('mautic.'.$sessionVar.'.contact.orderbydir', 'DESC');
+        $orderByDir = $session->get('mautic.'.$sessionVar.'.contact.orderbydir', $spec['orderByDir'] ?? 'DESC');
         $limit      = $session->get('mautic.'.$sessionVar.'.contact.limit', $this->coreParametersHelper->get('default_pagelimit'));
         $start      = max(0, (1 === $page) ? 0 : (($page - 1) * $limit));
         $columns    = $this->columnsDictionary->getColumns();
 
         /** @var LeadRepository $repo */
-        $repo     = $this->getModel('lead')->getRepository();
+        $repo = $this->getModel('lead')->getRepository();
+        // What the model's getEntities() gives its repository before it searches: the current user (`is:mine` and the owner
+        // commands need it). The translator the search commands need is autowired into the repository on 7 (CommonRepository's
+        // #[Required] method; there is no setTranslator() as on 5).
+        $repo->setCurrentUser($this->user);
         $contacts = $repo->getEntityContacts(
             [
                 'withTotalCount' => true,
@@ -93,7 +118,8 @@ trait ContactsTableTrait
             $spec['joinTable'],
             $entityId,
             $spec['contactFilter'],
-            $spec['idColumn']
+            $spec['idColumn'],
+            $spec['additionalJoins'] ?? null
         );
         $count = (int) $contacts['count'];
 
@@ -103,7 +129,7 @@ trait ContactsTableTrait
             $pageHelper->rememberPage($lastPage);
 
             return $this->postActionRedirect([
-                'returnUrl'         => $this->generateUrl($route, ['objectId' => $entityId, 'page' => $lastPage]),
+                'returnUrl'         => $this->generateUrl($route, ['objectId' => $entityId, 'page' => $lastPage, 'body' => 1]),
                 'viewParameters'    => ['page' => $lastPage, 'objectId' => $entityId],
                 'contentTemplate'   => $template,
                 'forwardController' => false,

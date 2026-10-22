@@ -28,10 +28,10 @@ function link(href, {inTable = true, inMenu = false} = {}) {
     };
 }
 
-function load() {
+function load(pathname = '/s/contacts') {
     const calls = {open: [], modal: [], created: []};
     let handler;
-    const window = {open: (...a) => calls.open.push(a)};
+    const window = {open: (...a) => calls.open.push(a), location: {pathname}};
     const document = {
         addEventListener: (type, fn, capture) => { assert.strictEqual(type, 'click'); assert.strictEqual(capture, true); handler = fn; },
         createElement: () => {
@@ -80,6 +80,26 @@ test('the Detalhes option of the row menu opens the contact page in a new tab', 
     assert.deepStrictEqual(calls.open, [['/s/contacts/view/185', '_blank', 'noopener']]);
     assert.deepStrictEqual(calls.modal, []);
     assert.ok(event.prevented && event.stopped);
+});
+
+test('the name opens the modal on a later page of the contact list too', () => {
+    const {calls, click} = load('/s/contacts/3');
+
+    click(link('/s/contacts/view/185'));
+
+    assert.strictEqual(calls.modal.length, 1);
+    assert.deepStrictEqual(calls.open, []);
+});
+
+test('a contact table anywhere else (segment or campaign page, a modal over them) opens the contact page in a new tab', () => {
+    for (const pathname of ['/s/campaigns/view/5', '/s/segments/view/9', '/s/segments', '/s/contacts/view/7']) {
+        const {calls, click} = load(pathname);
+        const event = click(link('/s/contacts/view/185'));
+
+        assert.deepStrictEqual(calls.open, [['/s/contacts/view/185', '_blank', 'noopener']], pathname);
+        assert.deepStrictEqual(calls.modal, [], pathname);
+        assert.ok(event.prevented && event.stopped, pathname);
+    }
 });
 
 test('a ctrl, cmd or shift click on the name goes to the contact page in a new tab', () => {
