@@ -79,7 +79,11 @@ trait ContactsTableTrait
         $columns    = $this->columnsDictionary->getColumns();
 
         /** @var LeadRepository $repo */
-        $repo     = $this->getModel('lead')->getRepository();
+        $repo = $this->getModel('lead')->getRepository();
+        // What the model's getEntities() gives its repository before it searches: without the translator and the user, a search
+        // command (`email:x`, `enro_academic_record:x`, `is:mine`) fails ("trans() on null").
+        $repo->setTranslator($this->translator);
+        $repo->setCurrentUser($this->user);
         $contacts = $repo->getEntityContacts(
             [
                 'withTotalCount' => true,
