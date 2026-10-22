@@ -12,8 +12,14 @@ use Symfony\Contracts\Service\Attribute\Required;
 
 /**
  * The contacts tab of a segment / campaign page as the contact list TABLE (same columns, in the order set in
- * Configuration > Contact Settings) instead of core's cards. Used by SegmentContactsController and
- * CampaignContactsController, which take over core's routes of those tabs.
+ * Configuration > Contact Settings) instead of core's cards, and the contacts list of the campaign node modals. Used by
+ * SegmentContactsController, CampaignContactsController and CampaignPendingContactsController: the one place of this table.
+ *
+ * The first load of the tab (a GET without `tmpl`) comes with the search bar of the contact list over the table
+ * (contacts_table.html.twig), the table in an element of its own; every later request (the live search: a GET with `tmpl`;
+ * sorting, paging, page size: POSTs with `tmpl`; the redirect to the last page: `body`) only brings the table, into that
+ * element, so the bar is not replaced while it is being typed in. The first load starts
+ * with an empty search (the session's search of the last visit is dropped).
  *
  * The query is the one of core's EntityContactsTrait::generateContactsGrid with ONE difference: core limits the
  * select of the segment to id, company, city, state and country (what the cards show), so the custom fields of the
@@ -47,12 +53,23 @@ trait ContactsTableTrait
         $entityId   = $spec['entityId'];
         $page       = $spec['page'];
         $template   = '@MauticPatches/Contact/contacts_table.html.twig';
+        $outer      = $spec['container'];
+        $bodyId     = ltrim($outer, '#').'-table';
+        $baseUrl    = $this->generateUrl($route, ['objectId' => $entityId]);
+        // core's own requests of a list (search, sorting, paging, the page size) all carry `tmpl`; the first load of the tab does not
+        $withBar    = 'GET' === $request->getMethod() && !$request->query->has('tmpl') && !$request->query->has('body');
         $view       = [
             'page'          => $page,
             'tmpl'          => $sessionVar.'Contacts',
-            'baseUrl'       => $this->generateUrl($route, ['objectId' => $entityId]),
+            'baseUrl'       => $baseUrl,
             'sessionVar'    => $sessionVar.'.contact',
-            'container'     => $spec['container'],
+            // the target of sorting, paging and the search: the table's own element, so the search bar stays
+            'container'     => '#'.$bodyId,
+            'outer'         => $outer,
+            'toolbar'       => $withBar,
+            'searchId'      => 'search-'.ltrim($outer, '#'),
+            'searchValue'   => '',
+            'searchAction'  => $baseUrl,
             'noContactList' => [],
             'columns'       => [],
             'permissions'   => [],
@@ -68,8 +85,11 @@ trait ContactsTableTrait
         }
 
         $session = $request->getSession();
-        $search  = $request->get('search', $session->get('mautic.'.$sessionVar.'.contact.filter', ''));
+        $search  = $withBar
+            ? (string) $request->query->get('search', '')
+            : $request->get('search', $session->get('mautic.'.$sessionVar.'.contact.filter', ''));
         $session->set('mautic.'.$sessionVar.'.contact.filter', $search);
+        $view['searchValue'] = $search;
 
         $pageHelper = $pageHelperFactory->make("mautic.{$sessionVar}", $page);
         $orderBy    = $session->get('mautic.'.$sessionVar.'.contact.orderby', $spec['orderBy']);
@@ -108,7 +128,7 @@ trait ContactsTableTrait
             $pageHelper->rememberPage($lastPage);
 
             return $this->postActionRedirect([
-                'returnUrl'         => $this->generateUrl($route, ['objectId' => $entityId, 'page' => $lastPage]),
+                'returnUrl'         => $this->generateUrl($route, ['objectId' => $entityId, 'page' => $lastPage, 'body' => 1]),
                 'viewParameters'    => ['page' => $lastPage, 'objectId' => $entityId],
                 'contentTemplate'   => $template,
                 'forwardController' => false,
