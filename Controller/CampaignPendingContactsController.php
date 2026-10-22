@@ -27,7 +27,8 @@ class CampaignPendingContactsController extends CampaignController
      */
     public function pendingContactsAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, $objectId, $page = 1)
     {
-        $event = $this->eventOrDeny((int) $objectId);
+        $eventId = (int) $objectId;
+        $event   = $this->eventOrDeny($eventId);
 
         if ($event instanceof Response) {
             return $event;
@@ -37,7 +38,7 @@ class CampaignPendingContactsController extends CampaignController
             // One row per CONTACT of the campaign (campaign_leads has one), not per log: a campaign that restarts gives a contact
             // a log of the same event for each rotation, and a join with the log table counted (and paged) the contact once per log.
             'entityId'        => (int) $event->getCampaign()->getId(),
-            'routeId'         => (int) $objectId,
+            'routeId'         => $eventId,
             'page'            => (int) $page,
             'sessionVar'      => 'campaignPending',
             'route'           => 'mautic_patches_campaign_event_pending_contacts',
@@ -55,7 +56,7 @@ class CampaignPendingContactsController extends CampaignController
                     'EXISTS (SELECT 1 FROM %1$scampaign_lead_event_log evlog WHERE evlog.lead_id = entity.lead_id AND evlog.event_id = %2$d AND evlog.is_scheduled = 1'
                     .' AND NOT EXISTS (SELECT 1 FROM %1$scampaign_lead_event_failed_log failed WHERE failed.log_id = evlog.id))',
                     MAUTIC_TABLE_PREFIX,
-                    (int) $objectId
+                    $eventId
                 ),
             ]],
             'orderBy'         => 'entity.date_added',
