@@ -57,6 +57,19 @@ return [
                 'requirements' => ['objectId' => '\\d+', 'page' => '\\d+'],
                 'defaults'     => ['page' => 1],
             ],
+            // The "Recalculate dates" button of the modal of a Wait node: the simulation (reads) and the application (writes).
+            'mautic_patches_campaign_wait_recalculate_simulate' => [
+                'path'         => '/campaign-wait/{eventId}/recalculate/simulate',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignWaitRecalculateController::simulateAction',
+                'method'       => 'GET',
+                'requirements' => ['eventId' => '\\d+'],
+            ],
+            'mautic_patches_campaign_wait_recalculate_apply' => [
+                'path'         => '/campaign-wait/{eventId}/recalculate/apply',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignWaitRecalculateController::applyAction',
+                'method'       => 'POST',
+                'requirements' => ['eventId' => '\\d+'],
+            ],
             // The "Ver" modal of the contact list: the contact's Details table, nothing else.
             'mautic_patches_contact_details' => [
                 'path'         => '/contact-details/{id}',

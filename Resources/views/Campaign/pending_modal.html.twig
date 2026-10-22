@@ -8,6 +8,37 @@
 #}
 {{ include('@MauticPatches/Contact/contacts_modal_width.html.twig', {'modalClass': 'mautic-patches-campaign-pending'}) }}
 <div class="mautic-patches-campaign-pending">
+    {% if recalculate %}
+    {# The message on top; below it, ONE row of buttons: Recalculate alone, or (after a simulation that can be applied) Apply and Cancel. While
+       the simulation runs the message line is the segment's "<spinner> Updating...", here "<spinner> Recalculating...". #}
+    <style>
+        {{ constant('MauticPlugin\\MauticPatchesBundle\\EventListener\\SegmentUpdateLockSubscriber::STYLE')|raw }}
+        #patches-wait-recalc [hidden] { display: none !important; }
+    </style>
+    <div id="patches-wait-recalc" class="mb-md"
+         data-simulate-url="{{ path('mautic_patches_campaign_wait_recalculate_simulate', {'eventId': event.id}) }}"
+         data-apply-url="{{ path('mautic_patches_campaign_wait_recalculate_apply', {'eventId': event.id}) }}"
+         data-text-intro="{{ 'mautic.patches.wait_relative.recalculate.intro'|trans }}"
+         data-text-changed="{{ 'mautic.patches.wait_relative.recalculate.changed'|trans }}"
+         data-text-leaving_now="{{ 'mautic.patches.wait_relative.recalculate.leaving_now'|trans }}"
+         data-text-unchanged="{{ 'mautic.patches.wait_relative.recalculate.unchanged'|trans }}"
+         data-text-nothing="{{ 'mautic.patches.wait_relative.recalculate.nothing'|trans }}"
+         data-text-applied="{{ 'mautic.patches.wait_relative.recalculate.applied'|trans }}">
+        <div class="patches-wait-recalc-running mb-md" hidden>
+            <small class="mautic-patches-updating">{{ constant('MauticPlugin\\MauticPatchesBundle\\EventListener\\SegmentUpdateLockSubscriber::SPINNER_SVG')|raw }}<span class="mautic-patches-updating-text">{{ 'mautic.patches.wait_relative.recalculate.running'|trans }}</span></small>
+        </div>
+        <div class="patches-wait-recalc-result mb-md" hidden></div>
+        {# One row. Recalculate and Apply are both btn-primary and never shown together, but the theme draws a SECOND btn-primary of the same
+           parent as outlined (transparent): each one is in its own parent, so each is "the first". #}
+        <div class="d-flex fd-row fw-nowrap ai-center">
+            <div><button type="button" class="btn btn-primary" data-recalc="start">{{ 'mautic.patches.wait_relative.recalculate'|trans }}</button></div>
+            <div class="d-flex fd-row fw-nowrap ai-center gap-sm">
+                <button type="button" class="btn btn-primary" data-recalc="apply" hidden>{{ 'mautic.patches.wait_relative.recalculate.apply'|trans }}</button>
+                <button type="button" class="btn btn-tertiary btn-cancel" data-recalc="cancel" hidden>{{ 'mautic.core.form.cancel'|trans }}</button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     <div class="page-list" id="patches-pending-container"
          data-target-url="{{ path('mautic_patches_campaign_event_pending_contacts', {'objectId': event.id, 'page': 1}) }}">
         <div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>
