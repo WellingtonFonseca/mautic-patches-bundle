@@ -43,6 +43,13 @@ return [
                 'method'       => 'GET',
                 'requirements' => ['id' => '\\d+'],
             ],
+            // The modal of the hourglass of a campaign node: the contacts waiting at that event.
+            'mautic_patches_campaign_event_pending' => [
+                'path'         => '/campaign-pending/{eventId}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignEventPendingController::pendingAction',
+                'method'       => 'GET',
+                'requirements' => ['eventId' => '\\d+'],
+            ],
             // The "Ver" modal of the contact list: the contact's Details table, nothing else.
             'mautic_patches_contact_details' => [
                 'path'         => '/contact-details/{id}',

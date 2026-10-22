@@ -1,0 +1,118 @@
+// Runs the REAL script that CampaignPendingClickSubscriber puts on the page (taken from the PHP class, not copied) against a
+// small fake browser: the click handler on the document, the stat spans of a campaign node (the check with the done count, the
+// hourglass with the pending count) and Mautic.ajaxifyModal as a recorder.
+//
+// Run inside the Mautic container, no extra dependencies (Node's built-in runner):
+//   docker exec mautic-mautic_web-1 sh -c "cd /var/www/html/docroot/plugins/MauticPatchesBundle && node --test 'Tests/js/*.test.js'"
+'use strict';
+
+const test   = require('node:test');
+const assert = require('node:assert');
+const path   = require('node:path');
+const vm     = require('node:vm');
+const {execFileSync} = require('node:child_process');
+
+const AUTOLOAD   = process.env.AUTOLOAD || '/var/www/html/vendor/autoload.php';
+const CLASS_FILE = path.resolve(__dirname, '../../EventListener/CampaignPendingClickSubscriber.php');
+
+const SCRIPT = execFileSync('php', ['-r',
+    `require ${JSON.stringify(AUTOLOAD)}; require ${JSON.stringify(CLASS_FILE)}; echo MauticPlugin\\MauticPatchesBundle\\EventListener\\CampaignPendingClickSubscriber::script('/s/campaign-pending/', 'Contatos aguardando');`,
+], {encoding: 'utf8'});
+
+// A stat span of a node: `icon` is the icon it holds, `eventId` the data-event-id of the node it sits in (null: in no node).
+function stat(icon, eventId = '41') {
+    return {
+        querySelector: (selector) => (selector === '.' + icon ? {} : null),
+        closest: (selector) => {
+            assert.strictEqual(selector, '[data-event-id]');
+
+            return eventId === null ? null : {getAttribute: (name) => (name === 'data-event-id' ? eventId : null)};
+        },
+    };
+}
+
+function load() {
+    const calls = {modal: []};
+    let clickHandler;
+    const document = {
+        addEventListener: (type, fn, capture) => { assert.strictEqual(type, 'click'); assert.strictEqual(capture, true); clickHandler = fn; },
+        createElement: () => ({attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }}),
+    };
+    const window  = {};
+    const Mautic  = {ajaxifyModal: (el) => calls.modal.push(el.attrs)};
+
+    vm.runInNewContext(SCRIPT, {window, document, Mautic});
+
+    function click(span, extra = {}) {
+        const event = {
+            button: 0, ...extra, prevented: false, stopped: false,
+            preventDefault() { this.prevented = true; }, stopImmediatePropagation() { this.stopped = true; },
+            target: {closest: (selector) => {
+                assert.strictEqual(selector, '.campaign-event-stat > span[data-toggle]');
+
+                return span;
+            }},
+        };
+        clickHandler(event);
+
+        return event;
+    }
+
+    return {calls, click, window, run: () => vm.runInNewContext(SCRIPT, {window, document, Mautic})};
+}
+
+test('a click on the hourglass opens the pending modal of that node with the route, the target and the title', () => {
+    const t = load();
+
+    const event = t.click(stat('ri-hourglass-line', '41'));
+
+    assert.strictEqual(event.prevented, true);
+    assert.strictEqual(event.stopped, true);
+    assert.deepStrictEqual(t.calls.modal, [{
+        href: '/s/campaign-pending/41', 'data-toggle': 'ajaxmodal', 'data-target': '#MauticSharedModal', 'data-header': 'Contatos aguardando',
+    }]);
+});
+
+test('the check of the done count is not touched', () => {
+    const t = load();
+
+    const event = t.click(stat('ri-check-line'));
+
+    assert.strictEqual(event.prevented, false);
+    assert.strictEqual(event.stopped, false);
+    assert.deepStrictEqual(t.calls.modal, []);
+});
+
+test('a click that is not on a stat span is not touched', () => {
+    const t = load();
+
+    assert.strictEqual(t.click(null).prevented, false);
+    assert.deepStrictEqual(t.calls.modal, []);
+});
+
+test('an hourglass outside a node (no event id) is not touched', () => {
+    const t = load();
+
+    assert.strictEqual(t.click(stat('ri-hourglass-line', null)).prevented, false);
+    assert.deepStrictEqual(t.calls.modal, []);
+});
+
+test('the middle button is left to the browser', () => {
+    const t = load();
+
+    assert.strictEqual(t.click(stat('ri-hourglass-line'), {button: 1}).prevented, false);
+    assert.deepStrictEqual(t.calls.modal, []);
+});
+
+test('the handler is added once, however many pages inject the script', () => {
+    const t = load();
+    let added = 0;
+    const original = t.window;
+
+    assert.strictEqual(original.mauticPatchesCampaignPendingClicks, true);
+    // a second injection into the same window does nothing
+    const document = {addEventListener: () => { added += 1; }, createElement: () => ({})};
+    vm.runInNewContext(SCRIPT, {window: original, document, Mautic: {}});
+
+    assert.strictEqual(added, 0);
+});
