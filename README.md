@@ -108,6 +108,8 @@ The bundle also holds small additions to Mautic's own behaviour, such as API end
 | Not a bug, a look: the heading and the browser tab of the segment page read `PREFIX - Name`, like the campaign page. The saved name does not change. | Segment page | `EventListener/SegmentTitlePrefixSubscriber.php` | Mautic 5.2 |
 | A bug of the downloaded pt_BR pack: texts with a placeholder named differently from the one core fills (the back button read `Voltar ao %alvo%`), malformed or lost. A plugin's own translations cannot replace a text of the pack, so core's translation loader gets a subclass that puts `Resources/translation-overrides/<locale>/<domain>.ini` over its catalogue. | Every page | `Loader/OverridingTranslationLoader.php`, `DependencyInjection/Compiler/OverridingTranslationLoaderPass.php`, `Resources/translation-overrides/` | Mautic 5.2 |
 | Not a bug, a usability choice: the notifications are fixed to the screen (core positions them on the page, out of sight on a scrolled list) and stay longer, 10 s a notice, 15 s a warning, 20 s an error (core: 4 s); the mouse over one holds it. | Every admin page | `EventListener/FlashesFixedSubscriber.php`, `EventListener/FlashesLongerSubscriber.php`, `Resources/js/flashes-longer.js` | Mautic 5.2 |
+| Not a bug, a usability choice: on the Preview tab of a campaign the hourglass (pending) and the check (done) of a node open a modal with the contacts waiting at / done with that node, as the contact list table with its search bar (columns of Contact Settings, sorting, paging, the `field:value` search commands). The builder shows no counts. A contact in the list opens in a new tab. | Campaign page, Preview tab | `EventListener/CampaignPendingClickSubscriber.php`, `Controller/CampaignEventPendingController.php`, `Controller/CampaignPendingContactsController.php`, `Resources/views/Campaign/pending_modal.html.twig` | Mautic 5.2 |
+| Not a bug, a usability choice: the contact list table of the segment and campaign pages (and of the node modals above) has the search bar of the contact list; it filters while typing and opens empty each time. The table comes from one place (`ContactsTableTrait` and two templates). The segment details modal and the node modals share one width (the middle between 1100px and 95vw). | Segment and campaign pages | `Controller/ContactsTableTrait.php`, `Resources/views/Contact/contacts_table.html.twig`, `Resources/views/Contact/contacts_modal_width.html.twig` | Mautic 5.2 |
 
 ## Adding a new fix
 
@@ -143,7 +145,7 @@ docker exec mautic-mautic_web-1 sh -c "cd /var/www/html/docroot/plugins/MauticPa
 
 ### Live test (real server)
 
-`mautic/scripts/5/test-contacts-tables.sh` checks the segment and campaign contact tables (table not cards, columns as in Contact Settings, custom field value, hidden first cell, sorting).
+`mautic/scripts/5/test-contacts-tables.sh` checks the segment and campaign contact tables (table not cards, columns as in Contact Settings, custom field value, hidden first cell, sorting). `mautic/scripts/5/seed-campaign-pending.sh` makes the campaign "Campanha aguardando" to look at the node modals.
 
 `mautic/scripts/5/test-segment-in-chips.sh` checks including / excluding on text fields: the operators offered (contact, company and Custom Object fields), both suggestion routes (contact/company here, Custom Objects in its plugin), the chips script on the segment form, and real segments filtering with `A|B`. It prints counts only. The chips' look and keys are checked by hand in the browser.
 
