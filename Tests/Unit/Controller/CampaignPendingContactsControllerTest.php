@@ -23,20 +23,26 @@ class CampaignPendingContactsControllerTest extends TestCase
         $this->assertCount(1, (new \ReflectionMethod(CampaignPendingContactsController::class, 'setColumnsDictionary'))->getAttributes(Required::class));
     }
 
-    public function testTheActionsHaveNamesOfTheirOwn(): void
+    public function testTheActionHasANameOfItsOwn(): void
     {
         // a `contactsAction` would have to keep core's signature (fatal error otherwise)
         $this->assertFalse(method_exists(CampaignController::class, 'pendingContactsAction'));
-        $this->assertFalse(method_exists(CampaignController::class, 'doneContactsAction'));
     }
 
-    public function testTheRoutesPointAtThePendingAndDoneActions(): void
+    public function testTheRouteOfThePendingListPointsAtItsAction(): void
     {
         $routes = (require __DIR__.'/../../../Config/config.php')['routes']['main'];
 
         $this->assertSame(CampaignPendingContactsController::class.'::pendingContactsAction', $routes['mautic_patches_campaign_event_pending_contacts']['controller']);
-        $this->assertSame(CampaignPendingContactsController::class.'::doneContactsAction', $routes['mautic_patches_campaign_event_done_contacts']['controller']);
         $this->assertStringContainsString('{objectId}', $routes['mautic_patches_campaign_event_pending_contacts']['path'], 'the trait builds its urls with objectId');
-        $this->assertStringContainsString('{objectId}', $routes['mautic_patches_campaign_event_done_contacts']['path']);
+    }
+
+    public function testTheCheckOfTheNodeOpensNothing(): void
+    {
+        $routes = (require __DIR__.'/../../../Config/config.php')['routes']['main'];
+
+        $this->assertArrayNotHasKey('mautic_patches_campaign_event_done_contacts', $routes);
+        $this->assertArrayNotHasKey('mautic_patches_campaign_event_done', $routes);
+        $this->assertFalse(method_exists(CampaignPendingContactsController::class, 'doneContactsAction'));
     }
 }
