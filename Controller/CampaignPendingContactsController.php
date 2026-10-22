@@ -70,7 +70,9 @@ class CampaignPendingContactsController extends CampaignController
             'sessionVar'      => $list['sessionVar'],
             'route'           => $list['route'],
             'container'       => '#patches-pending-container',
-            'permission'      => ['lead:leads:viewown', 'lead:leads:viewother'],
+            // the campaign's own view permission, as core's contacts tab of a campaign (EntityContactsTrait) checks: isGranted() wants ALL the
+            // permissions of an array, so ['lead:leads:viewown', 'lead:leads:viewother'] left a role with only one of them an empty table
+            'permission'      => 'campaign:campaigns:view',
             'joinTable'       => 'campaign_lead_event_log',
             'idColumn'        => 'event_id',
             // a log that failed is in neither count of core
