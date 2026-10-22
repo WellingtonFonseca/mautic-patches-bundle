@@ -7,16 +7,18 @@ namespace MauticPlugin\MauticPatchesBundle\Controller;
 use Mautic\CampaignBundle\Controller\CampaignController;
 use Mautic\CoreBundle\Factory\PageHelperFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The contacts of one event of a campaign (the lists the hourglass and the check of a node open, see
  * CampaignEventPendingController) as the contact list table (see ContactsTableTrait), the same one as the contacts tab of the
- * campaign. The contacts are the ones core counts on the node: a log of the event that is still scheduled (hourglass, the
- * earliest scheduled first) or already run (check, the latest first), of a member of the campaign, not failed; until a column
- * is clicked.
+ * campaign. The contacts are the ones core counts on the node: a member of the campaign with a log of the event that is still
+ * scheduled (hourglass) or already run (check), not failed, ONCE each however many logs (rotations) it has; the latest to join the
+ * campaign first, until a column is clicked.
  */
 class CampaignPendingContactsController extends CampaignController
 {
+    use CampaignEventAccessTrait;
     use ContactsTableTrait;
 
     /**
@@ -29,8 +31,6 @@ class CampaignPendingContactsController extends CampaignController
             'sessionVar' => 'campaignPending',
             'route'      => 'mautic_patches_campaign_event_pending_contacts',
             'scheduled'  => 1,
-            'orderBy'    => 'entity.trigger_date',
-            'orderByDir' => 'ASC',
         ]);
     }
 
@@ -44,28 +44,27 @@ class CampaignPendingContactsController extends CampaignController
             'sessionVar' => 'campaignDone',
             'route'      => 'mautic_patches_campaign_event_done_contacts',
             'scheduled'  => 0,
-            'orderBy'    => 'entity.date_triggered',
-            'orderByDir' => 'DESC',
         ]);
     }
 
     /**
-     * @param array{sessionVar: string, route: string, scheduled: int, orderBy: string, orderByDir: string} $list
+     * @param array{sessionVar: string, route: string, scheduled: int} $list
      */
     private function eventContacts(Request $request, PageHelperFactoryInterface $pageHelperFactory, int $eventId, int $page, array $list)
     {
-        $event = $this->getModel('campaign')->getEventRepository()->find($eventId);
+        $event = $this->eventOrDeny($eventId);
 
-        if (null === $event || null === $event->getCampaign()) {
-            return $this->notFound();
+        if ($event instanceof Response) {
+            return $event;
         }
 
-        if (!$this->security->hasEntityAccess('campaign:campaigns:viewown', 'campaign:campaigns:viewother', $event->getCampaign()->getCreatedBy())) {
-            return $this->accessDenied();
-        }
+        $prefix = MAUTIC_TABLE_PREFIX;
 
         return $this->contactsTable($request, $pageHelperFactory, [
-            'entityId'        => $eventId,
+            // One row per CONTACT of the campaign (campaign_leads has one), not per log: a campaign that restarts gives a contact
+            // a log of the same event for each rotation, and a join with the log table counted (and paged) the contact once per log.
+            'entityId'        => (int) $event->getCampaign()->getId(),
+            'routeId'         => $eventId,
             'page'            => $page,
             'sessionVar'      => $list['sessionVar'],
             'route'           => $list['route'],
@@ -73,28 +72,23 @@ class CampaignPendingContactsController extends CampaignController
             // the campaign's own view permission, as core's contacts tab of a campaign (EntityContactsTrait) checks: isGranted() wants ALL the
             // permissions of an array, so ['lead:leads:viewown', 'lead:leads:viewother'] left a role with only one of them an empty table
             'permission'      => 'campaign:campaigns:view',
-            'joinTable'       => 'campaign_lead_event_log',
-            'idColumn'        => 'event_id',
-            // a log that failed is in neither count of core
-            'contactFilter'   => ['is_scheduled' => $list['scheduled'], ['expr' => 'isNull', 'col' => 'failed.log_id']],
-            'orderBy'         => $list['orderBy'],
-            'orderByDir'      => $list['orderByDir'],
-            'additionalJoins' => [
-                [
-                    'type'       => 'innerJoin',
-                    'from_alias' => 'entity',
-                    'table'      => 'campaign_leads',
-                    'alias'      => 'member',
-                    'condition'  => 'member.campaign_id = entity.campaign_id AND member.lead_id = entity.lead_id',
-                ],
-                [
-                    'type'       => 'leftJoin',
-                    'from_alias' => 'entity',
-                    'table'      => 'campaign_lead_event_failed_log',
-                    'alias'      => 'failed',
-                    'condition'  => 'failed.log_id = entity.id',
-                ],
-            ],
+            'joinTable'       => 'campaign_leads',
+            'idColumn'        => 'campaign_id',
+            // the contact has a log of this event that is still scheduled (hourglass) or already run (check), and not a failed one:
+            // what core counts on the node
+            'contactFilter'   => [[
+                'expr'     => 'formula',
+                'internal' => true,
+                'val'      => sprintf(
+                    'EXISTS (SELECT 1 FROM %1$scampaign_lead_event_log evlog WHERE evlog.lead_id = entity.lead_id AND evlog.event_id = %2$d AND evlog.is_scheduled = %3$d'
+                    .' AND NOT EXISTS (SELECT 1 FROM %1$scampaign_lead_event_failed_log failed WHERE failed.log_id = evlog.id))',
+                    $prefix,
+                    $eventId,
+                    $list['scheduled']
+                ),
+            ]],
+            'orderBy'         => 'entity.date_added',
+            'orderByDir'      => 'DESC',
         ]);
     }
 }
