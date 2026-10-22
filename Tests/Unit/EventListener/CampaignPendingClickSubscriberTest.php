@@ -61,4 +61,12 @@ class CampaignPendingClickSubscriberTest extends TestCase
         $this->assertStringContainsString('".ri-hourglass-line"', $js);
         $this->assertStringContainsString('event.stopImmediatePropagation();', $js);
     }
+
+    public function testTheModalTableIsLoadedWhenItsBodyArrives(): void
+    {
+        $js = $this->content();
+
+        $this->assertStringContainsString('Mautic.campaignPendingOnLoad=function(){', $js);
+        $this->assertStringContainsString('mQuery("#patches-pending-container").data("target-url")', $js);
+    }
 }

@@ -1,41 +1,18 @@
 {#
-  Body of the modal the hourglass of a campaign node opens: the contacts waiting at that event. Core's shared modal is narrow
-  by default, so only a modal holding this body is widened (:has). Variables: event, total, rows (id, name, email, scheduled),
-  limit. `scheduled` is the stored UTC date: dateToFull writes it in the user's time zone.
+  Body of the modal the hourglass of a campaign node opens: the container of the contacts waiting there.
+  The container has the data-target-url of the table (CampaignPendingContactsController); Mautic.campaignPendingOnLoad
+  (CampaignPendingClickSubscriber) loads it when the modal opens, as the segment modal does for its Contacts tab. Core's
+  shared modal is narrow by default, so only a modal holding this body is widened (:has), to 95% of the screen: the table has all the columns of the contact list. Variable: event.
 #}
 <style>
     .modal-dialog:has(.mautic-patches-campaign-pending) {
-        width: 800px;
+        width: 95vw;
         max-width: 95vw;
     }
 </style>
 <div class="mautic-patches-campaign-pending">
-    <p class="fw-b">{{ event.name }}</p>
-    {% if rows is empty %}
-        <p class="text-muted mb-0">{{ 'mautic.patches.campaign.pending.empty'|trans }}</p>
-    {% else %}
-        <div class="panel shd-none mb-0">
-            <table class="table table-hover mb-0">
-                <thead>
-                <tr>
-                    <th>{{ 'mautic.lead.lead'|trans }}</th>
-                    <th>{{ 'mautic.core.email'|trans }}</th>
-                    <th>{{ 'mautic.patches.campaign.pending.scheduled'|trans }}</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for row in rows %}
-                    <tr>
-                        <td><a href="{{ path('mautic_contact_action', {'objectAction': 'view', 'objectId': row.id}) }}" target="_blank" rel="noopener">{{ row.name }}</a></td>
-                        <td>{{ row.email }}</td>
-                        <td>{{ row.scheduled ? dateToFull(row.scheduled) : '' }}</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% if total > rows|length %}
-            <p class="text-muted mt-md mb-0">{{ 'mautic.patches.campaign.pending.more'|trans({'%limit%': rows|length, '%total%': total}) }}</p>
-        {% endif %}
-    {% endif %}
+    <div class="page-list" id="patches-pending-container"
+         data-target-url="{{ path('mautic_patches_campaign_event_pending_contacts', {'objectId': event.id, 'page': 1}) }}">
+        <div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>
+    </div>
 </div>

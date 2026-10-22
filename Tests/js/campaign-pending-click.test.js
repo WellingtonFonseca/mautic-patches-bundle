@@ -39,9 +39,11 @@ function load() {
         createElement: () => ({attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }}),
     };
     const window  = {};
-    const Mautic  = {ajaxifyModal: (el) => calls.modal.push(el.attrs)};
+    const Mautic  = {ajaxifyModal: (el) => calls.modal.push(el.attrs), processPageContent: (r) => { calls.processed = r; }};
+    const mQuery  = Object.assign((selector) => ({data: (key) => (selector === '#patches-pending-container' && key === 'target-url' ? calls.container : undefined)}),
+        {get: (url, cb) => { calls.get = url; calls.getCb = cb; }});
 
-    vm.runInNewContext(SCRIPT, {window, document, Mautic});
+    vm.runInNewContext(SCRIPT, {window, document, Mautic, mQuery});
 
     function click(span, extra = {}) {
         const event = {
@@ -58,7 +60,7 @@ function load() {
         return event;
     }
 
-    return {calls, click, window, run: () => vm.runInNewContext(SCRIPT, {window, document, Mautic})};
+    return {calls, click, window, Mautic};
 }
 
 test('a click on the hourglass opens the pending modal of that node with the route, the target and the title', () => {
@@ -115,4 +117,23 @@ test('the handler is added once, however many pages inject the script', () => {
     vm.runInNewContext(SCRIPT, {window: original, document, Mautic: {}});
 
     assert.strictEqual(added, 0);
+});
+
+test('when the modal body arrives, its table is loaded into the container through core\'s own loader', () => {
+    const t = load();
+    t.calls.container = '/s/campaign-pending/41/contacts/1';
+
+    t.Mautic.campaignPendingOnLoad();
+    t.calls.getCb({html: 'x'});
+
+    assert.strictEqual(t.calls.get, '/s/campaign-pending/41/contacts/1');
+    assert.strictEqual(t.calls.processed.target, '#patches-pending-container');
+});
+
+test('a body without the container loads nothing', () => {
+    const t = load();
+
+    t.Mautic.campaignPendingOnLoad();
+
+    assert.strictEqual(t.calls.get, undefined);
 });
