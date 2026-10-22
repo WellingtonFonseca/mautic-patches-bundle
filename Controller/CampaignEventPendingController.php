@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Controller;
 
-use Doctrine\ORM\EntityManagerInterface;
-use Mautic\CampaignBundle\Entity\Event;
 use Mautic\CoreBundle\Controller\CommonController;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -17,26 +15,24 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class CampaignEventPendingController extends CommonController
 {
-    public function pendingAction(EntityManagerInterface $entityManager, int $eventId): Response
+    use CampaignEventAccessTrait;
+
+    public function pendingAction(int $eventId): Response
     {
-        return $this->show($entityManager, $eventId, 'mautic_patches_campaign_event_pending_contacts');
+        return $this->show($eventId, 'mautic_patches_campaign_event_pending_contacts');
     }
 
-    public function doneAction(EntityManagerInterface $entityManager, int $eventId): Response
+    public function doneAction(int $eventId): Response
     {
-        return $this->show($entityManager, $eventId, 'mautic_patches_campaign_event_done_contacts');
+        return $this->show($eventId, 'mautic_patches_campaign_event_done_contacts');
     }
 
-    private function show(EntityManagerInterface $entityManager, int $eventId, string $tableRoute): Response
+    private function show(int $eventId, string $tableRoute): Response
     {
-        $event = $entityManager->getRepository(Event::class)->find($eventId);
+        $event = $this->eventOrDeny($eventId);
 
-        if (null === $event || null === $event->getCampaign()) {
-            return $this->notFound();
-        }
-
-        if (!$this->security->hasEntityAccess('campaign:campaigns:viewown', 'campaign:campaigns:viewother', $event->getCampaign()->getCreatedBy())) {
-            return $this->accessDenied();
+        if ($event instanceof Response) {
+            return $event;
         }
 
         return $this->delegateView([
