@@ -1,0 +1,13 @@
+{#
+  The width of the modals that hold the contact list table (the segment's details modal and the campaign node modals): core's
+  shared modal is narrow by default, so only a modal holding the given class is widened (:has). Half way, rounded up to a whole
+  pixel, between 1100px and 95vw: the table has all the columns of the contact list, and 95vw was too wide. The fixed width is for
+  browsers without round(). One place for the modals: change it here. Variable: modalClass (the class of the modal's body).
+#}
+<style>
+    .modal-dialog:has(.{{ modalClass }}) {
+        width: 1310px;
+        width: round(up, calc((1100px + 95vw) / 2), 1px);
+        max-width: 95vw;
+    }
+</style>
