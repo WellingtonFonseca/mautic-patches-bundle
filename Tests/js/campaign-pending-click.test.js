@@ -39,9 +39,9 @@ function load() {
         createElement: () => ({attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }}),
     };
     const window  = {};
-    const Mautic  = {ajaxifyModal: (el) => calls.modal.push(el.attrs), processPageContent: (r) => { calls.processed = r; }};
+    const Mautic  = {ajaxifyModal: (el) => calls.modal.push(el.attrs), processPageContent: (r) => { calls.processed = r; }, processAjaxError: (...a) => { calls.error = a; }};
     const mQuery  = Object.assign((selector) => ({data: (key) => (selector === '#patches-pending-container' && key === 'target-url' ? calls.container : undefined)}),
-        {get: (url, cb) => { calls.get = url; calls.getCb = cb; }});
+        {get: (url, cb) => { calls.get = url; calls.getCb = cb; return {fail: (fn) => { calls.failCb = fn; }}; }});
 
     vm.runInNewContext(SCRIPT, {window, document, Mautic, mQuery});
 
@@ -141,6 +141,16 @@ test('when the modal body arrives, its table is loaded into the container throug
 
     assert.strictEqual(t.calls.get, '/s/campaign-pending/41/contacts/1');
     assert.strictEqual(t.calls.processed.target, '#patches-pending-container');
+});
+
+test('a table request that fails reports the error through core instead of leaving the spinner', () => {
+    const t = load();
+    t.calls.container = '/s/campaign-pending/41/contacts/1';
+
+    t.Mautic.campaignPendingOnLoad();
+    t.calls.failCb({status: 403}, 'error', 'Forbidden');
+
+    assert.deepStrictEqual(t.calls.error, [{status: 403}, 'error', 'Forbidden']);
 });
 
 test('a body without the container loads nothing', () => {

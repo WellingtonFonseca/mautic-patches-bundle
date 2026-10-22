@@ -56,8 +56,12 @@ class CampaignPendingContactsController extends CampaignController
     {
         $event = $this->getModel('campaign')->getEventRepository()->find($eventId);
 
-        if (null === $event || !$this->security->hasEntityAccess('campaign:campaigns:viewown', 'campaign:campaigns:viewother', $event->getCampaign()->getCreatedBy())) {
-            return null === $event ? $this->notFound() : $this->accessDenied();
+        if (null === $event || null === $event->getCampaign()) {
+            return $this->notFound();
+        }
+
+        if (!$this->security->hasEntityAccess('campaign:campaigns:viewown', 'campaign:campaigns:viewother', $event->getCampaign()->getCreatedBy())) {
+            return $this->accessDenied();
         }
 
         return $this->contactsTable($request, $pageHelperFactory, [

@@ -11,9 +11,10 @@ use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * A click on the hourglass of a campaign node (the pending count; only the Preview tab of the campaign page has it, the builder shows no counts) opens, in core's
- * shared modal (#MauticSharedModal, Mautic.ajaxifyModal), the contacts waiting at that node (the body is rendered by
- * CampaignEventPendingController, the table by CampaignPendingContactsController, loaded by Mautic.campaignPendingOnLoad). The check next to it (the done count) is not touched.
+ * A click on the hourglass (the pending count) or the check (the done count) of a campaign node (only the Preview tab of the
+ * campaign page has them, the builder shows no counts) opens, in core's shared modal (#MauticSharedModal, Mautic.ajaxifyModal),
+ * the contacts waiting at / done with that node (the body is rendered by CampaignEventPendingController, the table by
+ * CampaignPendingContactsController, loaded by Mautic.campaignPendingOnLoad).
  *
  * Core's template (Event/_preview.html.twig, the node) is not touched: a click handler in the capture phase, before core's own
  * handlers, looks at the stat span that holds `.ri-hourglass-line` or `.ri-check-line`; the node's id
@@ -81,7 +82,9 @@ class CampaignPendingClickSubscriber implements EventSubscriberInterface
             // The modal's body only has the container: its table is loaded when the body arrives (core calls <mauticContent>OnLoad).
             .'Mautic.campaignPendingOnLoad=function(){'
             .'var url=mQuery("#patches-pending-container").data("target-url");'
-            .'if(url){mQuery.get(url,function(response){response.target="#patches-pending-container";Mautic.processPageContent(response);});}'
+            .'if(url){mQuery.get(url,function(response){response.target="#patches-pending-container";Mautic.processPageContent(response);})'
+            // a 403 / 404 / expired session: core's own error handling, not a spinner that never goes away
+            .'.fail(function(request,status,error){Mautic.processAjaxError(request,status,error);});}'
             .'};'
             .'})();';
     }
