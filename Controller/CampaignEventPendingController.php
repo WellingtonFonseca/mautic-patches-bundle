@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Controller;
 
 use Mautic\CoreBundle\Controller\CommonController;
+use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -26,7 +27,8 @@ class CampaignEventPendingController extends CommonController
         }
 
         return $this->delegateView([
-            'viewParameters'  => ['event' => $event],
+            // the "Recalculate dates" box is only for a Wait node, and only for who can edit the campaign (the simulation alone is a view)
+            'viewParameters'  => ['event' => $event, 'recalculate' => RelativeWaitSubscriber::TYPE === $event->getType() && $this->canEditCampaign($event)],
             'contentTemplate' => '@MauticPatches/Campaign/pending_modal.html.twig',
             'passthroughVars' => ['route' => false, 'mauticContent' => 'campaignPending'],
         ]);
