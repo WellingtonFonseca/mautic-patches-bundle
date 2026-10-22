@@ -12,9 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * The contacts of one event of a campaign (the lists the hourglass and the check of a node open, see
  * CampaignEventPendingController) as the contact list table (see ContactsTableTrait), the same one as the contacts tab of the
- * campaign. The contacts are the ones core counts on the node: a member of the campaign with a log of the event that is still
- * scheduled (hourglass) or already run (check), not failed, ONCE each however many logs (rotations) it has; the latest to join the
- * campaign first, until a column is clicked.
+ * campaign. The contacts behind the number of the node: a member of the campaign with a log of the event that is still scheduled
+ * (hourglass) or already run (check), not failed, ONCE each however many logs (rotations) it has. The number itself is core's and
+ * counts LOGS, so after a restart it can be larger than this list. The latest to join the campaign first, until a column is clicked.
  */
 class CampaignPendingContactsController extends CampaignController
 {
@@ -74,8 +74,8 @@ class CampaignPendingContactsController extends CampaignController
             'permission'      => 'campaign:campaigns:view',
             'joinTable'       => 'campaign_leads',
             'idColumn'        => 'campaign_id',
-            // the contact has a log of this event that is still scheduled (hourglass) or already run (check), and not a failed one:
-            // what core counts on the node
+            // the contact has a log of this event that is still scheduled (hourglass) or already run (check), and not a failed one,
+            // on either path (core counts both)
             'contactFilter'   => [[
                 'expr'     => 'formula',
                 'internal' => true,
