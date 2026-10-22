@@ -16,7 +16,10 @@ class CampaignPendingClickSubscriberTest extends TestCase
     private function content(string $context = 'page.header.left'): string
     {
         $router = $this->createMock(RouterInterface::class);
-        $router->method('generate')->with('mautic_patches_campaign_event_pending', ['eventId' => 0])->willReturn('/s/campaign-pending/0');
+        $router->method('generate')->willReturnMap([
+            ['mautic_patches_campaign_event_pending', ['eventId' => 0], RouterInterface::ABSOLUTE_PATH, '/s/campaign-pending/0'],
+            ['mautic_patches_campaign_event_done', ['eventId' => 0], RouterInterface::ABSOLUTE_PATH, '/s/campaign-done/0'],
+        ]);
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(fn (string $key) => "[{$key}]");
 
@@ -38,8 +41,10 @@ class CampaignPendingClickSubscriberTest extends TestCase
         $this->assertSame('', $this->content('something.else'));
     }
 
-    public function testTheHourglassLooksClickable(): void
+    public function testTheHourglassAndTheCheckLookClickable(): void
     {
+        $this->assertStringContainsString(':has(.ri-hourglass-line)', $this->content());
+        $this->assertStringContainsString(':has(.ri-check-line)', $this->content());
         $this->assertStringContainsString('cursor:pointer', $this->content());
     }
 
@@ -47,18 +52,20 @@ class CampaignPendingClickSubscriberTest extends TestCase
     {
         $js = $this->content();
 
-        $this->assertStringContainsString('"/s/campaign-pending/"+id', $js);
+        $this->assertStringContainsString('(pending?"/s/campaign-pending/":"/s/campaign-done/")+id', $js);
         $this->assertStringContainsString('"[mautic.patches.campaign.pending.title]"', $js);
+        $this->assertStringContainsString('"[mautic.patches.campaign.done.title]"', $js);
         $this->assertStringContainsString('Mautic.ajaxifyModal(el,event);', $js);
     }
 
-    public function testItRunsBeforeCoresHandlersAndOnlyOnTheHourglass(): void
+    public function testItRunsBeforeCoresHandlersAndOnlyOnTheHourglassAndTheCheck(): void
     {
         $js = $this->content();
 
         $this->assertStringContainsString('},true);', $js, 'capture phase');
         $this->assertStringContainsString('".campaign-event-stat > span[data-toggle]"', $js);
         $this->assertStringContainsString('".ri-hourglass-line"', $js);
+        $this->assertStringContainsString('".ri-check-line"', $js);
         $this->assertStringContainsString('event.stopImmediatePropagation();', $js);
     }
 
