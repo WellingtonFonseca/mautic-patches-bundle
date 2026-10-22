@@ -42,20 +42,22 @@ trait ContactsTableTrait
      * @param array{
      *     entityId: int, page: int, sessionVar: string, route: string, container: string,
      *     permission: string|string[], joinTable: string, idColumn: string, contactFilter: array<int|string, int|array<string, string>>,
-     *     orderBy: string, orderByDir?: string, additionalJoins?: array<int, array<string, string>>
+     *     orderBy: string, orderByDir?: string, additionalJoins?: array<int, array<string, string>>, routeId?: int
      * } $spec container = the selector of the tab pane the table is loaded into (the target of sorting/paging);
-     *         orderByDir = the direction of the default order (DESC); additionalJoins = extra joins of the query (core's format)
+     *         orderByDir = the direction of the default order (DESC); additionalJoins = extra joins of the query (core's format);
+     *         routeId = the `objectId` of the route, when it is not the id the join table is filtered by (entityId)
      */
     private function contactsTable(Request $request, PageHelperFactoryInterface $pageHelperFactory, array $spec)
     {
         $sessionVar = $spec['sessionVar'];
         $route      = $spec['route'];
         $entityId   = $spec['entityId'];
+        $routeId    = $spec['routeId'] ?? $entityId;
         $page       = $spec['page'];
         $template   = '@MauticPatches/Contact/contacts_table.html.twig';
         $outer      = $spec['container'];
         $bodyId     = ltrim($outer, '#').'-table';
-        $baseUrl    = $this->generateUrl($route, ['objectId' => $entityId]);
+        $baseUrl    = $this->generateUrl($route, ['objectId' => $routeId]);
         // core's own requests of a list (search, sorting, paging, the page size) all carry `tmpl`; the first load of the tab does not
         $withBar    = 'GET' === $request->getMethod() && !$request->query->has('tmpl') && !$request->query->has('body');
         $view       = [
@@ -128,8 +130,8 @@ trait ContactsTableTrait
             $pageHelper->rememberPage($lastPage);
 
             return $this->postActionRedirect([
-                'returnUrl'         => $this->generateUrl($route, ['objectId' => $entityId, 'page' => $lastPage, 'body' => 1]),
-                'viewParameters'    => ['page' => $lastPage, 'objectId' => $entityId],
+                'returnUrl'         => $this->generateUrl($route, ['objectId' => $routeId, 'page' => $lastPage, 'body' => 1]),
+                'viewParameters'    => ['page' => $lastPage, 'objectId' => $routeId],
                 'contentTemplate'   => $template,
                 'forwardController' => false,
                 'passthroughVars'   => ['mauticContent' => $sessionVar.'Contacts'],
