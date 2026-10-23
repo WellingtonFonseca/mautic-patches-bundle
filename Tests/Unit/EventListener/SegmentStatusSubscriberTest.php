@@ -88,6 +88,8 @@ class SegmentStatusSubscriberTest extends TestCase
     {
         $css = SegmentStatusSubscriber::STYLE;
         $this->assertStringContainsString('i[class*="lead-list-publish-icon"]{display:none!important}', $css);
+        // the description under the name is hidden, only in the rows that have the label (segment and campaign lists)
+        $this->assertStringContainsString('td:has(.segment-status-label) > div.text-muted{display:none!important}', $css);
         // the script puts the label at the start of the name; until then it is invisible
         $this->assertStringContainsString('.segment-status-label:not([data-placed]){visibility:hidden}', $css);
         // the labels have the width of Inativo, measured by the script

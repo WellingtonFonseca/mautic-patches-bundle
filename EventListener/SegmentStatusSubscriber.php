@@ -31,7 +31,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class SegmentStatusSubscriber implements EventSubscriberInterface
 {
     // the label is placed at the start of the name by the script; until then it is invisible, so it does not flash at the end
+    // the description core prints under the name in the segment and campaign rows (the rows with this label inside) is hidden too
     public const STYLE = 'i[class*="lead-list-publish-icon"]{display:none!important}'
+        .'td:has(.segment-status-label) > div.text-muted{display:none!important}'
         .'.segment-status-label{margin-right:var(--spacing-03);box-sizing:border-box;min-width:var(--segment-status-width,0)}.segment-status-label:not([data-placed]){visibility:hidden}'
         .'a[data-segment-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-segment-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
