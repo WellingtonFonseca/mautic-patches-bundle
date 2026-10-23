@@ -48,7 +48,7 @@ class SegmentDetailsButtonSubscriber implements EventSubscriberInterface
                     'href'        => $this->router->generate('mautic_segment_action', ['objectAction' => 'view', 'objectId' => $segment->getId()]),
                 ],
                 'btnText'   => $this->translator->trans('mautic.core.details'),
-                'iconClass' => 'ri-file-list-line',
+                'iconClass' => 'ri-information-line',
                 'priority'  => 250, // first in the row menu, above Edit
             ],
             ButtonHelper::LOCATION_LIST_ACTIONS

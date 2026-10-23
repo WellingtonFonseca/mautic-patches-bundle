@@ -72,7 +72,7 @@
         {% if canEdit %}
         <button type="button" id="patches-contact-details-edit" class="btn btn-primary" onclick="mQuery('#MauticSharedModal').modal('hide'); Mautic.loadContent('{{ path('mautic_contact_action', {'objectAction': 'edit', 'objectId': lead.id})|e('js') }}');">{{ 'mautic.core.form.edit'|trans }}<i class="ri-edit-line"></i></button>
         {% endif %}
-        <button type="button" id="patches-contact-details-page" class="btn btn-secondary" onclick="mQuery('#MauticSharedModal').modal('hide'); Mautic.loadContent('{{ path('mautic_contact_action', {'objectAction': 'view', 'objectId': lead.id})|e('js') }}');">{{ 'mautic.core.details'|trans }}<i class="ri-file-list-line"></i></button>
+        <button type="button" id="patches-contact-details-page" class="btn btn-secondary" onclick="mQuery('#MauticSharedModal').modal('hide'); Mautic.loadContent('{{ path('mautic_contact_action', {'objectAction': 'view', 'objectId': lead.id})|e('js') }}');">{{ 'mautic.core.details'|trans }}<i class="ri-information-line"></i></button>
         <button type="button" id="patches-contact-details-close" class="btn btn-tertiary btn-cancel" data-dismiss="modal">{{ 'mautic.core.close'|trans }}<i class="ri-close-line"></i></button>
     </div>
 </div>
