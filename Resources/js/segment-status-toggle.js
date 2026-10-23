@@ -1,5 +1,5 @@
 /*
- * Activate / deactivate a segment (and, in installCampaign, installUser and installHsm, a campaign, a user and an HSM template) from the three-dots menu of the segment list. The status is shown by a label
+ * Activate / deactivate a segment (and, in installCampaign, installUser, installHsm and installSms, a campaign, a user and an HSM / SMS template) from the three-dots menu of the segment list. The status is shown by a label
  * (SegmentStatusSubscriber: "Ativo" green, "Inativo" red) that is only informative; the small toggle icon next to the name,
  * which was easy to hit by mistake, is hidden.
  *
@@ -257,6 +257,10 @@
         syncNamedRows($, cfg, 'hsmTemplateTable', 'n8ndispatch-hsmtemplate', 'data-hsm-status-action', 'td:nth-child(2) > div');
     }
 
+    function syncSms($, cfg) {
+        syncNamedRows($, cfg, 'smsTemplateTable', 'n8ndispatch-smstemplate', 'data-sms-status-action', 'td:nth-child(2) > div');
+    }
+
     function installUser($, Mautic, cfg) {
         if (!$ || root.mauticPatchesUserStatus) { return; }
         root.mauticPatchesUserStatus = true;
@@ -271,7 +275,14 @@
         syncHsm($, cfg);
     }
 
-    var api = {install: install, installCampaign: installCampaign, installUser: installUser, installHsm: installHsm, statusOf: statusOf, view: view, place: place, measure: measure, withoutAlias: withoutAlias};
+    function installSms($, Mautic, cfg) {
+        if (!$ || root.mauticPatchesSmsStatus) { return; }
+        root.mauticPatchesSmsStatus = true;
+        installIconDriven($, cfg, 'n8ndispatch-smstemplate', 'data-sms-status-action', syncSms);
+        syncSms($, cfg);
+    }
+
+    var api = {install: install, installCampaign: installCampaign, installUser: installUser, installHsm: installHsm, installSms: installSms, statusOf: statusOf, view: view, place: place, measure: measure, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
