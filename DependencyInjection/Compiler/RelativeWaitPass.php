@@ -12,9 +12,9 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
 /**
- * Core's campaign scheduler (on Mautic 7 the service of its class, `mautic.campaign.scheduler` is an alias of it; the 5 has the id as the definition) is a service of core's own config (read after this plugin's services.php, so a definition here
- * would be replaced): once everything is read, its class becomes RelativeWaitScheduler, which extends it. Its arguments stay
- * core's; the resolver of the dates and the selector of the items come by setters.
+ * Core's campaign scheduler is a service of core's own config (read after this plugin's services.php, so a definition here would be
+ * replaced): once everything is read, its class becomes RelativeWaitScheduler, which extends it. Its arguments stay core's; the resolver of
+ * the dates and the selector of the items come by setters.
  */
 class RelativeWaitPass implements CompilerPassInterface
 {
