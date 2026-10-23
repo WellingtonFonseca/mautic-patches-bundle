@@ -1,5 +1,5 @@
 /*
- * Activate / deactivate a segment from the three-dots menu of the segment list. The status is shown by a label
+ * Activate / deactivate a segment (and, in installCampaign and installUser, a campaign and a user) from the three-dots menu of the segment list. The status is shown by a label
  * (SegmentStatusSubscriber: "Ativo" green, "Inativo" red) that is only informative; the small toggle icon next to the name,
  * which was easy to hit by mistake, is hidden.
  *
@@ -209,7 +209,68 @@
         }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'data-status']});
     }
 
-    var api = {install: install, installCampaign: installCampaign, statusOf: statusOf, view: view, place: place, measure: measure, withoutAlias: withoutAlias};
+    /** The core icon of a user row (hidden), whose state tells the status; null on the row of the logged user (core prints none). */
+    function userIcon(row) { return row.querySelector('i[class*="user-publish-icon"]'); }
+
+    /**
+     * Brings the label and the menu item of every user row to the state of its core icon (spinning, or published / not). The user list has
+     * no hook for the label: it is made here, at the start of the name. The row without an icon is the logged user, always active.
+     */
+    function syncUsers($, cfg) {
+        var rows = root.document.querySelectorAll('#userTable tbody tr');
+        for (var k = 0; k < rows.length; k++) {
+            var row = rows[k], icon = userIcon(row), name = row.querySelector('td:nth-child(3) > div');
+            if (!name) { continue; }
+            var label = row.querySelector('.segment-status-label');
+            var status = icon ? (icon.getAttribute('data-status') === 'published' ? 'published' : 'unpublished') : 'published';
+            if (!label) {
+                label = root.document.createElement('span');
+                label.className = 'label segment-status-label';
+                label.setAttribute('data-placed', '1');
+                label.setAttribute('data-status', '');
+                name.insertBefore(label, name.firstChild);
+            }
+            if (icon && /\bri-spin\b/.test(icon.className)) {
+                $(label).removeClass('label-success label-danger').addClass('label-gray')
+                    .html('<i class="ri-loader-3-line ri-spin" aria-hidden="true"></i>').attr('data-status', 'busy');
+                continue;
+            }
+            if (label.getAttribute('data-status') === status) { continue; }
+            var v = view(status, cfg);
+            $(label).removeClass('label-success label-danger label-gray').addClass(v.labelClass).attr('data-status', status).text(v.labelText);
+            $(row).find('a[data-user-status-action]').each(function () {
+                var $link = $(this);
+                $link.attr('data-user-status-action', v.action).attr('aria-label', v.actionText);
+                $link.find('span').first().text(v.actionText);
+                $link.find('i').first().attr('class', v.actionIcon);
+            });
+        }
+    }
+
+    function installUser($, Mautic, cfg) {
+        if (!$ || root.mauticPatchesUserStatus) { return; }
+        root.mauticPatchesUserStatus = true;
+        setup(cfg);
+
+        // the menu item clicks core's icon of the row (hidden): core sends the request and checks the permission
+        $(root.document).on('click', 'a[data-user-status-action]', function (event) {
+            event.preventDefault();
+            var row = this.closest('tr'), icon = row && userIcon(row);
+            if (icon) { icon.click(); }
+        });
+
+        // core changes the icon (the spin while the request runs, the new icon when it is answered): the label follows
+        var pending = false;
+        var observer = new root.MutationObserver(function () {
+            if (pending) { return; }
+            pending = true;
+            root.requestAnimationFrame(function () { pending = false; syncUsers($, cfg); });
+        });
+        observer.observe(root.document.body || root.document.documentElement, {childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'data-status']});
+        syncUsers($, cfg);
+    }
+
+    var api = {install: install, installCampaign: installCampaign, installUser: installUser, statusOf: statusOf, view: view, place: place, measure: measure, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
