@@ -9,8 +9,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * The script of the status badge of the Mautic lists (Resources/js/segment-status-toggle.js) and the call that installs one list on it,
  * for the status subscribers (segment, campaign, user, email). The file is served as a static asset with a filemtime() version, so the
- * browser keeps it: inlining it in every page, once per subscriber, cost about 57 KB per page load. Each install call is guarded in the
- * script, so the repeated `<script src>` of the four subscribers runs the file again but does the work once.
+ * browser keeps it: inlining it in every page, once per subscriber, cost about 57 KB per page load. The call is skipped when the file
+ * did not load (the page keeps working, without the badge). Each install is guarded in the script, so the repeated `<script src>` of
+ * the four subscribers runs the file again but does the work once.
  */
 final class StatusScript
 {
@@ -32,6 +33,6 @@ final class StatusScript
         $mtime = @filemtime(dirname(__DIR__).'/'.self::PATH);
 
         return '<script src="/plugins/MauticPatchesBundle/'.self::PATH.'?v='.(false !== $mtime ? $mtime : time()).'"></script>'
-            .'<script>mauticPatchesSegmentStatusApi.'.$installFunction.'(mQuery,Mautic,'.json_encode($config, JSON_UNESCAPED_UNICODE).');</script>';
+            .'<script>window.mauticPatchesSegmentStatusApi&&mauticPatchesSegmentStatusApi.'.$installFunction.'(mQuery,Mautic,'.json_encode($config, JSON_UNESCAPED_UNICODE).');</script>';
     }
 }

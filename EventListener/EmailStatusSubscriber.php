@@ -15,7 +15,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * The same as HsmStatusSubscriber, for the email list: the active / inactive toggle next to the name (an icon that is easy to hit by
+ * The same as UserStatusSubscriber, for the email list: the active / inactive toggle next to the name (an icon that is easy to hit by
  * mistake, with the status told only by its color) becomes
  *  - a label at the start of the name ("Ativo" green, "Inativo" red, informative, not a link, all with the width of "Inativo");
  *  - "Desativar" / "Ativar" as the FIRST item of the three-dots menu (Delete is the last), red / green on hover like the status it
