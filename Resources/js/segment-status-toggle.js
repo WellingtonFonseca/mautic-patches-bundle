@@ -1,5 +1,5 @@
 /*
- * Activate / deactivate a segment (and, in installCampaign, installUser, installHsm, installSms and installEmail, a campaign, a user, an HSM / SMS template and an email) from the three-dots menu of the segment list. The status is shown by a label
+ * Activate / deactivate a segment (and, in installCampaign, installUser and installEmail, a campaign, a user and an email) from the three-dots menu of the segment list. The status is shown by a label
  * (SegmentStatusSubscriber: "Ativo" green, "Inativo" red) that is only informative; the small toggle icon next to the name,
  * which was easy to hit by mistake, is hidden.
  *
@@ -249,7 +249,7 @@
     }
 
     /**
-     * Brings the label and the menu item of every row of a list that has no hook for the label (the user, HSM, SMS and email lists) to
+     * Brings the label and the menu item of every row of a list that has no hook for the label (the user and email lists) to
      * the state of its core icon: the label is made here, at the start of the name (`nameSelector`, inside the row). The row without
      * an icon (the logged user) is always active.
      */
@@ -277,14 +277,6 @@
         syncNamedRows($, cfg, '#userTable', 'user', 'data-user-status-action', 'td:nth-child(3) > div');
     }
 
-    function syncHsm($, cfg) {
-        syncNamedRows($, cfg, '#hsmTemplateTable', 'n8ndispatch-hsmtemplate', 'data-hsm-status-action', 'td:nth-child(2) > div');
-    }
-
-    function syncSms($, cfg) {
-        syncNamedRows($, cfg, '#smsTemplateTable', 'n8ndispatch-smstemplate', 'data-sms-status-action', 'td:nth-child(2) > div');
-    }
-
     function syncEmails($, cfg) {
         syncNamedRows($, cfg, 'table.email-list', 'email', 'data-email-status-action', 'td:nth-child(2) > div');
     }
@@ -296,20 +288,6 @@
         syncUsers($, cfg);
     }
 
-    function installHsm($, Mautic, cfg) {
-        if (!$ || root.mauticPatchesHsmStatus) { return; }
-        root.mauticPatchesHsmStatus = true;
-        installIconDriven($, cfg, 'n8ndispatch-hsmtemplate', 'data-hsm-status-action', syncHsm);
-        syncHsm($, cfg);
-    }
-
-    function installSms($, Mautic, cfg) {
-        if (!$ || root.mauticPatchesSmsStatus) { return; }
-        root.mauticPatchesSmsStatus = true;
-        installIconDriven($, cfg, 'n8ndispatch-smstemplate', 'data-sms-status-action', syncSms);
-        syncSms($, cfg);
-    }
-
     function installEmail($, Mautic, cfg) {
         if (!$ || root.mauticPatchesEmailStatus) { return; }
         root.mauticPatchesEmailStatus = true;
@@ -317,7 +295,7 @@
         syncEmails($, cfg);
     }
 
-    var api = {install: install, installCampaign: installCampaign, installUser: installUser, installHsm: installHsm, installSms: installSms, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, measure: measure, withoutAlias: withoutAlias};
+    var api = {install: install, installCampaign: installCampaign, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, measure: measure, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
