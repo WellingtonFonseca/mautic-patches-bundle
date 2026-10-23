@@ -10,6 +10,7 @@ use Mautic\CoreBundle\Event\CustomButtonEvent;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
+use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -28,13 +29,12 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class CampaignStatusSubscriber implements EventSubscriberInterface
 {
+    // the badge's own style (the pill, its width, hidden until placed) is SegmentStatusSubscriber::STYLE, on every page
     public const STYLE = 'tr i[class*="campaign-publish-icon"]{display:none!important}'
         .'a[data-campaign-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-campaign-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-campaign-status-action="activate"]:hover{background-color:var(--support-success)!important}'
-        .'a[data-campaign-status-action]:hover *{color:inherit!important}'
-        // the label's own style (width, margin, hidden until placed) is SegmentStatusSubscriber::STYLE, on every page
-        ;
+        .'a[data-campaign-status-action]:hover *{color:inherit!important}';
 
     public function __construct(
         private TranslatorInterface $translator,
@@ -55,17 +55,7 @@ class CampaignStatusSubscriber implements EventSubscriberInterface
         $context = $customContentEvent->getContext();
 
         if ('page.header.left' === $context) {
-            $config = [
-                'active'     => $this->translator->trans('mautic.core.form.active'),
-                'inactive'   => $this->translator->trans('mautic.core.form.inactive'),
-                'activate'   => $this->translator->trans('mautic.patches.segment.activate'),
-                'deactivate' => $this->translator->trans('mautic.patches.segment.deactivate'),
-                'style'      => self::STYLE,
-            ];
-            $customContentEvent->addContent(
-                '<script>'.file_get_contents(__DIR__.'/../Resources/js/segment-status-toggle.js')
-                .';mauticPatchesSegmentStatusApi.installCampaign(mQuery,Mautic,'.json_encode($config, JSON_UNESCAPED_UNICODE).');</script>'
-            );
+            $customContentEvent->addContent(StatusScript::html($this->translator, self::STYLE, 'installCampaign'));
 
             return;
         }

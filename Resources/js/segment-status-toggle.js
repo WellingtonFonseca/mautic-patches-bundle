@@ -12,6 +12,8 @@
 (function (root) {
     'use strict';
 
+    var STATES = 'patches-badge--production patches-badge--failed patches-badge--pending';
+
     /** The status the answer says: published or not (unpublished, expired and pending are "not active"). */
     function statusOf(response) {
         var html = response && response.statusHtml;
@@ -36,7 +38,7 @@
     function apply($, id, status, cfg) {
         var v = view(status, cfg);
         $('.segment-status-label[data-segment-id="' + id + '"]')
-            .removeClass('patches-badge--production patches-badge--failed patches-badge--pending').addClass(v.labelClass)
+            .removeClass(STATES).addClass(v.labelClass)
             .attr('data-status', status).text(v.labelText);
         $('a[data-segment-status-action][data-segment-id="' + id + '"]').each(function () {
             var $link = $(this);
@@ -94,11 +96,13 @@
             var match = /\d+/.exec(badges[k].textContent);
             // core writes "Sem contatos" / "No contacts" for an empty segment: no number means empty
             var filled = !!match && parseInt(match[0], 10) > 0;
+            var modifier = filled ? 'patches-badge--info' : 'patches-badge--neutral';
+            var other = filled ? 'patches-badge--neutral' : 'patches-badge--info';
+            // already right: no DOM write, so no mutation to wake the observers
+            if (badges[k].classList.contains(modifier) && !badges[k].classList.contains(other)) { continue; }
             badges[k].removeAttribute('size');
-            badges[k].classList.remove('label', 'label-gray', 'label-blue');
-            badges[k].classList.add('patches-badge');
-            badges[k].classList.toggle('patches-badge--info', filled);
-            badges[k].classList.toggle('patches-badge--neutral', !filled);
+            badges[k].classList.remove('label', 'label-gray', 'label-blue', 'patches-badge--info', 'patches-badge--neutral');
+            badges[k].classList.add('patches-badge', modifier);
         }
     }
 
@@ -136,7 +140,7 @@
 
             var $label = $('.segment-status-label[data-segment-id="' + id + '"]');
             var before = $label.attr('data-status') || 'unpublished';
-            $label.removeClass('patches-badge--production patches-badge--failed').addClass('patches-badge--pending')
+            $label.removeClass(STATES).addClass('patches-badge--pending')
                 .html('<i class="ri-loader-3-line ri-spin" aria-hidden="true"></i>');
 
             if (root.MauticVars) { root.MauticVars.liveCache = []; }
@@ -168,13 +172,13 @@
      */
     function paint($, label, icon, status, $links, attr, cfg) {
         if (icon && /\bri-spin\b/.test(icon.className)) {
-            $(label).removeClass('patches-badge--production patches-badge--failed').addClass('patches-badge--pending')
+            $(label).removeClass(STATES).addClass('patches-badge--pending')
                 .html('<i class="ri-loader-3-line ri-spin" aria-hidden="true"></i>').attr('data-status', 'busy');
             return;
         }
         if (label.getAttribute('data-status') === status) { return; }
         var v = view(status, cfg);
-        $(label).removeClass('patches-badge--production patches-badge--failed patches-badge--pending').addClass(v.labelClass).attr('data-status', status).text(v.labelText);
+        $(label).removeClass(STATES).addClass(v.labelClass).attr('data-status', status).text(v.labelText);
         $links.each(function () {
             var $link = $(this);
             $link.attr(attr, v.action).attr('aria-label', v.actionText);
@@ -207,6 +211,7 @@
 
     /** Brings the label and the menu item of every campaign row to the state of its core icon. */
     function syncCampaigns($, cfg) {
+        if (!root.document.querySelector('.segment-status-label[data-campaign-id]')) { return; } // not a campaign list: no row to look at
         var rows = root.document.querySelectorAll('tr');
         for (var k = 0; k < rows.length; k++) {
             var row = rows[k], label = row.querySelector('.segment-status-label[data-campaign-id]');

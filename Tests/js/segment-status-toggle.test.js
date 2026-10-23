@@ -100,7 +100,7 @@ test('place: the alias is taken off the text of the block when the label carries
 test('colorCounts: a count with contacts is blue, an empty one is gray, and it follows a text changed later', () => {
     const badge = (text) => {
         const classes = new Set(['label', 'label-gray', 'col-count']);
-        return {textContent: text, removeAttribute: () => {}, classList: {add: (...n) => n.forEach((x) => classes.add(x)), remove: (...n) => n.forEach((x) => classes.delete(x)), toggle: (name, on) => { if (on) { classes.add(name); } else { classes.delete(name); } }}, classes};
+        return {textContent: text, removeAttribute: () => {}, classList: {contains: (n) => classes.has(n), add: (...n) => n.forEach((x) => classes.add(x)), remove: (...n) => n.forEach((x) => classes.delete(x)), toggle: (name, on) => { if (on) { classes.add(name); } else { classes.delete(name); } }}, classes};
     };
     const full = badge('Ver 6 Contatos'), empty = badge('Ver 0 Contatos'), none = badge('Sem contatos');
     const doc = {querySelectorAll: () => [full, empty, none]};

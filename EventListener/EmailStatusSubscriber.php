@@ -10,6 +10,7 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\EmailBundle\Entity\Email;
+use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -27,13 +28,12 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class EmailStatusSubscriber implements EventSubscriberInterface
 {
+    // the badge's own style (the pill, its width, hidden until placed) is SegmentStatusSubscriber::STYLE, on every page
     public const STYLE = 'table.email-list i[class*="email-publish-icon"]{display:none!important}'
         .'a[data-email-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-email-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-email-status-action="activate"]:hover{background-color:var(--support-success)!important}'
-        .'a[data-email-status-action]:hover *{color:inherit!important}'
-        // the label's own style (width, margin, hidden until placed) is SegmentStatusSubscriber::STYLE, on every page
-        ;
+        .'a[data-email-status-action]:hover *{color:inherit!important}';
 
     public function __construct(
         private TranslatorInterface $translator,
@@ -55,17 +55,7 @@ class EmailStatusSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $config = [
-            'active'     => $this->translator->trans('mautic.core.form.active'),
-            'inactive'   => $this->translator->trans('mautic.core.form.inactive'),
-            'activate'   => $this->translator->trans('mautic.patches.segment.activate'),
-            'deactivate' => $this->translator->trans('mautic.patches.segment.deactivate'),
-            'style'      => self::STYLE,
-        ];
-        $customContentEvent->addContent(
-            '<script>'.file_get_contents(__DIR__.'/../Resources/js/segment-status-toggle.js')
-            .';mauticPatchesSegmentStatusApi.installEmail(mQuery,Mautic,'.json_encode($config, JSON_UNESCAPED_UNICODE).');</script>'
-        );
+        $customContentEvent->addContent(StatusScript::html($this->translator, self::STYLE, 'installEmail'));
     }
 
     public function injectViewButtons(CustomButtonEvent $event): void

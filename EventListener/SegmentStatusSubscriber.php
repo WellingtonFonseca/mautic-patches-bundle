@@ -10,6 +10,7 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\LeadBundle\Entity\LeadList;
+use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -43,9 +44,8 @@ class SegmentStatusSubscriber implements EventSubscriberInterface
         .'.patches-badge--info{background-color:rgba(30,136,229,.16);color:#1e88e5;box-shadow:inset 0 0 0 1px rgba(30,136,229,.45)}'
         .'.patches-badge--neutral{background-color:rgba(120,120,120,.16);color:var(--text-secondary,#6f6f6f);box-shadow:inset 0 0 0 1px rgba(120,120,120,.4)}';
 
-    // the label is placed at the start of the name by the script; until then it is invisible, so it does not flash at the end
-    // (the second line of its rule); the description core prints under the name in the segment and campaign rows (the rows with this
-    // label inside) is hidden too
+    // The badge stays invisible until the script has placed it at the start of the name, so it does not flash at the end; the
+    // description core prints under the name in the segment, campaign and email rows (the rows with a badge inside) is hidden.
     public const STYLE = self::BADGE_STYLE
         .'i[class*="lead-list-publish-icon"]{display:none!important}'
         .'td:has(.segment-status-label) > div.text-muted{display:none!important}'
@@ -76,17 +76,7 @@ class SegmentStatusSubscriber implements EventSubscriberInterface
         $context = $customContentEvent->getContext();
 
         if ('page.header.left' === $context) {
-            $config = [
-                'active'     => $this->translator->trans('mautic.core.form.active'),
-                'inactive'   => $this->translator->trans('mautic.core.form.inactive'),
-                'activate'   => $this->translator->trans('mautic.patches.segment.activate'),
-                'deactivate' => $this->translator->trans('mautic.patches.segment.deactivate'),
-                'style'      => self::STYLE,
-            ];
-            $customContentEvent->addContent(
-                '<script>'.file_get_contents(__DIR__.'/../Resources/js/segment-status-toggle.js')
-                .';mauticPatchesSegmentStatusApi.install(mQuery,Mautic,'.json_encode($config, JSON_UNESCAPED_UNICODE).');</script>'
-            );
+            $customContentEvent->addContent(StatusScript::html($this->translator, self::STYLE, 'install'));
 
             return;
         }
