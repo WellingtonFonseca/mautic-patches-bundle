@@ -35,13 +35,14 @@ class ContactViewSidePanelSubscriberTest extends TestCase
         $this->assertSame('', $this->content('something.else'));
     }
 
-    public function testFindsTheContactPageByItsDetailsBlockAndTheColumnNextToIt(): void
+    public function testFindsTheDetailPagesByTheirRightColumnOutsideForms(): void
     {
         $js = $this->content();
 
-        $this->assertStringContainsString('mQuery("#lead-details").closest(".col-md-9")', $js);
-        $this->assertStringContainsString('$left.siblings(".col-md-3")', $js);
-        $this->assertStringContainsString('if(!$left.length||$left.data("mauticPatchesSidePanel")){return;}', $js);
+        $this->assertStringContainsString('mQuery("#app-content .col-md-3.bdr-l")', $js);
+        $this->assertStringContainsString('$right.siblings(".col-md-9")', $js);
+        $this->assertStringContainsString('$right.closest("form").length', $js);
+        $this->assertStringContainsString('$left.data("mauticPatchesSidePanel")', $js);
     }
 
     public function testAlwaysStartsHidden(): void
@@ -63,12 +64,14 @@ class ContactViewSidePanelSubscriberTest extends TestCase
         $this->assertStringContainsString('$left.css("width",hidden?"100%":"")', $this->content());
     }
 
-    public function testTheButtonIsCoresRoundIconButton(): void
+    public function testTheButtonIsCoresPrimaryTextButtonWithMoreAndAnArrow(): void
     {
         $js = $this->content();
 
-        $this->assertStringContainsString('btn btn-primary btn-icon btn-nospin', $js);
-        $this->assertStringContainsString('data-toggle=\"tooltip\"', $js);
+        $this->assertStringContainsString('class=\"btn btn-primary btn-nospin\"', $js);
+        $this->assertStringContainsString('ri-arrow-right-s-line', $js);
+        $this->assertStringContainsString('"T:mautic.patches.contact.side_panel.more"', $js);
+        $this->assertStringNotContainsString('btn-icon', $js);
         $this->assertStringNotContainsString('btn-ghost', $js);
     }
 
