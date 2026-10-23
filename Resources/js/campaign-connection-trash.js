@@ -94,7 +94,16 @@
         connection.mauticPatchesCircleTrash = button;
     }
 
+    // The Preview tab of the campaign page draws its canvas with the same function (core calls prepareCampaignCanvas for it too), but it only
+    // shows the campaign: nothing there is disconnected, so its canvas is left as core makes it (its container is inside #preview-container).
+    function isPreview(instance) {
+        var container = instance.getContainer ? instance.getContainer() : null;
+
+        return !!(container && container.closest && container.closest('#preview-container'));
+    }
+
     function instrument(instance, title) {
+        if (isPreview(instance)) { return; }
         if (!instance.mauticPatchesTrashBound) {
             instance.mauticPatchesTrashBound = true;
             instance.bind('connection', function (info) { decorate(instance, info.connection, title); });
