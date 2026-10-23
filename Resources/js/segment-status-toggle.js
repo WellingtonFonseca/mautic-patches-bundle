@@ -83,6 +83,23 @@
         return moved;
     }
 
+    /**
+     * The contact count of a segment row (`a.col-count`, "Ver 6 Contatos"), with the normal size of the labels, is gray when the segment is empty and blue (translucent, like
+     * the email list's badges) when it has contacts. Core fills the text by ajax after the page loads, so this runs on every change.
+     */
+    function colorCounts(doc) {
+        var badges = doc.querySelectorAll('a.col-count');
+        for (var k = 0; k < badges.length; k++) {
+            var match = /\d+/.exec(badges[k].textContent);
+            // core writes "Sem contatos" / "No contacts" for an empty segment: no number means empty
+            var filled = !!match && parseInt(match[0], 10) > 0;
+            // core prints size="sm" (11px); without it the badge has the normal size of the labels (14px)
+            badges[k].removeAttribute('size');
+            badges[k].classList.toggle('label-blue', filled);
+            badges[k].classList.toggle('label-gray', !filled);
+        }
+    }
+
     /** The width, in px, of a label with the text of Inativo; sets --segment-status-width. 0 when it cannot be measured (hidden page). */
     function measure(doc, cfg) {
         var body = doc.body;
@@ -114,11 +131,12 @@
 
         // the labels of a list that is in the page, and of every list loaded later
         place(root.document);
+        colorCounts(root.document);
         var pending = false;
         new root.MutationObserver(function () {
             if (pending) { return; }
             pending = true;
-            root.requestAnimationFrame(function () { pending = false; place(root.document); });
+            root.requestAnimationFrame(function () { pending = false; place(root.document); colorCounts(root.document); });
         }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true});
     }
 
@@ -293,7 +311,7 @@
         syncEmails($, cfg);
     }
 
-    var api = {install: install, installCampaign: installCampaign, installUser: installUser, installHsm: installHsm, installSms: installSms, installEmail: installEmail, statusOf: statusOf, view: view, place: place, measure: measure, withoutAlias: withoutAlias};
+    var api = {install: install, installCampaign: installCampaign, installUser: installUser, installHsm: installHsm, installSms: installSms, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, measure: measure, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

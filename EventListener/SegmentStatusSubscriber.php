@@ -34,6 +34,10 @@ class SegmentStatusSubscriber implements EventSubscriberInterface
     // the description core prints under the name in the segment and campaign rows (the rows with this label inside) is hidden too
     public const STYLE = 'i[class*="lead-list-publish-icon"]{display:none!important}'
         .'td:has(.segment-status-label) > div.text-muted{display:none!important}'
+        // "Atualizado em ..." under the name: as large as the rest of the table (core's <small> is 11.9px)
+        .'.segment-last-built small{font-size:14px}'
+        // the contact count badge ("Ver 6 Contatos") has the size of the table text (core's label is 11px)
+        .'a.col-count{font-size:14px}'
         .'.segment-status-label{margin-right:var(--spacing-03);box-sizing:border-box;min-width:var(--segment-status-width,0)}.segment-status-label:not([data-placed]){visibility:hidden}'
         .'a[data-segment-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-segment-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'

@@ -90,6 +90,9 @@ class SegmentStatusSubscriberTest extends TestCase
         $this->assertStringContainsString('i[class*="lead-list-publish-icon"]{display:none!important}', $css);
         // the description under the name is hidden, only in the rows that have the label (segment and campaign lists)
         $this->assertStringContainsString('td:has(.segment-status-label) > div.text-muted{display:none!important}', $css);
+        // "Atualizado em ..." is as large as the table
+        $this->assertStringContainsString('.segment-last-built small{font-size:14px}', $css);
+        $this->assertStringContainsString('a.col-count{font-size:14px}', $css);
         // the script puts the label at the start of the name; until then it is invisible
         $this->assertStringContainsString('.segment-status-label:not([data-placed]){visibility:hidden}', $css);
         // the labels have the width of Inativo, measured by the script
