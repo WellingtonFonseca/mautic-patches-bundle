@@ -10,6 +10,7 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\LeadBundle\Entity\LeadList;
+use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -17,7 +18,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * A usability change: the active / inactive toggle of the segment list was a small icon right before the name, easy to hit by
  * mistake, with the status told only by its color. Now:
  *  - a label at the start of the name tells the status ("Ativo" green, "Inativo" red); it is only informative, not a link; all of
- *    them have the width of "Inativo" (measured by the script), so they line up;
+ *    them have the same fixed width (76px, as the n8n badge's), so they line up;
  *  - the icon is hidden, and so is the alias after the name ("Name (alias)"), which is long, made from the name and says nothing:
  *    the label carries it (data-alias) and the script takes it off the text;
  *  - the three-dots menu of the row has "Desativar" / "Ativar" as its FIRST item (the last one is Delete, which nobody should
@@ -30,9 +31,29 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class SegmentStatusSubscriber implements EventSubscriberInterface
 {
-    // the label is placed at the start of the name by the script; until then it is invisible, so it does not flash at the end
-    public const STYLE = 'i[class*="lead-list-publish-icon"]{display:none!important}'
-        .'.segment-status-label{margin-right:var(--spacing-03);box-sizing:border-box;min-width:var(--segment-status-width,0)}.segment-status-label:not([data-placed]){visibility:hidden}'
+    // The status badge of the Mautic lists (segment, campaign, user, email) and the contact count of the segment list. It is the twin of N8nDispatchBundle's badge
+    // (.n8ndispatch-timeline-badge in campaign-status-badge.css), with the same modifiers: a 13px bold uppercase pill, white text, no
+    // icon, 76px wide, green (--production) / red (--failed) / orange while it works (--pending). Keep the two in step.
+    // It does not use core's .label, so core's size and colors do not reach it; .segment-status-label is only the hook of the script.
+    public const BADGE_STYLE = '.patches-badge{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:2px 10px;border-radius:11px;'
+        .'color:#fff;font-size:13px;font-weight:600;line-height:normal;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}'
+        .'.patches-badge--production{background-color:#43a047}'
+        .'.patches-badge--failed{background-color:#e53935}'
+        .'.patches-badge--pending{background-color:#fb8c00}'
+        // Mautic 7 prints the contact count as a span with the link inside: the link takes the badge's color
+        .'.patches-badge a{color:inherit}'
+        // the translucent ones: the contact count of the segment list (--info has contacts, --neutral is empty)
+        .'.patches-badge--info{background-color:rgba(30,136,229,.16);color:#1e88e5;box-shadow:inset 0 0 0 1px rgba(30,136,229,.45)}'
+        .'.patches-badge--neutral{background-color:rgba(120,120,120,.16);color:var(--text-secondary,#6f6f6f);box-shadow:inset 0 0 0 1px rgba(120,120,120,.4)}';
+
+    // The badge stays invisible until the script has placed it at the start of the name, so it does not flash at the end; the
+    // description core prints under the name in the segment, campaign and email rows (the rows with a badge inside) is hidden.
+    public const STYLE = self::BADGE_STYLE
+        .'i[class*="lead-list-publish-icon"]{display:none!important}'
+        .'td:has(.segment-status-label) > div:is(.text-muted,.text-secondary){display:none!important}'
+        // "Atualizado em ..." under the name: as large as the rest of the table (core's <small> is 11.9px)
+        .'.segment-last-built small{font-size:14px}'
+        .'.segment-status-label{margin-right:var(--spacing-03);box-sizing:border-box;min-width:76px}.segment-status-label:not([data-placed]){visibility:hidden}'
         .'a[data-segment-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-segment-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-segment-status-action="activate"]:hover{background-color:var(--support-success)!important}'
@@ -57,17 +78,7 @@ class SegmentStatusSubscriber implements EventSubscriberInterface
         $context = $customContentEvent->getContext();
 
         if ('page.header.left' === $context) {
-            $config = [
-                'active'     => $this->translator->trans('mautic.core.form.active'),
-                'inactive'   => $this->translator->trans('mautic.core.form.inactive'),
-                'activate'   => $this->translator->trans('mautic.patches.segment.activate'),
-                'deactivate' => $this->translator->trans('mautic.patches.segment.deactivate'),
-                'style'      => self::STYLE,
-            ];
-            $customContentEvent->addContent(
-                '<script>'.file_get_contents(__DIR__.'/../Resources/js/segment-status-toggle.js')
-                .';mauticPatchesSegmentStatusApi.install(mQuery,Mautic,'.json_encode($config, JSON_UNESCAPED_UNICODE).');</script>'
-            );
+            $customContentEvent->addContent(StatusScript::html($this->translator, self::STYLE, 'install'));
 
             return;
         }
@@ -79,8 +90,8 @@ class SegmentStatusSubscriber implements EventSubscriberInterface
 
         $published = $segment->isPublished();
         $customContentEvent->addContent(sprintf(
-            '<span class="label %s segment-status-label" data-segment-id="%d" data-status="%s" data-alias="%s">%s</span>',
-            $published ? 'label-success' : 'label-danger',
+            '<span class="patches-badge %s segment-status-label" data-segment-id="%d" data-status="%s" data-alias="%s">%s</span>',
+            $published ? 'patches-badge--production' : 'patches-badge--failed',
             $segment->getId(),
             $published ? 'published' : 'unpublished',
             htmlspecialchars((string) $segment->getAlias(), ENT_QUOTES),

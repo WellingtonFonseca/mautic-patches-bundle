@@ -25,13 +25,13 @@ test('statusOf: expired, pending, no icon or no answer are "not active"', () => 
 
 test('view: an active segment is a green label and the menu offers to deactivate it', () => {
     assert.deepStrictEqual(api.view('published', cfg), {
-        labelClass: 'label-success', labelText: 'Ativo', action: 'deactivate', actionText: 'Desativar', actionIcon: 'ri-close-circle-line',
+        labelClass: 'patches-badge--production', labelText: 'Ativo', action: 'deactivate', actionText: 'Desativar', actionIcon: 'ri-close-circle-line',
     });
 });
 
 test('view: an inactive segment is a red label and the menu offers to activate it', () => {
     assert.deepStrictEqual(api.view('unpublished', cfg), {
-        labelClass: 'label-danger', labelText: 'Inativo', action: 'activate', actionText: 'Ativar', actionIcon: 'ri-checkbox-circle-line',
+        labelClass: 'patches-badge--failed', labelText: 'Inativo', action: 'activate', actionText: 'Ativar', actionIcon: 'ri-checkbox-circle-line',
     });
 });
 
@@ -56,32 +56,6 @@ test('place: a label that already starts its block is only marked', () => {
 
     assert.strictEqual(api.place(doc), 0);
     assert.strictEqual(label.attrs['data-placed'], '1');
-});
-
-test('measure: a hidden label with the text of Inativo is measured and its width goes to --segment-status-width', () => {
-    const props = {};
-    const appended = [];
-    const doc = {
-        body: {appendChild: (n) => appended.push(n), removeChild: (n) => appended.splice(appended.indexOf(n), 1)},
-        documentElement: {style: {setProperty: (k, v) => { props[k] = v; }}},
-        createElement: () => ({attrs: {}, style: {}, setAttribute(k, v) { this.attrs[k] = v; }, getBoundingClientRect: () => ({width: 49.5})}),
-    };
-
-    assert.strictEqual(api.measure(doc, cfg), 49.5);
-    assert.deepStrictEqual(props, {'--segment-status-width': '49.5px'});
-    assert.strictEqual(appended.length, 0, 'the probe is removed');
-});
-
-test('measure: nothing is set when the width cannot be measured (a hidden page)', () => {
-    const props = {};
-    const doc = {
-        body: {appendChild() {}, removeChild() {}},
-        documentElement: {style: {setProperty: (k, v) => { props[k] = v; }}},
-        createElement: () => ({attrs: {}, style: {}, setAttribute() {}, getBoundingClientRect: () => ({width: 0})}),
-    };
-
-    assert.strictEqual(api.measure(doc, cfg), 0);
-    assert.deepStrictEqual(props, {});
 });
 
 test('place: a label printed inside the name link (the campaign list) goes to the start of the block, outside the link', () => {
@@ -121,4 +95,25 @@ test('place: the alias is taken off the text of the block when the label carries
 
     assert.strictEqual(text.nodeValue, 'Compras');
     assert.strictEqual(label.attrs['data-placed'], '1');
+});
+
+test('colorCounts: a count with contacts is blue, an empty one is gray, and it follows a text changed later', () => {
+    const badge = (text) => {
+        const classes = new Set(['label', 'label-gray', 'col-count']);
+        return {textContent: text, removeAttribute: () => {}, classList: {contains: (n) => classes.has(n), add: (...n) => n.forEach((x) => classes.add(x)), remove: (...n) => n.forEach((x) => classes.delete(x)), toggle: (name, on) => { if (on) { classes.add(name); } else { classes.delete(name); } }}, classes};
+    };
+    const full = badge('Ver 6 Contatos'), empty = badge('Ver 0 Contatos'), none = badge('Sem contatos');
+    const doc = {querySelectorAll: () => [full, empty, none]};
+
+    api.colorCounts(doc);
+    assert.ok(full.classes.has('patches-badge--info') && !full.classes.has('patches-badge--neutral'));
+    assert.ok(empty.classes.has('patches-badge--neutral') && !empty.classes.has('patches-badge--info'));
+    assert.ok(none.classes.has('patches-badge--neutral') && !none.classes.has('patches-badge--info'), 'a text without a number is an empty segment');
+
+    empty.textContent = 'Ver 3 Contatos';
+    none.classes.add('patches-badge--info');
+    none.textContent = 'Sem contatos';
+    api.colorCounts(doc);
+    assert.ok(empty.classes.has('patches-badge--info') && !empty.classes.has('patches-badge--neutral'));
+    assert.ok(none.classes.has('patches-badge--neutral') && !none.classes.has('patches-badge--info'), 'a blue badge goes back to gray when the segment is emptied');
 });

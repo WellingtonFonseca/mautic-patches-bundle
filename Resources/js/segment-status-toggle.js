@@ -1,5 +1,5 @@
 /*
- * Activate / deactivate a segment (and, in installCampaign and installUser, a campaign and a user) from the three-dots menu of the segment list. The status is shown by a label
+ * Activate / deactivate a segment (and, in installCampaign, installUser and installEmail, a campaign, a user and an email) from the three-dots menu of the segment list. The status is shown by a label
  * (SegmentStatusSubscriber: "Ativo" green, "Inativo" red) that is only informative; the small toggle icon next to the name,
  * which was easy to hit by mistake, is hidden.
  *
@@ -11,6 +11,8 @@
  */
 (function (root) {
     'use strict';
+
+    var STATES = 'patches-badge--production patches-badge--failed patches-badge--pending';
 
     /** The status the answer says: published or not (unpublished, expired and pending are "not active"). */
     function statusOf(response) {
@@ -25,7 +27,7 @@
         var active = status === 'published';
 
         return {
-            labelClass: active ? 'label-success' : 'label-danger',
+            labelClass: active ? 'patches-badge--production' : 'patches-badge--failed',
             labelText:  active ? cfg.active : cfg.inactive,
             action:     active ? 'deactivate' : 'activate',
             actionText: active ? cfg.deactivate : cfg.activate,
@@ -36,7 +38,7 @@
     function apply($, id, status, cfg) {
         var v = view(status, cfg);
         $('.segment-status-label[data-segment-id="' + id + '"]')
-            .removeClass('label-success label-danger label-gray').addClass(v.labelClass)
+            .removeClass(STATES).addClass(v.labelClass)
             .attr('data-status', status).text(v.labelText);
         $('a[data-segment-status-action][data-segment-id="' + id + '"]').each(function () {
             var $link = $(this);
@@ -83,24 +85,28 @@
         return moved;
     }
 
-    /** The width, in px, of a label with the text of Inativo; sets --segment-status-width. 0 when it cannot be measured (hidden page). */
-    function measure(doc, cfg) {
-        var body = doc.body;
-        if (!body) { return 0; }
-        var probe = doc.createElement('span');
-        probe.className = 'label label-danger segment-status-label';
-        probe.setAttribute('data-placed', '1');
-        probe.style.cssText = 'position:absolute;visibility:hidden;min-width:0;left:-9999px';
-        probe.textContent = cfg.inactive;
-        body.appendChild(probe);
-        var width = probe.getBoundingClientRect().width;
-        body.removeChild(probe);
-        if (width > 0) { doc.documentElement.style.setProperty('--segment-status-width', width + 'px'); }
-
-        return width;
+    /**
+     * The contact count of a segment row (`.col-count`, a `<span>` with the link inside on Mautic 7, "Ver 6 Contatos") is a patches-badge like the status: translucent blue
+     * (--info) when the segment has contacts, translucent gray (--neutral) when it is empty. Core prints it as `label label-gray`
+     * with size="sm" and fills the text by ajax after the page loads, so this runs on every change.
+     */
+    function colorCounts(doc) {
+        var badges = doc.querySelectorAll('.col-count');
+        for (var k = 0; k < badges.length; k++) {
+            var match = /\d+/.exec(badges[k].textContent);
+            // core writes "Sem contatos" / "No contacts" for an empty segment: no number means empty
+            var filled = !!match && parseInt(match[0], 10) > 0;
+            var modifier = filled ? 'patches-badge--info' : 'patches-badge--neutral';
+            var other = filled ? 'patches-badge--neutral' : 'patches-badge--info';
+            // already right: no DOM write, so no mutation to wake the observers
+            if (badges[k].classList.contains(modifier) && !badges[k].classList.contains(other)) { continue; }
+            badges[k].removeAttribute('size');
+            badges[k].classList.remove('label', 'label-gray', 'label-blue', 'patches-badge--info', 'patches-badge--neutral');
+            badges[k].classList.add('patches-badge', modifier);
+        }
     }
 
-    /** What both lists share, once per page: the style of the list, the width of the labels and the placing of the labels. */
+    /** What both lists share, once per page: the style of the list and the placing of the labels. */
     function setup(cfg) {
         var style = root.document.createElement('style');
         style.textContent = cfg.style;
@@ -109,16 +115,14 @@
         if (root.mauticPatchesStatusLabels) { return; }
         root.mauticPatchesStatusLabels = true;
 
-        measure(root.document, cfg);
-        if (root.document.fonts && root.document.fonts.ready) { root.document.fonts.ready.then(function () { measure(root.document, cfg); }); }
-
         // the labels of a list that is in the page, and of every list loaded later
         place(root.document);
+        colorCounts(root.document);
         var pending = false;
         new root.MutationObserver(function () {
             if (pending) { return; }
             pending = true;
-            root.requestAnimationFrame(function () { pending = false; place(root.document); });
+            root.requestAnimationFrame(function () { pending = false; place(root.document); colorCounts(root.document); });
         }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true});
     }
 
@@ -136,7 +140,7 @@
 
             var $label = $('.segment-status-label[data-segment-id="' + id + '"]');
             var before = $label.attr('data-status') || 'unpublished';
-            $label.removeClass('label-success label-danger').addClass('label-gray')
+            $label.removeClass(STATES).addClass('patches-badge--pending')
                 .html('<i class="ri-loader-3-line ri-spin" aria-hidden="true"></i>');
 
             if (root.MauticVars) { root.MauticVars.liveCache = []; }
@@ -168,13 +172,13 @@
      */
     function paint($, label, icon, status, $links, attr, cfg) {
         if (icon && /\bri-spin\b/.test(icon.className)) {
-            $(label).removeClass('label-success label-danger').addClass('label-gray')
+            $(label).removeClass(STATES).addClass('patches-badge--pending')
                 .html('<i class="ri-loader-3-line ri-spin" aria-hidden="true"></i>').attr('data-status', 'busy');
             return;
         }
         if (label.getAttribute('data-status') === status) { return; }
         var v = view(status, cfg);
-        $(label).removeClass('label-success label-danger label-gray').addClass(v.labelClass).attr('data-status', status).text(v.labelText);
+        $(label).removeClass(STATES).addClass(v.labelClass).attr('data-status', status).text(v.labelText);
         $links.each(function () {
             var $link = $(this);
             $link.attr(attr, v.action).attr('aria-label', v.actionText);
@@ -207,6 +211,7 @@
 
     /** Brings the label and the menu item of every campaign row to the state of its core icon. */
     function syncCampaigns($, cfg) {
+        if (!root.document.querySelector('.segment-status-label[data-campaign-id]')) { return; } // not a campaign list: no row to look at
         var rows = root.document.querySelectorAll('tr');
         for (var k = 0; k < rows.length; k++) {
             var row = rows[k], label = row.querySelector('.segment-status-label[data-campaign-id]');
@@ -225,27 +230,36 @@
     }
 
     /**
-     * Brings the label and the menu item of every user row to the state of its core icon. The user list has no hook for the label: it is
-     * made here, at the start of the name. The row without an icon is the logged user, always active.
+     * Brings the label and the menu item of every row of a list that has no hook for the label (the user and email lists) to
+     * the state of its core icon: the label is made here, at the start of the name (`nameSelector`, inside the row). The row without
+     * an icon (the logged user) is always active.
      */
-    function syncUsers($, cfg) {
-        var table = root.document.getElementById('userTable');
+    function syncNamedRows($, cfg, tableSelector, kind, attr, nameSelector) {
+        var table = root.document.querySelector(tableSelector);
         if (!table) { return; }
         var rows = table.querySelectorAll('tbody tr');
         for (var k = 0; k < rows.length; k++) {
-            var row = rows[k], icon = iconOf(row, 'user'), name = row.querySelector('td:nth-child(3) > div');
+            var row = rows[k], icon = iconOf(row, kind), name = row.querySelector(nameSelector);
             if (!name) { continue; }
             var label = row.querySelector('.segment-status-label');
             if (!label) {
                 label = root.document.createElement('span');
-                label.className = 'label segment-status-label';
+                label.className = 'patches-badge segment-status-label';
                 label.setAttribute('data-placed', '1');
                 label.setAttribute('data-status', '');
                 name.insertBefore(label, name.firstChild);
             }
-            paint($, label, icon, icon && icon.getAttribute('data-status') !== 'published' ? 'unpublished' : 'published',
-                $(row).find('a[data-user-status-action]'), 'data-user-status-action', cfg);
+            paint($, label, icon, icon && icon.getAttribute('data-status') === 'unpublished' ? 'unpublished' : 'published',
+                $(row).find('a[' + attr + ']'), attr, cfg);
         }
+    }
+
+    function syncUsers($, cfg) {
+        syncNamedRows($, cfg, '#userTable', 'user', 'data-user-status-action', 'td:nth-child(3) > div');
+    }
+
+    function syncEmails($, cfg) {
+        syncNamedRows($, cfg, 'table.email-list', 'email', 'data-email-status-action', 'td:nth-child(2) > div');
     }
 
     function installUser($, Mautic, cfg) {
@@ -255,7 +269,14 @@
         syncUsers($, cfg);
     }
 
-    var api = {install: install, installCampaign: installCampaign, installUser: installUser, statusOf: statusOf, view: view, place: place, measure: measure, withoutAlias: withoutAlias};
+    function installEmail($, Mautic, cfg) {
+        if (!$ || root.mauticPatchesEmailStatus) { return; }
+        root.mauticPatchesEmailStatus = true;
+        installIconDriven($, cfg, 'email', 'data-email-status-action', syncEmails);
+        syncEmails($, cfg);
+    }
+
+    var api = {install: install, installCampaign: installCampaign, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
