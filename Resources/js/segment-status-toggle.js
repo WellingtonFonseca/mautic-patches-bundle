@@ -1,5 +1,5 @@
 /*
- * Activate / deactivate a segment (and, in installCampaign and installUser, a campaign and a user) from the three-dots menu of the segment list. The status is shown by a label
+ * Activate / deactivate a segment (and, in installCampaign, installUser and installHsm, a campaign, a user and an HSM template) from the three-dots menu of the segment list. The status is shown by a label
  * (SegmentStatusSubscriber: "Ativo" green, "Inativo" red) that is only informative; the small toggle icon next to the name,
  * which was easy to hit by mistake, is hidden.
  *
@@ -225,15 +225,16 @@
     }
 
     /**
-     * Brings the label and the menu item of every user row to the state of its core icon. The user list has no hook for the label: it is
-     * made here, at the start of the name. The row without an icon is the logged user, always active.
+     * Brings the label and the menu item of every row of a list that has no hook for the label (the user and the HSM template lists) to
+     * the state of its core icon: the label is made here, at the start of the name (`nameSelector`, inside the row). The row without
+     * an icon (the logged user) is always active.
      */
-    function syncUsers($, cfg) {
-        var table = root.document.getElementById('userTable');
+    function syncNamedRows($, cfg, tableId, kind, attr, nameSelector) {
+        var table = root.document.getElementById(tableId);
         if (!table) { return; }
         var rows = table.querySelectorAll('tbody tr');
         for (var k = 0; k < rows.length; k++) {
-            var row = rows[k], icon = iconOf(row, 'user'), name = row.querySelector('td:nth-child(3) > div');
+            var row = rows[k], icon = iconOf(row, kind), name = row.querySelector(nameSelector);
             if (!name) { continue; }
             var label = row.querySelector('.segment-status-label');
             if (!label) {
@@ -244,8 +245,16 @@
                 name.insertBefore(label, name.firstChild);
             }
             paint($, label, icon, icon && icon.getAttribute('data-status') !== 'published' ? 'unpublished' : 'published',
-                $(row).find('a[data-user-status-action]'), 'data-user-status-action', cfg);
+                $(row).find('a[' + attr + ']'), attr, cfg);
         }
+    }
+
+    function syncUsers($, cfg) {
+        syncNamedRows($, cfg, 'userTable', 'user', 'data-user-status-action', 'td:nth-child(3) > div');
+    }
+
+    function syncHsm($, cfg) {
+        syncNamedRows($, cfg, 'hsmTemplateTable', 'n8ndispatch-hsmtemplate', 'data-hsm-status-action', 'td:nth-child(2) > div');
     }
 
     function installUser($, Mautic, cfg) {
@@ -255,7 +264,14 @@
         syncUsers($, cfg);
     }
 
-    var api = {install: install, installCampaign: installCampaign, installUser: installUser, statusOf: statusOf, view: view, place: place, measure: measure, withoutAlias: withoutAlias};
+    function installHsm($, Mautic, cfg) {
+        if (!$ || root.mauticPatchesHsmStatus) { return; }
+        root.mauticPatchesHsmStatus = true;
+        installIconDriven($, cfg, 'n8ndispatch-hsmtemplate', 'data-hsm-status-action', syncHsm);
+        syncHsm($, cfg);
+    }
+
+    var api = {install: install, installCampaign: installCampaign, installUser: installUser, installHsm: installHsm, statusOf: statusOf, view: view, place: place, measure: measure, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
