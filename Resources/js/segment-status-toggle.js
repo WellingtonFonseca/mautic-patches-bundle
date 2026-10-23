@@ -159,70 +159,83 @@
         });
     }
 
-    /** The core icon of a campaign row (hidden), whose state tells the status; null when the row has none. */
-    function coreIcon(row) { return row.querySelector('i[class*="campaign-publish-icon"]'); }
+    /** The core icon of a row (hidden), whose state tells the status; null when the row has none. */
+    function iconOf(row, kind) { return row.querySelector('i[class*="' + kind + '-publish-icon"]'); }
 
-    /** Brings the label and the menu item of every campaign row to the state of its core icon: spinning, or published / not. */
+    /**
+     * Brings a label and the menu items of its row ($links, whose `attr` holds the action) to the state of core's icon: spinning while
+     * core works, then published / not. Nothing is touched when the label already shows the status.
+     */
+    function paint($, label, icon, status, $links, attr, cfg) {
+        if (icon && /\bri-spin\b/.test(icon.className)) {
+            $(label).removeClass('label-success label-danger').addClass('label-gray')
+                .html('<i class="ri-loader-3-line ri-spin" aria-hidden="true"></i>').attr('data-status', 'busy');
+            return;
+        }
+        if (label.getAttribute('data-status') === status) { return; }
+        var v = view(status, cfg);
+        $(label).removeClass('label-success label-danger label-gray').addClass(v.labelClass).attr('data-status', status).text(v.labelText);
+        $links.each(function () {
+            var $link = $(this);
+            $link.attr(attr, v.action).attr('aria-label', v.actionText);
+            $link.find('span').first().text(v.actionText);
+            $link.find('i').first().attr('class', v.actionIcon);
+        });
+    }
+
+    /**
+     * What the campaign and the user lists share: the menu item (`a[attr]`) clicks core's icon of the row (hidden), so core asks its own
+     * confirmation and checks the permission; and the labels follow core's icon (the spin while the request runs, the new icon when it
+     * is answered) through a MutationObserver, once per frame. `sync` brings every row of the page to the state of its icon.
+     */
+    function installIconDriven($, cfg, kind, attr, sync) {
+        setup(cfg);
+
+        $(root.document).on('click', 'a[' + attr + ']', function (event) {
+            event.preventDefault();
+            var row = this.closest('tr'), icon = row && iconOf(row, kind);
+            if (icon) { icon.click(); }
+        });
+
+        var pending = false;
+        new root.MutationObserver(function () {
+            if (pending) { return; }
+            pending = true;
+            root.requestAnimationFrame(function () { pending = false; sync($, cfg); });
+        }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'data-status']});
+    }
+
+    /** Brings the label and the menu item of every campaign row to the state of its core icon. */
     function syncCampaigns($, cfg) {
         var rows = root.document.querySelectorAll('tr');
         for (var k = 0; k < rows.length; k++) {
             var row = rows[k], label = row.querySelector('.segment-status-label[data-campaign-id]');
-            var icon = label && coreIcon(row);
+            var icon = label && iconOf(row, 'campaign');
             if (!icon) { continue; }
             var id = label.getAttribute('data-campaign-id');
-            if (/\bri-spin\b/.test(icon.className)) {
-                $(label).removeClass('label-success label-danger').addClass('label-gray')
-                    .html('<i class="ri-loader-3-line ri-spin" aria-hidden="true"></i>').attr('data-status', 'busy');
-                continue;
-            }
-            var status = icon.getAttribute('data-status') === 'published' ? 'published' : 'unpublished';
-            if (label.getAttribute('data-status') === status) { continue; }
-            var v = view(status, cfg);
-            $(label).removeClass('label-success label-danger label-gray').addClass(v.labelClass).attr('data-status', status).text(v.labelText);
-            $('a[data-campaign-status-action][data-campaign-id="' + id + '"]').each(function () {
-                var $link = $(this);
-                $link.attr('data-campaign-status-action', v.action).attr('aria-label', v.actionText);
-                $link.find('span').first().text(v.actionText);
-                $link.find('i').first().attr('class', v.actionIcon);
-            });
+            paint($, label, icon, icon.getAttribute('data-status') === 'published' ? 'published' : 'unpublished',
+                $('a[data-campaign-status-action][data-campaign-id="' + id + '"]'), 'data-campaign-status-action', cfg);
         }
     }
 
     function installCampaign($, Mautic, cfg) {
         if (!$ || root.mauticPatchesCampaignStatus) { return; }
         root.mauticPatchesCampaignStatus = true;
-        setup(cfg);
-
-        // the menu item clicks core's icon of the row (hidden): its own onclick asks for the confirmation when deactivating
-        $(root.document).on('click', 'a[data-campaign-status-action]', function (event) {
-            event.preventDefault();
-            var row = this.closest('tr'), icon = row && coreIcon(row);
-            if (icon) { icon.click(); }
-        });
-
-        // core changes the icon (the spin while the request runs, the new icon when it is answered): the label follows
-        var pending = false;
-        new root.MutationObserver(function () {
-            if (pending) { return; }
-            pending = true;
-            root.requestAnimationFrame(function () { pending = false; syncCampaigns($, cfg); });
-        }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'data-status']});
+        installIconDriven($, cfg, 'campaign', 'data-campaign-status-action', syncCampaigns);
     }
 
-    /** The core icon of a user row (hidden), whose state tells the status; null on the row of the logged user (core prints none). */
-    function userIcon(row) { return row.querySelector('i[class*="user-publish-icon"]'); }
-
     /**
-     * Brings the label and the menu item of every user row to the state of its core icon (spinning, or published / not). The user list has
-     * no hook for the label: it is made here, at the start of the name. The row without an icon is the logged user, always active.
+     * Brings the label and the menu item of every user row to the state of its core icon. The user list has no hook for the label: it is
+     * made here, at the start of the name. The row without an icon is the logged user, always active.
      */
     function syncUsers($, cfg) {
-        var rows = root.document.querySelectorAll('#userTable tbody tr');
+        var table = root.document.getElementById('userTable');
+        if (!table) { return; }
+        var rows = table.querySelectorAll('tbody tr');
         for (var k = 0; k < rows.length; k++) {
-            var row = rows[k], icon = userIcon(row), name = row.querySelector('td:nth-child(3) > div');
+            var row = rows[k], icon = iconOf(row, 'user'), name = row.querySelector('td:nth-child(3) > div');
             if (!name) { continue; }
             var label = row.querySelector('.segment-status-label');
-            var status = icon ? (icon.getAttribute('data-status') === 'published' ? 'published' : 'unpublished') : 'published';
             if (!label) {
                 label = root.document.createElement('span');
                 label.className = 'label segment-status-label';
@@ -230,43 +243,15 @@
                 label.setAttribute('data-status', '');
                 name.insertBefore(label, name.firstChild);
             }
-            if (icon && /\bri-spin\b/.test(icon.className)) {
-                $(label).removeClass('label-success label-danger').addClass('label-gray')
-                    .html('<i class="ri-loader-3-line ri-spin" aria-hidden="true"></i>').attr('data-status', 'busy');
-                continue;
-            }
-            if (label.getAttribute('data-status') === status) { continue; }
-            var v = view(status, cfg);
-            $(label).removeClass('label-success label-danger label-gray').addClass(v.labelClass).attr('data-status', status).text(v.labelText);
-            $(row).find('a[data-user-status-action]').each(function () {
-                var $link = $(this);
-                $link.attr('data-user-status-action', v.action).attr('aria-label', v.actionText);
-                $link.find('span').first().text(v.actionText);
-                $link.find('i').first().attr('class', v.actionIcon);
-            });
+            paint($, label, icon, icon && icon.getAttribute('data-status') !== 'published' ? 'unpublished' : 'published',
+                $(row).find('a[data-user-status-action]'), 'data-user-status-action', cfg);
         }
     }
 
     function installUser($, Mautic, cfg) {
         if (!$ || root.mauticPatchesUserStatus) { return; }
         root.mauticPatchesUserStatus = true;
-        setup(cfg);
-
-        // the menu item clicks core's icon of the row (hidden): core sends the request and checks the permission
-        $(root.document).on('click', 'a[data-user-status-action]', function (event) {
-            event.preventDefault();
-            var row = this.closest('tr'), icon = row && userIcon(row);
-            if (icon) { icon.click(); }
-        });
-
-        // core changes the icon (the spin while the request runs, the new icon when it is answered): the label follows
-        var pending = false;
-        var observer = new root.MutationObserver(function () {
-            if (pending) { return; }
-            pending = true;
-            root.requestAnimationFrame(function () { pending = false; syncUsers($, cfg); });
-        });
-        observer.observe(root.document.body || root.document.documentElement, {childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'data-status']});
+        installIconDriven($, cfg, 'user', 'data-user-status-action', syncUsers);
         syncUsers($, cfg);
     }
 

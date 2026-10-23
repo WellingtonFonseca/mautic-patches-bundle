@@ -53,17 +53,15 @@ class ContactViewSidePanelSubscriber implements EventSubscriberInterface
 
     public static function script(string $showLabel, string $hideLabel, string $moreLabel): string
     {
-        $show = json_encode($showLabel, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP);
-        $hide = json_encode($hideLabel, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP);
-        $more = json_encode($moreLabel, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP);
+        [$show, $hide, $more] = array_map(
+            static fn (string $label): string => json_encode($label, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP),
+            [$showLabel, $hideLabel, $moreLabel]
+        );
 
         return '(function(){'
             .'if(window.mauticPatchesContactSidePanel){return;}'
             .'window.mauticPatchesContactSidePanel=true;'
             .'var showLabel='.$show.',hideLabel='.$hide.',moreLabel='.$more.';'
-            .'function init(){'
-            .'mQuery("#app-content .col-md-3.bdr-l").each(function(){place(mQuery(this));});'
-            .'}'
             .'function place($right){'
             .'var $left=$right.siblings(".col-md-9");'
             .'if($left.length!==1||$right.closest("form").length||$left.data("mauticPatchesSidePanel")){return;}'
@@ -82,6 +80,7 @@ class ContactViewSidePanelSubscriber implements EventSubscriberInterface
             .'$left.prepend(mQuery("<div class=\"text-right pr-md pt-sm\"></div>").append($button));'
             .'apply(true);'
             .'}'
+            .'function init(){mQuery("#app-content .col-md-3.bdr-l").each(function(){place(mQuery(this));});}'
             .'var original=Mautic.onPageLoad;'
             .'Mautic.onPageLoad=function(){var result=original.apply(this,arguments);init();return result;};'
             .'mQuery(init);'
