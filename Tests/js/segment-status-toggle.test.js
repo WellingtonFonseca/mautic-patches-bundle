@@ -25,13 +25,13 @@ test('statusOf: expired, pending, no icon or no answer are "not active"', () => 
 
 test('view: an active segment is a green label and the menu offers to deactivate it', () => {
     assert.deepStrictEqual(api.view('published', cfg), {
-        labelClass: 'label-success', labelText: 'Ativo', action: 'deactivate', actionText: 'Desativar', actionIcon: 'ri-close-circle-line',
+        labelClass: 'patches-badge--production', labelText: 'Ativo', action: 'deactivate', actionText: 'Desativar', actionIcon: 'ri-close-circle-line',
     });
 });
 
 test('view: an inactive segment is a red label and the menu offers to activate it', () => {
     assert.deepStrictEqual(api.view('unpublished', cfg), {
-        labelClass: 'label-danger', labelText: 'Inativo', action: 'activate', actionText: 'Ativar', actionIcon: 'ri-checkbox-circle-line',
+        labelClass: 'patches-badge--failed', labelText: 'Inativo', action: 'activate', actionText: 'Ativar', actionIcon: 'ri-checkbox-circle-line',
     });
 });
 
@@ -56,32 +56,6 @@ test('place: a label that already starts its block is only marked', () => {
 
     assert.strictEqual(api.place(doc), 0);
     assert.strictEqual(label.attrs['data-placed'], '1');
-});
-
-test('measure: a hidden label with the text of Inativo is measured and its width goes to --segment-status-width', () => {
-    const props = {};
-    const appended = [];
-    const doc = {
-        body: {appendChild: (n) => appended.push(n), removeChild: (n) => appended.splice(appended.indexOf(n), 1)},
-        documentElement: {style: {setProperty: (k, v) => { props[k] = v; }}},
-        createElement: () => ({attrs: {}, style: {}, setAttribute(k, v) { this.attrs[k] = v; }, getBoundingClientRect: () => ({width: 49.5})}),
-    };
-
-    assert.strictEqual(api.measure(doc, cfg), 49.5);
-    assert.deepStrictEqual(props, {'--segment-status-width': '49.5px'});
-    assert.strictEqual(appended.length, 0, 'the probe is removed');
-});
-
-test('measure: nothing is set when the width cannot be measured (a hidden page)', () => {
-    const props = {};
-    const doc = {
-        body: {appendChild() {}, removeChild() {}},
-        documentElement: {style: {setProperty: (k, v) => { props[k] = v; }}},
-        createElement: () => ({attrs: {}, style: {}, setAttribute() {}, getBoundingClientRect: () => ({width: 0})}),
-    };
-
-    assert.strictEqual(api.measure(doc, cfg), 0);
-    assert.deepStrictEqual(props, {});
 });
 
 test('place: a label printed inside the name link (the campaign list) goes to the start of the block, outside the link', () => {

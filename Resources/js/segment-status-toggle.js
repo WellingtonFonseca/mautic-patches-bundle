@@ -25,7 +25,7 @@
         var active = status === 'published';
 
         return {
-            labelClass: active ? 'label-success' : 'label-danger',
+            labelClass: active ? 'patches-badge--production' : 'patches-badge--failed',
             labelText:  active ? cfg.active : cfg.inactive,
             action:     active ? 'deactivate' : 'activate',
             actionText: active ? cfg.deactivate : cfg.activate,
@@ -36,7 +36,7 @@
     function apply($, id, status, cfg) {
         var v = view(status, cfg);
         $('.segment-status-label[data-segment-id="' + id + '"]')
-            .removeClass('label-success label-danger label-gray').addClass(v.labelClass)
+            .removeClass('patches-badge--production patches-badge--failed patches-badge--pending').addClass(v.labelClass)
             .attr('data-status', status).text(v.labelText);
         $('a[data-segment-status-action][data-segment-id="' + id + '"]').each(function () {
             var $link = $(this);
@@ -100,24 +100,7 @@
         }
     }
 
-    /** The width, in px, of a label with the text of Inativo; sets --segment-status-width. 0 when it cannot be measured (hidden page). */
-    function measure(doc, cfg) {
-        var body = doc.body;
-        if (!body) { return 0; }
-        var probe = doc.createElement('span');
-        probe.className = 'label label-danger segment-status-label';
-        probe.setAttribute('data-placed', '1');
-        probe.style.cssText = 'position:absolute;visibility:hidden;min-width:0;left:-9999px';
-        probe.textContent = cfg.inactive;
-        body.appendChild(probe);
-        var width = probe.getBoundingClientRect().width;
-        body.removeChild(probe);
-        if (width > 0) { doc.documentElement.style.setProperty('--segment-status-width', width + 'px'); }
-
-        return width;
-    }
-
-    /** What both lists share, once per page: the style of the list, the width of the labels and the placing of the labels. */
+    /** What both lists share, once per page: the style of the list and the placing of the labels. */
     function setup(cfg) {
         var style = root.document.createElement('style');
         style.textContent = cfg.style;
@@ -125,15 +108,6 @@
 
         if (root.mauticPatchesStatusLabels) { return; }
         root.mauticPatchesStatusLabels = true;
-
-        measure(root.document, cfg);
-        // the width depends on the web font: measure again once it is loaded (load() starts it even if no text has used it yet)
-        var fonts = root.document.fonts;
-        if (fonts && fonts.load) {
-            fonts.load('600 14px ' + root.getComputedStyle(root.document.body).fontFamily, cfg.inactive)
-                .then(function () { measure(root.document, cfg); }, function () {});
-        }
-        if (fonts && fonts.ready) { fonts.ready.then(function () { measure(root.document, cfg); }); }
 
         // the labels of a list that is in the page, and of every list loaded later
         place(root.document);
@@ -160,7 +134,7 @@
 
             var $label = $('.segment-status-label[data-segment-id="' + id + '"]');
             var before = $label.attr('data-status') || 'unpublished';
-            $label.removeClass('label-success label-danger').addClass('label-gray')
+            $label.removeClass('patches-badge--production patches-badge--failed').addClass('patches-badge--pending')
                 .html('<i class="ri-loader-3-line ri-spin" aria-hidden="true"></i>');
 
             if (root.MauticVars) { root.MauticVars.liveCache = []; }
@@ -192,13 +166,13 @@
      */
     function paint($, label, icon, status, $links, attr, cfg) {
         if (icon && /\bri-spin\b/.test(icon.className)) {
-            $(label).removeClass('label-success label-danger').addClass('label-gray')
+            $(label).removeClass('patches-badge--production patches-badge--failed').addClass('patches-badge--pending')
                 .html('<i class="ri-loader-3-line ri-spin" aria-hidden="true"></i>').attr('data-status', 'busy');
             return;
         }
         if (label.getAttribute('data-status') === status) { return; }
         var v = view(status, cfg);
-        $(label).removeClass('label-success label-danger label-gray').addClass(v.labelClass).attr('data-status', status).text(v.labelText);
+        $(label).removeClass('patches-badge--production patches-badge--failed patches-badge--pending').addClass(v.labelClass).attr('data-status', status).text(v.labelText);
         $links.each(function () {
             var $link = $(this);
             $link.attr(attr, v.action).attr('aria-label', v.actionText);
@@ -263,7 +237,7 @@
             var label = row.querySelector('.segment-status-label');
             if (!label) {
                 label = root.document.createElement('span');
-                label.className = 'label segment-status-label';
+                label.className = 'patches-badge segment-status-label';
                 label.setAttribute('data-placed', '1');
                 label.setAttribute('data-status', '');
                 name.insertBefore(label, name.firstChild);
@@ -295,7 +269,7 @@
         syncEmails($, cfg);
     }
 
-    var api = {install: install, installCampaign: installCampaign, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, measure: measure, withoutAlias: withoutAlias};
+    var api = {install: install, installCampaign: installCampaign, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

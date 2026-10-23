@@ -77,8 +77,8 @@ class CampaignStatusSubscriber implements EventSubscriberInterface
 
         $published = $campaign->isPublished();
         $customContentEvent->addContent(sprintf(
-            '<span class="label %s segment-status-label" data-campaign-id="%d" data-status="%s">%s</span>',
-            $published ? 'label-success' : 'label-danger',
+            '<span class="patches-badge %s segment-status-label" data-campaign-id="%d" data-status="%s">%s</span>',
+            $published ? 'patches-badge--production' : 'patches-badge--failed',
             $campaign->getId(),
             $published ? 'published' : 'unpublished',
             htmlspecialchars($this->translator->trans($published ? 'mautic.core.form.active' : 'mautic.core.form.inactive'), ENT_QUOTES)

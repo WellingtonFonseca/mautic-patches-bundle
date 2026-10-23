@@ -55,7 +55,7 @@ class CampaignStatusSubscriberTest extends TestCase
 
     public function testTheLabelTellsTheStatusAndIsNotALinkItself(): void
     {
-        foreach ([[true, 'label-success', 'published', 'mautic.core.form.active'], [false, 'label-danger', 'unpublished', 'mautic.core.form.inactive']] as [$published, $class, $status, $text]) {
+        foreach ([[true, 'patches-badge--production', 'published', 'mautic.core.form.active'], [false, 'patches-badge--failed', 'unpublished', 'mautic.core.form.inactive']] as [$published, $class, $status, $text]) {
             $event = new CustomContentEvent('some_view', 'campaign.name', ['item' => $this->campaign($published)]);
             $this->subscriber()->injectViewCustomContent($event);
             $html = implode('', $event->getContent());
