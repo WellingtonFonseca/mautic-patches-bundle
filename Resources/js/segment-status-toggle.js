@@ -86,7 +86,7 @@
     }
 
     /**
-     * The contact count of a segment row (`.col-count`, a `<span>` with the link inside on Mautic 7, "Ver 6 Contatos") is a patches-badge like the status: translucent blue
+     * The contact count of a segment row (`.col-count`: a `<span>` with the link inside on Mautic 7, the `a.col-count` itself on Mautic 5; "Ver 6 Contatos") is a patches-badge like the status: translucent blue
      * (--info) when the segment has contacts, translucent gray (--neutral) when it is empty. Core prints it as `label label-gray`
      * with size="sm" and fills the text by ajax after the page loads, so this runs on every change.
      */
