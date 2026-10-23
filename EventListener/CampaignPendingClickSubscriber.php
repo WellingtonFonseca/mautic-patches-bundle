@@ -73,11 +73,47 @@ class CampaignPendingClickSubscriber implements EventSubscriberInterface
             .'Mautic.ajaxifyModal(el,event);'
             .'},true);'
             // The modal's body only has the container: its table is loaded when the body arrives (core calls <mauticContent>OnLoad).
-            .'Mautic.campaignPendingOnLoad=function(){'
+            .'Mautic.campaignPendingLoadTable=function(){'
             .'var url=mQuery("#patches-pending-container").data("target-url");'
             .'if(url){mQuery.get(url,function(response){response.target="#patches-pending-container";Mautic.processPageContent(response);})'
             // a 403 / 404 / expired session: core's own error handling, not a spinner that never goes away
             .'.fail(function(request,status,error){Mautic.processAjaxError(request,status,error);});}'
+            .'};'
+            .'Mautic.campaignPendingOnLoad=function(){Mautic.campaignPendingLoadTable();Mautic.campaignPendingRecalc();};'
+            // The "Recalculate dates" box of a Wait node (its markup is in pending_modal.html.twig): the message on top and one row of
+            // buttons below it (the loader line "<spinner> Recalculating..." takes the message's place while it runs). Recalculate shows what the current rule would do (nothing is written); when something would change, it
+            // gives way to Apply and Cancel. Apply writes it and reloads the table. The texts are in the box's data attributes ("%count%" is replaced).
+            .'Mautic.campaignPendingRecalc=function(){'
+            .'var box=document.getElementById("patches-wait-recalc");'
+            .'if(!box){return;}'
+            .'var out=box.querySelector(".patches-wait-recalc-result"),running=box.querySelector(".patches-wait-recalc-running"),start=box.querySelector("[data-recalc=start]"),'
+            .'apply=box.querySelector("[data-recalc=apply]"),cancel=box.querySelector("[data-recalc=cancel]");'
+            .'function text(key,count){return box.getAttribute("data-text-"+key).replace("%count%",count);}'
+            .'function line(value){var p=document.createElement("p");p.textContent=value;out.appendChild(p);return p;}'
+            // Recalculate alone: no request running, nothing to apply
+            .'function idle(){running.hidden=true;start.hidden=false;start.disabled=false;apply.hidden=true;apply.disabled=false;cancel.hidden=true;}'
+            .'function show(data){'
+            .'idle();out.innerHTML="";out.hidden=false;'
+            .'var summary=data.summary,list=document.createElement("ul"),any=summary.changed+summary.leaving_now>0;'
+            .'["changed","leaving_now","unchanged"].forEach(function(key){if(summary[key]){var li=document.createElement("li");li.textContent=text(key,summary[key]);list.appendChild(li);}});'
+            .'line(any?text("intro",""):text("nothing",""));'
+            .'if(any){out.appendChild(list);}'
+            // only Apply and Cancel while there is something to apply
+            .'if(data.canApply){start.hidden=true;apply.hidden=false;cancel.hidden=false;}'
+            .'}'
+            .'start.onclick=function(){'
+            // the message line is "<spinner> Recalculating..." while the simulation runs
+            .'start.disabled=true;out.hidden=true;running.hidden=false;'
+            .'mQuery.getJSON(box.getAttribute("data-simulate-url"),show)'
+            .'.fail(function(request,status,error){idle();Mautic.processAjaxError(request,status,error);});'
+            .'};'
+            .'cancel.onclick=function(){out.hidden=true;idle();};'
+            .'apply.onclick=function(){'
+            .'apply.disabled=true;'
+            .'mQuery.ajax({type:"POST",url:box.getAttribute("data-apply-url"),dataType:"json"})'
+            .'.done(function(data){idle();out.innerHTML="";out.hidden=false;line(text("applied",data.applied)).className="patches-wait-recalc-applied";Mautic.campaignPendingLoadTable();})'
+            .'.fail(function(request,status,error){apply.disabled=false;Mautic.processAjaxError(request,status,error);});'
+            .'};'
             .'};'
             .'})();';
     }

@@ -33,6 +33,14 @@ trait CampaignEventAccessTrait
         return $event;
     }
 
+    /**
+     * Whether the user can edit the event's campaign (own / other): the recalculation of a Wait node changes dates, it is not a view.
+     */
+    private function canEditCampaign(Event $event): bool
+    {
+        return $this->security->hasEntityAccess('campaign:campaigns:editown', 'campaign:campaigns:editother', $event->getCampaign()->getCreatedBy());
+    }
+
     protected function findEvent(int $eventId): ?Event
     {
         return $this->getModel('campaign')->getEventRepository()->find($eventId);

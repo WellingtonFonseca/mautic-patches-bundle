@@ -16,6 +16,10 @@ use MauticPlugin\MauticPatchesBundle\Doctrine\SegmentRepositoryListener;
 use MauticPlugin\MauticPatchesBundle\Service\Performance\PerformanceLog;
 use MauticPlugin\MauticPatchesBundle\EventListener\TimeInputFormatSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignRebuildLauncher;
+use MauticPlugin\CustomObjectsBundle\Model\CustomObjectModel;
+use MauticPlugin\CustomObjectsBundle\Segment\SegmentItemResolver;
+use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitDateResolver;
+use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitItemSelector;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuildLauncher;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
@@ -73,6 +77,15 @@ return function (ContainerConfigurator $configurator): void {
     // The marker files of the running campaign updates go to a folder in Mautic's logs dir (writable by the web user).
     $services->set(CampaignRebuildLauncher::class)
         ->args(['%kernel.project_dir%', '%kernel.logs_dir%/campaign-rebuild', null]);
+
+    // The date fields of a "Date" are days of the system time zone (a string argument cannot be autowired).
+    $services->set(RelativeWaitDateResolver::class)
+        ->arg('$timezone', '%mautic.default_timezone%');
+
+    // The Custom Objects plugin is optional: without it there are no items to select (null arguments).
+    $services->set(RelativeWaitItemSelector::class)
+        ->arg('$itemResolver', service(SegmentItemResolver::class)->nullOnInvalid())
+        ->arg('$customObjectModel', service(CustomObjectModel::class)->nullOnInvalid());
 
     // The day files of the API timing, next to Mautic's own logs.
     $services->set(PerformanceLog::class)
