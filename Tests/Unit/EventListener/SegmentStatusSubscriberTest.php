@@ -92,7 +92,9 @@ class SegmentStatusSubscriberTest extends TestCase
         $this->assertStringContainsString('td:has(.segment-status-label) > div.text-muted{display:none!important}', $css);
         // "Atualizado em ..." is as large as the table
         $this->assertStringContainsString('.segment-last-built small{font-size:14px}', $css);
-        $this->assertStringContainsString('a.col-count{font-size:14px}', $css);
+        // the contact count is a translucent badge of the same family
+        $this->assertStringContainsString('.patches-badge--info{', $css);
+        $this->assertStringContainsString('.patches-badge--neutral{', $css);
         $this->assertStringContainsString('text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}', $css, 'the status badge is the twin of the n8n badge');
         $this->assertStringContainsString('.patches-badge--failed{background-color:#e53935}', $css);
         // the script puts the label at the start of the name; until then it is invisible

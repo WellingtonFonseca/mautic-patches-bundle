@@ -30,7 +30,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class SegmentStatusSubscriber implements EventSubscriberInterface
 {
-    // The status badge of the Mautic lists (segment, campaign, user, email). It is the twin of N8nDispatchBundle's badge
+    // The status badge of the Mautic lists (segment, campaign, user, email) and the contact count of the segment list. It is the twin of N8nDispatchBundle's badge
     // (.n8ndispatch-timeline-badge in campaign-status-badge.css), with the same modifiers: a 13px bold uppercase pill, white text, no
     // icon, 76px wide, green (--production) / red (--failed) / orange while it works (--pending). Keep the two in step.
     // It does not use core's .label, so core's size and colors do not reach it; .segment-status-label is only the hook of the script.
@@ -38,7 +38,10 @@ class SegmentStatusSubscriber implements EventSubscriberInterface
         .'color:#fff;font-size:13px;font-weight:600;line-height:normal;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}'
         .'.patches-badge--production{background-color:#43a047}'
         .'.patches-badge--failed{background-color:#e53935}'
-        .'.patches-badge--pending{background-color:#fb8c00}';
+        .'.patches-badge--pending{background-color:#fb8c00}'
+        // the translucent ones: the contact count of the segment list (--info has contacts, --neutral is empty)
+        .'.patches-badge--info{background-color:rgba(30,136,229,.16);color:#1e88e5;box-shadow:inset 0 0 0 1px rgba(30,136,229,.45)}'
+        .'.patches-badge--neutral{background-color:rgba(120,120,120,.16);color:var(--text-secondary,#6f6f6f);box-shadow:inset 0 0 0 1px rgba(120,120,120,.4)}';
 
     // the label is placed at the start of the name by the script; until then it is invisible, so it does not flash at the end
     // (the second line of its rule); the description core prints under the name in the segment and campaign rows (the rows with this
@@ -48,8 +51,6 @@ class SegmentStatusSubscriber implements EventSubscriberInterface
         .'td:has(.segment-status-label) > div.text-muted{display:none!important}'
         // "Atualizado em ..." under the name: as large as the rest of the table (core's <small> is 11.9px)
         .'.segment-last-built small{font-size:14px}'
-        // the contact count badge ("Ver 6 Contatos") has the size of the table text (core's label is 11px)
-        .'a.col-count{font-size:14px}'
         .'.segment-status-label{margin-right:var(--spacing-03);box-sizing:border-box;min-width:76px}.segment-status-label:not([data-placed]){visibility:hidden}'
         .'a[data-segment-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-segment-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'

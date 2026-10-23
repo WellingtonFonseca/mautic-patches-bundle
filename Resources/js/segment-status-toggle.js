@@ -84,8 +84,9 @@
     }
 
     /**
-     * The contact count of a segment row (`a.col-count`, "Ver 6 Contatos"), with the normal size of the labels, is gray when the segment is empty and blue (translucent, like
-     * the email list's badges) when it has contacts. Core fills the text by ajax after the page loads, so this runs on every change.
+     * The contact count of a segment row (`a.col-count`, "Ver 6 Contatos") is a patches-badge like the status: translucent blue
+     * (--info) when the segment has contacts, translucent gray (--neutral) when it is empty. Core prints it as `label label-gray`
+     * with size="sm" and fills the text by ajax after the page loads, so this runs on every change.
      */
     function colorCounts(doc) {
         var badges = doc.querySelectorAll('a.col-count');
@@ -93,10 +94,11 @@
             var match = /\d+/.exec(badges[k].textContent);
             // core writes "Sem contatos" / "No contacts" for an empty segment: no number means empty
             var filled = !!match && parseInt(match[0], 10) > 0;
-            // core prints size="sm" (11px); without it the badge has the normal size of the labels (14px)
             badges[k].removeAttribute('size');
-            badges[k].classList.toggle('label-blue', filled);
-            badges[k].classList.toggle('label-gray', !filled);
+            badges[k].classList.remove('label', 'label-gray', 'label-blue');
+            badges[k].classList.add('patches-badge');
+            badges[k].classList.toggle('patches-badge--info', filled);
+            badges[k].classList.toggle('patches-badge--neutral', !filled);
         }
     }
 

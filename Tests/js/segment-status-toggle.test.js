@@ -100,20 +100,20 @@ test('place: the alias is taken off the text of the block when the label carries
 test('colorCounts: a count with contacts is blue, an empty one is gray, and it follows a text changed later', () => {
     const badge = (text) => {
         const classes = new Set(['label', 'label-gray', 'col-count']);
-        return {textContent: text, removeAttribute: () => {}, classList: {toggle: (name, on) => { if (on) { classes.add(name); } else { classes.delete(name); } }}, classes};
+        return {textContent: text, removeAttribute: () => {}, classList: {add: (...n) => n.forEach((x) => classes.add(x)), remove: (...n) => n.forEach((x) => classes.delete(x)), toggle: (name, on) => { if (on) { classes.add(name); } else { classes.delete(name); } }}, classes};
     };
     const full = badge('Ver 6 Contatos'), empty = badge('Ver 0 Contatos'), none = badge('Sem contatos');
     const doc = {querySelectorAll: () => [full, empty, none]};
 
     api.colorCounts(doc);
-    assert.ok(full.classes.has('label-blue') && !full.classes.has('label-gray'));
-    assert.ok(empty.classes.has('label-gray') && !empty.classes.has('label-blue'));
-    assert.ok(none.classes.has('label-gray') && !none.classes.has('label-blue'), 'a text without a number is an empty segment');
+    assert.ok(full.classes.has('patches-badge--info') && !full.classes.has('patches-badge--neutral'));
+    assert.ok(empty.classes.has('patches-badge--neutral') && !empty.classes.has('patches-badge--info'));
+    assert.ok(none.classes.has('patches-badge--neutral') && !none.classes.has('patches-badge--info'), 'a text without a number is an empty segment');
 
     empty.textContent = 'Ver 3 Contatos';
-    none.classes.add('label-blue');
+    none.classes.add('patches-badge--info');
     none.textContent = 'Sem contatos';
     api.colorCounts(doc);
-    assert.ok(empty.classes.has('label-blue') && !empty.classes.has('label-gray'));
-    assert.ok(none.classes.has('label-gray') && !none.classes.has('label-blue'), 'a blue badge goes back to gray when the segment is emptied');
+    assert.ok(empty.classes.has('patches-badge--info') && !empty.classes.has('patches-badge--neutral'));
+    assert.ok(none.classes.has('patches-badge--neutral') && !none.classes.has('patches-badge--info'), 'a blue badge goes back to gray when the segment is emptied');
 });
