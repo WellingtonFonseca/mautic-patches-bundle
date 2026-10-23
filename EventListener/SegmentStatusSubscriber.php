@@ -38,7 +38,7 @@ class SegmentStatusSubscriber implements EventSubscriberInterface
         .'.segment-last-built small{font-size:14px}'
         // the contact count badge ("Ver 6 Contatos") has the size of the table text (core's label is 11px)
         .'a.col-count{font-size:14px}'
-        .'.segment-status-label{margin-right:var(--spacing-03);box-sizing:border-box;min-width:var(--segment-status-width,0)}.segment-status-label:not([data-placed]){visibility:hidden}'
+        .'.segment-status-label{margin-right:var(--spacing-03);box-sizing:border-box;font-size:14px;min-width:var(--segment-status-width,0)}.segment-status-label:not([data-placed]){visibility:hidden}'
         .'a[data-segment-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-segment-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-segment-status-action="activate"]:hover{background-color:var(--support-success)!important}'

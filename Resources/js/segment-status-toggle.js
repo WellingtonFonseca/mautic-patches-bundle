@@ -127,7 +127,13 @@
         root.mauticPatchesStatusLabels = true;
 
         measure(root.document, cfg);
-        if (root.document.fonts && root.document.fonts.ready) { root.document.fonts.ready.then(function () { measure(root.document, cfg); }); }
+        // the width depends on the web font: measure again once it is loaded (load() starts it even if no text has used it yet)
+        var fonts = root.document.fonts;
+        if (fonts && fonts.load) {
+            fonts.load('600 14px ' + root.getComputedStyle(root.document.body).fontFamily, cfg.inactive)
+                .then(function () { measure(root.document, cfg); }, function () {});
+        }
+        if (fonts && fonts.ready) { fonts.ready.then(function () { measure(root.document, cfg); }); }
 
         // the labels of a list that is in the page, and of every list loaded later
         place(root.document);
