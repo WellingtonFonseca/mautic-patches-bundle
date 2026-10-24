@@ -155,4 +155,42 @@ class SegmentFilterPresenterTest extends TestCase
         $this->assertSame([], $rows[0]['values']);
         $this->assertSame('Maria | João', $rows[0]['value']);
     }
+
+    public function testWhenTheStoredValueAndTheDisplayAreInBothPlacesThePropertiesWinForTheValueAndTheTopLevelForTheDisplay(): void
+    {
+        $both = [
+            'glue' => 'and', 'object' => 'lead', 'field' => 'email', 'operator' => '=',
+            'filter' => 'top-value', 'properties' => ['filter' => 'properties-value'],
+        ];
+        $rows = $this->presenter()->present([$both], self::CHOICES);
+        $this->assertSame('properties-value', $rows[0]['value']);
+
+        $withDisplay = $both + ['display' => 'top-display'];
+        $withDisplay['properties']['display'] = 'properties-display';
+        $this->assertSame('top-display', $this->presenter()->present([$withDisplay], self::CHOICES)[0]['value']);
+
+        $including = ['operator' => 'in', 'field' => 'estado'] + $both;
+        $including['filter'] = 'rj';
+        $including['properties']['filter'] = 'sp';
+        $this->assertSame(['São Paulo'], $this->presenter()->present([$including], self::CHOICES)[0]['values']);
+
+        $including['display'] = 'top-display';
+        $including['properties']['display'] = '';
+        $this->assertSame([], $this->presenter()->present([$including], self::CHOICES)[0]['values'], 'the top-level display decides');
+    }
+
+    public function testAnOptionOfAListWithoutValueAndLabelIsSkipped(): void
+    {
+        $choices = ['lead' => ['nivel' => ['label' => 'Nível', 'operators' => [], 'properties' => ['list' => [['foo' => 1], ['value' => '1', 'label' => 'Básico']]]]]];
+        $rows    = $this->presenter()->present([['object' => 'lead', 'field' => 'nivel', 'operator' => '=', 'properties' => ['filter' => '1']]], $choices);
+
+        $this->assertSame('Básico', $rows[0]['value']);
+    }
+
+    public function testAnIncludingFilterWithTheValueOnlyAtTheTopLevelStillGivesItsEntries(): void
+    {
+        $rows = $this->presenter()->present([['object' => 'lead', 'field' => 'estado', 'operator' => 'in', 'filter' => 'sp|rj']], self::CHOICES);
+
+        $this->assertSame(['São Paulo', 'Rio de Janeiro'], $rows[0]['values']);
+    }
 }

@@ -36,6 +36,9 @@ class RelativeWaitRecalculatorTest extends TestCase
     /** @var array<int, array{string, array<string, mixed>}> */
     private array $writes = [];
 
+    /** @var array<int, array<string, mixed>> */
+    private array $writeTypes = [];
+
     protected function setUp(): void
     {
         $this->now        = new \DateTimeImmutable('2026-03-10 12:00:00', new \DateTimeZone('UTC'));
@@ -45,6 +48,7 @@ class RelativeWaitRecalculatorTest extends TestCase
         $this->writes     = [];
         $this->connection->method('executeStatement')->willReturnCallback(function (string $sql, array $params = [], array $types = []): int {
             $this->writes[] = [$sql, $params];
+            $this->writeTypes[] = $types;
 
             return count($params['ids'] ?? []);
         });
@@ -174,6 +178,37 @@ class RelativeWaitRecalculatorTest extends TestCase
         }
         $this->assertSame([101, 102], $byDate['2026-03-25 03:00:00']);
         $this->assertSame([104], $byDate['2026-03-10 12:00:00']);
+    }
+
+    public function testOnlyTheScheduledLogsOfTheEventAreRead(): void
+    {
+        $this->connection->expects($this->once())->method('fetchAllAssociative')
+            ->with($this->stringContains('l.event_id = :event AND l.is_scheduled = 1'), ['event' => 42])
+            ->willReturn([]);
+
+        $this->recalculator()->plan($this->waitEvent(), $this->now);
+    }
+
+    public function testTheRowsSayWhetherTheContactHasNoDate(): void
+    {
+        $this->scheduledLogs([1 => '2026-03-20 03:00:00', 2 => '2026-03-20 03:00:00']);
+        $this->ruleGives([1 => '2026-03-25 03:00:00']);
+
+        $plan = $this->recalculator()->plan($this->waitEvent(), $this->now);
+
+        $this->assertFalse($plan['rows'][0]['without_date']);
+        $this->assertTrue($plan['rows'][1]['without_date']);
+    }
+
+    public function testTheIdsOfAnUpdateAreSentAsAnIntegerList(): void
+    {
+        $this->scheduledLogs([1 => '2026-03-20 03:00:00']);
+        $this->ruleGives([1 => '2026-03-25 03:00:00']);
+        $recalculator = $this->recalculator();
+
+        $recalculator->apply($recalculator->plan($this->waitEvent(), $this->now));
+
+        $this->assertSame([['ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER]], $this->writeTypes);
     }
 
     public function testApplyingAPlanWithNothingToChangeWritesNothing(): void
