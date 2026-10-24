@@ -102,4 +102,22 @@ class UserStatusSubscriberTest extends TestCase
         $this->assertSame([], $this->buttons($this->subscriber(), $this->user(true), 'mautic_segment_index'));
         $this->assertSame([], $this->buttons($this->subscriber(), $this->user(true), 'mautic_user_index', ButtonHelper::LOCATION_PAGE_ACTIONS));
     }
+
+    public function testAnItemThatIsNotAUserGetsNoMenuItem(): void
+    {
+        $request = new Request();
+        $request->attributes->set('_route', 'mautic_user_index');
+        $event = new CustomButtonEvent(ButtonHelper::LOCATION_LIST_ACTIONS, $request, [], new \Mautic\CampaignBundle\Entity\Campaign());
+        $this->subscriber()->injectViewButtons($event);
+
+        $this->assertSame([], $event->getButtons());
+    }
+
+    public function testTheHeaderScriptCarriesTheStyleOfTheList(): void
+    {
+        $event = new CustomContentEvent('some_view', 'page.header.left');
+        $this->subscriber()->injectViewCustomContent($event);
+
+        $this->assertStringContainsString('user-publish-icon', implode('', $event->getContent()));
+    }
 }

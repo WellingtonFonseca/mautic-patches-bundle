@@ -1,0 +1,21 @@
+{
+    // Mutation testing of the unit tests. Run it inside the web container (wiki/tests.md, "mutation testing").
+    "$schema": "https://raw.githubusercontent.com/infection/infection/0.32.0/resources/schema.json",
+    "source": {
+        "directories": ["Service", "EventListener"],
+        // Infection loads the classes with its own autoloader and cannot find the parent of a class that extends an abstract one of the plugin
+        // (AnonymousClassReflection: class "AbstractListStatusSubscriber" does not exist): the base class and the four lists are left out.
+        "excludes": ["AbstractListStatusSubscriber.php", "SegmentStatusSubscriber.php", "CampaignStatusSubscriber.php", "UserStatusSubscriber.php", "EmailStatusSubscriber.php"]
+    },
+    "phpUnit": {
+        "configDir": ".",
+        "customPath": "/var/www/html/vendor/bin/phpunit"
+    },
+    "tmpDir": "/tmp/infection-patches",
+    "logs": {
+        "text": "/tmp/infection-patches/infection.log"
+    },
+    "mutators": {
+        "@default": true
+    }
+}
