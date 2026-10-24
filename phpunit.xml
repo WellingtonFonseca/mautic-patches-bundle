@@ -13,6 +13,7 @@
     <source>
         <include>
             <directory>EventListener</directory>
+            <directory>Service</directory>
         </include>
     </source>
 </phpunit>
