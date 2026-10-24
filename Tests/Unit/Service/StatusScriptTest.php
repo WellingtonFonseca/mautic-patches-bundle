@@ -22,7 +22,7 @@ class StatusScriptTest extends TestCase
     {
         $html = $this->html();
 
-        $this->assertMatchesRegularExpression('#<script src="/plugins/MauticPatchesBundle/Resources/js/segment-status-toggle\.js\?v=\d+"></script>#', $html);
+        $this->assertMatchesRegularExpression('#<script src="/plugins/MauticPatchesBundle/Resources/js/list-status-toggle\.js\?v=\d+"></script>#', $html);
         $this->assertStringNotContainsString('(function (root)', $html, 'the 14 KB file is not copied into every page');
     }
 
@@ -31,7 +31,7 @@ class StatusScriptTest extends TestCase
         $html = $this->html('installEmail');
 
         $this->assertLessThan(strpos($html, 'installEmail('), strpos($html, '<script src='), 'the file loads before the call that needs it');
-        $this->assertStringContainsString('mauticPatchesSegmentStatusApi.installEmail(mQuery,Mautic,{', $html);
+        $this->assertStringContainsString('mauticPatchesListStatusApi.installEmail(mQuery,Mautic,{', $html);
         $this->assertStringContainsString('"active":"mautic.core.form.active"', $html);
         $this->assertStringContainsString('"deactivate":"mautic.patches.segment.deactivate"', $html);
         $this->assertStringContainsString('"style":"a{b:c}"', $html);

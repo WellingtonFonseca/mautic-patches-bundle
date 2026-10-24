@@ -60,7 +60,7 @@ class CampaignStatusSubscriberTest extends TestCase
             $this->subscriber()->injectViewCustomContent($event);
             $html = implode('', $event->getContent());
 
-            $this->assertStringContainsString($class.' segment-status-label', $html);
+            $this->assertStringContainsString($class.' patches-status-label', $html);
             $this->assertStringContainsString('data-status="'.$status.'"', $html);
             $this->assertStringContainsString('data-campaign-id="9"', $html);
             $this->assertStringContainsString('>'.$text.'<', $html);
@@ -72,7 +72,7 @@ class CampaignStatusSubscriberTest extends TestCase
     {
         $event = new CustomContentEvent('some_view', 'page.header.left');
         $this->subscriber()->injectViewCustomContent($event);
-        $this->assertStringContainsString('mauticPatchesSegmentStatusApi.installCampaign(mQuery,Mautic,', implode('', $event->getContent()));
+        $this->assertStringContainsString('mauticPatchesListStatusApi.installCampaign(mQuery,Mautic,', implode('', $event->getContent()));
 
         foreach ([new CustomContentEvent('v', 'campaign.name', []), new CustomContentEvent('v', 'campaign.name', ['item' => 'no']), new CustomContentEvent('v', 'something.else', ['item' => $this->campaign(true)])] as $other) {
             $this->subscriber()->injectViewCustomContent($other);

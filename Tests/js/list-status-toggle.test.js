@@ -1,4 +1,4 @@
-// The logic of the segment status toggle (Resources/js/segment-status-toggle.js): what the answer of the server says, and what the
+// The logic of the segment status toggle (Resources/js/list-status-toggle.js): what the answer of the server says, and what the
 // label and the menu item show for it. The DOM part is checked in the browser.
 //
 //   docker exec mautic-mautic_web-1 sh -c "cd /var/www/html/docroot/plugins/MauticPatchesBundle && node --test 'Tests/js/*.test.js'"
@@ -6,7 +6,7 @@
 
 const test   = require('node:test');
 const assert = require('node:assert');
-const api    = require('../../Resources/js/segment-status-toggle.js');
+const api    = require('../../Resources/js/list-status-toggle.js');
 
 const cfg = {active: 'Ativo', inactive: 'Inativo', activate: 'Ativar', deactivate: 'Desativar'};
 
@@ -39,7 +39,7 @@ test('place: a label that is not first in its block is moved to the start, once,
     const insertions = [];
     const block = {firstChild: {name: 'link'}, insertBefore(node, ref) { insertions.push([node.name, ref.name]); this.firstChild = node; }};
     const label = {name: 'label', parentNode: block, attrs: {}, getAttribute(k) { return this.attrs[k]; }, setAttribute(k, v) { this.attrs[k] = v; }};
-    const doc = {querySelectorAll: (sel) => (sel === '.segment-status-label:not([data-placed])' && !label.attrs['data-placed'] ? [label] : [])};
+    const doc = {querySelectorAll: (sel) => (sel === '.patches-status-label:not([data-placed])' && !label.attrs['data-placed'] ? [label] : [])};
 
     assert.strictEqual(api.place(doc), 1);
     assert.deepStrictEqual(insertions, [['label', 'link']]);
