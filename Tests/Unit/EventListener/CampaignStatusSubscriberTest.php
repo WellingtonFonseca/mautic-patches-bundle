@@ -114,4 +114,37 @@ class CampaignStatusSubscriberTest extends TestCase
         $this->assertSame([], $this->buttons($this->subscriber(), $this->campaign(true), 'mautic_segment_index'));
         $this->assertSame([], $this->buttons($this->subscriber(), $this->campaign(true), 'mautic_campaign_index', ButtonHelper::LOCATION_PAGE_ACTIONS));
     }
+
+    public function testThePermissionAskedIsTheCampaignsEditOwnOrOther(): void
+    {
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')->willReturnArgument(0);
+        $security = $this->createMock(CorePermissions::class);
+        $security->expects($this->once())->method('hasEntityAccess')->with('campaign:campaigns:editown', 'campaign:campaigns:editother', $this->anything())->willReturn(true);
+        $request = new Request();
+        $request->attributes->set('_route', 'mautic_campaign_index');
+        $event = new CustomButtonEvent(ButtonHelper::LOCATION_LIST_ACTIONS, $request, [], $this->campaign(true));
+
+        (new CampaignStatusSubscriber($translator, $security))->injectViewButtons($event);
+
+        $this->assertCount(1, $event->getButtons());
+    }
+
+    public function testAnItemThatIsNotACampaignGetsNoMenuItem(): void
+    {
+        $request = new Request();
+        $request->attributes->set('_route', 'mautic_campaign_index');
+        $buttons = new CustomButtonEvent(ButtonHelper::LOCATION_LIST_ACTIONS, $request, [], new \Mautic\LeadBundle\Entity\LeadList());
+        $this->subscriber()->injectViewButtons($buttons);
+
+        $this->assertSame([], $buttons->getButtons());
+    }
+
+    public function testTheHeaderScriptCarriesTheStyleOfTheList(): void
+    {
+        $event = new CustomContentEvent('some_view', 'page.header.left');
+        $this->subscriber()->injectViewCustomContent($event);
+
+        $this->assertStringContainsString('campaign-publish-icon', implode('', $event->getContent()));
+    }
 }

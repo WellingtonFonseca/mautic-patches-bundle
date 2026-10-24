@@ -11,6 +11,7 @@ use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentStatusSubscriber;
+use MauticPlugin\MauticPatchesBundle\EventListener\AbstractListStatusSubscriber;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -132,5 +133,50 @@ class SegmentStatusSubscriberTest extends TestCase
         $this->assertSame([], $this->buttons($this->subscriber(false), $this->segment(true)));
         $this->assertSame([], $this->buttons($this->subscriber(), $this->segment(true), 'mautic_campaign_index'));
         $this->assertSame([], $this->buttons($this->subscriber(), $this->segment(true), 'mautic_segment_index', ButtonHelper::LOCATION_PAGE_ACTIONS));
+    }
+
+    public function testThePermissionAskedIsTheSegmentsEditOwnOrOther(): void
+    {
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')->willReturnArgument(0);
+        $security = $this->createMock(CorePermissions::class);
+        $security->expects($this->once())->method('hasEntityAccess')->with('lead:lists:editown', 'lead:lists:editother', $this->anything())->willReturn(true);
+        $request = new Request();
+        $request->attributes->set('_route', 'mautic_segment_index');
+        $event = new CustomButtonEvent(ButtonHelper::LOCATION_LIST_ACTIONS, $request, [], $this->segment(true));
+
+        (new SegmentStatusSubscriber($translator, $security))->injectViewButtons($event);
+
+        $this->assertCount(1, $event->getButtons());
+    }
+
+    public function testAnItemThatIsNotASegmentGetsNoLabelAndNoMenuItem(): void
+    {
+        $request = new Request();
+        $request->attributes->set('_route', 'mautic_segment_index');
+        $buttons = new CustomButtonEvent(ButtonHelper::LOCATION_LIST_ACTIONS, $request, [], new \Mautic\CampaignBundle\Entity\Campaign());
+        $this->subscriber()->injectViewButtons($buttons);
+        $this->assertSame([], $buttons->getButtons());
+
+        $content = new CustomContentEvent('some_view', 'segment.name', ['item' => new \Mautic\CampaignBundle\Entity\Campaign()]);
+        $this->subscriber()->injectViewCustomContent($content);
+        $this->assertSame([], $content->getContent());
+    }
+
+    public function testTheHeaderScriptCarriesTheStyleOfTheListAndTheBadgeStyle(): void
+    {
+        $event = new CustomContentEvent('some_view', 'page.header.left');
+        $this->subscriber()->injectViewCustomContent($event);
+        $html = implode('', $event->getContent());
+
+        $this->assertStringContainsString('lead-list-publish-icon', $html);
+        $this->assertStringContainsString('.patches-badge--production', $html);
+    }
+
+    public function testTheBadgeStyleKeepsTheStatusColorsAndIsPartOfTheSegmentStyle(): void
+    {
+        $this->assertStringContainsString('.patches-badge--production{background-color:#43a047}', AbstractListStatusSubscriber::BADGE_STYLE);
+        $this->assertStringContainsString('.patches-badge--failed{background-color:#e53935}', AbstractListStatusSubscriber::BADGE_STYLE);
+        $this->assertStringStartsWith(AbstractListStatusSubscriber::BADGE_STYLE, SegmentStatusSubscriber::STYLE);
     }
 }
