@@ -89,7 +89,7 @@ abstract class AbstractListStatusSubscriber implements EventSubscriberInterface
         }
 
         $item = $customContentEvent->getVars()['item'] ?? null;
-        if (null === $this->nameContext() || $this->nameContext() !== $context || !$this->supports($item)) {
+        if (null === $item || $this->nameContext() !== $context || !$this->supports($item)) {
             return;
         }
 
