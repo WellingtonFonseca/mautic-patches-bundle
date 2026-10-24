@@ -37,7 +37,7 @@
 
     function apply($, id, status, cfg) {
         var v = view(status, cfg);
-        $('.segment-status-label[data-segment-id="' + id + '"]')
+        $('.patches-status-label[data-segment-id="' + id + '"]')
             .removeClass(STATES).addClass(v.labelClass)
             .attr('data-status', status).text(v.labelText);
         $('a[data-segment-status-action][data-segment-id="' + id + '"]').each(function () {
@@ -72,7 +72,7 @@
     /** Moves the labels that are not at the start of their block yet; returns how many it moved. */
     function place(doc) {
         var moved = 0;
-        var labels = doc.querySelectorAll('.segment-status-label:not([data-placed])');
+        var labels = doc.querySelectorAll('.patches-status-label:not([data-placed])');
         for (var k = 0; k < labels.length; k++) {
             var label = labels[k], parent = label.parentNode;
             // the campaign list prints the hook inside the name link: the label goes to the start of the block, outside the link
@@ -138,7 +138,7 @@
             if ($link.data('busy')) { return; }
             $link.data('busy', true);
 
-            var $label = $('.segment-status-label[data-segment-id="' + id + '"]');
+            var $label = $('.patches-status-label[data-segment-id="' + id + '"]');
             var before = $label.attr('data-status') || 'unpublished';
             $label.removeClass(STATES).addClass('patches-badge--pending')
                 .html('<i class="ri-loader-3-line ri-spin" aria-hidden="true"></i>');
@@ -211,10 +211,10 @@
 
     /** Brings the label and the menu item of every campaign row to the state of its core icon. */
     function syncCampaigns($, cfg) {
-        if (!root.document.querySelector('.segment-status-label[data-campaign-id]')) { return; } // not a campaign list: no row to look at
+        if (!root.document.querySelector('.patches-status-label[data-campaign-id]')) { return; } // not a campaign list: no row to look at
         var rows = root.document.querySelectorAll('tr');
         for (var k = 0; k < rows.length; k++) {
-            var row = rows[k], label = row.querySelector('.segment-status-label[data-campaign-id]');
+            var row = rows[k], label = row.querySelector('.patches-status-label[data-campaign-id]');
             var icon = label && iconOf(row, 'campaign');
             if (!icon) { continue; }
             var id = label.getAttribute('data-campaign-id');
@@ -241,10 +241,10 @@
         for (var k = 0; k < rows.length; k++) {
             var row = rows[k], icon = iconOf(row, kind), name = row.querySelector(nameSelector);
             if (!name) { continue; }
-            var label = row.querySelector('.segment-status-label');
+            var label = row.querySelector('.patches-status-label');
             if (!label) {
                 label = root.document.createElement('span');
-                label.className = 'patches-badge segment-status-label';
+                label.className = 'patches-badge patches-status-label';
                 label.setAttribute('data-placed', '1');
                 label.setAttribute('data-status', '');
                 name.insertBefore(label, name.firstChild);
@@ -281,6 +281,6 @@
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {
-        root.mauticPatchesSegmentStatusApi = api;
+        root.mauticPatchesListStatusApi = api;
     }
 })(typeof window !== 'undefined' ? window : this);

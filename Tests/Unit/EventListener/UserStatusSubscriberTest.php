@@ -60,7 +60,7 @@ class UserStatusSubscriberTest extends TestCase
     {
         $event = new CustomContentEvent('some_view', 'page.header.left');
         $this->subscriber()->injectViewCustomContent($event);
-        $this->assertStringContainsString('mauticPatchesSegmentStatusApi.installUser(mQuery,Mautic,', implode('', $event->getContent()));
+        $this->assertStringContainsString('mauticPatchesListStatusApi.installUser(mQuery,Mautic,', implode('', $event->getContent()));
 
         $other = new CustomContentEvent('some_view', 'user.name', ['item' => $this->user(true)]);
         $this->subscriber()->injectViewCustomContent($other);
