@@ -61,7 +61,7 @@ class SegmentStatusSubscriberTest extends TestCase
             $this->subscriber()->injectViewCustomContent($event);
             $html = implode('', $event->getContent());
 
-            $this->assertStringContainsString($class.' segment-status-label', $html);
+            $this->assertStringContainsString($class.' patches-status-label', $html);
             $this->assertStringContainsString('data-status="'.$status.'"', $html);
             $this->assertStringContainsString('data-segment-id="7"', $html);
             // the alias goes with the label: the script takes "(alias)" off the name
@@ -77,7 +77,7 @@ class SegmentStatusSubscriberTest extends TestCase
         $event = new CustomContentEvent('some_view', 'page.header.left');
         $this->subscriber()->injectViewCustomContent($event);
         $html = implode('', $event->getContent());
-        $this->assertStringContainsString('mauticPatchesSegmentStatusApi.install(mQuery,Mautic,', $html);
+        $this->assertStringContainsString('mauticPatchesListStatusApi.install(mQuery,Mautic,', $html);
 
         $other = new CustomContentEvent('some_view', 'something.else');
         $this->subscriber()->injectViewCustomContent($other);
@@ -89,7 +89,7 @@ class SegmentStatusSubscriberTest extends TestCase
         $css = SegmentStatusSubscriber::STYLE;
         $this->assertStringContainsString('i[class*="lead-list-publish-icon"]{display:none!important}', $css);
         // the description under the name is hidden, only in the rows that have the label (segment and campaign lists)
-        $this->assertStringContainsString('td:has(.segment-status-label) > div.text-muted{display:none!important}', $css);
+        $this->assertStringContainsString('td:has(.patches-status-label) > div.text-muted{display:none!important}', $css);
         // "Atualizado em ..." is as large as the table
         $this->assertStringContainsString('.segment-last-built small{font-size:14px}', $css);
         // the contact count is a translucent badge of the same family
@@ -98,7 +98,7 @@ class SegmentStatusSubscriberTest extends TestCase
         $this->assertStringContainsString('text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}', $css, 'the status badge is the twin of the n8n badge');
         $this->assertStringContainsString('.patches-badge--failed{background-color:#e53935}', $css);
         // the script puts the label at the start of the name; until then it is invisible
-        $this->assertStringContainsString('.segment-status-label:not([data-placed]){visibility:hidden}', $css);
+        $this->assertStringContainsString('.patches-status-label:not([data-placed]){visibility:hidden}', $css);
         // all the labels have the same width
         $this->assertStringContainsString('min-width:76px}', $css);
         $this->assertStringContainsString('[data-segment-status-action="deactivate"]:hover{background-color:var(--support-error)', $css);

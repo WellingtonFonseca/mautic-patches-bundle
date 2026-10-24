@@ -4,15 +4,7 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\EventListener;
 
-use Mautic\CoreBundle\CoreEvents;
-use Mautic\CoreBundle\Event\CustomButtonEvent;
-use Mautic\CoreBundle\Event\CustomContentEvent;
-use Mautic\CoreBundle\Security\Permissions\CorePermissions;
-use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\EmailBundle\Entity\Email;
-use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * The same as UserStatusSubscriber, for the email list: the active / inactive toggle next to the name (an icon that is easy to hit by
@@ -23,67 +15,45 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * Core's flow is kept: the menu item clicks core's icon (hidden), so the server checks the permission as it always did. An email
  * published but outside its publish dates (core's icon says pending / expired) counts as active, like its `isPublished` flag.
  *
- * The list has no hook that fits (the one at the name is inside the link): the script (Resources/js/segment-status-toggle.js,
+ * The list has no hook that fits (the one at the name is inside the link): the script (Resources/js/list-status-toggle.js,
  * installEmail) makes the labels from the state of core's icons.
  */
-class EmailStatusSubscriber implements EventSubscriberInterface
+class EmailStatusSubscriber extends AbstractListStatusSubscriber
 {
-    // the badge's own style (the pill, its width, hidden until placed) is SegmentStatusSubscriber::STYLE, on every page
+    // the badge's own style (the pill, its width, hidden until placed) is AbstractListStatusSubscriber::BADGE_STYLE and SegmentStatusSubscriber::STYLE, on every page
     public const STYLE = 'table.email-list i[class*="email-publish-icon"]{display:none!important}'
         .'a[data-email-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-email-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-email-status-action="activate"]:hover{background-color:var(--support-success)!important}'
         .'a[data-email-status-action]:hover *{color:inherit!important}';
 
-    public function __construct(
-        private TranslatorInterface $translator,
-        private CorePermissions $security
-    ) {
+    protected function key(): string
+    {
+        return 'email';
     }
 
-    public static function getSubscribedEvents(): array
+    protected function installFunction(): string
     {
-        return [
-            CoreEvents::VIEW_INJECT_CUSTOM_CONTENT => 'injectViewCustomContent',
-            CoreEvents::VIEW_INJECT_CUSTOM_BUTTONS => ['injectViewButtons', 0],
-        ];
+        return 'installEmail';
     }
 
-    public function injectViewCustomContent(CustomContentEvent $customContentEvent): void
+    protected function style(): string
     {
-        if ('page.header.left' !== $customContentEvent->getContext()) {
-            return;
-        }
-
-        $customContentEvent->addContent(StatusScript::html($this->translator, self::STYLE, 'installEmail'));
+        return self::STYLE;
     }
 
-    public function injectViewButtons(CustomButtonEvent $event): void
+    protected function route(): string
     {
-        $email = $event->getItem();
+        return 'mautic_email_index';
+    }
 
-        if (!$email instanceof Email
-            || ButtonHelper::LOCATION_LIST_ACTIONS !== $event->getLocation()
-            || 'mautic_email_index' !== $event->getRoute()
-            || !$this->security->hasEntityAccess('email:emails:editown', 'email:emails:editother', $email->getCreatedBy())) {
-            return;
-        }
+    protected function supports(mixed $item): bool
+    {
+        return $item instanceof Email;
+    }
 
-        $published = $email->isPublished();
-        $event->addButton(
-            [
-                'attr' => [
-                    // not 'ajax': core would add that and navigate; the script clicks core's icon
-                    'data-toggle'              => 'email-status',
-                    'data-email-id'            => $email->getId(),
-                    'data-email-status-action' => $published ? 'deactivate' : 'activate',
-                    'href'                     => 'javascript:void(0);',
-                ],
-                'btnText'   => $this->translator->trans($published ? 'mautic.patches.segment.deactivate' : 'mautic.patches.segment.activate'),
-                'iconClass' => $published ? 'ri-close-circle-line' : 'ri-checkbox-circle-line',
-                'priority'  => 300, // first in the row menu: above Edit and, far below, Delete
-            ],
-            ButtonHelper::LOCATION_LIST_ACTIONS
-        );
+    protected function mayEdit(object $item): bool
+    {
+        return $this->security->hasEntityAccess('email:emails:editown', 'email:emails:editother', $item->getCreatedBy());
     }
 }
