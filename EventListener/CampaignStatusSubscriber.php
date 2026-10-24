@@ -5,14 +5,6 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\EventListener;
 
 use Mautic\CampaignBundle\Entity\Campaign;
-use Mautic\CoreBundle\CoreEvents;
-use Mautic\CoreBundle\Event\CustomButtonEvent;
-use Mautic\CoreBundle\Event\CustomContentEvent;
-use Mautic\CoreBundle\Security\Permissions\CorePermissions;
-use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
-use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * The same as SegmentStatusSubscriber, for the campaign list: the active / inactive toggle next to the name (an icon that is easy to hit
@@ -22,85 +14,52 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  *    leads to; only for who may edit the campaign.
  * Core's flow is kept: the menu item clicks core's icon (hidden), so deactivating asks for the confirmation of core
  * (Mautic.confirmationCampaignPublishStatus) and activating does not. The label follows core's icon. See
- * Resources/js/segment-status-toggle.js (installCampaign).
+ * Resources/js/list-status-toggle.js (installCampaign).
  *
  * The label goes in the 'campaign.name' hook, which core prints INSIDE the name link: the script moves it out, to the start of the
  * block. Injected like SegmentStatusSubscriber.
  */
-class CampaignStatusSubscriber implements EventSubscriberInterface
+class CampaignStatusSubscriber extends AbstractListStatusSubscriber
 {
-    // the badge's own style (the pill, its width, hidden until placed) is SegmentStatusSubscriber::STYLE, on every page
+    // the badge's own style (the pill, its width, hidden until placed) is AbstractListStatusSubscriber::BADGE_STYLE and SegmentStatusSubscriber::STYLE, on every page
     public const STYLE = 'tr i[class*="campaign-publish-icon"]{display:none!important}'
         .'a[data-campaign-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-campaign-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-campaign-status-action="activate"]:hover{background-color:var(--support-success)!important}'
         .'a[data-campaign-status-action]:hover *{color:inherit!important}';
 
-    public function __construct(
-        private TranslatorInterface $translator,
-        private CorePermissions $security
-    ) {
+    protected function key(): string
+    {
+        return 'campaign';
     }
 
-    public static function getSubscribedEvents(): array
+    protected function installFunction(): string
     {
-        return [
-            CoreEvents::VIEW_INJECT_CUSTOM_CONTENT => 'injectViewCustomContent',
-            CoreEvents::VIEW_INJECT_CUSTOM_BUTTONS => ['injectViewButtons', 0],
-        ];
+        return 'installCampaign';
     }
 
-    public function injectViewCustomContent(CustomContentEvent $customContentEvent): void
+    protected function style(): string
     {
-        $context = $customContentEvent->getContext();
-
-        if ('page.header.left' === $context) {
-            $customContentEvent->addContent(StatusScript::html($this->translator, self::STYLE, 'installCampaign'));
-
-            return;
-        }
-
-        $campaign = $customContentEvent->getVars()['item'] ?? null;
-        if ('campaign.name' !== $context || !$campaign instanceof Campaign) {
-            return;
-        }
-
-        $published = $campaign->isPublished();
-        $customContentEvent->addContent(sprintf(
-            '<span class="patches-badge %s segment-status-label" data-campaign-id="%d" data-status="%s">%s</span>',
-            $published ? 'patches-badge--production' : 'patches-badge--failed',
-            $campaign->getId(),
-            $published ? 'published' : 'unpublished',
-            htmlspecialchars($this->translator->trans($published ? 'mautic.core.form.active' : 'mautic.core.form.inactive'), ENT_QUOTES)
-        ));
+        return self::STYLE;
     }
 
-    public function injectViewButtons(CustomButtonEvent $event): void
+    protected function route(): string
     {
-        $campaign = $event->getItem();
+        return 'mautic_campaign_index';
+    }
 
-        if (!$campaign instanceof Campaign
-            || ButtonHelper::LOCATION_LIST_ACTIONS !== $event->getLocation()
-            || 'mautic_campaign_index' !== $event->getRoute()
-            || !$this->security->hasEntityAccess('campaign:campaigns:editown', 'campaign:campaigns:editother', $campaign->getCreatedBy())) {
-            return;
-        }
+    protected function supports(mixed $item): bool
+    {
+        return $item instanceof Campaign;
+    }
 
-        $published = $campaign->isPublished();
-        $event->addButton(
-            [
-                'attr' => [
-                    // not 'ajax': core would add that and navigate; the script clicks core's icon
-                    'data-toggle'                 => 'campaign-status',
-                    'data-campaign-id'            => $campaign->getId(),
-                    'data-campaign-status-action' => $published ? 'deactivate' : 'activate',
-                    'href'                        => 'javascript:void(0);',
-                ],
-                'btnText'   => $this->translator->trans($published ? 'mautic.patches.segment.deactivate' : 'mautic.patches.segment.activate'),
-                'iconClass' => $published ? 'ri-close-circle-line' : 'ri-checkbox-circle-line',
-                'priority'  => 300, // first in the row menu: above Edit and, far below, Delete
-            ],
-            ButtonHelper::LOCATION_LIST_ACTIONS
-        );
+    protected function mayEdit(object $item): bool
+    {
+        return $this->security->hasEntityAccess('campaign:campaigns:editown', 'campaign:campaigns:editother', $item->getCreatedBy());
+    }
+
+    protected function nameContext(): ?string
+    {
+        return 'campaign.name';
     }
 }

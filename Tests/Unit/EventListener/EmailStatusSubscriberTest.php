@@ -57,7 +57,7 @@ class EmailStatusSubscriberTest extends TestCase
     {
         $event = new CustomContentEvent('some_view', 'page.header.left');
         $this->subscriber()->injectViewCustomContent($event);
-        $this->assertStringContainsString('mauticPatchesSegmentStatusApi.installEmail(mQuery,Mautic,', implode('', $event->getContent()));
+        $this->assertStringContainsString('mauticPatchesListStatusApi.installEmail(mQuery,Mautic,', implode('', $event->getContent()));
 
         $other = new CustomContentEvent('some_view', 'email.name');
         $this->subscriber()->injectViewCustomContent($other);
