@@ -84,4 +84,52 @@ class SegmentFilterValuesTest extends TestCase
         $this->expectException(\OutOfBoundsException::class);
         $this->values->find('lead', 'a`; DROP TABLE leads;--', '');
     }
+
+    public function testAnAliasWithTextAroundAValidOneIsRefused(): void
+    {
+        $this->connection->expects($this->never())->method('fetchOne');
+
+        foreach (['!email', 'email!', "email\n!"] as $alias) {
+            try {
+                $this->values->find('lead', $alias, '');
+                $this->fail($alias);
+            } catch (\OutOfBoundsException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+    }
+
+    public function testTheFieldIsLookedUpByObjectAndAlias(): void
+    {
+        $this->connection->expects($this->once())->method('fetchOne')
+            ->with($this->stringContains('FROM lead_fields WHERE object = :object AND alias = :alias AND is_published = 1'), ['object' => 'company', 'alias' => 'companyname'])
+            ->willReturn('text');
+        $this->connection->method('fetchFirstColumn')->willReturn([]);
+
+        $this->values->find('company', 'companyname', '');
+    }
+
+    public function testTheLimitIsAtLeastOneAndTheValuesAreStrings(): void
+    {
+        $this->connection->method('fetchOne')->willReturn('text');
+        $this->connection->expects($this->exactly(2))->method('fetchFirstColumn')
+            ->willReturnCallback(function (string $sql): array {
+                $this->assertMatchesRegularExpression('/LIMIT 1$/', $sql);
+
+                return [5, 'a'];
+            });
+
+        $this->assertSame(['5', 'a'], $this->values->find('lead', 'email', '', 0));
+        $this->assertSame(['5', 'a'], $this->values->find('lead', 'email', '', -3));
+    }
+
+    public function testTheQueryIsBuiltOnTheRightTableInTheRightOrder(): void
+    {
+        $this->connection->method('fetchOne')->willReturn('text');
+        $this->connection->expects($this->once())->method('fetchFirstColumn')
+            ->with("SELECT DISTINCT `email` FROM leads WHERE `email` LIKE :search AND `email` <> '' ORDER BY `email` LIMIT 20", $this->anything())
+            ->willReturn([]);
+
+        $this->values->find('lead', 'email', '');
+    }
 }

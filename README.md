@@ -131,6 +131,14 @@ Requires `phpunit/phpunit` as a dev dependency on the image — see
 [wiki/docker-mautic5.md](../wiki/docker-mautic5.md) ("PHPUnit / automated
 tests") for how that's set up in this project's Docker stack.
 
+Mutation testing (Infection, with PCOV for the coverage), from the plugin folder inside the web container:
+
+```bash
+infection --threads=8 --no-progress --initial-tests-php-options='-d pcov.enabled=1' --min-msi=0 [--filter=File.php]
+```
+
+`infection.json5` reads `Service/` and `EventListener/`. Most escaped mutants are CSS / JS / HTML inside strings, which the browser specs check, so read the list of escaped mutants and not only the MSI. See [wiki/tests.md](../wiki/tests.md).
+
 ### JavaScript tests (Node, no extra dependencies)
 
 The scripts these subscribers put on the page are also run for real, against a small

@@ -107,9 +107,88 @@ class RelativeWaitDateResolverTest extends TestCase
 
     public function testAFieldThatIsNotADateHasNoDate(): void
     {
-        $resolver = $this->resolver(['FROM lead_fields' => 'text', 'FROM leads' => 'abc']);
+        $queries  = [];
+        $resolver = $this->resolver(['FROM lead_fields' => 'text', 'FROM leads' => '2026-03-01 10:00:00'], $queries);
 
         $this->assertNull($resolver->resolve(7, $this->config(['dateField' => 'contact:firstname'])));
+        $this->assertCount(0, array_filter($queries, static fn (array $q): bool => str_contains($q[0], 'FROM leads')), 'the value is not even read');
+    }
+
+    public function testACustomFieldThatIsNotJustDigitsIsNotLookedUp(): void
+    {
+        foreach (['a33', '33a'] as $id) {
+            $queries = [];
+            $date    = $this->resolver(['FROM custom_field' => 'date'], $queries)->resolve(7, $this->config(['dateField' => 'custom_object:'.$id]));
+
+            $this->assertNull($date);
+            $this->assertSame([], $queries, $id);
+        }
+    }
+
+    public function testAZeroOrEmptyDateIsNoDate(): void
+    {
+        foreach (['0000-00-00 00:00:00', ''] as $value) {
+            $resolver = $this->resolver(['FROM lead_fields' => 'datetime', 'FROM leads' => $value]);
+
+            $this->assertNull($resolver->resolve(7, $this->config()), var_export($value, true));
+        }
+    }
+
+    public function testADateFieldKeepsOnlyTheDayOfWhatIsStored(): void
+    {
+        $resolver = $this->resolver(['FROM lead_fields' => 'date', 'FROM leads' => '2026-03-01 23:00:00']);
+        $date     = $resolver->resolve(7, $this->config(['amount' => 0]));
+
+        $this->assertSame('2026-03-01 00:00:00', $date->setTimezone(new \DateTimeZone(self::ZONE))->format('Y-m-d H:i:s'));
+    }
+
+    public function testAFractionalAmountBelowOneIsZeroAndAboveOneIsTruncated(): void
+    {
+        $resolver = $this->resolver(['FROM lead_fields' => 'datetime', 'FROM leads' => '2026-03-01 10:00:00']);
+
+        $this->assertSame('2026-03-01 10:00:00', $this->utc($resolver->resolve(7, $this->config(['amount' => '-0.5']))));
+        $this->assertSame('2026-03-02 10:00:00', $this->utc($resolver->resolve(7, $this->config(['amount' => '1.9']))));
+    }
+
+    public function testTheQueriesOfAContactFieldCarryTheAliasAndTheContact(): void
+    {
+        $queries  = [];
+        $resolver = $this->resolver(['FROM lead_fields' => 'datetime', 'FROM leads' => '2026-03-01 10:00:00'], $queries);
+        $resolver->resolve(7, $this->config());
+
+        $this->assertSame(['object' => 'lead', 'alias' => 'attribution_date'], $queries[0][1]);
+        $this->assertStringContainsString('`attribution_date`', $queries[1][0]);
+        $this->assertSame(['id' => 7], $queries[1][1]);
+    }
+
+    public function testEachFieldHasItsOwnCachedType(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchOne')->willReturnCallback(static function (string $sql, array $params = []) {
+            if (str_contains($sql, 'FROM lead_fields')) {
+                return 'birth' === $params['alias'] ? 'datetime' : 'text';
+            }
+            if (str_contains($sql, 'FROM custom_field')) {
+                return 'text';
+            }
+
+            return '2026-03-01 10:00:00';
+        });
+        $connection->method('fetchAssociative')->willReturn(['value' => '2026-03-01 10:00:00']);
+        $resolver = new RelativeWaitDateResolver($connection, self::ZONE);
+
+        $this->assertNotNull($resolver->resolve(7, $this->config(['dateField' => 'contact:birth'])));
+        $this->assertNull($resolver->resolve(7, $this->config(['dateField' => 'contact:other'])), 'another alias is not answered with the cached type of birth');
+        $this->assertNull($resolver->resolve(7, $this->config(['dateField' => 'custom_object:5'])));
+        $this->assertNull($resolver->resolve(7, $this->config(['dateField' => 'custom_object:6'])));
+    }
+
+    public function testTheTypeQueryOfACustomFieldCarriesItsId(): void
+    {
+        $queries = [];
+        $this->resolver(['FROM custom_field' => 'date'], $queries)->resolve(7, $this->config(['dateField' => 'custom_object:33']));
+
+        $this->assertSame(['id' => 33], $queries[0][1]);
     }
 
     /**
@@ -120,6 +199,10 @@ class RelativeWaitDateResolverTest extends TestCase
         return [
             'no field'            => [['dateField' => '']],
             'unknown source'      => [['dateField' => 'company:founded']],
+            'text before source'  => [['dateField' => 'zzcontact:attribution_date']],
+            'text after alias'    => [['dateField' => 'contact:attribution_date!']],
+            'text before id'      => [['dateField' => 'custom_object:a33']],
+            'text after id'       => [['dateField' => 'custom_object:33a']],
             'alias with an SQL'   => [['dateField' => 'contact:a`; DROP TABLE leads; --']],
             'custom field not id' => [['dateField' => 'custom_object:abc']],
             'unknown unit'        => [['unit' => 'x']],
