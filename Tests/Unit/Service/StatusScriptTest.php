@@ -12,7 +12,7 @@ class StatusScriptTest extends TestCase
 {
     private function html(string $install = 'installUser'): string
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnArgument(0);
 
         return StatusScript::html($translator, 'a{b:c}', $install);

@@ -10,8 +10,10 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\Doctrine\SegmentRepositoryListener;
 use MauticPlugin\MauticPatchesBundle\Entity\SegmentListRepository;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 
+#[AllowMockObjectsWithoutExpectations]
 class SegmentRepositoryListenerTest extends TestCase
 {
     public function testTheSegmentGetsTheRepositoryThatSortsByPrefix(): void

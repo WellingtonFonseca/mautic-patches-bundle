@@ -28,7 +28,7 @@ class CampaignPreviewSourceSubscriberTest extends TestCase
             $campaign->addList($segment);
         }
 
-        $store = $this->createMock(SegmentPrefixStore::class);
+        $store = $this->createStub(SegmentPrefixStore::class);
         $store->method('all')->willReturn($prefixes);
 
         $event = new CustomContentEvent('some_view', $context, $withCampaign ? ['campaign' => $campaign] : []);

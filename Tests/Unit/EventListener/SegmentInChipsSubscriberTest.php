@@ -7,10 +7,12 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentInChipsSubscriber;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\RouterInterface;
 
+#[AllowMockObjectsWithoutExpectations]
 class SegmentInChipsSubscriberTest extends TestCase
 {
     private function content(RouterInterface $router, string $context = 'page.header.left'): string
@@ -23,7 +25,7 @@ class SegmentInChipsSubscriberTest extends TestCase
 
     public function testTheScriptCarriesTheComponentAndBothRoutes(): void
     {
-        $router = $this->createMock(RouterInterface::class);
+        $router = $this->createStub(RouterInterface::class);
         $router->method('generate')->willReturnMap([
             ['mautic_patches_segment_filter_values', [], RouterInterface::ABSOLUTE_PATH, '/s/segment-filter-values'],
             ['mautic_custom_segment_filter_values', [], RouterInterface::ABSOLUTE_PATH, '/s/custom/segment-filter-values.json'],
@@ -39,7 +41,7 @@ class SegmentInChipsSubscriberTest extends TestCase
 
     public function testWithoutTheCustomObjectsPluginThereIsNoCustomUrl(): void
     {
-        $router = $this->createMock(RouterInterface::class);
+        $router = $this->createStub(RouterInterface::class);
         $router->method('generate')->willReturnCallback(static function (string $name) {
             if ('mautic_custom_segment_filter_values' === $name) {
                 throw new RouteNotFoundException();

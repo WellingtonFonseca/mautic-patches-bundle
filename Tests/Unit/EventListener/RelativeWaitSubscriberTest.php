@@ -16,7 +16,7 @@ class RelativeWaitSubscriberTest extends TestCase
 {
     private function executionEvent(string $type): CampaignExecutionEvent
     {
-        $lead = $this->createMock(Lead::class);
+        $lead = $this->createStub(Lead::class);
         $lead->method('getId')->willReturn(1);
 
         return new CampaignExecutionEvent(
@@ -27,7 +27,7 @@ class RelativeWaitSubscriberTest extends TestCase
 
     public function testTheWaitIsAnActionOfTheCampaignBuilderWithItsOwnForm(): void
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnArgument(0);
         $event = new CampaignBuilderEvent($translator);
         (new RelativeWaitSubscriber())->onCampaignBuild($event);

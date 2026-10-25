@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 
+use PHPUnit\Framework\MockObject\Stub;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomButtonEvent;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentListButtonSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuilder;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -17,6 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[AllowMockObjectsWithoutExpectations]
 class SegmentListButtonSubscriberTest extends TestCase
 {
     private SegmentRebuilder&MockObject $rebuilder;
@@ -25,11 +28,11 @@ class SegmentListButtonSubscriberTest extends TestCase
 
     protected function setUp(): void
     {
-        $router = $this->createMock(RouterInterface::class);
+        $router = $this->createStub(RouterInterface::class);
         $router->method('generate')->willReturnCallback(
             fn (string $route, array $p) => "/s/{$route}/{$p['id']}".(isset($p['return']) ? "?return={$p['return']}" : '')
         );
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(fn (string $key) => "[{$key}]");
 
         $this->rebuilder  = $this->createMock(SegmentRebuilder::class);
@@ -47,9 +50,9 @@ class SegmentListButtonSubscriberTest extends TestCase
         return new CustomButtonEvent($location, $request, [], $item);
     }
 
-    private function segment(): LeadList&MockObject
+    private function segment(): LeadList&Stub
     {
-        $segment = $this->createMock(LeadList::class);
+        $segment = $this->createStub(LeadList::class);
         $segment->method('getId')->willReturn(7);
 
         return $segment;

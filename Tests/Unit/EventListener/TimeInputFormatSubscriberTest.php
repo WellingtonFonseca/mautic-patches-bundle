@@ -15,12 +15,12 @@ class TimeInputFormatSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left', ?array $english = null, ?array $local = null): string
     {
-        $relativeDate = $this->createMock(RelativeDate::class);
+        $relativeDate = $this->createStub(RelativeDate::class);
         $relativeDate->method('getRelativeDateStrings')->willReturn($local ?? ['mautic.lead.list.today' => 'hoje', 'mautic.lead.list.yesterday' => 'ontém', 'mautic.lead.list.week_this' => 'esta semana']);
 
         // the same keys in English, as the translator gives them for en_US
         $english    = $english ?? ['mautic.lead.list.today' => 'today', 'mautic.lead.list.yesterday' => 'yesterday', 'mautic.lead.list.week_this' => 'this week'];
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(fn (string $key, array $parameters = [], ?string $domain = null, ?string $locale = null) => 'en_US' === $locale ? ($english[$key] ?? $key) : $key);
 
         $event = new CustomContentEvent('some_view', $context);

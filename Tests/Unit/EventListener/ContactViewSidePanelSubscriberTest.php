@@ -14,7 +14,7 @@ class ContactViewSidePanelSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left'): string
     {
-        $translator = $this->createMock(Translator::class);
+        $translator = $this->createStub(Translator::class);
         $translator->method('trans')->willReturnCallback(fn (string $key): string => 'T:'.$key);
 
         $event = new CustomContentEvent('some_view', $context);

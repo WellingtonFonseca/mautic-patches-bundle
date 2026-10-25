@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
+use PHPUnit\Framework\MockObject\Stub;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Model\ListModel;
 use MauticPlugin\MauticPatchesBundle\DTO\SegmentRebuildResult;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuilder;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuildLauncher;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+#[AllowMockObjectsWithoutExpectations]
 class SegmentRebuilderTest extends TestCase
 {
     private ListModel&MockObject $listModel;
@@ -31,9 +34,9 @@ class SegmentRebuilderTest extends TestCase
         $this->rebuilder = new SegmentRebuilder($this->listModel, $this->security, $this->launcher);
     }
 
-    private function segment(bool $published = true): LeadList&MockObject
+    private function segment(bool $published = true): LeadList&Stub
     {
-        $segment = $this->createMock(LeadList::class);
+        $segment = $this->createStub(LeadList::class);
         $segment->method('getId')->willReturn(7);
         $segment->method('getName')->willReturn('Em andamento');
         $segment->method('isPublished')->willReturn($published);

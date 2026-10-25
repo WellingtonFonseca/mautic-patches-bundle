@@ -23,7 +23,7 @@ class CampaignPrefixModelTest extends TestCase
      */
     private function sources(?string $type, array $parentResult): array
     {
-        $store = $this->createMock(SegmentPrefixStore::class);
+        $store = $this->createStub(SegmentPrefixStore::class);
         $store->method('all')->willReturn([5 => 'Compras']);
 
         return CampaignPrefixModel::prefixSources($type, $parentResult, $store);

@@ -11,10 +11,12 @@ use Mautic\CampaignBundle\Entity\Event;
 use MauticPlugin\MauticPatchesBundle\Command\RelativeWaitRecalculateCommand;
 use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitRecalculator;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
+#[AllowMockObjectsWithoutExpectations]
 class RelativeWaitRecalculateCommandTest extends TestCase
 {
     /** @var RelativeWaitRecalculator&MockObject */
@@ -37,7 +39,7 @@ class RelativeWaitRecalculateCommandTest extends TestCase
 
     private function tester(?Event $event): CommandTester
     {
-        $repository = $this->createMock(EntityRepository::class);
+        $repository = $this->createStub(EntityRepository::class);
         $repository->method('find')->willReturn($event);
         $manager = $this->createMock(EntityManagerInterface::class);
         $manager->method('getRepository')->with(Event::class)->willReturn($repository);
@@ -47,7 +49,7 @@ class RelativeWaitRecalculateCommandTest extends TestCase
 
     private function waitEvent(string $type = RelativeWaitSubscriber::TYPE): Event
     {
-        $event = $this->createMock(Event::class);
+        $event = $this->createStub(Event::class);
         $event->method('getType')->willReturn($type);
         $event->method('getCampaign')->willReturn($this->createMock(Campaign::class));
 

@@ -13,9 +13,9 @@ class RelativeWaitFieldCatalogTest extends TestCase
 {
     private function catalog(array $contactFields, array $objectFields): RelativeWaitFieldCatalog
     {
-        $connection = $this->createMock(Connection::class);
+        $connection = $this->createStub(Connection::class);
         $connection->method('fetchAllAssociative')->willReturnCallback(static fn (string $sql): array => str_contains($sql, 'lead_fields') ? $contactFields : $objectFields);
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturn('Contato');
 
         return new RelativeWaitFieldCatalog($connection, $translator);
@@ -44,7 +44,7 @@ class RelativeWaitFieldCatalogTest extends TestCase
 
     public function testWithoutTheCustomObjectsPluginOnlyTheContactFieldsAreOffered(): void
     {
-        $connection = $this->createMock(Connection::class);
+        $connection = $this->createStub(Connection::class);
         $connection->method('fetchAllAssociative')->willReturnCallback(static function (string $sql): array {
             if (str_contains($sql, 'custom_field')) {
                 throw new \RuntimeException('no such table');
@@ -52,7 +52,7 @@ class RelativeWaitFieldCatalogTest extends TestCase
 
             return [['alias' => 'attribution_date', 'label' => 'Attribution date']];
         });
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturn('Contato');
 
         $this->assertSame(['Contato' => ['Attribution date' => 'contact:attribution_date']], (new RelativeWaitFieldCatalog($connection, $translator))->choices());

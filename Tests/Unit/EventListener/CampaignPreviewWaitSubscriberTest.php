@@ -18,7 +18,7 @@ class CampaignPreviewWaitSubscriberTest extends TestCase
     private function subscriber(): CampaignPreviewWaitSubscriber
     {
         // Echoes key and arguments, so the test sees exactly what core's keys and arguments are.
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(
             static fn (string $key, array $params = []): string => $key.($params ? ' '.json_encode($params) : '')
         );

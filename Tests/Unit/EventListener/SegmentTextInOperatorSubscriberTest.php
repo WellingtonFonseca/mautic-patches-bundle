@@ -17,7 +17,7 @@ class SegmentTextInOperatorSubscriberTest extends TestCase
 
     private function choicesAfter(array $choices): array
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(static fn (string $key) => ['mautic.lead.list.form.operator.in' => 'including', 'mautic.lead.list.form.operator.notin' => 'excluding'][$key] ?? $key);
         $event = new LeadListFiltersChoicesEvent($choices, [], $translator);
         (new SegmentTextInOperatorSubscriber())->onGenerateSegmentFilters($event);

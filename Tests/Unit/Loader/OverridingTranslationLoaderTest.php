@@ -53,7 +53,7 @@ class OverridingTranslationLoaderTest extends TestCase
     public function testTheOverridesGoOverCoresCatalogue(): void
     {
         // core's loader is final on this version: its answer is made by a stand-in
-        $core = $this->createMock(LoaderInterface::class);
+        $core = $this->createStub(LoaderInterface::class);
         $core->method('load')->willReturn(new MessageCatalogue('pt_BR', ['messages' => ['mautic.core.close_back' => 'Voltar ao %alvo%', 'other' => 'Outro']]));
 
         $catalogue = (new OverridingTranslationLoader($core))->load('mautic', 'pt_BR', 'messages');

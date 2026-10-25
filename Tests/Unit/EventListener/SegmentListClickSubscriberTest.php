@@ -17,7 +17,7 @@ class SegmentListClickSubscriberTest extends TestCase
     {
         $router = $this->createMock(RouterInterface::class);
         $router->method('generate')->with('mautic_patches_segment_details', ['id' => 0])->willReturn('/s/segment-details/0');
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(fn (string $key) => "[{$key}]");
 
         $event = new CustomContentEvent('some_view', $context);

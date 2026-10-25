@@ -15,9 +15,9 @@ class SegmentFiltersTabSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left'): string
     {
-        $router = $this->createMock(RouterInterface::class);
+        $router = $this->createStub(RouterInterface::class);
         $router->method('generate')->willReturn('/s/segment-filters/0');
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturn('Filtros');
 
         $event = new CustomContentEvent('some_view', $context);

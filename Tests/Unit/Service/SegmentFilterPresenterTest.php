@@ -23,7 +23,7 @@ class SegmentFilterPresenterTest extends TestCase
 
     private function presenter(): SegmentFilterPresenter
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(fn (string $key): string => 'T('.$key.')');
 
         return new SegmentFilterPresenter($translator);

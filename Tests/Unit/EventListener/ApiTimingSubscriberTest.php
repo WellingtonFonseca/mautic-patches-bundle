@@ -8,6 +8,7 @@ use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use MauticPlugin\MauticPatchesBundle\EventListener\ApiTimingSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\Performance\PerformanceLog;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,6 +18,7 @@ use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 
+#[AllowMockObjectsWithoutExpectations]
 class ApiTimingSubscriberTest extends TestCase
 {
     public function testNormalizesNumericIds(): void
@@ -36,11 +38,11 @@ class ApiTimingSubscriberTest extends TestCase
     public function testAnApiRequestGetsTheServerTimingHeaderAndALogLine(): void
     {
         $config = new Configuration();
-        $conn   = $this->createMock(Connection::class);
+        $conn   = $this->createStub(Connection::class);
         $conn->method('getConfiguration')->willReturn($config);
         $dir    = sys_get_temp_dir().'/apitiming-'.uniqid();
         $sub    = new ApiTimingSubscriber($conn, new PerformanceLog($dir));
-        $kernel = $this->createMock(KernelInterface::class);
+        $kernel = $this->createStub(KernelInterface::class);
 
         $request = Request::create('/api/contacts/7');
         $request->attributes->set('_route', 'mautic_api_contacts_getone');
@@ -65,7 +67,7 @@ class ApiTimingSubscriberTest extends TestCase
     public function testNonApiRequestsAreLeftAlone(): void
     {
         $config = new Configuration();
-        $conn   = $this->createMock(Connection::class);
+        $conn   = $this->createStub(Connection::class);
         $conn->method('getConfiguration')->willReturn($config);
         $sub     = new ApiTimingSubscriber($conn, new PerformanceLog(sys_get_temp_dir().'/never'));
         $request = Request::create('/s/dashboard');
@@ -84,11 +86,11 @@ class ApiTimingSubscriberTest extends TestCase
      */
     private function runRequest(string $path, array $query = [], float $startedAgo = 0.0, string $body = '', int $status = 200): array
     {
-        $conn = $this->createMock(Connection::class);
+        $conn = $this->createStub(Connection::class);
         $conn->method('getConfiguration')->willReturn(new Configuration());
         $dir     = sys_get_temp_dir().'/apitiming-'.uniqid();
         $sub     = new ApiTimingSubscriber($conn, new PerformanceLog($dir));
-        $kernel  = $this->createMock(KernelInterface::class);
+        $kernel  = $this->createStub(KernelInterface::class);
         $request = Request::create($path, 'POST', $query);
         $request->server->set('REQUEST_TIME_FLOAT', microtime(true) - $startedAgo);
         $request->query->replace($query);
@@ -148,8 +150,8 @@ class ApiTimingSubscriberTest extends TestCase
 
     public function testASubRequestGetsNoHeaderAndNothingIsLoggedWithoutMeasure(): void
     {
-        $kernel   = $this->createMock(KernelInterface::class);
-        $conn     = $this->createMock(Connection::class);
+        $kernel   = $this->createStub(KernelInterface::class);
+        $conn     = $this->createStub(Connection::class);
         $conn->method('getConfiguration')->willReturn(new Configuration());
         $dir      = sys_get_temp_dir().'/apitiming-'.uniqid();
         $sub      = new ApiTimingSubscriber($conn, new PerformanceLog($dir));
@@ -168,7 +170,7 @@ class ApiTimingSubscriberTest extends TestCase
 
     public function testABrokenMeasureStateIsIgnored(): void
     {
-        $kernel   = $this->createMock(KernelInterface::class);
+        $kernel   = $this->createStub(KernelInterface::class);
         $sub      = new ApiTimingSubscriber($this->createMock(Connection::class), new PerformanceLog(sys_get_temp_dir().'/never'));
         $request  = Request::create('/api/contacts');
         $response = new Response();

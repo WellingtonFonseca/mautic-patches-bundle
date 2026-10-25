@@ -13,6 +13,7 @@ use MauticPlugin\CustomObjectsBundle\Exception\NotFoundException;
 use MauticPlugin\CustomObjectsBundle\Model\CustomObjectModel;
 use MauticPlugin\CustomObjectsBundle\Segment\SegmentItemResolver;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitItemSelector;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -20,6 +21,7 @@ use PHPUnit\Framework\TestCase;
  * The rules of the selection are the Custom Objects plugin's (SegmentItemResolver); this only finds the object of the field the
  * wait uses and asks it. Only a Custom Object field has items; a contact field never does.
  */
+#[AllowMockObjectsWithoutExpectations]
 class RelativeWaitItemSelectorTest extends TestCase
 {
     private function contact(): Lead
@@ -32,7 +34,7 @@ class RelativeWaitItemSelectorTest extends TestCase
 
     private function connection(mixed $objectId): Connection
     {
-        $connection = $this->createMock(Connection::class);
+        $connection = $this->createStub(Connection::class);
         $connection->method('fetchOne')->willReturn($objectId);
 
         return $connection;
@@ -50,7 +52,7 @@ class RelativeWaitItemSelectorTest extends TestCase
     public function testTheSegmentsOfTheCampaignSelectTheItemsOfTheObjectOfTheField(): void
     {
         $campaign = new Campaign();
-        $object   = $this->createMock(CustomObject::class);
+        $object   = $this->createStub(CustomObject::class);
         $model    = $this->createMock(CustomObjectModel::class);
         $model->expects($this->once())->method('fetchEntity')->with(3)->willReturn($object);
         $resolver = $this->createMock(SegmentItemResolver::class);
@@ -62,9 +64,9 @@ class RelativeWaitItemSelectorTest extends TestCase
 
     public function testNoSegmentConditionOnTheObjectLeavesTheChoiceOpen(): void
     {
-        $model = $this->createMock(CustomObjectModel::class);
+        $model = $this->createStub(CustomObjectModel::class);
         $model->method('fetchEntity')->willReturn($this->createMock(CustomObject::class));
-        $resolver = $this->createMock(SegmentItemResolver::class);
+        $resolver = $this->createStub(SegmentItemResolver::class);
         $resolver->method('resolveItemIds')->willReturn(null);
         $selector = new RelativeWaitItemSelector($this->connection('3'), $resolver, $model);
 
@@ -79,7 +81,7 @@ class RelativeWaitItemSelectorTest extends TestCase
         $this->assertNull((new RelativeWaitItemSelector($this->connection(false), $resolver, $this->createMock(CustomObjectModel::class)))
             ->itemIds($this->contact(), new Campaign(), ['dateField' => 'custom_object:999']));
 
-        $model = $this->createMock(CustomObjectModel::class);
+        $model = $this->createStub(CustomObjectModel::class);
         $model->method('fetchEntity')->willThrowException(new NotFoundException('gone'));
         $this->assertNull((new RelativeWaitItemSelector($this->connection('3'), $resolver, $model))
             ->itemIds($this->contact(), new Campaign(), ['dateField' => 'custom_object:33']));

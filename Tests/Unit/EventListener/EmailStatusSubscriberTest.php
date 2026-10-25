@@ -19,9 +19,9 @@ class EmailStatusSubscriberTest extends TestCase
 {
     private function subscriber(bool $canEdit = true): EmailStatusSubscriber
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnArgument(0);
-        $security = $this->createMock(CorePermissions::class);
+        $security = $this->createStub(CorePermissions::class);
         $security->method('hasEntityAccess')->willReturn($canEdit);
 
         return new EmailStatusSubscriber($translator, $security);
@@ -102,7 +102,7 @@ class EmailStatusSubscriberTest extends TestCase
 
     public function testThePermissionAskedIsTheEmailsEditOwnOrOther(): void
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnArgument(0);
         $security = $this->createMock(CorePermissions::class);
         $security->expects($this->once())->method('hasEntityAccess')->with('email:emails:editown', 'email:emails:editother', $this->anything())->willReturn(true);

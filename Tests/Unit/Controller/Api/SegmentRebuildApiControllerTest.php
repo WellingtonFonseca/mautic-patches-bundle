@@ -8,10 +8,12 @@ use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\Controller\Api\SegmentRebuildApiController;
 use MauticPlugin\MauticPatchesBundle\DTO\SegmentRebuildResult;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuilder;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+#[AllowMockObjectsWithoutExpectations]
 class SegmentRebuildApiControllerTest extends TestCase
 {
     private SegmentRebuilder&MockObject $rebuilder;
@@ -53,7 +55,7 @@ class SegmentRebuildApiControllerTest extends TestCase
 
     public function testDispatchedIs202WithTheSegment(): void
     {
-        $segment = $this->createMock(LeadList::class);
+        $segment = $this->createStub(LeadList::class);
         $segment->method('getId')->willReturn(7);
         $segment->method('getName')->willReturn('Em andamento');
         $this->rebuilder->method('request')->willReturn(new SegmentRebuildResult(SegmentRebuildResult::DISPATCHED, $segment));

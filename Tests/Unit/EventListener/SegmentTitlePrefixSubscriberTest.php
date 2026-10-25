@@ -24,7 +24,7 @@ class SegmentTitlePrefixSubscriberTest extends TestCase
 
     private function content(?string $prefix, array $vars, string $context = 'page.header.left'): string
     {
-        $store = $this->createMock(SegmentPrefixStore::class);
+        $store = $this->createStub(SegmentPrefixStore::class);
         $store->method('get')->willReturn($prefix);
         $event = new CustomContentEvent('some_view', $context, $vars);
         (new SegmentTitlePrefixSubscriber($store))->injectViewCustomContent($event);

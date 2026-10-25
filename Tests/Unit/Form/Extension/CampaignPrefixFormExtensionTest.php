@@ -31,13 +31,13 @@ class CampaignPrefixFormExtensionTest extends TestCase
      */
     private function form(Campaign $campaign, array $registered = ['Compras', 'Vendas'], ?string $stored = null): FormInterface
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(static fn (string $key, array $params = []) => $key.($params ? ' '.json_encode($params) : ''));
 
-        $prefixes = $this->createMock(CampaignPrefixes::class);
+        $prefixes = $this->createStub(CampaignPrefixes::class);
         $prefixes->method('all')->willReturn($registered);
 
-        $store = $this->createMock(CampaignPrefixStore::class);
+        $store = $this->createStub(CampaignPrefixStore::class);
         $store->method('get')->willReturn($stored);
         $store->method('remember')->willReturnCallback(function (Campaign $s, string $p): void {
             $this->remembered = [$s, $p];

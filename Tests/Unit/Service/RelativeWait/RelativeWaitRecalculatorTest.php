@@ -12,6 +12,7 @@ use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitDateResolver;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitItemSelector;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitRecalculator;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -20,6 +21,7 @@ use PHPUnit\Framework\TestCase;
  * gives its contact (the same resolver, selector and "past or missing is now" rule the scheduler uses). A plan only reads;
  * applying it is what writes the dates.
  */
+#[AllowMockObjectsWithoutExpectations]
 class RelativeWaitRecalculatorTest extends TestCase
 {
     private \DateTimeImmutable $now;
@@ -61,9 +63,9 @@ class RelativeWaitRecalculatorTest extends TestCase
 
     private function waitEvent(string $type = RelativeWaitSubscriber::TYPE): Event
     {
-        $campaign = $this->createMock(Campaign::class);
+        $campaign = $this->createStub(Campaign::class);
         $campaign->method('getId')->willReturn(3);
-        $event = $this->createMock(Event::class);
+        $event = $this->createStub(Event::class);
         $event->method('getId')->willReturn(42);
         $event->method('getType')->willReturn($type);
         $event->method('getCampaign')->willReturn($campaign);

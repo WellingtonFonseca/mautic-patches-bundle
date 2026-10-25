@@ -8,8 +8,10 @@ use Mautic\ConfigBundle\ConfigEvents;
 use Mautic\ConfigBundle\Event\ConfigBuilderEvent;
 use Mautic\CoreBundle\Helper\BundleHelper;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignPrefixConfigSubscriber;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 
+#[AllowMockObjectsWithoutExpectations]
 class CampaignPrefixConfigSubscriberTest extends TestCase
 {
     public function testRunsAfterCoreListener(): void

@@ -32,9 +32,9 @@ class CampaignPrefixColumnSubscriberTest extends TestCase
         }
         $stack->push($request);
 
-        $store = $this->createMock(CampaignPrefixStore::class);
+        $store = $this->createStub(CampaignPrefixStore::class);
         $store->method('get')->willReturn($prefix);
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(static fn (string $key, array $params = []) => 'T:'.$key);
 
         return new CampaignPrefixColumnSubscriber($store, $translator, $stack);

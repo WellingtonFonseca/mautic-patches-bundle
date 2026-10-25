@@ -12,8 +12,10 @@ use Doctrine\ORM\QueryBuilder;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\Entity\SegmentPrefixValue;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 
+#[AllowMockObjectsWithoutExpectations]
 class SegmentPrefixStoreTest extends TestCase
 {
     private function store(array $rows = [], ?Connection $connection = null): SegmentPrefixStore
@@ -21,7 +23,7 @@ class SegmentPrefixStoreTest extends TestCase
         $query = $this->getMockBuilder(Query::class)->disableOriginalConstructor()->onlyMethods(['getArrayResult'])->getMock();
         $query->method('getArrayResult')->willReturn($rows);
 
-        $metadata = $this->createMock(ClassMetadata::class);
+        $metadata = $this->createStub(ClassMetadata::class);
         $metadata->method('getTableName')->willReturn('mt_segment_prefix');
 
         $em = $this->createMock(EntityManagerInterface::class);

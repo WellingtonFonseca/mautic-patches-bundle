@@ -14,7 +14,7 @@ class EmailBuilderErrorModalSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left'): string
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(static fn (string $id): string => 'mautic.core.close' === $id ? 'Fechar' : $id);
 
         $event = new CustomContentEvent('some_view', $context);

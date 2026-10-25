@@ -10,8 +10,10 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Mautic\CampaignBundle\Entity\Campaign;
 use MauticPlugin\MauticPatchesBundle\Doctrine\CampaignRepositoryListener;
 use MauticPlugin\MauticPatchesBundle\Entity\CampaignPrefixRepository;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 
+#[AllowMockObjectsWithoutExpectations]
 class CampaignRepositoryListenerTest extends TestCase
 {
     public function testTheCampaignGetsTheRepositoryThatSortsByPrefix(): void

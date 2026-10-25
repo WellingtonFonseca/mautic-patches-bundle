@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
+use PHPUnit\Framework\MockObject\Stub;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Model\CampaignModel;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use MauticPlugin\MauticPatchesBundle\DTO\CampaignRebuildResult;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignRebuilder;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignRebuildLauncher;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+#[AllowMockObjectsWithoutExpectations]
 class CampaignRebuilderTest extends TestCase
 {
     private CampaignModel&MockObject $campaignModel;
@@ -31,9 +34,9 @@ class CampaignRebuilderTest extends TestCase
         $this->rebuilder     = new CampaignRebuilder($this->campaignModel, $this->security, $this->launcher);
     }
 
-    private function campaign(bool $published = true): Campaign&MockObject
+    private function campaign(bool $published = true): Campaign&Stub
     {
-        $campaign = $this->createMock(Campaign::class);
+        $campaign = $this->createStub(Campaign::class);
         $campaign->method('getId')->willReturn(7);
         $campaign->method('getName')->willReturn('Boas-vindas');
         $campaign->method('isPublished')->willReturn($published);

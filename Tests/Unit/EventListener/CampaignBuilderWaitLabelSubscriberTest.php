@@ -22,7 +22,7 @@ class CampaignBuilderWaitLabelSubscriberTest extends TestCase
 
     public function testTurnsTheInactionTextBackToTheWaitTextAfterAConditionOnly(): void
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(static fn (string $key): string => $key);
         $rewrites = (new CampaignBuilderWaitLabelSubscriber($translator))->rewrites();
 

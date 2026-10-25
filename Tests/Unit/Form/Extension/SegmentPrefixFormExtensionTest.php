@@ -31,13 +31,13 @@ class SegmentPrefixFormExtensionTest extends TestCase
      */
     private function form(LeadList $segment, array $registered = ['Compras', 'Vendas'], ?string $stored = null): FormInterface
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(static fn (string $key, array $params = []) => $key.($params ? ' '.json_encode($params) : ''));
 
-        $prefixes = $this->createMock(SegmentPrefixes::class);
+        $prefixes = $this->createStub(SegmentPrefixes::class);
         $prefixes->method('all')->willReturn($registered);
 
-        $store = $this->createMock(SegmentPrefixStore::class);
+        $store = $this->createStub(SegmentPrefixStore::class);
         $store->method('get')->willReturn($stored);
         $store->method('remember')->willReturnCallback(function (LeadList $s, string $p): void {
             $this->remembered = [$s, $p];

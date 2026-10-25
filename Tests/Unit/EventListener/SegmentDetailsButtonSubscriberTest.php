@@ -21,9 +21,9 @@ class SegmentDetailsButtonSubscriberTest extends TestCase
 
     protected function setUp(): void
     {
-        $router = $this->createMock(RouterInterface::class);
+        $router = $this->createStub(RouterInterface::class);
         $router->method('generate')->willReturnCallback(fn (string $route, array $p) => "/s/segments/{$p['objectAction']}/{$p['objectId']}");
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(fn (string $key) => "[{$key}]");
 
         $this->subscriber = new SegmentDetailsButtonSubscriber($router, $translator);
@@ -39,7 +39,7 @@ class SegmentDetailsButtonSubscriberTest extends TestCase
 
     private function segment(): LeadList
     {
-        $segment = $this->createMock(LeadList::class);
+        $segment = $this->createStub(LeadList::class);
         $segment->method('getId')->willReturn(7);
 
         return $segment;

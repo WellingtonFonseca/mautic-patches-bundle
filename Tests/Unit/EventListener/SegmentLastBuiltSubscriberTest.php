@@ -16,7 +16,7 @@ class SegmentLastBuiltSubscriberTest extends TestCase
 {
     private function subscriber(string $locale = 'pt_BR'): SegmentLastBuiltSubscriber
     {
-        $translator = $this->createMock(Translator::class);
+        $translator = $this->createStub(Translator::class);
         $translator->method('getLocale')->willReturn($locale);
 
         return new SegmentLastBuiltSubscriber($translator, new LocalizedDateFormatter());

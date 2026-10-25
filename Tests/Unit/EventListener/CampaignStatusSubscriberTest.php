@@ -19,9 +19,9 @@ class CampaignStatusSubscriberTest extends TestCase
 {
     private function subscriber(bool $canEdit = true): CampaignStatusSubscriber
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnArgument(0);
-        $security = $this->createMock(CorePermissions::class);
+        $security = $this->createStub(CorePermissions::class);
         $security->method('hasEntityAccess')->willReturn($canEdit);
 
         return new CampaignStatusSubscriber($translator, $security);
@@ -117,7 +117,7 @@ class CampaignStatusSubscriberTest extends TestCase
 
     public function testThePermissionAskedIsTheCampaignsEditOwnOrOther(): void
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnArgument(0);
         $security = $this->createMock(CorePermissions::class);
         $security->expects($this->once())->method('hasEntityAccess')->with('campaign:campaigns:editown', 'campaign:campaigns:editother', $this->anything())->willReturn(true);

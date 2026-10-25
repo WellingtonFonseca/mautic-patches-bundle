@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Controller;
 
+use PHPUnit\Framework\MockObject\Stub;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Entity\Event;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
@@ -11,6 +12,7 @@ use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventAccessTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignWaitRecalculateController;
 use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitRecalculator;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,13 +23,14 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  * what would change) and the application (writes). The simulation needs the campaign's view permission like the modal itself;
  * applying needs its edit permission, and only a Wait node can be recalculated.
  */
+#[AllowMockObjectsWithoutExpectations]
 class CampaignWaitRecalculateControllerTest extends TestCase
 {
     /** @var RelativeWaitRecalculator&MockObject */
     private MockObject $recalculator;
 
     /** @var CorePermissions&MockObject */
-    private MockObject $security;
+    private Stub $security;
 
     private ?Event $event;
 
@@ -39,7 +42,7 @@ class CampaignWaitRecalculateControllerTest extends TestCase
     protected function setUp(): void
     {
         $this->recalculator = $this->createMock(RelativeWaitRecalculator::class);
-        $this->security     = $this->createMock(CorePermissions::class);
+        $this->security     = $this->createStub(CorePermissions::class);
         $this->security->method('hasEntityAccess')->willReturnCallback(fn (string $own): bool => $this->granted[$own] ?? false);
         $this->event = $this->waitEvent();
     }

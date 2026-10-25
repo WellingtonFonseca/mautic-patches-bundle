@@ -20,9 +20,9 @@ class SegmentStatusSubscriberTest extends TestCase
 {
     private function subscriber(bool $canEdit = true): SegmentStatusSubscriber
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnArgument(0);
-        $security = $this->createMock(CorePermissions::class);
+        $security = $this->createStub(CorePermissions::class);
         $security->method('hasEntityAccess')->willReturn($canEdit);
 
         return new SegmentStatusSubscriber($translator, $security);
@@ -137,7 +137,7 @@ class SegmentStatusSubscriberTest extends TestCase
 
     public function testThePermissionAskedIsTheSegmentsEditOwnOrOther(): void
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnArgument(0);
         $security = $this->createMock(CorePermissions::class);
         $security->expects($this->once())->method('hasEntityAccess')->with('lead:lists:editown', 'lead:lists:editother', $this->anything())->willReturn(true);

@@ -17,7 +17,7 @@ class CampaignPendingClickSubscriberTest extends TestCase
     {
         $router = $this->createMock(RouterInterface::class);
         $router->method('generate')->with('mautic_patches_campaign_event_pending', ['eventId' => 0])->willReturn('/s/campaign-pending/0');
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(fn (string $key) => "[{$key}]");
 
         $event = new CustomContentEvent('some_view', $context);

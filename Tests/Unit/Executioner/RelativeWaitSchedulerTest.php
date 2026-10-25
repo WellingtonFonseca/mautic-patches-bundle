@@ -25,6 +25,7 @@ use MauticPlugin\MauticPatchesBundle\Executioner\RelativeWaitDueDate;
 use MauticPlugin\MauticPatchesBundle\Executioner\RelativeWaitScheduler;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitDateResolver;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitItemSelector;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -34,6 +35,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  * The scheduler of the campaign (core's mautic.campaign.scheduler, replaced by this subclass) gives each contact the
  * date its relative wait resolved to. Core's modes know one date for the whole batch; this wait has one per contact.
  */
+#[AllowMockObjectsWithoutExpectations]
 class RelativeWaitSchedulerTest extends TestCase
 {
     private \DateTimeImmutable $now;
@@ -57,7 +59,7 @@ class RelativeWaitSchedulerTest extends TestCase
 
     private function scheduler(): RelativeWaitScheduler
     {
-        $logger = $this->createMock(EventLogger::class);
+        $logger = $this->createStub(EventLogger::class);
         $logger->method('buildLogEntry')->willReturnCallback(function (Event $event, ?Lead $contact = null): LeadEventLog {
             $log = new LeadEventLog();
             $log->setEvent($event);
@@ -76,7 +78,7 @@ class RelativeWaitSchedulerTest extends TestCase
         // An immediate event has no contact specific date (Interval::isContactSpecificExecutionDateRequired is false).
         $interval = new IntervalScheduler(new NullLogger(), $this->createMock(CoreParametersHelper::class));
 
-        $collector = $this->createMock(EventCollector::class);
+        $collector = $this->createStub(EventCollector::class);
         $collector->method('getEventConfig')->willReturn($this->createMock(AbstractEventAccessor::class));
 
         $scheduler = new RelativeWaitScheduler(
@@ -99,7 +101,7 @@ class RelativeWaitSchedulerTest extends TestCase
 
     private function event(string $type): Event
     {
-        $campaign = $this->createMock(Campaign::class);
+        $campaign = $this->createStub(Campaign::class);
         $campaign->method('getId')->willReturn(3);
         $event = new Event();
         $event->setType($type);
@@ -113,7 +115,7 @@ class RelativeWaitSchedulerTest extends TestCase
 
     private function contact(int $id): Lead
     {
-        $contact = $this->createMock(Lead::class);
+        $contact = $this->createStub(Lead::class);
         $contact->method('getId')->willReturn($id);
 
         return $contact;

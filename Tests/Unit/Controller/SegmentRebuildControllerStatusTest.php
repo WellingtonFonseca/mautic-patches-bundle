@@ -6,6 +6,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Controller;
 
 use MauticPlugin\MauticPatchesBundle\Controller\SegmentRebuildController;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuilder;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -13,6 +14,7 @@ use PHPUnit\Framework\TestCase;
  * statusAction only uses what it is handed, so the controller (which extends
  * core's CommonController, heavy to build) is created without its constructor.
  */
+#[AllowMockObjectsWithoutExpectations]
 class SegmentRebuildControllerStatusTest extends TestCase
 {
     private SegmentRebuilder&MockObject $rebuilder;

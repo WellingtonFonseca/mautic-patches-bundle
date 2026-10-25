@@ -19,7 +19,7 @@ class RelativeWaitDateResolverTest extends TestCase
     private function resolver(array $answers, ?array &$queries = null): RelativeWaitDateResolver
     {
         $queries    = [];
-        $connection = $this->createMock(Connection::class);
+        $connection = $this->createStub(Connection::class);
         $answer     = function (string $sql, array $params = [], array $types = []) use ($answers, &$queries) {
             $queries[] = [$sql, $params];
             foreach ($answers as $part => $value) {
@@ -163,7 +163,7 @@ class RelativeWaitDateResolverTest extends TestCase
 
     public function testEachFieldHasItsOwnCachedType(): void
     {
-        $connection = $this->createMock(Connection::class);
+        $connection = $this->createStub(Connection::class);
         $connection->method('fetchOne')->willReturnCallback(static function (string $sql, array $params = []) {
             if (str_contains($sql, 'FROM lead_fields')) {
                 return 'birth' === $params['alias'] ? 'datetime' : 'text';

@@ -20,11 +20,11 @@ class UserStatusSubscriberTest extends TestCase
 {
     private function subscriber(bool $canEdit = true, int $loggedId = 1): UserStatusSubscriber
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnArgument(0);
-        $security = $this->createMock(CorePermissions::class);
+        $security = $this->createStub(CorePermissions::class);
         $security->method('isGranted')->willReturnCallback(fn ($permission): bool => 'user:users:edit' === $permission && $canEdit);
-        $userHelper = $this->createMock(UserHelper::class);
+        $userHelper = $this->createStub(UserHelper::class);
         $userHelper->method('getUser')->willReturn($this->user(true, $loggedId));
 
         return new UserStatusSubscriber($translator, $security, $userHelper);

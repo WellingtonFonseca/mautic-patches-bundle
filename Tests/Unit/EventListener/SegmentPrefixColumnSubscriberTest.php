@@ -32,9 +32,9 @@ class SegmentPrefixColumnSubscriberTest extends TestCase
         }
         $stack->push($request);
 
-        $store = $this->createMock(SegmentPrefixStore::class);
+        $store = $this->createStub(SegmentPrefixStore::class);
         $store->method('get')->willReturn($prefix);
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(static fn (string $key, array $params = []) => 'T:'.$key);
 
         return new SegmentPrefixColumnSubscriber($store, $translator, $stack);
