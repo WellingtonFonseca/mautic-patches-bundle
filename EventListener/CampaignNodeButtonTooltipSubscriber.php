@@ -32,7 +32,7 @@ class CampaignNodeButtonTooltipSubscriber implements EventSubscriberInterface
 
         $customContentEvent->addContent(
             '<script>'.file_get_contents(__DIR__.'/../Resources/js/campaign-node-button-tooltips.js')
-            .';if(!window.mauticPatchesNodeButtonTooltips){window.mauticPatchesNodeButtonTooltips=true;mauticPatchesNodeButtonTooltipsApi.install(window);}</script>'
+            .';if(!window.mauticPatchesNodeButtonTooltips){mauticPatchesNodeButtonTooltipsApi.install(window);window.mauticPatchesNodeButtonTooltips=true;}</script>'
         );
     }
 }

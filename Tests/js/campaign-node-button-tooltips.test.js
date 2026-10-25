@@ -59,3 +59,16 @@ test('the plugin of Bootstrap missing is not an error', () => {
 test('nothing to strip is not an error and returns zero', () => {
     assert.strictEqual(api.strip(scope([]), null, doc()), 0);
 });
+
+// the nodes just added to the page: only the ones that are, or hold, node buttons make the page worth stripping again
+const element = (matches, holds) => ({nodeType: 1, matches: () => matches, querySelector: () => holds});
+
+test('a node added to the page that is or holds node buttons is noticed', () => {
+    assert.strictEqual(api.hasButtons([element(true, null)]), true);
+    assert.strictEqual(api.hasButtons([element(false, {})]), true);
+});
+
+test('other nodes added to the page are not noticed', () => {
+    assert.strictEqual(api.hasButtons([element(false, null), {nodeType: 3}]), false);
+    assert.strictEqual(api.hasButtons([]), false);
+});
