@@ -21,9 +21,16 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * handlers, looks at the stat span that holds `.ri-hourglass-line`; the node's id
  * is the data-event-id of the node it sits in. Same technique as ContactListClickSubscriber and injected the same way
  * (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left'). The hourglass gets the pointer cursor from a style.
+ *
+ * The same style sets the counts of EVERY node (`.campaign-event-stat`) apart from the text, at the right end of the node: core puts them
+ * right after the text, so a long line touched them. The padding needs `!important` because core's utility `pa-4` (padding 4px) on the
+ * counts is `!important`; `margin-left:auto` only moves them when the node has room to spare.
  */
 class CampaignPendingClickSubscriber implements EventSubscriberInterface
 {
+    public const STAT_STYLE = '.campaign-event-stat{margin-left:auto;padding-left:24px!important}'
+        .'.campaign-event-stat > span[data-toggle]:has(.ri-hourglass-line){cursor:pointer}';
+
     public function __construct(
         private RouterInterface $router,
         private TranslatorInterface $translator
@@ -47,7 +54,7 @@ class CampaignPendingClickSubscriber implements EventSubscriberInterface
         $pending = (string) preg_replace('#0$#', '', $this->router->generate('mautic_patches_campaign_event_pending', ['eventId' => 0]));
 
         $customContentEvent->addContent(
-            '<style>.campaign-event-stat > span[data-toggle]:has(.ri-hourglass-line){cursor:pointer}</style>'
+            '<style>'.self::STAT_STYLE.'</style>'
             .'<script>'.self::script($pending, $this->translator->trans('mautic.patches.campaign.pending.title')).'</script>'
         );
     }
