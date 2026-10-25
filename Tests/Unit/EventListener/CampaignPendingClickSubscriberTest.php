@@ -38,6 +38,12 @@ class CampaignPendingClickSubscriberTest extends TestCase
         $this->assertSame('', $this->content('something.else'));
     }
 
+    public function testTheCountsOfEveryNodeAreSetApartAtTheRight(): void
+    {
+        // core's `pa-4` on the counts is !important: the padding must be too
+        $this->assertStringContainsString('<style>.campaign-event-stat{margin-left:auto;padding-left:24px!important}', $this->content());
+    }
+
     public function testOnlyTheHourglassLooksClickable(): void
     {
         $this->assertStringContainsString(':has(.ri-hourglass-line)', $this->content());
