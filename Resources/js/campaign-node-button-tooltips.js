@@ -34,6 +34,16 @@
         return icons.length;
     }
 
+    // true when one of the nodes just added to the page is, or holds, a `.campaign-event-buttons`
+    function hasButtons(nodes) {
+        for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            if (node.nodeType === 1 && (node.matches('.campaign-event-buttons') || node.querySelector('.campaign-event-buttons'))) { return true; }
+        }
+
+        return false;
+    }
+
     function install(win) {
         var doc = win.document;
         var jq  = win.mQuery || win.jQuery;
@@ -44,11 +54,14 @@
 
         run();
         if (win.MutationObserver) {
-            new win.MutationObserver(soon).observe(doc.body, {childList: true, subtree: true});
+            // only what brings node buttons into the page counts: every other change of the page (lists, modals) costs nothing
+            new win.MutationObserver(function (mutations) {
+                if (mutations.some(function (m) { return hasButtons(m.addedNodes); })) { soon(); }
+            }).observe(doc.body, {childList: true, subtree: true});
         }
     }
 
-    root.mauticPatchesNodeButtonTooltipsApi = {strip: strip, install: install};
+    root.mauticPatchesNodeButtonTooltipsApi = {strip: strip, hasButtons: hasButtons, install: install};
 
     if (typeof module !== 'undefined' && module.exports) { module.exports = root.mauticPatchesNodeButtonTooltipsApi; }
 })(typeof window !== 'undefined' ? window : this);

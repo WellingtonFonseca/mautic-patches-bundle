@@ -26,9 +26,9 @@ class CampaignNodeButtonTooltipSubscriberTest extends TestCase
         $this->assertStringStartsWith('<script>', $content);
         $this->assertStringContainsString('mauticPatchesNodeButtonTooltipsApi', $content);
         $this->assertStringContainsString('.campaign-event-buttons [data-toggle="tooltip"]', $content);
-        // the page header is rendered on every page load over ajax too: installed once
-        $this->assertStringContainsString('if(!window.mauticPatchesNodeButtonTooltips)', $content);
-        $this->assertStringContainsString('mauticPatchesNodeButtonTooltipsApi.install(window)', $content);
+        // the page header is rendered on every page load over ajax too: installed once, and marked as installed only after install() ran
+        // (an install that throws is tried again on the next page load)
+        $this->assertStringContainsString('if(!window.mauticPatchesNodeButtonTooltips){mauticPatchesNodeButtonTooltipsApi.install(window);window.mauticPatchesNodeButtonTooltips=true;}', $content);
     }
 
     public function testOnlyThePageHeaderGetsTheScript(): void
