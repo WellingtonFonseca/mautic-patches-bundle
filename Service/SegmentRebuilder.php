@@ -76,7 +76,10 @@ class SegmentRebuilder
         return $segment->isPublished() && $this->hasEditAccess($segment);
     }
 
-    private function hasEditAccess(LeadList $segment): bool
+    /**
+     * Whether the user may edit the segment (the list offers Update to who may, hidden until the segment is active).
+     */
+    public function hasEditAccess(LeadList $segment): bool
     {
         return $this->security->hasEntityAccess('lead:lists:editown', 'lead:lists:editother', $segment->getCreatedBy());
     }

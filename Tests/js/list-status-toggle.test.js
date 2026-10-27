@@ -117,3 +117,20 @@ test('colorCounts: a count with contacts is blue, an empty one is gray, and it f
     assert.ok(empty.classes.has('patches-badge--info') && !empty.classes.has('patches-badge--neutral'));
     assert.ok(none.classes.has('patches-badge--neutral') && !none.classes.has('patches-badge--info'), 'a blue badge goes back to gray when the segment is emptied');
 });
+
+test('toggleUpdate: the Update item of the row is shown while the campaign is active and hidden otherwise, only the one of that campaign', () => {
+    const link = () => ({attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, removeAttribute(k) { delete this.attrs[k]; }});
+    const mine = link(), other = link();
+    const asked = [];
+    const row = {querySelectorAll(selector) { asked.push(selector); return [mine]; }};
+
+    api.toggleUpdate(row, 'campaign-rebuild', '7', 'unpublished');
+    assert.deepStrictEqual(mine.attrs, {hidden: 'hidden'});
+    api.toggleUpdate(row, 'campaign-rebuild', '7', 'published');
+    assert.deepStrictEqual(mine.attrs, {});
+    assert.deepStrictEqual(other.attrs, {});
+    assert.deepStrictEqual(asked, ['a[href$="/s/campaign-rebuild/7"]', 'a[href$="/s/campaign-rebuild/7"]']);
+
+    api.toggleUpdate(row, 'segment-rebuild', '9', 'published');
+    assert.strictEqual(asked[2], 'a[href$="/s/segment-rebuild/9"]');
+});

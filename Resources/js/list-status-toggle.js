@@ -46,6 +46,7 @@
             $link.find('span').first().text(v.actionText);
             $link.find('i').first().attr('class', v.actionIcon);
         });
+        toggleUpdate(root.document, 'segment-rebuild', id, status);
     }
 
     /** The text without " (alias)": the exact alias in parentheses (the last one), with the spaces before it. */
@@ -209,6 +210,19 @@
         }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'data-status']});
     }
 
+    /**
+     * The Update item of a row menu (rendered by the server, hidden for an inactive segment or campaign) is shown while it is active:
+     * activating or deactivating from the menu changes only the icon or the label, no new menu comes from the server. `scope` is what
+     * holds the links (the row, or the document); `path` is the route of the item (`segment-rebuild`, `campaign-rebuild`). The href must END
+     * with the id: a "contains" match would also take the items of ids 10 to 19 when the id is 1.
+     */
+    function toggleUpdate(scope, path, id, status) {
+        var links = scope.querySelectorAll('a[href$="/s/' + path + '/' + id + '"]');
+        for (var k = 0; k < links.length; k++) {
+            if (status === 'published') { links[k].removeAttribute('hidden'); } else { links[k].setAttribute('hidden', 'hidden'); }
+        }
+    }
+
     /** Brings the label and the menu item of every campaign row to the state of its core icon. */
     function syncCampaigns($, cfg) {
         if (!root.document.querySelector('.patches-status-label[data-campaign-id]')) { return; } // not a campaign list: no row to look at
@@ -218,8 +232,9 @@
             var icon = label && iconOf(row, 'campaign');
             if (!icon) { continue; }
             var id = label.getAttribute('data-campaign-id');
-            paint($, label, icon, icon.getAttribute('data-status') === 'published' ? 'published' : 'unpublished',
-                $('a[data-campaign-status-action][data-campaign-id="' + id + '"]'), 'data-campaign-status-action', cfg);
+            var status = icon.getAttribute('data-status') === 'published' ? 'published' : 'unpublished';
+            paint($, label, icon, status, $('a[data-campaign-status-action][data-campaign-id="' + id + '"]'), 'data-campaign-status-action', cfg);
+            if (!/\bri-spin\b/.test(icon.className)) { toggleUpdate(row, 'campaign-rebuild', id, status); }
         }
     }
 
@@ -276,7 +291,7 @@
         syncEmails($, cfg);
     }
 
-    var api = {install: install, installCampaign: installCampaign, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
+    var api = {install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

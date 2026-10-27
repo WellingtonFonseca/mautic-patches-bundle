@@ -121,6 +121,14 @@ class CampaignRebuilderTest extends TestCase
         $this->assertFalse($this->rebuilder->canRebuild($this->campaign(false)));
     }
 
+    public function testHasEditAccessIgnoresThePublishedStateForTheRowMenuOfAnInactiveCampaign(): void
+    {
+        $this->security->method('hasEntityAccess')->with('campaign:campaigns:editown', 'campaign:campaigns:editother', 3)->willReturn(true);
+
+        $this->assertTrue($this->rebuilder->hasEditAccess($this->campaign(false)));
+        $this->assertFalse($this->rebuilder->canRebuild($this->campaign(false)));
+    }
+
     public function testStatusIsNullForAnUnknownCampaign(): void
     {
         $this->campaignModel->method('getEntity')->with(7)->willReturn(null);

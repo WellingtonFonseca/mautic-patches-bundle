@@ -102,6 +102,14 @@ class SegmentRebuilderTest extends TestCase
         $this->assertSame('boom', $result->message);
     }
 
+    public function testHasEditAccessIgnoresThePublishedStateForTheRowMenuOfAnInactiveSegment(): void
+    {
+        $this->security->method('hasEntityAccess')->with('lead:lists:editown', 'lead:lists:editother', 3)->willReturn(true);
+
+        $this->assertTrue($this->rebuilder->hasEditAccess($this->segment(false)));
+        $this->assertFalse($this->rebuilder->canRebuild($this->segment(false)));
+    }
+
     public function testCanRebuildIsTheSameCheckWithoutLaunching(): void
     {
         $this->security->method('hasEntityAccess')->with('lead:lists:editown', 'lead:lists:editother', 3)->willReturn(true);
