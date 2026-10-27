@@ -129,8 +129,8 @@ test('toggleUpdate: the Update item of the row is shown while the campaign is ac
     api.toggleUpdate(row, 'campaign-rebuild', '7', 'published');
     assert.deepStrictEqual(mine.attrs, {});
     assert.deepStrictEqual(other.attrs, {});
-    assert.deepStrictEqual(asked, ['a[href*="/s/campaign-rebuild/7"]', 'a[href*="/s/campaign-rebuild/7"]']);
+    assert.deepStrictEqual(asked, ['a[href$="/s/campaign-rebuild/7"]', 'a[href$="/s/campaign-rebuild/7"]']);
 
     api.toggleUpdate(row, 'segment-rebuild', '9', 'published');
-    assert.strictEqual(asked[2], 'a[href*="/s/segment-rebuild/9"]');
+    assert.strictEqual(asked[2], 'a[href$="/s/segment-rebuild/9"]');
 });

@@ -213,10 +213,11 @@
     /**
      * The Update item of a row menu (rendered by the server, hidden for an inactive segment or campaign) is shown while it is active:
      * activating or deactivating from the menu changes only the icon or the label, no new menu comes from the server. `scope` is what
-     * holds the links (the row, or the document); `path` is the route of the item (`segment-rebuild`, `campaign-rebuild`).
+     * holds the links (the row, or the document); `path` is the route of the item (`segment-rebuild`, `campaign-rebuild`). The href must END
+     * with the id: a "contains" match would also take the items of ids 10 to 19 when the id is 1.
      */
     function toggleUpdate(scope, path, id, status) {
-        var links = scope.querySelectorAll('a[href*="/s/' + path + '/' + id + '"]');
+        var links = scope.querySelectorAll('a[href$="/s/' + path + '/' + id + '"]');
         for (var k = 0; k < links.length; k++) {
             if (status === 'published') { links[k].removeAttribute('hidden'); } else { links[k].setAttribute('hidden', 'hidden'); }
         }
