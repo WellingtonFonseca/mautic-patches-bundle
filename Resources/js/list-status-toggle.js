@@ -209,6 +209,17 @@
         }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'data-status']});
     }
 
+    /**
+     * The Update item of the row menu (rendered by the server, hidden for an inactive campaign) is shown while the campaign is active:
+     * activating from the menu changes only the icon, no new menu comes from the server.
+     */
+    function toggleUpdate(row, id, status) {
+        var links = row.querySelectorAll('a[href*="/s/campaign-rebuild/' + id + '"]');
+        for (var k = 0; k < links.length; k++) {
+            if (status === 'published') { links[k].removeAttribute('hidden'); } else { links[k].setAttribute('hidden', 'hidden'); }
+        }
+    }
+
     /** Brings the label and the menu item of every campaign row to the state of its core icon. */
     function syncCampaigns($, cfg) {
         if (!root.document.querySelector('.patches-status-label[data-campaign-id]')) { return; } // not a campaign list: no row to look at
@@ -218,8 +229,9 @@
             var icon = label && iconOf(row, 'campaign');
             if (!icon) { continue; }
             var id = label.getAttribute('data-campaign-id');
-            paint($, label, icon, icon.getAttribute('data-status') === 'published' ? 'published' : 'unpublished',
-                $('a[data-campaign-status-action][data-campaign-id="' + id + '"]'), 'data-campaign-status-action', cfg);
+            var status = icon.getAttribute('data-status') === 'published' ? 'published' : 'unpublished';
+            paint($, label, icon, status, $('a[data-campaign-status-action][data-campaign-id="' + id + '"]'), 'data-campaign-status-action', cfg);
+            if (!/\bri-spin\b/.test(icon.className)) { toggleUpdate(row, id, status); }
         }
     }
 
@@ -276,7 +288,7 @@
         syncEmails($, cfg);
     }
 
-    var api = {install: install, installCampaign: installCampaign, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
+    var api = {install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

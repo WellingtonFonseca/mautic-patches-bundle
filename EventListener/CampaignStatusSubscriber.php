@@ -26,7 +26,8 @@ class CampaignStatusSubscriber extends AbstractListStatusSubscriber
         .'a[data-campaign-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-campaign-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-campaign-status-action="activate"]:hover{background-color:var(--support-success)!important}'
-        .'a[data-campaign-status-action]:hover *{color:inherit!important}';
+        .'a[data-campaign-status-action]:hover *{color:inherit!important}'
+        .'li:has(>a[hidden][href*="/s/campaign-rebuild/"]){display:none!important}'; // Update of an inactive campaign, shown by the script on activation
 
     protected function key(): string
     {
