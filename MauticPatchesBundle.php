@@ -9,6 +9,7 @@ use Mautic\PluginBundle\Bundle\PluginBundleBase;
 use Mautic\PluginBundle\Entity\Plugin;
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\OverridingTranslationLoaderPass;
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\RelativeWaitPass;
+use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\SortableListThemePass;
 use MauticPlugin\MauticPatchesBundle\Entity\CampaignPrefixValue;
 use MauticPlugin\MauticPatchesBundle\Entity\SegmentPrefixValue;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -24,6 +25,9 @@ class MauticPatchesBundle extends PluginBundleBase
 
         // the campaign scheduler gets the wait with a date per contact ("Wait", patches.wait_relative)
         $container->addCompilerPass(new RelativeWaitPass());
+
+        // the add button of core's lists of values (field options, form fields, ...) comes below the list
+        $container->addCompilerPass(new SortableListThemePass());
     }
 
     /**
