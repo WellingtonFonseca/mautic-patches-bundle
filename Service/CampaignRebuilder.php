@@ -77,7 +77,10 @@ class CampaignRebuilder
         return $campaign->isPublished() && $this->hasEditAccess($campaign);
     }
 
-    private function hasEditAccess(Campaign $campaign): bool
+    /**
+     * Whether the user may edit the campaign (the list offers Update to who may, hidden until the campaign is active).
+     */
+    public function hasEditAccess(Campaign $campaign): bool
     {
         return $this->security->hasEntityAccess('campaign:campaigns:editown', 'campaign:campaigns:editother', $campaign->getCreatedBy());
     }

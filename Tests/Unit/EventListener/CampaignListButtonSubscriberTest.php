@@ -60,13 +60,14 @@ class CampaignListButtonSubscriberTest extends TestCase
 
     public function testSubscribesToTheButtonEvent(): void
     {
-        $this->assertArrayHasKey(CoreEvents::VIEW_INJECT_CUSTOM_BUTTONS, CampaignListButtonSubscriber::getSubscribedEvents());
+        $this->assertSame(['injectViewButtons', 0], CampaignListButtonSubscriber::getSubscribedEvents()[CoreEvents::VIEW_INJECT_CUSTOM_BUTTONS]);
     }
 
     public function testAddsUpdateToTheRowMenuOfTheCampaignList(): void
     {
         $campaign = $this->campaign();
-        $this->rebuilder->method('canRebuild')->with($campaign)->willReturn(true);
+        $campaign->method('isPublished')->willReturn(true);
+        $this->rebuilder->method('hasEditAccess')->with($campaign)->willReturn(true);
         $event = $this->event(ButtonHelper::LOCATION_LIST_ACTIONS, 'mautic_campaign_index', $campaign);
 
         $this->subscriber->injectViewButtons($event);
@@ -77,6 +78,23 @@ class CampaignListButtonSubscriberTest extends TestCase
         $this->assertSame('/s/mautic_patches_campaign_rebuild/7', $buttons[0]['attr']['href']);
         $this->assertSame('ajax', $buttons[0]['attr']['data-toggle']);
         $this->assertSame('POST', $buttons[0]['attr']['data-method']);
+        $this->assertArrayNotHasKey('hidden', $buttons[0]['attr']);
+        $this->assertSame(150, $buttons[0]['priority']);
+    }
+
+    public function testTheRowMenuCarriesUpdateHiddenForAnInactiveCampaignSoActivatingCanShowIt(): void
+    {
+        $campaign = $this->campaign();
+        $campaign->method('isPublished')->willReturn(false);
+        $this->rebuilder->method('hasEditAccess')->willReturn(true);
+        $event = $this->event(ButtonHelper::LOCATION_LIST_ACTIONS, 'mautic_campaign_index', $campaign);
+
+        $this->subscriber->injectViewButtons($event);
+
+        $buttons = array_values($event->getButtons());
+        $this->assertCount(1, $buttons);
+        $this->assertSame('hidden', $buttons[0]['attr']['hidden']);
+        $this->assertSame('/s/mautic_patches_campaign_rebuild/7', $buttons[0]['attr']['href']);
     }
 
     public function testAddsUpdateToThePageActionsOfTheCampaignDetailAndComesBackThere(): void
@@ -93,6 +111,8 @@ class CampaignListButtonSubscriberTest extends TestCase
         $this->assertSame('/s/mautic_patches_campaign_rebuild/7?return=view', $buttons[0]['attr']['href']);
         $this->assertSame('ajax', $buttons[0]['attr']['data-toggle']);
         $this->assertSame('POST', $buttons[0]['attr']['data-method']);
+        $this->assertArrayNotHasKey('hidden', $buttons[0]['attr']);
+        $this->assertSame(150, $buttons[0]['priority']);
     }
 
     public function testDetailButtonOnlyWhenTheUserCanRebuild(): void
@@ -124,10 +144,12 @@ class CampaignListButtonSubscriberTest extends TestCase
         $this->assertSame([], $event->getButtons());
     }
 
-    public function testNoButtonWithoutEditAccessOrForAnUnpublishedCampaign(): void
+    public function testNoButtonInTheRowMenuWithoutEditAccess(): void
     {
-        $this->rebuilder->method('canRebuild')->willReturn(false);
-        $event = $this->event(ButtonHelper::LOCATION_LIST_ACTIONS, 'mautic_campaign_index', $this->campaign());
+        $campaign = $this->campaign();
+        $campaign->method('isPublished')->willReturn(true);
+        $this->rebuilder->method('hasEditAccess')->willReturn(false);
+        $event = $this->event(ButtonHelper::LOCATION_LIST_ACTIONS, 'mautic_campaign_index', $campaign);
 
         $this->subscriber->injectViewButtons($event);
 
@@ -151,8 +173,11 @@ class CampaignListButtonSubscriberTest extends TestCase
     #[DataProvider('otherPlaces')]
     public function testNothingElsewhere(string $location, string $route): void
     {
+        $campaign = $this->campaign();
+        $campaign->method('isPublished')->willReturn(true);
         $this->rebuilder->method('canRebuild')->willReturn(true);
-        $event = $this->event($location, $route, $this->campaign());
+        $this->rebuilder->method('hasEditAccess')->willReturn(true);
+        $event = $this->event($location, $route, $campaign, 'view');
 
         $this->subscriber->injectViewButtons($event);
 
