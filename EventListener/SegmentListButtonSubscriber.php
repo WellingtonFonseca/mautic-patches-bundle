@@ -18,7 +18,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * row of the segment list and to the dropdown of the segment detail page (the
  * one with Clone / Delete), next to the core's own options. The button POSTs to
  * SegmentRebuildController, which uses the same SegmentRebuilder as the API.
- * It is only offered when the user may edit the segment and it is published.
+ * It is only offered when the user may edit the segment and it is published. The row menu of the list also carries it,
+ * hidden, for an inactive segment: activating or deactivating from that menu only swaps the label (no new menu is sent),
+ * so the script (list-status-toggle.js, apply) shows or hides it as the status changes.
  * From the detail page the controller returns to that page (?return=view).
  */
 class SegmentListButtonSubscriber implements EventSubscriberInterface
@@ -41,22 +43,30 @@ class SegmentListButtonSubscriber implements EventSubscriberInterface
     {
         $segment = $event->getItem();
 
-        if (!$segment instanceof LeadList || !$this->rebuilder->canRebuild($segment)) {
+        if (!$segment instanceof LeadList) {
             return;
         }
 
         $location = $event->getLocation();
         $route    = $event->getRoute();
         $params   = ['id' => $segment->getId()];
+        $hidden   = false;
 
         if (ButtonHelper::LOCATION_LIST_ACTIONS === $location && 'mautic_segment_index' === $route) {
             $priority = 150; // row menu of the segment list, among Edit / Clone / Delete
+            $hidden   = !$segment->isPublished();
+            $offered  = $this->rebuilder->hasEditAccess($segment);
         } elseif (ButtonHelper::LOCATION_PAGE_ACTIONS === $location
             && 'mautic_segment_action' === $route
             && 'view' === $event->getRequest()->attributes->get('objectAction')) {
             $priority = 150; // dropdown of the segment detail page, next to Clone / Delete
             $params['return'] = 'view'; // come back to this page, not to the list
+            $offered  = $this->rebuilder->canRebuild($segment);
         } else {
+            return;
+        }
+
+        if (!$offered) {
             return;
         }
 
@@ -66,7 +76,7 @@ class SegmentListButtonSubscriber implements EventSubscriberInterface
                     'data-toggle' => 'ajax',
                     'data-method' => 'POST',
                     'href'        => $this->router->generate('mautic_patches_segment_rebuild', $params),
-                ],
+                ] + ($hidden ? ['hidden' => 'hidden'] : []),
                 'btnText'   => $this->translator->trans('mautic.patches.segment.rebuild'),
                 'iconClass' => 'ri-refresh-line',
                 'priority'  => $priority,
