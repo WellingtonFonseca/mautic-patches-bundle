@@ -57,13 +57,14 @@ class SegmentListButtonSubscriberTest extends TestCase
 
     public function testSubscribesToTheButtonEvent(): void
     {
-        $this->assertArrayHasKey(CoreEvents::VIEW_INJECT_CUSTOM_BUTTONS, SegmentListButtonSubscriber::getSubscribedEvents());
+        $this->assertSame(['injectViewButtons', 0], SegmentListButtonSubscriber::getSubscribedEvents()[CoreEvents::VIEW_INJECT_CUSTOM_BUTTONS]);
     }
 
     public function testAddsUpdateToTheRowMenuOfTheSegmentList(): void
     {
         $segment = $this->segment();
-        $this->rebuilder->method('canRebuild')->with($segment)->willReturn(true);
+        $segment->method('isPublished')->willReturn(true);
+        $this->rebuilder->method('hasEditAccess')->with($segment)->willReturn(true);
         $event = $this->event(ButtonHelper::LOCATION_LIST_ACTIONS, 'mautic_segment_index', $segment);
 
         $this->subscriber->injectViewButtons($event);
@@ -74,6 +75,23 @@ class SegmentListButtonSubscriberTest extends TestCase
         $this->assertSame('/s/mautic_patches_segment_rebuild/7', $buttons[0]['attr']['href']);
         $this->assertSame('ajax', $buttons[0]['attr']['data-toggle']);
         $this->assertSame('POST', $buttons[0]['attr']['data-method']);
+        $this->assertArrayNotHasKey('hidden', $buttons[0]['attr']);
+        $this->assertSame(150, $buttons[0]['priority']);
+    }
+
+    public function testTheRowMenuCarriesUpdateHiddenForAnInactiveSegmentSoActivatingCanShowIt(): void
+    {
+        $segment = $this->segment();
+        $segment->method('isPublished')->willReturn(false);
+        $this->rebuilder->method('hasEditAccess')->willReturn(true);
+        $event = $this->event(ButtonHelper::LOCATION_LIST_ACTIONS, 'mautic_segment_index', $segment);
+
+        $this->subscriber->injectViewButtons($event);
+
+        $buttons = array_values($event->getButtons());
+        $this->assertCount(1, $buttons);
+        $this->assertSame('hidden', $buttons[0]['attr']['hidden']);
+        $this->assertSame('/s/mautic_patches_segment_rebuild/7', $buttons[0]['attr']['href']);
     }
 
     public function testAddsUpdateToThePageActionsOfTheSegmentDetailAndComesBackThere(): void
@@ -90,6 +108,8 @@ class SegmentListButtonSubscriberTest extends TestCase
         $this->assertSame('/s/mautic_patches_segment_rebuild/7?return=view', $buttons[0]['attr']['href']);
         $this->assertSame('ajax', $buttons[0]['attr']['data-toggle']);
         $this->assertSame('POST', $buttons[0]['attr']['data-method']);
+        $this->assertArrayNotHasKey('hidden', $buttons[0]['attr']);
+        $this->assertSame(150, $buttons[0]['priority']);
     }
 
     public function testDetailButtonOnlyWhenTheUserCanRebuild(): void
@@ -121,10 +141,12 @@ class SegmentListButtonSubscriberTest extends TestCase
         $this->assertSame([], $event->getButtons());
     }
 
-    public function testNoButtonWithoutEditAccessOrForAnUnpublishedSegment(): void
+    public function testNoButtonInTheRowMenuWithoutEditAccess(): void
     {
-        $this->rebuilder->method('canRebuild')->willReturn(false);
-        $event = $this->event(ButtonHelper::LOCATION_LIST_ACTIONS, 'mautic_segment_index', $this->segment());
+        $segment = $this->segment();
+        $segment->method('isPublished')->willReturn(true);
+        $this->rebuilder->method('hasEditAccess')->willReturn(false);
+        $event = $this->event(ButtonHelper::LOCATION_LIST_ACTIONS, 'mautic_segment_index', $segment);
 
         $this->subscriber->injectViewButtons($event);
 
@@ -148,8 +170,11 @@ class SegmentListButtonSubscriberTest extends TestCase
     #[DataProvider('otherPlaces')]
     public function testNothingElsewhere(string $location, string $route): void
     {
+        $segment = $this->segment();
+        $segment->method('isPublished')->willReturn(true);
         $this->rebuilder->method('canRebuild')->willReturn(true);
-        $event = $this->event($location, $route, $this->segment());
+        $this->rebuilder->method('hasEditAccess')->willReturn(true);
+        $event = $this->event($location, $route, $segment, 'view');
 
         $this->subscriber->injectViewButtons($event);
 

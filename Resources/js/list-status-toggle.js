@@ -46,6 +46,7 @@
             $link.find('span').first().text(v.actionText);
             $link.find('i').first().attr('class', v.actionIcon);
         });
+        toggleUpdate(root.document, 'segment-rebuild', id, status);
     }
 
     /** The text without " (alias)": the exact alias in parentheses (the last one), with the spaces before it. */
@@ -210,11 +211,12 @@
     }
 
     /**
-     * The Update item of the row menu (rendered by the server, hidden for an inactive campaign) is shown while the campaign is active:
-     * activating from the menu changes only the icon, no new menu comes from the server.
+     * The Update item of a row menu (rendered by the server, hidden for an inactive segment or campaign) is shown while it is active:
+     * activating or deactivating from the menu changes only the icon or the label, no new menu comes from the server. `scope` is what
+     * holds the links (the row, or the document); `path` is the route of the item (`segment-rebuild`, `campaign-rebuild`).
      */
-    function toggleUpdate(row, id, status) {
-        var links = row.querySelectorAll('a[href*="/s/campaign-rebuild/' + id + '"]');
+    function toggleUpdate(scope, path, id, status) {
+        var links = scope.querySelectorAll('a[href*="/s/' + path + '/' + id + '"]');
         for (var k = 0; k < links.length; k++) {
             if (status === 'published') { links[k].removeAttribute('hidden'); } else { links[k].setAttribute('hidden', 'hidden'); }
         }
@@ -231,7 +233,7 @@
             var id = label.getAttribute('data-campaign-id');
             var status = icon.getAttribute('data-status') === 'published' ? 'published' : 'unpublished';
             paint($, label, icon, status, $('a[data-campaign-status-action][data-campaign-id="' + id + '"]'), 'data-campaign-status-action', cfg);
-            if (!/\bri-spin\b/.test(icon.className)) { toggleUpdate(row, id, status); }
+            if (!/\bri-spin\b/.test(icon.className)) { toggleUpdate(row, 'campaign-rebuild', id, status); }
         }
     }
 

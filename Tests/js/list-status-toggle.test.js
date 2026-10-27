@@ -124,10 +124,13 @@ test('toggleUpdate: the Update item of the row is shown while the campaign is ac
     const asked = [];
     const row = {querySelectorAll(selector) { asked.push(selector); return [mine]; }};
 
-    api.toggleUpdate(row, '7', 'unpublished');
+    api.toggleUpdate(row, 'campaign-rebuild', '7', 'unpublished');
     assert.deepStrictEqual(mine.attrs, {hidden: 'hidden'});
-    api.toggleUpdate(row, '7', 'published');
+    api.toggleUpdate(row, 'campaign-rebuild', '7', 'published');
     assert.deepStrictEqual(mine.attrs, {});
     assert.deepStrictEqual(other.attrs, {});
     assert.deepStrictEqual(asked, ['a[href*="/s/campaign-rebuild/7"]', 'a[href*="/s/campaign-rebuild/7"]']);
+
+    api.toggleUpdate(row, 'segment-rebuild', '9', 'published');
+    assert.strictEqual(asked[2], 'a[href*="/s/segment-rebuild/9"]');
 });
