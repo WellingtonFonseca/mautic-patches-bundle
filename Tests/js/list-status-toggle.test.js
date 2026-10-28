@@ -9,7 +9,7 @@ const assert = require('node:assert');
 const api    = require('../../Resources/js/list-status-toggle.js');
 
 const cfg = {active: 'Ativo', inactive: 'Inativo', activate: 'Ativar', deactivate: 'Desativar'};
-const ccfg = Object.assign({column: 'Status'}, cfg);
+const ccfg = Object.assign({column: 'Status', restart: 'Reingresso'}, cfg);
 
 test('statusOf: the data-status of the icon in the answer', () => {
     assert.strictEqual(api.statusOf({statusHtml: '<i class="ri-toggle-fill" data-status="published"></i>'}), 'published');
@@ -163,7 +163,7 @@ function node(name) {
 }
 
 /** A campaign table: header [menu, prefix, name] and rows [menu, prefix, name(label)], the label in the name cell. */
-function campaignTable(rowCount, labelled = true, status = 'published') {
+function campaignTable(rowCount, labelled = true, status = 'published', restart = false) {
     const headRow = node('tr'), menuTh = node('th'), prefixTh = node('th'), nameTh = node('th');
     [menuTh, prefixTh, nameTh].forEach((th) => headRow.appendChild(th));
     const rows = [];
@@ -173,6 +173,7 @@ function campaignTable(rowCount, labelled = true, status = 'published') {
         if (labelled) {
             const label = node('label');
             label.attrs = {'data-status': status};
+            if (restart) { label.attrs['data-restart'] = '1'; }
             cells[2].appendChild(label);
             row.label = label;
         }
@@ -251,8 +252,8 @@ test('addCampaignStatusColumn: a row without any cell is skipped, the others sti
     assert.strictEqual(rows[1].children.length, 4);
 });
 
-function statusLabelIn(status) {
-    const {doc, rows} = campaignTable(1, true, status);
+function statusLabelIn(status, restart = false) {
+    const {doc, rows} = campaignTable(1, true, status, restart);
     api.addCampaignStatusColumn(doc, ccfg);
 
     return rows[0].label;
@@ -261,7 +262,7 @@ function statusLabelIn(status) {
 test('addCampaignStatusColumn: an active label becomes a play icon plus the word, and the word is its title', () => {
     const label = statusLabelIn('published');
 
-    assert.deepStrictEqual(label.children.map((c) => [c.name, c.className, c.textContent]), [['i', 'ri-play-fill', ''], ['span', 'patches-status-label__text', 'Ativo']]);
+    assert.deepStrictEqual(label.children.map((c) => [c.name, c.className, c.textContent]), [['i', 'ri-play-fill', ''], ['span', 'patches-icon-badge__text', 'Ativo']]);
     assert.strictEqual(label.children[0].attrs['aria-hidden'], 'true');
     assert.strictEqual(label.attrs.title, 'Ativo');
     assert.strictEqual(label.attrs['aria-label'], 'Ativo');
@@ -270,7 +271,7 @@ test('addCampaignStatusColumn: an active label becomes a play icon plus the word
 test('addCampaignStatusColumn: an inactive label becomes a stop icon plus the word', () => {
     const label = statusLabelIn('unpublished');
 
-    assert.deepStrictEqual(label.children.map((c) => [c.className, c.textContent]), [['ri-stop-fill', ''], ['patches-status-label__text', 'Inativo']]);
+    assert.deepStrictEqual(label.children.map((c) => [c.className, c.textContent]), [['ri-stop-fill', ''], ['patches-icon-badge__text', 'Inativo']]);
     assert.strictEqual(label.attrs.title, 'Inativo');
 });
 
@@ -279,4 +280,42 @@ test('addCampaignStatusColumn: a label that is spinning is left as it is for pai
 
     assert.deepStrictEqual(label.children, []);
     assert.strictEqual(label.attrs.title, undefined);
+});
+
+test('addCampaignStatusColumn: a campaign that allows reentry gets a reload badge next to the status, icon plus the word as title', () => {
+    const {doc, rows} = campaignTable(1, true, 'published', true);
+
+    api.addCampaignStatusColumn(doc, ccfg);
+
+    const cell = rows[0].children[1];
+    assert.strictEqual(cell.children.length, 2);
+    assert.strictEqual(cell.children[0], rows[0].label, 'the status badge comes first');
+    const badge = cell.children[1];
+    assert.strictEqual(badge.name, 'span');
+    assert.match(badge.className, /patches-badge/);
+    assert.match(badge.className, /patches-badge--restart/);
+    assert.match(badge.className, /patches-icon-badge/);
+    assert.match(badge.className, /patches-restart-badge/);
+    assert.deepStrictEqual(badge.children.map((c) => [c.name, c.className, c.textContent]), [['i', 'ri-refresh-line', ''], ['span', 'patches-icon-badge__text', 'Reingresso']]);
+    assert.strictEqual(badge.children[0].attrs['aria-hidden'], 'true');
+    assert.strictEqual(badge.attrs.title, 'Reingresso');
+    assert.strictEqual(badge.attrs['aria-label'], 'Reingresso');
+});
+
+test('addCampaignStatusColumn: a campaign that does not allow reentry has no reentry badge, and an inactive one with reentry still has it', () => {
+    const plain = campaignTable(1, true, 'published', false);
+    api.addCampaignStatusColumn(plain.doc, ccfg);
+    assert.strictEqual(plain.rows[0].children[1].children.length, 1);
+
+    const off = campaignTable(1, true, 'unpublished', true);
+    api.addCampaignStatusColumn(off.doc, ccfg);
+    assert.strictEqual(off.rows[0].children[1].children.length, 2);
+});
+
+test('addCampaignStatusColumn: a spinning status label still gets the reentry badge', () => {
+    const {doc, rows} = campaignTable(1, true, 'busy', true);
+
+    api.addCampaignStatusColumn(doc, ccfg);
+
+    assert.strictEqual(rows[0].children[1].children.length, 2);
 });

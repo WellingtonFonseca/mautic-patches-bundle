@@ -46,6 +46,25 @@ class CampaignStatusSubscriberTest extends TestCase
         return array_values($event->getButtons());
     }
 
+    private function labelHtml(Campaign $campaign): string
+    {
+        $event = new CustomContentEvent('some_view', 'campaign.name', ['item' => $campaign]);
+        $this->subscriber()->injectViewCustomContent($event);
+
+        return implode('', $event->getContent());
+    }
+
+    public function testACampaignThatAllowsReentryCarriesTheMarkerForTheReentryBadge(): void
+    {
+        $allows = $this->campaign(true);
+        $allows->setAllowRestart(true);
+        $denies = $this->campaign(true);
+        $denies->setAllowRestart(false);
+
+        $this->assertStringContainsString(' data-restart="1"', $this->labelHtml($allows));
+        $this->assertStringNotContainsString('data-restart', $this->labelHtml($denies));
+    }
+
     public function testSubscribesToTheContentAndTheButtons(): void
     {
         $events = CampaignStatusSubscriber::getSubscribedEvents();
