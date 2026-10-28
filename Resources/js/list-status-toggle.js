@@ -181,74 +181,6 @@
         }
     }
 
-    /** How much a badge of the Status column grows when it opens: its content, up to 140px (260px for a wide one), minus what it has. */
-    function growth(badge) {
-        var cap = /\bpatches-extra-badge--wide\b/.test(badge.className) ? 260 : 140;
-
-        return Math.max(0, Math.min(badge.scrollWidth, cap) - badge.offsetWidth);
-    }
-
-    /** What an open badge does not fit in its cell: the box of badges at rest plus what the badge grows, past the room the cell has. 0 when it fits. */
-    function overflow(boxWidth, grow, room) {
-        return Math.max(0, boxWidth + grow - room);
-    }
-
-    /**
-     * The widths of the columns while a badge in column `index` is open: that column grows by `delta`, the others keep what they have, so the
-     * table is wider by `delta` (it scrolls in its box) and does not squeeze the other columns, which would make their text wrap again and
-     * change the height of the rows, and a row that changes height slides the badge from under the pointer.
-     */
-    function pushPlan(widths, index, delta) {
-        var grow = Math.max(0, delta), out = widths.map(function (w, k) { return k === index ? w + grow : w; });
-
-        return {widths: out, total: out.reduce(function (a, b) { return a + b; }, 0)};
-    }
-
-    var PUSHED = 'data-patches-pushed';
-    var BADGES = 'td.col-patches-status .patches-status-label, td.col-patches-status .patches-extra-badge';
-
-    /** Opening a badge pushes the columns after its own: the widths are fixed to what they are now and its column widens (pushPlan). */
-    function openBadge(badge) {
-        var table = badge.closest('table'), cell = badge.closest('td');
-        if (!table || !cell || table.hasAttribute(PUSHED)) { return; }
-        var heads = table.querySelectorAll('thead th'), widths = [], index = cell.cellIndex;
-        for (var k = 0; k < heads.length; k++) { widths.push(heads[k].getBoundingClientRect().width); }
-        // the Status column often has room (its header is wider than one badge): push only what does not fit
-        var box = badge.closest('.patches-status-box') || badge, style = root.getComputedStyle(cell);
-        var room = cell.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-        var push = overflow(box.getBoundingClientRect().width, growth(badge), room);
-        if (push <= 0) { return; }
-        var plan = pushPlan(widths, index, push);
-        table.setAttribute(PUSHED, table.style.cssText + '|' + Array.prototype.map.call(heads, function (h) { return h.style.width; }).join(','));
-        table.style.tableLayout = 'fixed';
-        table.style.width = plan.total + 'px';
-        for (var j = 0; j < heads.length; j++) { heads[j].style.width = plan.widths[j] + 'px'; }
-    }
-
-    /** Gives the table back its own widths. */
-    function closeBadge(badge) {
-        var table = badge.closest('table');
-        if (!table || !table.hasAttribute(PUSHED)) { return; }
-        var saved = table.getAttribute(PUSHED).split('|'), widths = saved[saved.length - 1].split(','), heads = table.querySelectorAll('thead th');
-        table.removeAttribute(PUSHED);
-        table.style.cssText = saved.slice(0, -1).join('|');
-        for (var k = 0; k < heads.length; k++) { heads[k].style.width = widths[k] || ''; }
-    }
-
-    /** The pointer over a badge of the Status column opens it (pushing the columns), out of it closes it; one handler for every list, also the ones drawn later. */
-    function installPush(doc) {
-        if (root.mauticPatchesStatusPush) { return; }
-        root.mauticPatchesStatusPush = true;
-        doc.addEventListener('mouseover', function (event) {
-            var badge = event.target.closest && event.target.closest(BADGES);
-            if (badge) { openBadge(badge); }
-        });
-        doc.addEventListener('mouseout', function (event) {
-            var badge = event.target.closest && event.target.closest(BADGES);
-            if (badge && !(event.relatedTarget && badge.contains(event.relatedTarget))) { closeBadge(badge); }
-        });
-    }
-
     /** What both lists share, once per page: the style of the list and the placing of the labels. */
     function setup(cfg) {
         var style = root.document.createElement('style');
@@ -262,7 +194,6 @@
         place(root.document);
         colorCounts(root.document);
         addStatusColumns(root.document, cfg);
-        installPush(root.document);
         var pending = false;
         new root.MutationObserver(function () {
             if (pending) { return; }
@@ -411,8 +342,7 @@
             td.className = columnClass;
             cell.parentNode.insertBefore(td, cell.nextSibling);
             if (!label) { continue; }
-            // the badges sit in a box as wide as the badges at rest: one that opens on hover overflows it (over the next column) and pushes the
-            // ones after it, but the table does not reflow, so no row changes height under the pointer
+            // the badges sit side by side in a box in the flow of the cell: one that opens on hover widens the column and the browser lays out the table
             var box = doc.createElement('div');
             box.className = 'patches-status-box';
             td.appendChild(box);
@@ -423,7 +353,6 @@
             if (status === 'published' || status === 'unpublished') { fillLabel(label, view(status, cfg)); }
             if (label.getAttribute('data-restart') === '1') { box.appendChild(restartBadge(doc, cfg.restart)); }
             if (spec.kind === 'segment') { moveSegmentFlags(doc, rows[k], box, cfg); }
-            box.style.width = (box.children.length * 28 - 6) + 'px'; // 22px per badge and 6px between
         }
 
         return true;
@@ -506,7 +435,7 @@
         syncEmails($, cfg);
     }
 
-    var api = {overflow: overflow, pushPlan: pushPlan, growth: growth, openBadge: openBadge, closeBadge: closeBadge, addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
+    var api = {addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

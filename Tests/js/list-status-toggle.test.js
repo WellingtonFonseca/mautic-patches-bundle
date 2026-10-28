@@ -220,7 +220,6 @@ test('addStatusColumn: a Status header and a cell per row go right after the men
         assert.strictEqual(cell.className, 'col-patches-status col-campaign-status');
         assert.deepStrictEqual(cell.children[0].children, [row.label]);
         assert.strictEqual(cell.children[0].className, 'patches-status-box');
-        assert.strictEqual(cell.children[0].style.width, '22px');
         assert.strictEqual(row.label.attrs['data-placed'], '1');
         assert.strictEqual(row.cells[2].children.length, 0, 'the name cell no longer holds the label');
     });
@@ -307,7 +306,6 @@ test('addStatusColumn: a campaign that allows reentry gets a reload badge next t
 
     const cell = rows[0].children[1];
     assert.strictEqual(items(cell).length, 2);
-    assert.strictEqual(cell.children[0].style.width, '50px', 'two badges and the gap between them');
     assert.strictEqual(items(cell)[0], rows[0].label, 'the status badge comes first');
     const badge = items(cell)[1];
     assert.strictEqual(badge.name, 'span');
@@ -478,32 +476,4 @@ test('the reentry badge carries the shared extra-badge class too', () => {
     api.addStatusColumn(doc, campaignSpec, ccfg);
 
     assert.match(items(rows[0].children[1])[1].className, /patches-extra-badge/);
-});
-
-test('pushPlan: the opening badge widens its own column by what it grows, every other column keeps its width, and the table grows by the same', () => {
-    const plan = api.pushPlan([40, 90, 60, 300, 80], 1, 118);
-
-    assert.deepStrictEqual(plan.widths, [40, 208, 60, 300, 80]);
-    assert.strictEqual(plan.total, 40 + 208 + 60 + 300 + 80);
-});
-
-test('pushPlan: nothing to push (a badge that does not grow) leaves every width as it was', () => {
-    assert.deepStrictEqual(api.pushPlan([10, 20], 0, 0), {widths: [10, 20], total: 30});
-    assert.deepStrictEqual(api.pushPlan([10, 20], 0, -5), {widths: [10, 20], total: 30});
-});
-
-test('growth: a badge grows to its content, up to 140px, or 260px when it is a wide one, minus the 22px it already has', () => {
-    assert.strictEqual(api.growth({scrollWidth: 60, offsetWidth: 22, className: 'patches-extra-badge'}), 38);
-    assert.strictEqual(api.growth({scrollWidth: 400, offsetWidth: 22, className: 'patches-extra-badge'}), 118);
-    assert.strictEqual(api.growth({scrollWidth: 400, offsetWidth: 22, className: 'patches-extra-badge patches-extra-badge--wide'}), 238);
-    assert.strictEqual(api.growth({scrollWidth: 22, offsetWidth: 22, className: 'patches-status-label'}), 0);
-});
-
-test('overflow: the columns are pushed only by what the open badge does not fit in the cell', () => {
-    // the box (what the badges take at rest) plus what the badge grows, against the room of the cell
-    assert.strictEqual(api.overflow(22, 118, 90), 50);
-    assert.strictEqual(api.overflow(50, 38, 90), 0, 'it fits exactly');
-    assert.strictEqual(api.overflow(22, 38, 90), 0, 'it fits with room to spare');
-    assert.strictEqual(api.overflow(78, 118, 90), 106);
-    assert.strictEqual(api.overflow(22, 0, 90), 0);
 });
