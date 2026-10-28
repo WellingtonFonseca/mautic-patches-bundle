@@ -30,6 +30,10 @@ final class StatusScript
             'deactivate' => $translator->trans('mautic.patches.segment.deactivate'),
             'column'     => $translator->trans('mautic.patches.status.column'),
             'restart'    => $translator->trans('mautic.patches.campaign.restart'),
+            'global'     => $translator->trans('mautic.patches.segment.global'),
+            'filters'    => $translator->trans('mautic.patches.segment.filters'),
+            'rebuild'    => $translator->trans('mautic.patches.segment.not_rebuilt'),
+            'slow'       => $translator->trans('mautic.patches.segment.slow_build'),
             'style'      => $style,
         ];
         $mtime = @filemtime(dirname(__DIR__).'/'.self::PATH);

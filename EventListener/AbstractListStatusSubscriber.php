@@ -36,17 +36,22 @@ abstract class AbstractListStatusSubscriber implements EventSubscriberInterface
 
     /**
      * The badges of the Status column of the lists (segment, campaign, user, email: Resources/js/list-status-toggle.js, addStatusColumn): the status and,
-     * in the campaign list, the reentry one beside it are 22px circles with a play / stop / reload icon; on hover one opens to the right and
-     * shows the word, as the status badge of the n8n campaign card. They are in the flow of the cell: opening one pushes the next and widens
-     * the column. The 76px minimum of the word badge does not apply to them.
+     * in the campaign list the reentry one, in the segment list the global / filters / warning ones, beside it are 22px circles with a play / stop / reload icon; on hover one opens to the right and
+     * shows the word, as the status badge of the n8n campaign card. They sit in a box as wide as the badges at rest: opening one pushes the ones after it and
+     * overflows the box over the next column, but the table does not reflow (it did, and a row that changed height moved the badge away from the pointer). The 76px minimum of the word badge does not apply to them.
      */
     public const ICON_BADGE_STYLE = 'td.col-patches-status{white-space:nowrap}'
-        .'td.col-patches-status :is(.patches-status-label,.patches-restart-badge){display:inline-flex;vertical-align:middle;box-sizing:border-box;height:22px;min-width:0;max-width:22px;margin:0 6px 0 0;padding:0;gap:0;'
+        // the box is as wide as the badges at rest (the script sets it), so the table never reflows: an open badge overflows it, over the next column
+        .'td.col-patches-status .patches-status-box{display:flex;align-items:center;gap:6px;height:22px}'
+        .'td.col-patches-status :is(.patches-status-label,.patches-extra-badge){position:relative;z-index:2;flex:none;display:inline-flex;box-sizing:border-box;height:22px;min-width:0;max-width:22px;margin:0;padding:0;gap:0;'
         .'justify-content:flex-start;overflow:hidden;transition:max-width .2s ease,box-shadow .2s ease}'
-        .'td.col-patches-status :is(.patches-status-label,.patches-restart-badge):hover{max-width:140px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0}'
-        .'td.col-patches-status :is(.patches-status-label,.patches-restart-badge)>i{flex:0 0 22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center}'
+        .'td.col-patches-status :is(.patches-status-label,.patches-extra-badge):hover{z-index:3;max-width:140px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0}'
+        .'td.col-patches-status :is(.patches-status-label,.patches-extra-badge)>i{flex:0 0 22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center}'
         .'td.col-patches-status .patches-icon-badge__text{padding:0 10px 0 0;opacity:0;transition:opacity .15s ease .05s}'
-        .'td.col-patches-status :is(.patches-status-label,.patches-restart-badge):hover .patches-icon-badge__text{opacity:1}';
+        .'td.col-patches-status :is(.patches-status-label,.patches-extra-badge):hover .patches-icon-badge__text{opacity:1}'
+        // the badges beside the status: informative blue (reentry, global, filters; the red ones are patches-badge--failed); a long word (the warnings of the segment list) gets more room
+        .'.patches-badge--flag,.patches-badge--restart{background-color:#1e88e5}'
+        .'td.col-patches-status .patches-extra-badge--wide:hover{max-width:260px}';
 
     public function __construct(
         protected TranslatorInterface $translator,

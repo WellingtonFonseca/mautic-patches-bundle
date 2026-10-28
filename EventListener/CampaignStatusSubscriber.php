@@ -25,8 +25,6 @@ class CampaignStatusSubscriber extends AbstractListStatusSubscriber
 {
     // the badge's own style (the pill, its width, hidden until placed) is AbstractListStatusSubscriber::BADGE_STYLE and SegmentStatusSubscriber::STYLE, on every page
     public const STYLE = 'tr i[class*="campaign-publish-icon"]{display:none!important}'
-        // the reentry badge beside the status of a campaign that lets contacts enter again (same icon badge as the status, see AbstractListStatusSubscriber::ICON_BADGE_STYLE)
-        .'td.col-patches-status .patches-restart-badge{background-color:#1e88e5}'
         .'a[data-campaign-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-campaign-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-campaign-status-action="activate"]:hover{background-color:var(--support-success)!important}'
