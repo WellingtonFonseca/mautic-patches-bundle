@@ -395,7 +395,7 @@ const badgeParts = (b) => [b.className.split(' ').filter((c) => /^patches-badge-
 
 test('SEGMENT_FLAGS: the four icons core prints next to the segment name, in the order they are shown', () => {
     assert.deepStrictEqual(api.SEGMENT_FLAGS.map((f) => f.key), ['global', 'filters', 'rebuild', 'slow']);
-    assert.deepStrictEqual(api.SEGMENT_FLAGS.map((f) => f.icon), ['ri-group-2-fill', 'ri-filter-2-fill', 'ri-error-warning-line', 'ri-time-line']);
+    assert.deepStrictEqual(api.SEGMENT_FLAGS.map((f) => f.icon), ['ri-global-line', 'ri-filter-2-fill', 'ri-error-warning-line', 'ri-time-line']);
     assert.strictEqual(api.SEGMENT_FLAGS[2].selector, 'i.ri-error-warning-line-circle', 'the icon core prints is found by its own class');
 });
 
@@ -403,7 +403,7 @@ test('addStatusColumn (segment): the global and filters icons leave the name cel
     const {status, nameCell} = segmentTable(['global', 'filters']);
 
     assert.strictEqual(status.children.length, 3);
-    assert.deepStrictEqual(badgeParts(status.children[1]), ['patches-badge--flag patches-extra-badge', 'ri-group-2-fill', 'Global', 'Global']);
+    assert.deepStrictEqual(badgeParts(status.children[1]), ['patches-badge--flag patches-extra-badge', 'ri-global-line', 'Global', 'Global']);
     assert.deepStrictEqual(badgeParts(status.children[2]), ['patches-badge--flag patches-extra-badge', 'ri-filter-2-fill', 'Filtros', 'Filtros']);
     assert.strictEqual(nameCell.children.length, 0, 'the icons of core are gone from the name');
 });
@@ -456,7 +456,7 @@ test('addStatusColumn (segment): a segment with no icons gets only the status ba
 test('addStatusColumn (segment): all four together keep the order global, filters, rebuild, slow', () => {
     const {status} = segmentTable(['slow', 'filters', 'rebuild', 'global']);
 
-    assert.deepStrictEqual(status.children.slice(1).map((b) => b.children[0].className), ['ri-group-2-fill', 'ri-filter-2-fill', 'ri-error-warning-line', 'ri-time-line']);
+    assert.deepStrictEqual(status.children.slice(1).map((b) => b.children[0].className), ['ri-global-line', 'ri-filter-2-fill', 'ri-error-warning-line', 'ri-time-line']);
 });
 
 test('addStatusColumn: the other lists never look for the segment icons', () => {

@@ -86,7 +86,7 @@
      * whose number (hours, seconds) goes into the short word of cfg (`word`, with %count%); the sentence of core is the fallback when it has no number.
      */
     var SEGMENT_FLAGS = [
-        {key: 'global', icon: 'ri-group-2-fill', selector: 'i.ri-group-2-fill', modifier: 'flag', word: 'global'},
+        {key: 'global', icon: 'ri-global-line', selector: 'i.ri-group-2-fill', modifier: 'flag', word: 'global'},
         {key: 'filters', icon: 'ri-filter-2-fill', selector: 'i.ri-filter-2-fill', modifier: 'flag', word: 'filters'},
         {key: 'rebuild', icon: 'ri-error-warning-line', coreIcon: 'ri-error-warning-line-circle', selector: 'i.ri-error-warning-line-circle', modifier: 'failed', holder: true, word: 'rebuild'},
         {key: 'slow', icon: 'ri-time-line', selector: 'i.ri-time-line', modifier: 'failed', holder: true, word: 'slow'}
