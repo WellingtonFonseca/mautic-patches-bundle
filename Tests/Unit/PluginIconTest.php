@@ -20,6 +20,15 @@ class PluginIconTest extends TestCase
         $this->assertFileExists(self::ICON);
     }
 
+    public function testTheTileOfTheIntegrationHasTheSameIcon(): void
+    {
+        // core looks for Assets/img/<integration name in lower case>.png for the tile of an integration
+        $tile = __DIR__.'/../../Assets/img/mauticpatches.png';
+
+        $this->assertFileExists($tile);
+        $this->assertSame(md5_file(self::ICON), md5_file($tile));
+    }
+
     public function testItIsASquarePng(): void
     {
         $info = getimagesize(self::ICON);
