@@ -46,13 +46,32 @@
         var doc = label.ownerDocument, icon = doc.createElement('i'), text = doc.createElement('span');
         icon.className = v.labelIcon;
         icon.setAttribute('aria-hidden', 'true');
-        text.className = 'patches-status-label__text';
+        text.className = 'patches-icon-badge__text';
         text.textContent = v.labelText;
         label.textContent = '';
         label.appendChild(icon);
         label.appendChild(text);
         label.setAttribute('title', v.labelText);
         label.setAttribute('aria-label', v.labelText);
+    }
+
+    /**
+     * The badge next to the status of a campaign that lets its contacts enter again (allowRestart): a reload icon, blue, that opens on
+     * hover to show the word like the status badge. Informative only, it is not touched after the table is drawn.
+     */
+    function restartBadge(doc, text) {
+        var badge = doc.createElement('span'), icon = doc.createElement('i'), word = doc.createElement('span');
+        badge.className = 'patches-badge patches-badge--restart patches-icon-badge patches-restart-badge';
+        badge.setAttribute('title', text);
+        badge.setAttribute('aria-label', text);
+        icon.className = 'ri-refresh-line';
+        icon.setAttribute('aria-hidden', 'true');
+        word.className = 'patches-icon-badge__text';
+        word.textContent = text;
+        badge.appendChild(icon);
+        badge.appendChild(word);
+
+        return badge;
     }
 
     function apply($, id, status, cfg) {
@@ -282,6 +301,7 @@
             var status = label.getAttribute('data-status');
             // a label that is spinning (core is working) is painted by paint() when the work ends
             if (status === 'published' || status === 'unpublished') { fillLabel(label, view(status, cfg)); }
+            if (label.getAttribute('data-restart') === '1') { td.appendChild(restartBadge(doc, cfg.restart)); }
         }
 
         return true;

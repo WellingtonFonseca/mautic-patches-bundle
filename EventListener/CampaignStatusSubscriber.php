@@ -27,14 +27,15 @@ class CampaignStatusSubscriber extends AbstractListStatusSubscriber
     public const STYLE = 'tr i[class*="campaign-publish-icon"]{display:none!important}'
         // the label leaves the name cell for its own column (the script), so SegmentStatusSubscriber's rule that finds the description by the label no longer reaches it
         .'#campaignTable td > div.text-muted{display:none!important}'
-        // the label of the Status column is a 22px circle with the icon; on hover it opens to the right and shows the word, over the next cell (absolute, so the column does not move), as the n8n badge of the campaign card
-        .'td.col-campaign-status{position:relative!important;min-width:60px}'
-        .'td.col-campaign-status .patches-status-label{position:absolute;top:50%;left:var(--spacing-04,12px);transform:translateY(-50%);z-index:2;box-sizing:border-box;height:22px;min-width:0;max-width:22px;margin:0;padding:0;gap:0;'
+        // the badges of the Status column (the status and, when the campaign lets contacts enter again, the reentry one beside it) are 22px circles with an icon; on hover one opens to the right and shows the word, as the n8n badge of the campaign card. They are in the flow of the cell: opening pushes the next badge and widens the column
+        .'td.col-campaign-status{white-space:nowrap}'
+        .'td.col-campaign-status :is(.patches-status-label,.patches-restart-badge){display:inline-flex;vertical-align:middle;box-sizing:border-box;height:22px;min-width:0;max-width:22px;margin:0 6px 0 0;padding:0;gap:0;'
         .'justify-content:flex-start;overflow:hidden;transition:max-width .2s ease,box-shadow .2s ease}'
-        .'td.col-campaign-status .patches-status-label:hover{max-width:140px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0}'
-        .'td.col-campaign-status .patches-status-label>i{flex:0 0 22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center}'
-        .'td.col-campaign-status .patches-status-label__text{padding:0 10px 0 0;opacity:0;transition:opacity .15s ease .05s}'
-        .'td.col-campaign-status .patches-status-label:hover .patches-status-label__text{opacity:1}'
+        .'td.col-campaign-status .patches-restart-badge{background-color:#1e88e5}'
+        .'td.col-campaign-status :is(.patches-status-label,.patches-restart-badge):hover{max-width:140px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0}'
+        .'td.col-campaign-status :is(.patches-status-label,.patches-restart-badge)>i{flex:0 0 22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center}'
+        .'td.col-campaign-status .patches-icon-badge__text{padding:0 10px 0 0;opacity:0;transition:opacity .15s ease .05s}'
+        .'td.col-campaign-status :is(.patches-status-label,.patches-restart-badge):hover .patches-icon-badge__text{opacity:1}'
         .'a[data-campaign-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-campaign-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-campaign-status-action="activate"]:hover{background-color:var(--support-success)!important}'
@@ -69,6 +70,12 @@ class CampaignStatusSubscriber extends AbstractListStatusSubscriber
     protected function mayEdit(object $item): bool
     {
         return $this->security->hasEntityAccess('campaign:campaigns:editown', 'campaign:campaigns:editother', $item->getCreatedBy());
+    }
+
+    /** A campaign that lets its contacts enter again carries the marker the script turns into the reentry badge. */
+    protected function labelAttributes(object $item): string
+    {
+        return $item->allowRestart() ? ' data-restart="1"' : '';
     }
 
     protected function nameContext(): ?string

@@ -35,6 +35,7 @@ class StatusScriptTest extends TestCase
         $this->assertStringContainsString('"active":"mautic.core.form.active"', $html);
         $this->assertStringContainsString('"deactivate":"mautic.patches.segment.deactivate"', $html);
         $this->assertStringContainsString('"column":"mautic.patches.status.column"', $html);
+        $this->assertStringContainsString('"restart":"mautic.patches.campaign.restart"', $html);
         $this->assertStringContainsString('"style":"a{b:c}"', $html);
     }
 }
