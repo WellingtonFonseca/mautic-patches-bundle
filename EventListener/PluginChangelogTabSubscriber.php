@@ -29,10 +29,15 @@ class PluginChangelogTabSubscriber implements EventSubscriberInterface
             return;
         }
 
+        $script = file_get_contents(__DIR__.'/../Resources/js/plugin-changelog-tab.js');
+        if (false === $script) {
+            return;
+        }
+
         $customContentEvent->addContent(
             '<style>.patches-changelog{max-height:60vh;overflow-y:auto}.patches-changelog__day{margin-bottom:12px}'
             .'.patches-changelog__day ul{margin:4px 0 0;padding-left:20px}</style>'
-            .'<script>'.file_get_contents(__DIR__.'/../Resources/js/plugin-changelog-tab.js')
+            .'<script>'.$script
             .';mauticPatchesChangelogTabApi.install(mQuery,Mautic);</script>'
         );
     }
