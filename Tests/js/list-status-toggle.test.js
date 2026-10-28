@@ -9,6 +9,7 @@ const assert = require('node:assert');
 const api    = require('../../Resources/js/list-status-toggle.js');
 
 const cfg = {active: 'Ativo', inactive: 'Inativo', activate: 'Ativar', deactivate: 'Desativar'};
+const campaignSpec = {table: '#campaignTable', kind: 'campaign'};
 const ccfg = Object.assign({column: 'Status', restart: 'Reingresso'}, cfg);
 
 test('statusOf: the data-status of the icon in the answer', () => {
@@ -163,7 +164,7 @@ function node(name) {
 }
 
 /** A campaign table: header [menu, prefix, name] and rows [menu, prefix, name(label)], the label in the name cell. */
-function campaignTable(rowCount, labelled = true, status = 'published', restart = false) {
+function campaignTable(rowCount, labelled = true, status = 'published', restart = false, tableSelector = '#campaignTable') {
     const headRow = node('tr'), menuTh = node('th'), prefixTh = node('th'), nameTh = node('th');
     [menuTh, prefixTh, nameTh].forEach((th) => headRow.appendChild(th));
     const rows = [];
@@ -183,14 +184,15 @@ function campaignTable(rowCount, labelled = true, status = 'published', restart 
     }
     const table = {
         querySelector(selector) {
-            if (selector === 'th.col-campaign-status') { return headRow.children.find((c) => c.className.includes('col-campaign-status')) || null; }
+            if (selector === 'th.col-patches-status') { return headRow.children.find((c) => c.className.includes('col-patches-status')) || null; }
             if (selector === 'thead tr') { return {querySelector: () => headRow.children[0]}; }
+            if (selector === '.patches-status-label') { return rows.find((r) => r.label) ? {} : null; }
             return null;
         },
         querySelectorAll: () => rows
     };
     const doc = {
-        querySelector: (selector) => (selector === '#campaignTable' ? table : null),
+        querySelector: (selector) => (selector === tableSelector ? table : null),
         createElement: (tag) => { const n = node(tag); n.ownerDocument = doc; return n; }
     };
     rows.forEach((row) => { if (row.label) { row.label.ownerDocument = doc; } });
@@ -198,55 +200,66 @@ function campaignTable(rowCount, labelled = true, status = 'published', restart 
     return {doc, headRow, rows};
 }
 
-test('addCampaignStatusColumn: a Status header and a cell per row go right after the menu column, and the label moves into its cell', () => {
+test('addStatusColumn: a Status header and a cell per row go right after the menu column, and the label moves into its cell', () => {
     const {doc, headRow, rows} = campaignTable(2);
 
-    assert.strictEqual(api.addCampaignStatusColumn(doc, ccfg), true);
+    assert.strictEqual(api.addStatusColumn(doc, campaignSpec, ccfg), true);
 
     assert.strictEqual(headRow.children.length, 4);
     const th = headRow.children[1];
-    assert.match(th.className, /col-campaign-status/);
+    assert.match(th.className, /col-patches-status col-campaign-status/);
     assert.strictEqual(th.attrs.scope, 'col');
     assert.strictEqual(th.children[0].children[0].textContent, 'Status');
     assert.strictEqual(th.children[0].style.pointerEvents, 'none', 'the header is not a sort link');
     rows.forEach((row) => {
         assert.strictEqual(row.children.length, 4);
         const cell = row.children[1];
-        assert.strictEqual(cell.className, 'col-campaign-status');
+        assert.strictEqual(cell.className, 'col-patches-status col-campaign-status');
         assert.deepStrictEqual(cell.children, [row.label]);
         assert.strictEqual(row.label.attrs['data-placed'], '1');
         assert.strictEqual(row.cells[2].children.length, 0, 'the name cell no longer holds the label');
     });
 });
 
-test('addCampaignStatusColumn: done once per drawing of the table', () => {
+test('addStatusColumn: done once per drawing of the table', () => {
     const {doc, headRow} = campaignTable(1);
 
-    assert.strictEqual(api.addCampaignStatusColumn(doc, ccfg), true);
-    assert.strictEqual(api.addCampaignStatusColumn(doc, ccfg), false);
+    assert.strictEqual(api.addStatusColumn(doc, campaignSpec, ccfg), true);
+    assert.strictEqual(api.addStatusColumn(doc, campaignSpec, ccfg), false);
     assert.strictEqual(headRow.children.length, 4);
 });
 
-test('addCampaignStatusColumn: a row without a label still gets an empty cell, so the columns line up', () => {
-    const {doc, rows} = campaignTable(1, false);
+test('addStatusColumn: a row without a label still gets an empty cell, so the columns line up', () => {
+    const {doc, rows} = campaignTable(2);
+    delete rows[1].label;
 
-    api.addCampaignStatusColumn(doc, ccfg);
+    api.addStatusColumn(doc, campaignSpec, ccfg);
 
-    assert.strictEqual(rows[0].children.length, 4);
-    assert.strictEqual(rows[0].children[1].children.length, 0);
+    assert.strictEqual(rows[1].children.length, 4);
+    assert.strictEqual(rows[1].children[1].children.length, 0);
+    assert.strictEqual(rows[0].children[1].children.length, 1);
 });
 
-test('addCampaignStatusColumn: no campaign table, or a table without a header, is left alone', () => {
-    assert.strictEqual(api.addCampaignStatusColumn({querySelector: () => null}, ccfg), false);
+test('addStatusColumn: no column while the table has no label yet (the user and email lists make theirs after the draw)', () => {
+    const {doc, headRow, rows} = campaignTable(2, false);
+
+    assert.strictEqual(api.addStatusColumn(doc, campaignSpec, ccfg), false);
+
+    assert.strictEqual(headRow.children.length, 3);
+    assert.strictEqual(rows[0].children.length, 3);
+});
+
+test('addStatusColumn: no campaign table, or a table without a header, is left alone', () => {
+    assert.strictEqual(api.addStatusColumn({querySelector: () => null}, campaignSpec, ccfg), false);
     const noHead = {querySelector: (s) => (s === '#campaignTable' ? {querySelector: () => null} : null)};
-    assert.strictEqual(api.addCampaignStatusColumn(noHead, ccfg), false);
+    assert.strictEqual(api.addStatusColumn(noHead, campaignSpec, ccfg), false);
 });
 
-test('addCampaignStatusColumn: a row without any cell is skipped, the others still get theirs', () => {
+test('addStatusColumn: a row without any cell is skipped, the others still get theirs', () => {
     const {doc, rows} = campaignTable(2);
     rows[0].querySelector = () => null;
 
-    assert.strictEqual(api.addCampaignStatusColumn(doc, ccfg), true);
+    assert.strictEqual(api.addStatusColumn(doc, campaignSpec, ccfg), true);
 
     assert.strictEqual(rows[0].children.length, 3);
     assert.strictEqual(rows[1].children.length, 4);
@@ -254,12 +267,12 @@ test('addCampaignStatusColumn: a row without any cell is skipped, the others sti
 
 function statusLabelIn(status, restart = false) {
     const {doc, rows} = campaignTable(1, true, status, restart);
-    api.addCampaignStatusColumn(doc, ccfg);
+    api.addStatusColumn(doc, campaignSpec, ccfg);
 
     return rows[0].label;
 }
 
-test('addCampaignStatusColumn: an active label becomes a play icon plus the word, and the word is its title', () => {
+test('addStatusColumn: an active label becomes a play icon plus the word, and the word is its title', () => {
     const label = statusLabelIn('published');
 
     assert.deepStrictEqual(label.children.map((c) => [c.name, c.className, c.textContent]), [['i', 'ri-play-fill', ''], ['span', 'patches-icon-badge__text', 'Ativo']]);
@@ -268,24 +281,24 @@ test('addCampaignStatusColumn: an active label becomes a play icon plus the word
     assert.strictEqual(label.attrs['aria-label'], 'Ativo');
 });
 
-test('addCampaignStatusColumn: an inactive label becomes a stop icon plus the word', () => {
+test('addStatusColumn: an inactive label becomes a stop icon plus the word', () => {
     const label = statusLabelIn('unpublished');
 
     assert.deepStrictEqual(label.children.map((c) => [c.className, c.textContent]), [['ri-stop-fill', ''], ['patches-icon-badge__text', 'Inativo']]);
     assert.strictEqual(label.attrs.title, 'Inativo');
 });
 
-test('addCampaignStatusColumn: a label that is spinning is left as it is for paint() to finish', () => {
+test('addStatusColumn: a label that is spinning is left as it is for paint() to finish', () => {
     const label = statusLabelIn('busy');
 
     assert.deepStrictEqual(label.children, []);
     assert.strictEqual(label.attrs.title, undefined);
 });
 
-test('addCampaignStatusColumn: a campaign that allows reentry gets a reload badge next to the status, icon plus the word as title', () => {
+test('addStatusColumn: a campaign that allows reentry gets a reload badge next to the status, icon plus the word as title', () => {
     const {doc, rows} = campaignTable(1, true, 'published', true);
 
-    api.addCampaignStatusColumn(doc, ccfg);
+    api.addStatusColumn(doc, campaignSpec, ccfg);
 
     const cell = rows[0].children[1];
     assert.strictEqual(cell.children.length, 2);
@@ -296,26 +309,55 @@ test('addCampaignStatusColumn: a campaign that allows reentry gets a reload badg
     assert.match(badge.className, /patches-badge--restart/);
     assert.match(badge.className, /patches-icon-badge/);
     assert.match(badge.className, /patches-restart-badge/);
-    assert.deepStrictEqual(badge.children.map((c) => [c.name, c.className, c.textContent]), [['i', 'ri-refresh-line', ''], ['span', 'patches-icon-badge__text', 'Reingresso']]);
+    assert.deepStrictEqual(badge.children.map((c) => [c.name, c.className, c.textContent]), [['i', 'ri-arrow-go-back-line', ''], ['span', 'patches-icon-badge__text', 'Reingresso']]);
     assert.strictEqual(badge.children[0].attrs['aria-hidden'], 'true');
     assert.strictEqual(badge.attrs.title, 'Reingresso');
     assert.strictEqual(badge.attrs['aria-label'], 'Reingresso');
 });
 
-test('addCampaignStatusColumn: a campaign that does not allow reentry has no reentry badge, and an inactive one with reentry still has it', () => {
+test('addStatusColumn: a campaign that does not allow reentry has no reentry badge, and an inactive one with reentry still has it', () => {
     const plain = campaignTable(1, true, 'published', false);
-    api.addCampaignStatusColumn(plain.doc, ccfg);
+    api.addStatusColumn(plain.doc, campaignSpec, ccfg);
     assert.strictEqual(plain.rows[0].children[1].children.length, 1);
 
     const off = campaignTable(1, true, 'unpublished', true);
-    api.addCampaignStatusColumn(off.doc, ccfg);
+    api.addStatusColumn(off.doc, campaignSpec, ccfg);
     assert.strictEqual(off.rows[0].children[1].children.length, 2);
 });
 
-test('addCampaignStatusColumn: a spinning status label still gets the reentry badge', () => {
+test('addStatusColumn: a spinning status label still gets the reentry badge', () => {
     const {doc, rows} = campaignTable(1, true, 'busy', true);
 
-    api.addCampaignStatusColumn(doc, ccfg);
+    api.addStatusColumn(doc, campaignSpec, ccfg);
 
     assert.strictEqual(rows[0].children[1].children.length, 2);
+});
+
+test('COLUMNS: the four lists that have a Status column, each with its table and kind', () => {
+    assert.deepStrictEqual(api.COLUMNS.map((c) => [c.kind, c.table]), [
+        ['segment', '#leadListTable'], ['campaign', '#campaignTable'], ['user', '#userTable'], ['email', 'table.email-list'],
+    ]);
+});
+
+test('addStatusColumn: every list gets the same column, with its own kind in the class', () => {
+    for (const spec of api.COLUMNS) {
+        const {doc, headRow, rows} = campaignTable(1, true, 'unpublished', false, spec.table);
+
+        assert.strictEqual(api.addStatusColumn(doc, spec, ccfg), true, spec.kind);
+
+        assert.strictEqual(headRow.children[1].className, `col-patches-status col-${spec.kind}-status pa-0`);
+        assert.strictEqual(rows[0].children[1].className, `col-patches-status col-${spec.kind}-status`);
+        assert.deepStrictEqual(rows[0].children[1].children[0].children.map((c) => c.className), ['ri-stop-fill', 'patches-icon-badge__text']);
+    }
+});
+
+test('addStatusColumns: adds the column of the lists on the page and leaves the others alone', () => {
+    const {doc, headRow} = campaignTable(1, true, 'published', false, '#userTable');
+
+    api.addStatusColumns(doc, ccfg);
+
+    assert.strictEqual(headRow.children.length, 4);
+    assert.strictEqual(headRow.children[1].className, 'col-patches-status col-user-status pa-0');
+    api.addStatusColumns(doc, ccfg);
+    assert.strictEqual(headRow.children.length, 4, 'once per drawing of the table');
 });

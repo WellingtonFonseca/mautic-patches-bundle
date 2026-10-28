@@ -37,12 +37,12 @@
     }
 
     /**
-     * Writes the status into a label. In the Status column of the campaign list the label is an icon (play for active, stop for
+     * Writes the status into a label. In the Status column of a list (segments, campaigns, users, emails) the label is an icon (play for active, stop for
      * inactive) that opens to show the word on hover (the CSS of CampaignStatusSubscriber, as the n8n badge of the campaign card); the
      * word is also its title and aria-label. Everywhere else it is the word alone.
      */
     function fillLabel(label, v) {
-        if (!label.closest || !label.closest('td.col-campaign-status')) { label.textContent = v.labelText; return; }
+        if (!label.closest || !label.closest('td.col-patches-status')) { label.textContent = v.labelText; return; }
         var doc = label.ownerDocument, icon = doc.createElement('i'), text = doc.createElement('span');
         icon.className = v.labelIcon;
         icon.setAttribute('aria-hidden', 'true');
@@ -64,7 +64,7 @@
         badge.className = 'patches-badge patches-badge--restart patches-icon-badge patches-restart-badge';
         badge.setAttribute('title', text);
         badge.setAttribute('aria-label', text);
-        icon.className = 'ri-refresh-line';
+        icon.className = 'ri-arrow-go-back-line';
         icon.setAttribute('aria-hidden', 'true');
         word.className = 'patches-icon-badge__text';
         word.textContent = text;
@@ -76,9 +76,10 @@
 
     function apply($, id, status, cfg) {
         var v = view(status, cfg);
-        $('.patches-status-label[data-segment-id="' + id + '"]')
-            .removeClass(STATES).addClass(v.labelClass)
-            .attr('data-status', status).text(v.labelText);
+        $('.patches-status-label[data-segment-id="' + id + '"]').each(function () {
+            $(this).removeClass(STATES).addClass(v.labelClass).attr('data-status', status);
+            fillLabel(this, v);
+        });
         $('a[data-segment-status-action][data-segment-id="' + id + '"]').each(function () {
             var $link = $(this);
             $link.attr('data-segment-status-action', v.action).attr('aria-label', v.actionText);
@@ -158,11 +159,12 @@
         // the labels of a list that is in the page, and of every list loaded later
         place(root.document);
         colorCounts(root.document);
+        addStatusColumns(root.document, cfg);
         var pending = false;
         new root.MutationObserver(function () {
             if (pending) { return; }
             pending = true;
-            root.requestAnimationFrame(function () { pending = false; place(root.document); colorCounts(root.document); });
+            root.requestAnimationFrame(function () { pending = false; place(root.document); colorCounts(root.document); addStatusColumns(root.document, cfg); });
         }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true});
     }
 
@@ -263,21 +265,31 @@
         }
     }
 
+    /** The lists that have a Status column: the CSS selector of the table and the kind (the name in the class of the column). */
+    var COLUMNS = [
+        {table: '#leadListTable', kind: 'segment'},
+        {table: '#campaignTable', kind: 'campaign'},
+        {table: '#userTable', kind: 'user'},
+        {table: 'table.email-list', kind: 'email'}
+    ];
+
     /**
-     * The status of the campaign list is a column of its own, right after the menu column (before "Prefixo" and "Nome"): a header
-     * `th.col-campaign-status` and, in every row, a cell that holds the label (core prints it with the name). The header is plain, not
-     * a sort link. The label becomes an icon with the word on hover (fillLabel). Done once per drawing of the table (a sort, a page or a
-     * search draws it again); returns whether it added the column. `cfg`: the texts (column, active, inactive).
-     * It is placed by position (second column), so it does not depend on the order in which the Prefixo column is added.
+     * The status of a list is a column of its own, right after the menu column (before "Prefixo", the avatar and "Nome"): a header
+     * `th.col-patches-status` and, in every row, a cell that holds the label (core, or this script, prints it with the name). The
+     * header is plain, not a sort link. The label becomes an icon with the word on hover (fillLabel). Done once per drawing of the table (a
+     * sort, a page or a search draws it again); returns whether it added the column. It is placed by position (second column), so it
+     * does not depend on the order in which the Prefixo column is added. `cfg`: the texts (column, active, inactive, restart).
      */
-    function addCampaignStatusColumn(doc, cfg) {
-        var table = doc.querySelector('#campaignTable');
-        if (!table || table.querySelector('th.col-campaign-status')) { return false; }
+    function addStatusColumn(doc, spec, cfg) {
+        var table = doc.querySelector(spec.table);
+        // not before a label exists: the user and email lists get theirs from the script (syncNamedRows), which finds the name cell by its position
+        if (!table || table.querySelector('th.col-patches-status') || !table.querySelector('.patches-status-label')) { return false; }
         var head = table.querySelector('thead tr'), first = head && head.querySelector('th');
         if (!first) { return false; }
+        var columnClass = 'col-patches-status col-' + spec.kind + '-status';
 
         var th = doc.createElement('th'), box = doc.createElement('span'), text = doc.createElement('span');
-        th.className = 'col-campaign-status pa-0';
+        th.className = columnClass + ' pa-0';
         th.setAttribute('scope', 'col');
         box.className = 'btn btn-ghost btn-block jc-space-between';
         box.style.pointerEvents = 'none';
@@ -293,7 +305,7 @@
             var cell = rows[k].querySelector('td');
             if (!cell) { continue; }
             var td = doc.createElement('td'), label = rows[k].querySelector('.patches-status-label');
-            td.className = 'col-campaign-status';
+            td.className = columnClass;
             cell.parentNode.insertBefore(td, cell.nextSibling);
             if (!label) { continue; }
             label.setAttribute('data-placed', '1');
@@ -307,10 +319,15 @@
         return true;
     }
 
+    /** The Status column of every list that is on the page and has none yet. */
+    function addStatusColumns(doc, cfg) {
+        for (var k = 0; k < COLUMNS.length; k++) { addStatusColumn(doc, COLUMNS[k], cfg); }
+    }
+
     /** Brings the label and the menu item of every campaign row to the state of its core icon. */
     function syncCampaigns($, cfg) {
         if (!root.document.querySelector('.patches-status-label[data-campaign-id]')) { return; } // not a campaign list: no row to look at
-        addCampaignStatusColumn(root.document, cfg);
+        addStatusColumns(root.document, cfg);
         var rows = root.document.querySelectorAll('tr');
         for (var k = 0; k < rows.length; k++) {
             var row = rows[k], label = row.querySelector('.patches-status-label[data-campaign-id]');
@@ -339,10 +356,12 @@
         if (!table) { return; }
         var rows = table.querySelectorAll('tbody tr');
         for (var k = 0; k < rows.length; k++) {
-            var row = rows[k], icon = iconOf(row, kind), name = row.querySelector(nameSelector);
-            if (!name) { continue; }
+            var row = rows[k], icon = iconOf(row, kind);
             var label = row.querySelector('.patches-status-label');
             if (!label) {
+                // only a row that has no label yet needs its name cell, found by position: once the Status column exists the positions have moved
+                var name = row.querySelector(nameSelector);
+                if (!name) { continue; }
                 label = root.document.createElement('span');
                 label.className = 'patches-badge patches-status-label';
                 label.setAttribute('data-placed', '1');
@@ -352,6 +371,7 @@
             paint($, label, icon, icon && icon.getAttribute('data-status') === 'unpublished' ? 'unpublished' : 'published',
                 $(row).find('a[' + attr + ']'), attr, cfg);
         }
+        addStatusColumns(root.document, cfg);
     }
 
     function syncUsers($, cfg) {
@@ -376,7 +396,7 @@
         syncEmails($, cfg);
     }
 
-    var api = {addCampaignStatusColumn: addCampaignStatusColumn, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
+    var api = {addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

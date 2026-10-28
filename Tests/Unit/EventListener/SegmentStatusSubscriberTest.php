@@ -89,8 +89,11 @@ class SegmentStatusSubscriberTest extends TestCase
     {
         $css = SegmentStatusSubscriber::STYLE;
         $this->assertStringContainsString('i[class*="lead-list-publish-icon"]{display:none!important}', $css);
-        // the description under the name is hidden, only in the rows that have the label (segment and campaign lists)
-        $this->assertStringContainsString('td:has(.patches-status-label) > div.text-muted{display:none!important}', $css);
+        // the description under the name is hidden in the lists whose label moved to the Status column (segment, campaign, email)
+        $this->assertStringContainsString('#leadListTable td > div.text-muted,#campaignTable td > div.text-muted,table.email-list td > div.text-muted{display:none!important}', $css);
+        // the icon badge of the Status column is part of the style, with no fixed width
+        $this->assertStringContainsString('td.col-patches-status :is(.patches-status-label,.patches-restart-badge){display:inline-flex;', $css);
+        $this->assertStringContainsString('max-width:22px;', $css);
         // "Atualizado em ..." is as large as the table
         $this->assertStringContainsString('.segment-last-built small{font-size:14px}', $css);
         // the contact count is a translucent badge of the same family

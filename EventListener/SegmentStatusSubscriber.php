@@ -25,9 +25,10 @@ class SegmentStatusSubscriber extends AbstractListStatusSubscriber
 {
     // The badge stays invisible until the script has placed it at the start of the name, so it does not flash at the end; the
     // description core prints under the name in the segment, campaign and email rows (the rows with a badge inside) is hidden.
-    public const STYLE = self::BADGE_STYLE
+    public const STYLE = self::BADGE_STYLE.self::ICON_BADGE_STYLE
         .'i[class*="lead-list-publish-icon"]{display:none!important}'
-        .'td:has(.patches-status-label) > div.text-muted{display:none!important}'
+        // the label leaves the name cell for the Status column (the script), so the rule that found the description by the label is by table
+        .'#leadListTable td > div.text-muted,#campaignTable td > div.text-muted,table.email-list td > div.text-muted{display:none!important}'
         // "Atualizado em ..." under the name: as large as the rest of the table (core's <small> is 11.9px)
         .'.segment-last-built small{font-size:14px}'
         .'.patches-status-label{margin-right:var(--spacing-03);box-sizing:border-box;min-width:76px}.patches-status-label:not([data-placed]){visibility:hidden}'

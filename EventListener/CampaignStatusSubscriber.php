@@ -25,17 +25,8 @@ class CampaignStatusSubscriber extends AbstractListStatusSubscriber
 {
     // the badge's own style (the pill, its width, hidden until placed) is AbstractListStatusSubscriber::BADGE_STYLE and SegmentStatusSubscriber::STYLE, on every page
     public const STYLE = 'tr i[class*="campaign-publish-icon"]{display:none!important}'
-        // the label leaves the name cell for its own column (the script), so SegmentStatusSubscriber's rule that finds the description by the label no longer reaches it
-        .'#campaignTable td > div.text-muted{display:none!important}'
-        // the badges of the Status column (the status and, when the campaign lets contacts enter again, the reentry one beside it) are 22px circles with an icon; on hover one opens to the right and shows the word, as the n8n badge of the campaign card. They are in the flow of the cell: opening pushes the next badge and widens the column
-        .'td.col-campaign-status{white-space:nowrap}'
-        .'td.col-campaign-status :is(.patches-status-label,.patches-restart-badge){display:inline-flex;vertical-align:middle;box-sizing:border-box;height:22px;min-width:0;max-width:22px;margin:0 6px 0 0;padding:0;gap:0;'
-        .'justify-content:flex-start;overflow:hidden;transition:max-width .2s ease,box-shadow .2s ease}'
-        .'td.col-campaign-status .patches-restart-badge{background-color:#1e88e5}'
-        .'td.col-campaign-status :is(.patches-status-label,.patches-restart-badge):hover{max-width:140px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0}'
-        .'td.col-campaign-status :is(.patches-status-label,.patches-restart-badge)>i{flex:0 0 22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center}'
-        .'td.col-campaign-status .patches-icon-badge__text{padding:0 10px 0 0;opacity:0;transition:opacity .15s ease .05s}'
-        .'td.col-campaign-status :is(.patches-status-label,.patches-restart-badge):hover .patches-icon-badge__text{opacity:1}'
+        // the reentry badge beside the status of a campaign that lets contacts enter again (same icon badge as the status, see AbstractListStatusSubscriber::ICON_BADGE_STYLE)
+        .'td.col-patches-status .patches-restart-badge{background-color:#1e88e5}'
         .'a[data-campaign-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-campaign-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-campaign-status-action="activate"]:hover{background-color:var(--support-success)!important}'
