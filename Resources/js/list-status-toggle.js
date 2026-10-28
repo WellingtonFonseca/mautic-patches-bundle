@@ -29,10 +29,30 @@
         return {
             labelClass: active ? 'patches-badge--production' : 'patches-badge--failed',
             labelText:  active ? cfg.active : cfg.inactive,
+            labelIcon:  active ? 'ri-play-fill' : 'ri-stop-fill',
             action:     active ? 'deactivate' : 'activate',
             actionText: active ? cfg.deactivate : cfg.activate,
             actionIcon: active ? 'ri-close-circle-line' : 'ri-checkbox-circle-line'
         };
+    }
+
+    /**
+     * Writes the status into a label. In the Status column of the campaign list the label is an icon (play for active, stop for
+     * inactive) that opens to show the word on hover (the CSS of CampaignStatusSubscriber, as the n8n badge of the campaign card); the
+     * word is also its title and aria-label. Everywhere else it is the word alone.
+     */
+    function fillLabel(label, v) {
+        if (!label.closest || !label.closest('td.col-campaign-status')) { label.textContent = v.labelText; return; }
+        var doc = label.ownerDocument, icon = doc.createElement('i'), text = doc.createElement('span');
+        icon.className = v.labelIcon;
+        icon.setAttribute('aria-hidden', 'true');
+        text.className = 'patches-status-label__text';
+        text.textContent = v.labelText;
+        label.textContent = '';
+        label.appendChild(icon);
+        label.appendChild(text);
+        label.setAttribute('title', v.labelText);
+        label.setAttribute('aria-label', v.labelText);
     }
 
     function apply($, id, status, cfg) {
@@ -179,7 +199,8 @@
         }
         if (label.getAttribute('data-status') === status) { return; }
         var v = view(status, cfg);
-        $(label).removeClass(STATES).addClass(v.labelClass).attr('data-status', status).text(v.labelText);
+        $(label).removeClass(STATES).addClass(v.labelClass).attr('data-status', status);
+        fillLabel(label, v);
         $links.each(function () {
             var $link = $(this);
             $link.attr(attr, v.action).attr('aria-label', v.actionText);
@@ -223,9 +244,53 @@
         }
     }
 
+    /**
+     * The status of the campaign list is a column of its own, right after the menu column (before "Prefixo" and "Nome"): a header
+     * `th.col-campaign-status` and, in every row, a cell that holds the label (core prints it with the name). The header is plain, not
+     * a sort link. The label becomes an icon with the word on hover (fillLabel). Done once per drawing of the table (a sort, a page or a
+     * search draws it again); returns whether it added the column. `cfg`: the texts (column, active, inactive).
+     * It is placed by position (second column), so it does not depend on the order in which the Prefixo column is added.
+     */
+    function addCampaignStatusColumn(doc, cfg) {
+        var table = doc.querySelector('#campaignTable');
+        if (!table || table.querySelector('th.col-campaign-status')) { return false; }
+        var head = table.querySelector('thead tr'), first = head && head.querySelector('th');
+        if (!first) { return false; }
+
+        var th = doc.createElement('th'), box = doc.createElement('span'), text = doc.createElement('span');
+        th.className = 'col-campaign-status pa-0';
+        th.setAttribute('scope', 'col');
+        box.className = 'btn btn-ghost btn-block jc-space-between';
+        box.style.pointerEvents = 'none';
+        box.style.color = 'inherit'; // a ghost button takes the link color; the other headers are black
+        text.className = 'fw-b';
+        text.textContent = cfg.column;
+        box.appendChild(text);
+        th.appendChild(box);
+        first.parentNode.insertBefore(th, first.nextSibling);
+
+        var rows = table.querySelectorAll('tbody tr');
+        for (var k = 0; k < rows.length; k++) {
+            var cell = rows[k].querySelector('td');
+            if (!cell) { continue; }
+            var td = doc.createElement('td'), label = rows[k].querySelector('.patches-status-label');
+            td.className = 'col-campaign-status';
+            cell.parentNode.insertBefore(td, cell.nextSibling);
+            if (!label) { continue; }
+            label.setAttribute('data-placed', '1');
+            td.appendChild(label);
+            var status = label.getAttribute('data-status');
+            // a label that is spinning (core is working) is painted by paint() when the work ends
+            if (status === 'published' || status === 'unpublished') { fillLabel(label, view(status, cfg)); }
+        }
+
+        return true;
+    }
+
     /** Brings the label and the menu item of every campaign row to the state of its core icon. */
     function syncCampaigns($, cfg) {
         if (!root.document.querySelector('.patches-status-label[data-campaign-id]')) { return; } // not a campaign list: no row to look at
+        addCampaignStatusColumn(root.document, cfg);
         var rows = root.document.querySelectorAll('tr');
         for (var k = 0; k < rows.length; k++) {
             var row = rows[k], label = row.querySelector('.patches-status-label[data-campaign-id]');
@@ -291,7 +356,7 @@
         syncEmails($, cfg);
     }
 
-    var api = {install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
+    var api = {addCampaignStatusColumn: addCampaignStatusColumn, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

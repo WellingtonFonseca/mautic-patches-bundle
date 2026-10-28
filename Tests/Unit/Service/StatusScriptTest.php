@@ -34,6 +34,7 @@ class StatusScriptTest extends TestCase
         $this->assertStringContainsString('mauticPatchesListStatusApi.installEmail(mQuery,Mautic,{', $html);
         $this->assertStringContainsString('"active":"mautic.core.form.active"', $html);
         $this->assertStringContainsString('"deactivate":"mautic.patches.segment.deactivate"', $html);
+        $this->assertStringContainsString('"column":"mautic.patches.status.column"', $html);
         $this->assertStringContainsString('"style":"a{b:c}"', $html);
     }
 }
