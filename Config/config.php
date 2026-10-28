@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-return [
+use MauticPlugin\MauticPatchesBundle\Integration\MauticPatchesIntegration;
+
+$patchesConfig = [
     'name'        => 'Mautic Patches',
     'description' => 'Small, targeted fixes for Mautic core UI bugs, applied without editing core files.',
-    'version'     => '0.5.0',
+    'version'     => '0.6.0',
     'routes'      => [
         // Session-authenticated target of the "Update" button in the segment list. Not under
         // /segments/..., which core's /s/segments/{objectAction}/{objectId} would match first.
@@ -125,6 +127,31 @@ return [
             ],
         ],
     ],
+    'services' => [
+        'integrations' => [
+            'mautic.integration.mauticpatches' => [
+                'class'     => MauticPatchesIntegration::class,
+                'arguments' => [
+                    'event_dispatcher',
+                    'mautic.helper.cache_storage',
+                    'doctrine.orm.entity_manager',
+                    'session',
+                    'request_stack',
+                    'router',
+                    'translator',
+                    'monolog.logger.mautic',
+                    'mautic.helper.encryption',
+                    'mautic.lead.model.lead',
+                    'mautic.lead.model.company',
+                    'mautic.helper.paths',
+                    'mautic.core.model.notification',
+                    'mautic.lead.model.field',
+                    'mautic.plugin.model.integration_entity',
+                    'mautic.lead.model.dnc',
+                ],
+            ],
+        ],
+    ],
     'parameters'  => [
         // The Prefixes a segment name can start with (Configurações > Prefixos), one string per prefix.
         'segment_prefixes'  => [],
@@ -133,3 +160,13 @@ return [
     ],
     'author'      => 'Wellington Fonseca',
 ];
+
+// Mautic 7's AbstractIntegration no longer takes the session and takes FieldsWithUniqueIdentifier as the last argument.
+if (class_exists('Mautic\\CoreBundle\\ProcessSignal\\ProcessSignalService')) {
+    $integrationArguments = &$patchesConfig['services']['integrations']['mautic.integration.mauticpatches']['arguments'];
+    $integrationArguments = array_values(array_diff($integrationArguments, ['session']));
+    $integrationArguments[] = 'mautic.lead.field.fields_with_unique_identifier';
+    unset($integrationArguments);
+}
+
+return $patchesConfig;
