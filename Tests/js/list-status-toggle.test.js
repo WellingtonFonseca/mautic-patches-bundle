@@ -479,3 +479,22 @@ test('the reentry badge carries the shared extra-badge class too', () => {
 
     assert.match(items(rows[0].children[1])[1].className, /patches-extra-badge/);
 });
+
+test('pushPlan: the opening badge widens its own column by what it grows, every other column keeps its width, and the table grows by the same', () => {
+    const plan = api.pushPlan([40, 90, 60, 300, 80], 1, 118);
+
+    assert.deepStrictEqual(plan.widths, [40, 208, 60, 300, 80]);
+    assert.strictEqual(plan.total, 40 + 208 + 60 + 300 + 80);
+});
+
+test('pushPlan: nothing to push (a badge that does not grow) leaves every width as it was', () => {
+    assert.deepStrictEqual(api.pushPlan([10, 20], 0, 0), {widths: [10, 20], total: 30});
+    assert.deepStrictEqual(api.pushPlan([10, 20], 0, -5), {widths: [10, 20], total: 30});
+});
+
+test('growth: a badge grows to its content, up to 140px, or 260px when it is a wide one, minus the 22px it already has', () => {
+    assert.strictEqual(api.growth({scrollWidth: 60, offsetWidth: 22, className: 'patches-extra-badge'}), 38);
+    assert.strictEqual(api.growth({scrollWidth: 400, offsetWidth: 22, className: 'patches-extra-badge'}), 118);
+    assert.strictEqual(api.growth({scrollWidth: 400, offsetWidth: 22, className: 'patches-extra-badge patches-extra-badge--wide'}), 238);
+    assert.strictEqual(api.growth({scrollWidth: 22, offsetWidth: 22, className: 'patches-status-label'}), 0);
+});

@@ -37,11 +37,11 @@ abstract class AbstractListStatusSubscriber implements EventSubscriberInterface
     /**
      * The badges of the Status column of the lists (segment, campaign, user, email: Resources/js/list-status-toggle.js, addStatusColumn): the status and,
      * in the campaign list the reentry one, in the segment list the global / filters / warning ones, beside it are 22px circles with a play / stop / reload icon; on hover one opens to the right and
-     * shows the word, as the status badge of the n8n campaign card. They sit in a box as wide as the badges at rest: opening one pushes the ones after it and
-     * overflows the box over the next column, but the table does not reflow (it did, and a row that changed height moved the badge away from the pointer). The 76px minimum of the word badge does not apply to them.
+     * shows the word, as the status badge of the n8n campaign card. They sit in a box as wide as the badges at rest; opening one pushes the columns after it: the script (openBadge) fixes the widths of the
+     * table so the other columns keep their width and no row changes height (the table squeezing them made the rows re-wrap and the badge slide from under the pointer). The 76px minimum of the word badge does not apply to them.
      */
     public const ICON_BADGE_STYLE = 'td.col-patches-status{white-space:nowrap}'
-        // the box is as wide as the badges at rest (the script sets it), so the table never reflows: an open badge overflows it, over the next column
+        // the box is as wide as the badges at rest (the script sets it); the cell is widened by the script while a badge is open
         .'td.col-patches-status .patches-status-box{display:flex;align-items:center;gap:6px;height:22px}'
         .'td.col-patches-status :is(.patches-status-label,.patches-extra-badge){position:relative;z-index:2;flex:none;display:inline-flex;box-sizing:border-box;height:22px;min-width:0;max-width:22px;margin:0;padding:0;gap:0;'
         .'justify-content:flex-start;overflow:hidden;transition:max-width .2s ease,box-shadow .2s ease}'
