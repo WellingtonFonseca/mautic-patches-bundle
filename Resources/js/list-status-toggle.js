@@ -56,22 +56,56 @@
     }
 
     /**
-     * The badge next to the status of a campaign that lets its contacts enter again (allowRestart): a reload icon, blue, that opens on
-     * hover to show the word like the status badge. Informative only, it is not touched after the table is drawn.
+     * An informative icon badge beside the status in the Status column: an icon that opens on hover to show the word (also its title and
+     * aria-label), blue (`flag`, `restart`) or red (`failed`). `o`: icon, text, modifier, and optionally `extra` (more classes) and
+     * `wide` (a long word, such as the warning of core).
      */
-    function restartBadge(doc, text) {
+    function extraBadge(doc, o) {
         var badge = doc.createElement('span'), icon = doc.createElement('i'), word = doc.createElement('span');
-        badge.className = 'patches-badge patches-badge--restart patches-icon-badge patches-restart-badge';
-        badge.setAttribute('title', text);
-        badge.setAttribute('aria-label', text);
-        icon.className = 'ri-arrow-go-back-line';
+        badge.className = 'patches-badge patches-badge--' + o.modifier + ' patches-icon-badge patches-extra-badge' + (o.wide ? ' patches-extra-badge--wide' : '') + (o.extra ? ' ' + o.extra : '');
+        badge.setAttribute('title', o.text);
+        badge.setAttribute('aria-label', o.text);
+        icon.className = o.icon;
         icon.setAttribute('aria-hidden', 'true');
         word.className = 'patches-icon-badge__text';
-        word.textContent = text;
+        word.textContent = o.text;
         badge.appendChild(icon);
         badge.appendChild(word);
 
         return badge;
+    }
+
+    /** The badge next to the status of a campaign that lets its contacts enter again (allowRestart). Informative only, it is not touched after the table is drawn. */
+    function restartBadge(doc, text) {
+        return extraBadge(doc, {icon: 'ri-arrow-go-back-line', text: text, modifier: 'restart', extra: 'patches-restart-badge'});
+    }
+
+    /**
+     * The icons core prints next to the name in the segment list (LeadBundle List/_list_row.html.twig), in the order they are shown as badges after the status (`icon`: the one of the badge; core's own class of the rebuild warning, `ri-error-warning-line-circle`, has no glyph in the icon font, so nothing was ever drawn for it):
+     * global, has filters, and the two warnings (not rebuilt for long, slow to build, red). `holder`: the label that holds a warning's icon and its tooltip,
+     * whose number (hours, seconds) goes into the short word of cfg (`word`, with %count%); the sentence of core is the fallback when it has no number.
+     */
+    var SEGMENT_FLAGS = [
+        {key: 'global', icon: 'ri-group-2-fill', selector: 'i.ri-group-2-fill', modifier: 'flag', word: 'global'},
+        {key: 'filters', icon: 'ri-filter-2-fill', selector: 'i.ri-filter-2-fill', modifier: 'flag', word: 'filters'},
+        {key: 'rebuild', icon: 'ri-error-warning-line', coreIcon: 'ri-error-warning-line-circle', selector: 'i.ri-error-warning-line-circle', modifier: 'failed', holder: true, word: 'rebuild'},
+        {key: 'slow', icon: 'ri-time-line', selector: 'i.ri-time-line', modifier: 'failed', holder: true, word: 'slow'}
+    ];
+
+    /** Moves the icons of a segment row out of the name cell into badges at the end of the box of its Status cell. */
+    function moveSegmentFlags(doc, row, box, cfg) {
+        for (var k = 0; k < SEGMENT_FLAGS.length; k++) {
+            var f = SEGMENT_FLAGS[k], icon = row.querySelector(f.selector);
+            if (!icon) { continue; }
+            var holder = f.holder ? icon.parentNode : icon;
+            var text = cfg[f.word];
+            if (f.holder) {
+                var sentence = holder.getAttribute('data-original-title') || '', count = /\d+(?:[.,]\d+)?/.exec(sentence);
+                text = count ? text.replace('%count%', String(Math.round(parseFloat(count[0].replace(',', '.'))))) : sentence; // core prints 72.0219 hours
+            }
+            box.appendChild(extraBadge(doc, {icon: f.icon, text: text || '', modifier: f.modifier, wide: !!f.holder}));
+            holder.parentNode.removeChild(holder);
+        }
     }
 
     function apply($, id, status, cfg) {
@@ -308,12 +342,19 @@
             td.className = columnClass;
             cell.parentNode.insertBefore(td, cell.nextSibling);
             if (!label) { continue; }
+            // the badges sit in a box as wide as the badges at rest: one that opens on hover overflows it (over the next column) and pushes the
+            // ones after it, but the table does not reflow, so no row changes height under the pointer
+            var box = doc.createElement('div');
+            box.className = 'patches-status-box';
+            td.appendChild(box);
             label.setAttribute('data-placed', '1');
-            td.appendChild(label);
+            box.appendChild(label);
             var status = label.getAttribute('data-status');
             // a label that is spinning (core is working) is painted by paint() when the work ends
             if (status === 'published' || status === 'unpublished') { fillLabel(label, view(status, cfg)); }
-            if (label.getAttribute('data-restart') === '1') { td.appendChild(restartBadge(doc, cfg.restart)); }
+            if (label.getAttribute('data-restart') === '1') { box.appendChild(restartBadge(doc, cfg.restart)); }
+            if (spec.kind === 'segment') { moveSegmentFlags(doc, rows[k], box, cfg); }
+            box.style.width = (box.children.length * 28 - 6) + 'px'; // 22px per badge and 6px between
         }
 
         return true;
@@ -396,7 +437,7 @@
         syncEmails($, cfg);
     }
 
-    var api = {addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
+    var api = {addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

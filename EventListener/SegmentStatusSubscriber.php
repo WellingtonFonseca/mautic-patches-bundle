@@ -29,6 +29,8 @@ class SegmentStatusSubscriber extends AbstractListStatusSubscriber
         .'i[class*="lead-list-publish-icon"]{display:none!important}'
         // the label leaves the name cell for the Status column (the script), so the rule that found the description by the label is by table
         .'#leadListTable td > div.text-muted,#campaignTable td > div.text-muted,table.email-list td > div.text-muted{display:none!important}'
+        // the icons core prints next to the name (global, filters, the two warnings) are shown as badges in the Status column by the script: hidden from the first paint
+        .'#leadListTable td:not(.col-patches-status) :is(i.ri-group-2-fill,i.ri-filter-2-fill,label:has(>i.ri-error-warning-line-circle),label:has(>i.ri-time-line)){display:none!important}'
         // "Atualizado em ..." under the name: as large as the rest of the table (core's <small> is 11.9px)
         .'.segment-last-built small{font-size:14px}'
         .'.patches-status-label{margin-right:var(--spacing-03);box-sizing:border-box;min-width:76px}.patches-status-label:not([data-placed]){visibility:hidden}'

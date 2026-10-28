@@ -36,6 +36,10 @@ class StatusScriptTest extends TestCase
         $this->assertStringContainsString('"deactivate":"mautic.patches.segment.deactivate"', $html);
         $this->assertStringContainsString('"column":"mautic.patches.status.column"', $html);
         $this->assertStringContainsString('"restart":"mautic.patches.campaign.restart"', $html);
+        $this->assertStringContainsString('"global":"mautic.patches.segment.global"', $html);
+        $this->assertStringContainsString('"filters":"mautic.patches.segment.filters"', $html);
+        $this->assertStringContainsString('"rebuild":"mautic.patches.segment.not_rebuilt"', $html);
+        $this->assertStringContainsString('"slow":"mautic.patches.segment.slow_build"', $html);
         $this->assertStringContainsString('"style":"a{b:c}"', $html);
     }
 }
