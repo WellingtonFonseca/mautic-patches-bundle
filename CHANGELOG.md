@@ -2,6 +2,10 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-10-28
+- Novo histórico de mudanças por dia (este arquivo), em uma aba própria do modal do plugin em Configurações > Plugins
+- O plugin ganhou o tile "Mautic Patches" em Configurações > Plugins, já ligado e com o ícone do curativo (versão 0.6.0)
+
 ## 2026-10-27
 - O item Atualizar de campanhas e segmentos aparece e some conforme o status muda, sem recarregar a página
 
