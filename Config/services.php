@@ -30,8 +30,10 @@ return function (ContainerConfigurator $configurator): void {
         ->autoconfigure()
         ->public();
 
+    // Integration/MauticPatchesIntegration.php is registered in Config/config.php (services.integrations) with core's service ids, as every
+    // Mautic Integration is, so autowiring does not load it.
     $services->load('MauticPlugin\\MauticPatchesBundle\\', '../')
-        ->exclude('../{'.implode(',', MauticCoreExtension::DEFAULT_EXCLUDES).'}');
+        ->exclude('../{'.implode(',', array_merge(MauticCoreExtension::DEFAULT_EXCLUDES, ['Integration/MauticPatchesIntegration.php'])).'}');
 
     // The segment entity gets the repository that sorts by prefix (SegmentListRepository).
     $services->set(SegmentRepositoryListener::class)

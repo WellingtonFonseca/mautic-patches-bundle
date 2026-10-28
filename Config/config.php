@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use MauticPlugin\MauticPatchesBundle\Integration\MauticPatchesIntegration;
+
 return [
     'name'        => 'Mautic Patches',
     'description' => 'Small, targeted fixes for Mautic core UI bugs, applied without editing core files.',
-    'version'     => '0.5.0',
+    'version'     => '0.6.0',
     'routes'      => [
         // Session-authenticated target of the "Update" button in the segment list. Not under
         // /segments/..., which core's /s/segments/{objectAction}/{objectId} would match first.
@@ -122,6 +124,31 @@ return [
                 'iconClass' => 'ri-speed-up-line',
                 'access'    => 'admin',
                 'priority'  => 5,
+            ],
+        ],
+    ],
+    'services' => [
+        'integrations' => [
+            'mautic.integration.mauticpatches' => [
+                'class'     => MauticPatchesIntegration::class,
+                'arguments' => [
+                    'event_dispatcher',
+                    'mautic.helper.cache_storage',
+                    'doctrine.orm.entity_manager',
+                    'session',
+                    'request_stack',
+                    'router',
+                    'translator',
+                    'monolog.logger.mautic',
+                    'mautic.helper.encryption',
+                    'mautic.lead.model.lead',
+                    'mautic.lead.model.company',
+                    'mautic.helper.paths',
+                    'mautic.core.model.notification',
+                    'mautic.lead.model.field',
+                    'mautic.plugin.model.integration_entity',
+                    'mautic.lead.model.dnc',
+                ],
             ],
         ],
     ],
