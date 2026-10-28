@@ -6,18 +6,18 @@
 
 {% if days %}
     <div class="patches-changelog-block" data-tab-label="{{ 'mautic.patches.settings.changelog'|trans }}" data-onload-callback="patchesChangelogTab">
-    <h4 class="patches-changelog-title mt-lg mb-sm">{{ 'mautic.patches.settings.changelog'|trans }}</h4>
-    <div class="patches-changelog">
-        {% for day in days %}
-            <div class="patches-changelog__day">
-                <strong>{{ day.date }}</strong>
-                <ul>
-                    {% for item in day.items %}
-                        <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endfor %}
-    </div>
+        <h4 class="patches-changelog-title mt-lg mb-sm">{{ 'mautic.patches.settings.changelog'|trans }}</h4>
+        <div class="patches-changelog">
+            {% for day in days %}
+                <div class="patches-changelog__day">
+                    <strong>{{ day.date }}</strong>
+                    <ul>
+                        {% for item in day.items %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 {% endif %}

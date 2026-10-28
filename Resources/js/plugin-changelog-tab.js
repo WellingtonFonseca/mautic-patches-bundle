@@ -34,7 +34,7 @@
         Mautic.patchesChangelogTab = function (element) { moveToTab($, element); };
     }
 
-    var api = {install: install, moveToTab: moveToTab, PANE_ID: PANE_ID};
+    var api = {install: install, moveToTab: moveToTab};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
