@@ -498,3 +498,12 @@ test('growth: a badge grows to its content, up to 140px, or 260px when it is a w
     assert.strictEqual(api.growth({scrollWidth: 400, offsetWidth: 22, className: 'patches-extra-badge patches-extra-badge--wide'}), 238);
     assert.strictEqual(api.growth({scrollWidth: 22, offsetWidth: 22, className: 'patches-status-label'}), 0);
 });
+
+test('overflow: the columns are pushed only by what the open badge does not fit in the cell', () => {
+    // the box (what the badges take at rest) plus what the badge grows, against the room of the cell
+    assert.strictEqual(api.overflow(22, 118, 90), 50);
+    assert.strictEqual(api.overflow(50, 38, 90), 0, 'it fits exactly');
+    assert.strictEqual(api.overflow(22, 38, 90), 0, 'it fits with room to spare');
+    assert.strictEqual(api.overflow(78, 118, 90), 106);
+    assert.strictEqual(api.overflow(22, 0, 90), 0);
+});

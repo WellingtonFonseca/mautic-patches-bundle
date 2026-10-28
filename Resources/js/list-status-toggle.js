@@ -188,6 +188,11 @@
         return Math.max(0, Math.min(badge.scrollWidth, cap) - badge.offsetWidth);
     }
 
+    /** What an open badge does not fit in its cell: the box of badges at rest plus what the badge grows, past the room the cell has. 0 when it fits. */
+    function overflow(boxWidth, grow, room) {
+        return Math.max(0, boxWidth + grow - room);
+    }
+
     /**
      * The widths of the columns while a badge in column `index` is open: that column grows by `delta`, the others keep what they have, so the
      * table is wider by `delta` (it scrolls in its box) and does not squeeze the other columns, which would make their text wrap again and
@@ -208,7 +213,12 @@
         if (!table || !cell || table.hasAttribute(PUSHED)) { return; }
         var heads = table.querySelectorAll('thead th'), widths = [], index = cell.cellIndex;
         for (var k = 0; k < heads.length; k++) { widths.push(heads[k].getBoundingClientRect().width); }
-        var plan = pushPlan(widths, index, growth(badge));
+        // the Status column often has room (its header is wider than one badge): push only what does not fit
+        var box = badge.closest('.patches-status-box') || badge, style = root.getComputedStyle(cell);
+        var room = cell.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+        var push = overflow(box.getBoundingClientRect().width, growth(badge), room);
+        if (push <= 0) { return; }
+        var plan = pushPlan(widths, index, push);
         table.setAttribute(PUSHED, table.style.cssText + '|' + Array.prototype.map.call(heads, function (h) { return h.style.width; }).join(','));
         table.style.tableLayout = 'fixed';
         table.style.width = plan.total + 'px';
@@ -496,7 +506,7 @@
         syncEmails($, cfg);
     }
 
-    var api = {pushPlan: pushPlan, growth: growth, openBadge: openBadge, closeBadge: closeBadge, addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
+    var api = {overflow: overflow, pushPlan: pushPlan, growth: growth, openBadge: openBadge, closeBadge: closeBadge, addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
