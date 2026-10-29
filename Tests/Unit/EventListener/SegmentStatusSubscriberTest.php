@@ -107,6 +107,11 @@ class SegmentStatusSubscriberTest extends TestCase
         $this->assertStringContainsString('.patches-badge--neutral{', $css);
         $this->assertStringContainsString('text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}', $css, 'the status badge is the twin of the n8n badge');
         $this->assertStringContainsString('.patches-badge--failed{background-color:#e53935}', $css);
+        // the cells of the lists never wrap, so an open badge widens its column and no row changes height under the pointer
+        $this->assertStringContainsString('#leadListTable td,#campaignTable td,#userTable td,table.email-list td,#leadTable td{white-space:nowrap}', $css);
+        // the email list: one color for the type (campaign and broadcast), one for each of A/B test, translation and draft
+        $this->assertStringContainsString('.patches-badge--emailtype{background-color:#00897b}.patches-badge--abtest{background-color:#7e57c2}', $css);
+        $this->assertStringContainsString('.patches-badge--translation{background-color:#4285f4}.patches-badge--draft{background-color:#546e7a}', $css);
         // the script puts the label at the start of the name; until then it is invisible
         $this->assertStringContainsString('.patches-status-label:not([data-placed]){visibility:hidden}', $css);
         // all the labels have the same width
