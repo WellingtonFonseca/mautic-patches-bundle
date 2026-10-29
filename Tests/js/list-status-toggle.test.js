@@ -602,3 +602,20 @@ test('isContactListPath: the contact list and its pages, also under a subdirecto
 test('the email icons are looked for only in the tooltip spans core prints next to the name, so no other icon of the row is taken', () => {
     assert.ok(api.EMAIL_FLAGS.every((f) => f.selector.startsWith('span[data-toggle="tooltip"] > i.')));
 });
+
+/** A document that is still being parsed: nothing of the page may be read, a half-drawn table would get its column once, with rows missing. */
+const loadingDoc = () => ({readyState: 'loading', querySelector() { throw new Error('the page was read while it loads'); }});
+
+test('addStatusColumn: nothing is read or added while the page is still being parsed', () => {
+    assert.strictEqual(api.addStatusColumn(loadingDoc(), campaignSpec, ccfg), false);
+});
+
+test('addContactStatusColumn: nothing is read or added while the page is still being parsed', () => {
+    assert.strictEqual(api.addContactStatusColumn(loadingDoc(), contactCfg), false);
+});
+
+test('blockedChannels: only a class that STARTS with ico- is a channel (not x-ico-sms)', () => {
+    const row = {querySelectorAll: () => [{className: 'ri-prohibited-line x-ico-sms'}, {className: 'ri-prohibited-line ico-email'}]};
+
+    assert.deepStrictEqual(api.blockedChannels(row), {email: true});
+});
