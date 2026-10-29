@@ -2,6 +2,11 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-10-29
+- A faixa de espera do node (no construtor e na aba Pré-visualizar) mostra, abaixo de "Esperar 3 dias", o horário e os dias programados: "Entre 10h e 19h", "Às 9h30m" e "Seg, Qua, Qui"; não precisa mais abrir o node para saber quando ele dispara
+- A data de uma espera até uma data aparece no idioma e no fuso horário do usuário, em vez do inglês e do UTC do core
+- O texto da espera começa com maiúscula ("Esperar 3 dias", "Esperar até ...") e o ícone da espera é uma ampulheta
+
 ## 2026-10-28
 - A coluna Status das listas de segmentos, campanhas, usuários e emails mostra o status como um ícone (play verde, stop vermelho) que abre ao passar o mouse; Ativar e Desativar é o primeiro item do menu da linha
 - O badge de status abre dentro da coluna, sem empurrar nem cobrir as outras, e os nomes não quebram de linha
