@@ -45,15 +45,22 @@ class CampaignPreviewWaitSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $labels = [];
+        $labels    = [];
+        $schedules = [];
         foreach ($campaign->getEvents() as $event) {
             $label = $this->label($event);
-            if ('' !== $label) {
-                $labels['CampaignEvent_'.$event->getId()] = $label;
+            if ('' === $label) {
+                continue;
+            }
+
+            $labels['CampaignEvent_'.$event->getId()] = $label;
+            $schedule                                 = self::schedule($event);
+            if (null !== $schedule) {
+                $schedules['CampaignEvent_'.$event->getId()] = $schedule;
             }
         }
 
-        $customContentEvent->addContent('<script>'.self::script($labels).'</script>');
+        $customContentEvent->addContent('<script>'.self::script($labels, $schedules).'</script>');
     }
 
     /**
@@ -104,14 +111,48 @@ class CampaignPreviewWaitSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * Leaves the texts for the page (CampaignBuilderWaitLabelSubscriber puts them on the nodes, now and after every
+     * The fields of an interval event that say WHEN it sends (hour, window of hours, days of the week), in the shape of the event
+     * the builder holds (Mautic.campaignBuilderCanvasEvents), so the one formatter of the page (campaign-node-schedule.js) reads both.
+     * null when the event has none of them: no extra lines.
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function schedule(Event $event): ?array
+    {
+        if (Event::TRIGGER_MODE_INTERVAL !== $event->getTriggerMode()) {
+            return null;
+        }
+
+        $hour  = $event->getTriggerHour();
+        $start = $event->getTriggerRestrictedStartHour();
+        $stop  = $event->getTriggerRestrictedStopHour();
+        $days  = array_values($event->getTriggerRestrictedDaysOfWeek());
+        if (null === $hour && null === $start && null === $stop && [] === $days) {
+            return null;
+        }
+
+        return [
+            'triggerMode'                 => Event::TRIGGER_MODE_INTERVAL,
+            'triggerHour'                 => $hour?->format('H:i'),
+            'triggerRestrictedStartHour'  => $start?->format('H:i'),
+            'triggerRestrictedStopHour'   => $stop?->format('H:i'),
+            'triggerRestrictedDaysOfWeek' => $days,
+        ];
+    }
+
+    /**
+     * Leaves the texts and the schedules for the page (CampaignBuilderWaitLabelSubscriber puts them on the nodes, now and after every
      * Mautic page load). Always sent, even empty: it replaces the texts of the campaign seen before over ajax.
      *
-     * @param array<string, string> $labels node id => text
+     * @param array<string, string>               $labels    node id => text
+     * @param array<string, array<string, mixed>> $schedules node id => the fields of its schedule (self::schedule())
      */
-    public static function script(array $labels): string
+    public static function script(array $labels, array $schedules = []): string
     {
-        return 'window.mauticPatchesPreviewWaits='.json_encode((object) $labels, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP).';'
+        $flags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP;
+
+        return 'window.mauticPatchesPreviewWaits='.json_encode((object) $labels, $flags).';'
+            .'window.mauticPatchesPreviewSchedules='.json_encode((object) $schedules, $flags).';'
             .'if(window.mauticPatchesApplyWaits){window.mauticPatchesApplyWaits();}';
     }
 }

@@ -22,8 +22,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * This replaces that function. It removes every Label overlay of the connections that end at the node (through
  * Object.keys, which works for an object and for an array) and puts the text core already computed
  * (Mautic.campaignBuilderLabels[domEventId]) in a `.campaign-event-wait` strip at the top of the node's
- * `.campaign-event-type`, with the clock icon (window.mauticPatchesSetWait, also used by the Preview tab of the campaign
- * page, see CampaignPreviewWaitSubscriber). No text: the strip is removed. The node grows taller by the strip, so
+ * `.campaign-event-type`, with the hourglass icon (window.mauticPatchesSetWait, also used by the Preview tab of the campaign
+ * page, see CampaignPreviewWaitSubscriber). Under the wait text the strip has one line per fact of the schedule (the hours, the
+ * days of the week, each with its icon), made by the formatter of CampaignNodeScheduleSubscriber; an event with none has only the
+ * wait line. No text: the strip is removed. The node grows taller by the strip, so
  * jsPlumb revalidates it to bring the endpoints and lines to the new size, but only when the strip changed (core calls
  * the function once per connection when the canvas opens, so an unchanged strip costs nothing) and all the nodes of a
  * moment together on the next animation frame (one layout, not one per node). The strip belongs to the node, so it
@@ -56,10 +58,13 @@ class CampaignBuilderWaitLabelSubscriber implements EventSubscriberInterface
     }
 
     /** The strip is attached to the card: the card loses its top corners, the strip has them. */
-    public const STYLE = '.campaign-event-wait{display:flex;align-items:center;gap:6px;padding:4px 12px;font-size:14px;'
+    public const STYLE = '.campaign-event-wait{display:flex;flex-direction:column;gap:2px;padding:4px 12px;font-size:14px;'
         .'line-height:20px;white-space:nowrap;background:var(--layer-01);color:var(--text-secondary);'
         .'border:2px solid var(--border-strong-01,var(--border-subtle));border-bottom:0;border-radius:8px 8px 0 0}'
-        .'.campaign-event-wait+.campaign-event-content{border-top-left-radius:0;border-top-right-radius:0}';
+        .'.campaign-event-wait+.campaign-event-content{border-top-left-radius:0;border-top-right-radius:0}'
+        // one line per fact: the wait, then the hours and the days of the schedule (CampaignNodeScheduleSubscriber)
+        .'.campaign-event-wait-line{display:flex;align-items:center;gap:6px}'
+        .'.campaign-event-wait-extra{display:flex;flex-direction:column;gap:2px}';
 
     /**
      * Core's text for an event on the no path ("entre 1 dia") is a deadline that only makes sense after a decision. After
@@ -105,25 +110,47 @@ class CampaignBuilderWaitLabelSubscriber implements EventSubscriberInterface
             .'list.forEach(function(n){try{i.revalidate(n);}catch(e){}});'
             .'});'
             .'}'
+            // the lines of the schedule (hours, days) under the wait text, in one block: rebuilt only when they changed; true if so
+            .'function setLines(strip,lines){'
+            .'var extra=strip.querySelector(":scope > .campaign-event-wait-extra");'
+            .'var sig=lines.map(function(l){return l.icon+"|"+l.text;}).join("\\n");'
+            .'if(!lines.length){if(extra){extra.remove();return true;}return false;}'
+            .'if(extra&&extra.getAttribute("data-lines")===sig){return false;}'
+            .'if(extra){extra.remove();}'
+            .'extra=document.createElement("div");extra.className="campaign-event-wait-extra";extra.setAttribute("data-lines",sig);'
+            .'lines.forEach(function(l){'
+            .'var row=document.createElement("div");row.className="campaign-event-wait-line";'
+            .'var icon=document.createElement("i");icon.className=l.icon;'
+            .'var text=document.createElement("span");text.textContent=l.text;'
+            .'row.appendChild(icon);row.appendChild(text);extra.appendChild(row);'
+            .'});'
+            .'strip.appendChild(extra);return true;'
+            .'}'
+            // what the formatter (CampaignNodeScheduleSubscriber) makes of the fields of an event; no lines without it
+            .'function scheduleOf(event){var api=window.mauticPatchesScheduleApi;return api?api.format(event):[];}'
             // the strip on a node: created, rewritten or removed; the preview of the campaign page uses it too
-            .'window.mauticPatchesSetWait=function(node,label){'
+            .'window.mauticPatchesSetWait=function(node,label,lines){'
             .'var type=node?node.querySelector(".campaign-event-type"):null;'
             .'if(!type){return;}'
             .'var strip=type.querySelector(":scope > .campaign-event-wait");'
             .'if(!label){if(strip){strip.remove();revalidate(node);}return;}'
+            .'var changed=false;'
             .'if(!strip){strip=document.createElement("div");strip.className="campaign-event-wait";'
-            .'strip.innerHTML=\'<i class="ri-time-line"></i><span></span>\';type.insertBefore(strip,type.firstChild);}'
-            .'else if(strip.lastChild.textContent===label){return;}'
-            .'strip.lastChild.textContent=label;'
-            .'revalidate(node);'
+            .'strip.innerHTML=\'<div class="campaign-event-wait-line"><i class="ri-hourglass-line"></i><span class="campaign-event-wait-text"></span></div>\';'
+            .'type.insertBefore(strip,type.firstChild);changed=true;}'
+            .'var text=strip.querySelector(".campaign-event-wait-text");'
+            .'if(text.textContent!==label){text.textContent=label;changed=true;}'
+            .'if(setLines(strip,lines||[])){changed=true;}'
+            .'if(changed){revalidate(node);}'
             .'};'
             // the Preview tab of the campaign page (CampaignPreviewWaitSubscriber) leaves its texts in
             // window.mauticPatchesPreviewWaits; they are put on the nodes now and after every Mautic page load, because the
             // content that comes over ajax is not in the page yet when its own inline script runs
             .'window.mauticPatchesApplyWaits=function(){'
             .'var waits=window.mauticPatchesPreviewWaits||{};'
+            .'var schedules=window.mauticPatchesPreviewSchedules||{};'
             .'Object.keys(waits).forEach(function(id){'
-            .'window.mauticPatchesSetWait(document.querySelector("#preview-container #"+id),waits[id]);'
+            .'window.mauticPatchesSetWait(document.querySelector("#preview-container #"+id),waits[id],scheduleOf(schedules[id]));'
             .'});'
             .'};'
             // after a condition the no path waits like any event: the inaction text is turned back into the plain one
@@ -158,9 +185,23 @@ class CampaignBuilderWaitLabelSubscriber implements EventSubscriberInterface
             .'if(overlays[key]&&overlays[key].type=="Label"){conn.removeOverlay(overlays[key].id);}'
             .'});'
             .'});'
-            .'window.mauticPatchesSetWait(document.getElementById(domEventId),label);'
+            .'var events=Mautic.campaignBuilderCanvasEvents||{};'
+            .'window.mauticPatchesSetWait(document.getElementById(domEventId),label,scheduleOf(events[domEventId.replace("CampaignEvent_","")]));'
             .'}'
-            .'function patch(){if(Mautic.campaignBuilderUpdateLabel&&Mautic.campaignBuilderUpdateLabel!==updateLabel){Mautic.campaignBuilderUpdateLabel=updateLabel;}}'
+            // core calls the label update BEFORE it stores the edited event in Mautic.campaignBuilderCanvasEvents, so after an edit the
+            // schedule is read again once core is done
+            .'function patchEdit(){'
+            .'var original=Mautic.campaignEventOnLoad;'
+            .'if(!original||original.mauticPatchesSchedule){return;}'
+            .'var wrapped=function(container,response){'
+            .'var result=original.apply(this,arguments);'
+            .'var id=response&&response.eventId&&!response.deleted?"CampaignEvent_"+response.eventId:null;'
+            .'if(id&&Mautic.campaignBuilderInstance&&document.getElementById(id)){updateLabel(id);}'
+            .'return result;'
+            .'};'
+            .'wrapped.mauticPatchesSchedule=true;Mautic.campaignEventOnLoad=wrapped;'
+            .'}'
+            .'function patch(){patchEdit();if(Mautic.campaignBuilderUpdateLabel&&Mautic.campaignBuilderUpdateLabel!==updateLabel){Mautic.campaignBuilderUpdateLabel=updateLabel;}}'
             .'var original=Mautic.onPageLoad;'
             .'Mautic.onPageLoad=function(){patch();var result=original.apply(this,arguments);window.mauticPatchesApplyWaits();return result;};'
             .'mQuery(patch);'

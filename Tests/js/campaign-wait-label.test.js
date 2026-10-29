@@ -9,7 +9,18 @@ const test   = require('node:test');
 const assert = require('node:assert');
 const path   = require('node:path');
 const vm     = require('node:vm');
+const fs     = require('node:fs');
 const {execFileSync} = require('node:child_process');
+
+const WORDS = {
+    hour: '%hour%h', hour_minutes: '%hour%h%minutes%m', at: 'às %time%', window: '%start% às %end%', range: '%from%–%to%',
+    day_0: 'Dom', day_1: 'Seg', day_2: 'Ter', day_3: 'Qua', day_4: 'Qui', day_5: 'Sex', day_6: 'Sáb',
+};
+
+// the formatter of the lines, loaded on the fake page with the words of the language
+function loadFormatter(win) {
+    vm.runInNewContext(`${fs.readFileSync(path.resolve(__dirname, '../../Resources/js/campaign-node-schedule.js'), 'utf8')}; window.mauticPatchesScheduleApi.configure(${JSON.stringify(WORDS)});`, {window: win});
+}
 
 const AUTOLOAD = process.env.AUTOLOAD || '/var/www/html/vendor/autoload.php';
 
@@ -43,28 +54,74 @@ function fakeNode() {
     return {node, type};
 }
 
-function load(conn, labels, node, rewrites = []) {
+// An element of the page. The strip gets its first line (hourglass + the wait text) when innerHTML is set; the lines of the schedule are
+// added with appendChild. querySelector(':scope > .x') looks at the children only, querySelector('.x') at all the descendants.
+// remove() takes the element out of the list that holds it (the card's .campaign-event-type for a strip, its parent otherwise).
+function makeElement(root) {
+    const el = {
+        className: '', children: [], attrs: {}, textContent: '', parent: null,
+        setAttribute(k, v) { el.attrs[k] = v; },
+        getAttribute(k) { return Object.prototype.hasOwnProperty.call(el.attrs, k) ? el.attrs[k] : null; },
+        appendChild(child) { child.parent = el; el.children.push(child); },
+        querySelector(sel) {
+            const name = sel.split('.').pop();
+            const direct = sel.startsWith(':scope >');
+            const search = (list) => {
+                for (const c of list) {
+                    if (c.className.split(' ').includes(name)) { return c; }
+                    const found = direct ? null : search(c.children);
+                    if (found) { return found; }
+                }
+                return null;
+            };
+
+            return search(el.children);
+        },
+        remove() { const list = el.parent ? el.parent.children : root.children; list.splice(list.indexOf(el), 1); },
+    };
+    Object.defineProperty(el, 'innerHTML', {set() {
+        const line = makeElement(root);
+        line.className = 'campaign-event-wait-line';
+        const icon = makeElement(root);
+        icon.className = 'ri-hourglass-line';
+        const text = makeElement(root);
+        text.className = 'campaign-event-wait-text';
+        line.appendChild(icon);
+        line.appendChild(text);
+        el.appendChild(line);
+    }});
+
+    return el;
+}
+
+// the text of the wait in a strip, and the lines of the schedule under it as 'icon text'
+const waitText = (strip) => strip.querySelector('.campaign-event-wait-text').textContent;
+const extraLines = (strip) => {
+    const extra = strip.querySelector(':scope > .campaign-event-wait-extra');
+
+    return extra ? extra.children.map((row) => `${row.children[0].className} ${row.children[1].textContent}`) : [];
+};
+
+function load(conn, labels, node, rewrites = [], extra = {}) {
     const revalidated = [];
     const Mautic = {
         campaignBuilderLabels: labels,
         campaignBuilderInstance: {select: () => ({each: (fn) => [conn].forEach(fn)}), revalidate: (n) => revalidated.push(n)},
         campaignBuilderUpdateLabel() { throw new Error('core version must have been replaced'); },
         onPageLoad() { return 'core'; },
+        ...extra,
     };
+    const win = {};
+    if (extra.campaignBuilderCanvasEvents || extra.campaignEventOnLoad) { loadFormatter(win); }
     const ready = [];
     const frames = [];
     const flush = () => { while (frames.length) frames.shift()(); };
     const document = {
         head: {appendChild() {}},
-        createElement() {
-            const el = {className: '', lastChild: {textContent: ''}, remove() { node.type.children.splice(node.type.children.indexOf(el), 1); }};
-            Object.defineProperty(el, 'innerHTML', {set(v) { el.html = v; }});
-
-            return el;
-        },
+        createElement() { return makeElement(node.type); },
         getElementById: () => node.node,
     };
-    vm.runInNewContext(script(rewrites), {Mautic, window: {}, document, mQuery: (fn) => ready.push(fn), requestAnimationFrame: (fn) => frames.push(fn)});
+    vm.runInNewContext(script(rewrites), {Mautic, window: win, document, mQuery: (fn) => ready.push(fn), requestAnimationFrame: (fn) => frames.push(fn)});
     ready.forEach((fn) => fn());
 
     return {Mautic, revalidated, flush};
@@ -105,13 +162,13 @@ test('the wait goes in one strip, before the card, and is reused when it changes
     flush();
     assert.strictEqual(strips(n).length, 1);
     assert.strictEqual(n.type.children[0].className, 'campaign-event-wait');
-    assert.strictEqual(n.type.children[0].lastChild.textContent, 'esperar 2 dias');
+    assert.strictEqual(waitText(n.type.children[0]), 'esperar 2 dias');
 
     Mautic.campaignBuilderLabels.CampaignEvent_1 = 'esperar 3 dias';
     Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
     flush();
     assert.strictEqual(strips(n).length, 1);
-    assert.strictEqual(strips(n)[0].lastChild.textContent, 'esperar 3 dias');
+    assert.strictEqual(waitText(strips(n)[0]), 'esperar 3 dias');
     assert.strictEqual(revalidated.length, 2);
 
     // the same text again (core calls the function once per connection when the canvas opens): nothing to redo
@@ -138,14 +195,14 @@ test('many nodes changed in one moment are revalidated together, once each, on t
 test('the helper of the Preview tab puts the strip on a given node', () => {
     const n = fakeNode();
     const ctx = {Mautic: {campaignBuilderLabels: {}, campaignBuilderInstance: null, onPageLoad() {}}};
-    const document = {head: {appendChild() {}}, createElement() { const el = {className: '', lastChild: {textContent: ''}, remove() {}}; Object.defineProperty(el, 'innerHTML', {set() {}}); return el; }, getElementById: () => null};
+    const document = {head: {appendChild() {}}, createElement() { return makeElement(n.type); }, getElementById: () => null};
     const window = {};
     vm.runInNewContext(script(), {...ctx, window, document, mQuery: () => {}});
 
     window.mauticPatchesSetWait(n.node, 'esperar 1 minuto');
 
     assert.strictEqual(strips(n).length, 1);
-    assert.strictEqual(strips(n)[0].lastChild.textContent, 'esperar 1 minuto');
+    assert.strictEqual(waitText(strips(n)[0]), 'esperar 1 minuto');
 });
 
 test('no wait: the strip is removed', () => {
@@ -176,7 +233,7 @@ test('the page load of core still runs, and the patch holds after it', () => {
 test('the texts of the Preview tab are put on the nodes now and after every Mautic page load, and a new campaign replaces them', () => {
     const preview = fakeNode();
     const win = {};
-    const document = {head: {appendChild() {}}, createElement() { const el = {className: '', lastChild: {textContent: ''}, remove() { preview.type.children.splice(preview.type.children.indexOf(el), 1); }}; Object.defineProperty(el, 'innerHTML', {set() {}}); return el; },
+    const document = {head: {appendChild() {}}, createElement() { return makeElement(preview.type); },
         getElementById: () => null, querySelector: (sel) => (sel === '#preview-container #CampaignEvent_172' ? preview.node : null)};
     const Mautic = {campaignBuilderLabels: {}, campaignBuilderInstance: null, onPageLoad() { return 'core'; }};
     vm.runInNewContext(script(), {Mautic, window: win, document, mQuery: () => {}});
@@ -189,7 +246,144 @@ test('the texts of the Preview tab are put on the nodes now and after every Maut
     // a Mautic page load applies them again: unchanged, still one strip
     assert.strictEqual(Mautic.onPageLoad(), 'core');
     assert.strictEqual(strips(preview).length, 1);
-    assert.strictEqual(strips(preview)[0].lastChild.textContent, 'esperar 1 minuto');
+    assert.strictEqual(waitText(strips(preview)[0]), 'esperar 1 minuto');
+});
+
+const WINDOW_EVENT = {triggerMode: 'interval', triggerRestrictedStartHour: {date: '1970-01-01 10:00:00.000000'}, triggerRestrictedStopHour: '16:20', triggerRestrictedDaysOfWeek: [1, 3, 4]};
+const HOURS = 'ri-time-line 10h às 16h20m';
+const DAYS = 'ri-calendar-line Seg, Qua, Qui';
+
+test('the schedule is a line per fact under the wait text, in the same strip, and follows the edits', () => {
+    const n = fakeNode();
+    const {Mautic, revalidated, flush} = load(connection({}), {CampaignEvent_1: 'esperar 3 dias'}, n, [], {campaignBuilderCanvasEvents: {1: WINDOW_EVENT}});
+
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    flush();
+    assert.strictEqual(strips(n).length, 1);
+    assert.strictEqual(waitText(strips(n)[0]), 'esperar 3 dias');
+    assert.strictEqual(strips(n)[0].children[0].children[0].className, 'ri-hourglass-line', 'the wait line has the hourglass');
+    assert.deepStrictEqual(extraLines(strips(n)[0]), [HOURS, DAYS]);
+    assert.strictEqual(revalidated.length, 1);
+
+    // the same schedule again: nothing to redo
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    flush();
+    assert.strictEqual(revalidated.length, 1);
+
+    // only the days: the hours line goes, the node is revalidated (it got shorter)
+    Mautic.campaignBuilderCanvasEvents[1] = {triggerMode: 'interval', triggerRestrictedDaysOfWeek: [1, 3, 4]};
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    flush();
+    assert.deepStrictEqual(extraLines(strips(n)[0]), [DAYS]);
+    assert.strictEqual(revalidated.length, 2);
+
+    // no restriction any more: the lines go, the wait stays
+    Mautic.campaignBuilderCanvasEvents[1] = {triggerMode: 'interval'};
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    flush();
+    assert.deepStrictEqual(extraLines(strips(n)[0]), []);
+    assert.strictEqual(strips(n)[0].querySelector(':scope > .campaign-event-wait-extra'), null);
+    assert.strictEqual(waitText(strips(n)[0]), 'esperar 3 dias');
+    assert.strictEqual(revalidated.length, 3);
+});
+
+test('an event without a wait text has no strip and so no lines', () => {
+    const n = fakeNode();
+    const {Mautic} = load(connection({}), {}, n, [], {campaignBuilderCanvasEvents: {1: WINDOW_EVENT}});
+
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    assert.strictEqual(strips(n).length, 0);
+});
+
+test('an event the builder does not know has no lines, and the strip still works', () => {
+    const n = fakeNode();
+    const {Mautic} = load(connection({}), {CampaignEvent_1: 'esperar 2 dias'}, n, [], {campaignBuilderCanvasEvents: {}});
+
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    assert.deepStrictEqual(extraLines(strips(n)[0]), []);
+    assert.strictEqual(waitText(strips(n)[0]), 'esperar 2 dias');
+});
+
+test('without the formatter on the page the strip works and has no lines', () => {
+    const n = fakeNode();
+    const {Mautic} = load(connection({}), {CampaignEvent_1: 'esperar 2 dias'}, n, [], {});
+    Mautic.campaignBuilderCanvasEvents = {1: WINDOW_EVENT};
+
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    assert.deepStrictEqual(extraLines(strips(n)[0]), []);
+});
+
+test('after an edit core stores the event AFTER the label update: the lines are read again once core is done', () => {
+    const n = fakeNode();
+    const order = [];
+    const {Mautic} = load(connection({}), {CampaignEvent_1: 'esperar 3 dias'}, n, [], {
+        campaignBuilderCanvasEvents: {1: WINDOW_EVENT},
+        campaignEventOnLoad(container, response) {
+            // what core does: the label first, the stored event last
+            order.push('label');
+            Mautic.campaignBuilderUpdateLabel('CampaignEvent_' + response.eventId);
+            order.push('store');
+            Mautic.campaignBuilderCanvasEvents[response.event.id] = response.event;
+
+            return 'core-result';
+        },
+    });
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    assert.deepStrictEqual(extraLines(strips(n)[0]), [HOURS, DAYS]);
+
+    const edited = {id: 1, triggerMode: 'interval', triggerHour: '09:30', triggerRestrictedDaysOfWeek: []};
+    const result = Mautic.campaignEventOnLoad('c', {eventId: 1, event: edited});
+
+    assert.strictEqual(result, 'core-result');
+    assert.deepStrictEqual(order, ['label', 'store']);
+    assert.deepStrictEqual(extraLines(strips(n)[0]), ['ri-time-line às 9h30m']);
+});
+
+test('opening the form (no eventId), or a deleted event, does not touch the strip', () => {
+    const n = fakeNode();
+    const {Mautic} = load(connection({}), {CampaignEvent_1: 'esperar 3 dias'}, n, [], {
+        campaignBuilderCanvasEvents: {1: WINDOW_EVENT},
+        campaignEventOnLoad() { return 'core'; },
+    });
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+    Mautic.campaignBuilderCanvasEvents[1] = {triggerMode: 'interval'};
+
+    assert.strictEqual(Mautic.campaignEventOnLoad('c', {}), 'core');
+    assert.strictEqual(Mautic.campaignEventOnLoad('c', {eventId: 1, deleted: true, event: {id: 1}}), 'core');
+    assert.deepStrictEqual(extraLines(strips(n)[0]), [HOURS, DAYS], 'still the old lines: nothing was refreshed');
+});
+
+test('the edit hook is installed once, however many page loads', () => {
+    const {Mautic} = load(connection({}), {}, fakeNode(), [], {campaignBuilderCanvasEvents: {}, campaignEventOnLoad() { return 'core'; }});
+    const first = Mautic.campaignEventOnLoad;
+
+    Mautic.onPageLoad();
+    Mautic.onPageLoad();
+
+    assert.strictEqual(Mautic.campaignEventOnLoad, first);
+});
+
+test('the Preview tab: the schedules left by the page are put on the nodes with the texts', () => {
+    const preview = fakeNode();
+    const win = {};
+    loadFormatter(win);
+    const document = {head: {appendChild() {}}, createElement() { return makeElement(preview.type); }, getElementById: () => null,
+        querySelector: (sel) => (sel === '#preview-container #CampaignEvent_172' ? preview.node : null)};
+    vm.runInNewContext(script(), {Mautic: {campaignBuilderLabels: {}, campaignBuilderInstance: null, onPageLoad() {}}, window: win, document, mQuery: () => {}});
+
+    win.mauticPatchesPreviewWaits = {CampaignEvent_172: 'esperar 1 dia'};
+    win.mauticPatchesPreviewSchedules = {CampaignEvent_172: WINDOW_EVENT};
+    win.mauticPatchesApplyWaits();
+
+    assert.deepStrictEqual(extraLines(strips(preview)[0]), [HOURS, DAYS]);
+
+    // the next campaign has no schedule: the lines go
+    win.mauticPatchesPreviewSchedules = {};
+    win.mauticPatchesApplyWaits();
+    assert.deepStrictEqual(extraLines(strips(preview)[0]), []);
 });
 
 const REWRITES = [
@@ -204,7 +398,7 @@ test('after a condition the inaction text ("entre 1 dia") is turned back into th
 
     Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
 
-    assert.strictEqual(strips(n)[0].lastChild.textContent, 'esperar 1 dia');
+    assert.strictEqual(waitText(strips(n)[0]), 'esperar 1 dia');
 });
 
 test('the date text of the no path after a condition is turned back too', () => {
@@ -214,7 +408,7 @@ test('the date text of the no path after a condition is turned back too', () => 
 
     Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
 
-    assert.strictEqual(strips(n)[0].lastChild.textContent, 'esperar até 10 de outubro de 2026 às 09:00');
+    assert.strictEqual(waitText(strips(n)[0]), 'esperar até 10 de outubro de 2026 às 09:00');
 });
 
 test('after a decision the inaction text stays: it is a deadline there', () => {
@@ -224,7 +418,7 @@ test('after a decision the inaction text stays: it is a deadline there', () => {
 
     Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
 
-    assert.strictEqual(strips(n)[0].lastChild.textContent, 'entre 1 dia');
+    assert.strictEqual(waitText(strips(n)[0]), 'entre 1 dia');
 });
 
 test('a text that is not the inaction one is left alone after a condition', () => {
@@ -234,5 +428,5 @@ test('a text that is not the inaction one is left alone after a condition', () =
 
     Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
 
-    assert.strictEqual(strips(n)[0].lastChild.textContent, 'esperar 2 dias');
+    assert.strictEqual(waitText(strips(n)[0]), 'esperar 2 dias');
 });
