@@ -37,6 +37,11 @@ final class StatusScript
             'contactEmail'   => $translator->trans('mautic.patches.contact.status.email'),
             'contactSms'     => $translator->trans('mautic.patches.contact.status.sms'),
             'contactHsm'     => $translator->trans('mautic.patches.contact.status.hsm'),
+            'emailCampaign'    => $translator->trans('mautic.patches.email.type.campaign'),
+            'emailBroadcast'   => $translator->trans('mautic.patches.email.type.broadcast'),
+            'emailAbtest'      => $translator->trans('mautic.patches.email.abtest'),
+            'emailTranslation' => $translator->trans('mautic.patches.email.translation'),
+            'emailDraft'       => $translator->trans('mautic.patches.email.draft'),
             'style'      => $style,
         ];
         $mtime = @filemtime(dirname(__DIR__).'/'.self::PATH);

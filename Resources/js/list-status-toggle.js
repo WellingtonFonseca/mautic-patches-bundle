@@ -108,6 +108,36 @@
         }
     }
 
+    /**
+     * The icons core prints next to the name in the email list (EmailBundle Email/_list.html.twig), shown as badges after the status. The first one
+     * is the TYPE of the email, always there: "Broadcast" (core's pie chart, an email of a segment) or "Campanha" (no icon in core, the email of campaigns,
+     * forms and points): the same color, so the color says the type. Then, each with its own color, A/B test, translation and draft. `holder`: the
+     * span of core with the tooltip around the icon, removed with it.
+     */
+    var EMAIL_TYPES = {
+        broadcast: {icon: 'ri-pie-chart-fill', word: 'emailBroadcast'},
+        campaign: {icon: 'ri-mail-send-fill', word: 'emailCampaign'}
+    };
+    var EMAIL_FLAGS = [
+        {key: 'abtest', icon: 'ri-organization-chart', selector: 'i.ri-organization-chart', modifier: 'abtest', word: 'emailAbtest'},
+        {key: 'translation', icon: 'ri-translate', selector: 'i.ri-translate', modifier: 'translation', word: 'emailTranslation'},
+        {key: 'draft', icon: 'ri-draft-line', selector: 'i.fa-file', modifier: 'draft', word: 'emailDraft'}
+    ];
+    var EMAIL_BROADCAST_ICON = 'i.ri-pie-chart-line';
+
+    /** Moves the icons of an email row out of the name cell into badges at the end of the box of its Status cell: the type first. */
+    function moveEmailFlags(doc, row, box, cfg) {
+        var pie = row.querySelector(EMAIL_BROADCAST_ICON), type = EMAIL_TYPES[pie ? 'broadcast' : 'campaign'];
+        box.appendChild(extraBadge(doc, {icon: type.icon, text: cfg[type.word], modifier: 'emailtype'}));
+        if (pie) { pie.parentNode.parentNode.removeChild(pie.parentNode); }
+        for (var k = 0; k < EMAIL_FLAGS.length; k++) {
+            var f = EMAIL_FLAGS[k], icon = row.querySelector(f.selector);
+            if (!icon) { continue; }
+            box.appendChild(extraBadge(doc, {icon: f.icon, text: cfg[f.word], modifier: f.modifier}));
+            icon.parentNode.parentNode.removeChild(icon.parentNode);
+        }
+    }
+
     function apply($, id, status, cfg) {
         var v = view(status, cfg);
         $('.patches-status-label[data-segment-id="' + id + '"]').each(function () {
@@ -195,7 +225,7 @@
         colorCounts(root.document);
         addStatusColumns(root.document, cfg);
         addContactStatusColumn(root.document, cfg);
-        root.document.addEventListener('DOMContentLoaded', function () { addContactStatusColumn(root.document, cfg); });
+        root.document.addEventListener('DOMContentLoaded', function () { place(root.document); addStatusColumns(root.document, cfg); addContactStatusColumn(root.document, cfg); });
         var pending = false;
         new root.MutationObserver(function () {
             if (pending) { return; }
@@ -280,6 +310,7 @@
             if (icon) { icon.click(); }
         });
 
+        root.document.addEventListener('DOMContentLoaded', function () { sync($, cfg); }); // the page is whole: the rows the draws before it could not see
         var pending = false;
         new root.MutationObserver(function () {
             if (pending) { return; }
@@ -332,6 +363,8 @@
      * does not depend on the order in which the Prefixo column is added. `cfg`: the texts (column, active, inactive, restart).
      */
     function addStatusColumn(doc, spec, cfg) {
+        // not while the page is still being parsed: a table that is half there would get its column once, with rows missing (the sync runs again at DOMContentLoaded)
+        if (doc.readyState === 'loading') { return false; }
         var table = doc.querySelector(spec.table);
         // not before a label exists: the user and email lists get theirs from the script (syncNamedRows), which finds the name cell by its position
         if (!table || table.querySelector('th.col-patches-status') || !table.querySelector('.patches-status-label')) { return false; }
@@ -360,6 +393,7 @@
             if (status === 'published' || status === 'unpublished') { fillLabel(label, view(status, cfg)); }
             if (label.getAttribute('data-restart') === '1') { box.appendChild(restartBadge(doc, cfg.restart)); }
             if (spec.kind === 'segment') { moveSegmentFlags(doc, rows[k], box, cfg); }
+            if (spec.kind === 'email') { moveEmailFlags(doc, rows[k], box, cfg); }
         }
 
         return true;
@@ -512,7 +546,7 @@
         setup(cfg);
     }
 
-    var api = {addContactStatusColumn: addContactStatusColumn, blockedChannels: blockedChannels, contactBadges: contactBadges, CONTACT_CHANNELS: CONTACT_CHANNELS, installContact: installContact, addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
+    var api = {EMAIL_FLAGS: EMAIL_FLAGS, EMAIL_TYPES: EMAIL_TYPES, addContactStatusColumn: addContactStatusColumn, blockedChannels: blockedChannels, contactBadges: contactBadges, CONTACT_CHANNELS: CONTACT_CHANNELS, installContact: installContact, addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

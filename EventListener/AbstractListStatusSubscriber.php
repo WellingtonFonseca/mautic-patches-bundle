@@ -49,7 +49,10 @@ abstract class AbstractListStatusSubscriber implements EventSubscriberInterface
         .'td.col-patches-status :is(.patches-status-label,.patches-extra-badge):hover .patches-icon-badge__text{opacity:1}'
         // the badges beside the status: informative blue (reentry, global, filters; the red ones are patches-badge--failed); a long word (the warnings of the segment list) gets more room
         .'.patches-badge--flag,.patches-badge--restart{background-color:#1e88e5}'
-        .'td.col-patches-status .patches-extra-badge--wide:hover{max-width:260px}';
+        .'td.col-patches-status .patches-extra-badge--wide:hover{max-width:260px}'
+        // the badges of the email list: one color for the type (campaign and broadcast share it), one for each of A/B test, translation and draft
+        .'.patches-badge--emailtype{background-color:#7e57c2}.patches-badge--abtest{background-color:#00897b}'
+        .'.patches-badge--translation{background-color:#8d6e63}.patches-badge--draft{background-color:#546e7a}';
 
     public function __construct(
         protected TranslatorInterface $translator,

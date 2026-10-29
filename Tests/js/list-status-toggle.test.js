@@ -523,3 +523,67 @@ test('contactBadges: HSM follows the sms channel, so a blocked sms makes SMS and
 test('contactBadges: a channel that is not one of ours (push, whatsapp) changes nothing', () => {
     assert.deepStrictEqual(api.contactBadges({push: true}, contactCfg).map((b) => b.modifier), ['production', 'production', 'production']);
 });
+
+const ecfg = Object.assign({emailCampaign: 'Campanha', emailBroadcast: 'Broadcast', emailAbtest: 'Teste A/B', emailTranslation: 'Tradução', emailDraft: 'Rascunho'}, ccfg);
+const EMAIL = {abtest: 'i.ri-organization-chart', translation: 'i.ri-translate', draft: 'i.fa-file', broadcast: 'i.ri-pie-chart-line'};
+
+/** An email row whose name cell holds the tooltip spans core prints (one icon each) for the flags in `present`. */
+function emailTable(present) {
+    const {doc, rows} = campaignTable(1, true, 'published', false, 'table.email-list');
+    const row = rows[0], nameCell = row.cells[2], found = {};
+    for (const key of present) {
+        const span = node('span'), icon = node('i');
+        icon.className = EMAIL[key].slice(2).split('.').join(' ');
+        span.appendChild(icon);
+        nameCell.appendChild(span);
+        found[EMAIL[key]] = icon;
+    }
+    const plain = row.querySelector;
+    row.querySelector = (selector) => found[selector] || plain(selector);
+    api.addStatusColumn(doc, api.COLUMNS[3], ecfg);
+
+    return {status: row.children[1].children[0], nameCell};
+}
+
+test('EMAIL_FLAGS: A/B test, translation and draft, in the order they are shown, each with a color of its own', () => {
+    assert.deepStrictEqual(api.EMAIL_FLAGS.map((f) => f.key), ['abtest', 'translation', 'draft']);
+    assert.deepStrictEqual(api.EMAIL_FLAGS.map((f) => f.modifier), ['abtest', 'translation', 'draft']);
+    assert.deepStrictEqual(api.EMAIL_FLAGS.map((f) => f.icon), ['ri-organization-chart', 'ri-translate', 'ri-draft-line']);
+});
+
+test('addStatusColumn (email): an email of campaigns has the Campanha badge after the status, and nothing else', () => {
+    const {status} = emailTable([]);
+
+    assert.strictEqual(status.children.length, 2);
+    assert.deepStrictEqual(badgeParts(status.children[1]), ['patches-badge--emailtype patches-extra-badge', 'ri-mail-send-fill', 'Campanha', 'Campanha']);
+});
+
+test('addStatusColumn (email): the pie chart of core is the Broadcast badge, the same color as Campanha, and its span leaves the name', () => {
+    const {status, nameCell} = emailTable(['broadcast']);
+
+    assert.deepStrictEqual(badgeParts(status.children[1]), ['patches-badge--emailtype patches-extra-badge', 'ri-pie-chart-fill', 'Broadcast', 'Broadcast']);
+    assert.strictEqual(nameCell.children.length, 0);
+});
+
+test('addStatusColumn (email): the type comes first, then A/B test, translation and draft, each with its own color', () => {
+    const {status, nameCell} = emailTable(['draft', 'translation', 'broadcast', 'abtest']);
+
+    assert.deepStrictEqual(status.children.slice(1).map(badgeParts), [
+        ['patches-badge--emailtype patches-extra-badge', 'ri-pie-chart-fill', 'Broadcast', 'Broadcast'],
+        ['patches-badge--abtest patches-extra-badge', 'ri-organization-chart', 'Teste A/B', 'Teste A/B'],
+        ['patches-badge--translation patches-extra-badge', 'ri-translate', 'Tradução', 'Tradução'],
+        ['patches-badge--draft patches-extra-badge', 'ri-draft-line', 'Rascunho', 'Rascunho'],
+    ]);
+    assert.strictEqual(nameCell.children.length, 0, 'the icons of core are gone from the name');
+});
+
+test('addStatusColumn: the other lists never look for the icons of the email list', () => {
+    const {doc, rows} = campaignTable(1, true, 'published', false, '#campaignTable');
+    const asked = [];
+    const plain = rows[0].querySelector;
+    rows[0].querySelector = (selector) => { asked.push(selector); return plain(selector); };
+
+    api.addStatusColumn(doc, campaignSpec, ccfg);
+
+    assert.ok(!asked.some((s) => /organization-chart|ri-translate|fa-file|pie-chart/.test(s)), asked.join(','));
+});
