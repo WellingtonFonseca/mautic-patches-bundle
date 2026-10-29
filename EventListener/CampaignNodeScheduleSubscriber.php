@@ -54,11 +54,11 @@ class CampaignNodeScheduleSubscriber implements EventSubscriberInterface
             return;
         }
 
+        $flags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP;
+
         $customContentEvent->addContent(
             '<script>'.file_get_contents(__DIR__.'/../Resources/js/campaign-node-schedule.js')
-            .';window.mauticPatchesScheduleApi.configure('
-            .json_encode($this->words(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP).','
-            .json_encode($this->zone(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP).');</script>'
+            .';window.mauticPatchesScheduleApi.configure('.json_encode($this->words(), $flags).','.json_encode($this->zone(), $flags).');</script>'
         );
     }
 

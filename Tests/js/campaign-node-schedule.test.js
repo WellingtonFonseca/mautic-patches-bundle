@@ -73,6 +73,13 @@ test('all seven days, or none, is no restriction', () => {
     assert.deepStrictEqual(lines({}), []);
 });
 
+test('days that come as an object (PHP writes an array with gaps in its keys that way) are read from its values', () => {
+    assert.deepStrictEqual(texts({triggerRestrictedDaysOfWeek: {0: 1, 2: 3, 3: '5'}}), ['Seg, Qua, Sex']);
+    assert.deepStrictEqual(lines({triggerRestrictedDaysOfWeek: {}}), []);
+    assert.deepStrictEqual(lines({triggerRestrictedDaysOfWeek: 'x'}), []);
+    assert.deepStrictEqual(lines({triggerRestrictedDaysOfWeek: 3}), []);
+});
+
 test('values that are not a day are ignored', () => {
     assert.deepStrictEqual(texts({triggerRestrictedDaysOfWeek: [7, -2, 'x', 3]}), ['Qua']);
     assert.deepStrictEqual(lines({triggerRestrictedDaysOfWeek: [7, 9]}), []);

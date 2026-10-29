@@ -20,11 +20,13 @@
     var CALENDAR = 'ri-calendar-line';
     var words = {};
     var zone = {locale: 'en-US', timeZone: 'UTC'};
+    var dateFormat = null; // the Intl formatter of the user's locale and zone, made once (a formatter is costly to build)
 
     // the words of the language, and the locale ("pt-BR") and IANA time zone ("America/Sao_Paulo") of the user
     function configure(t, z) {
         words = t || {};
         zone = {locale: (z && z.locale) || 'en-US', timeZone: (z && z.timeZone) || 'UTC'};
+        dateFormat = null;
     }
 
     function fill(text, values) {
@@ -48,7 +50,9 @@
     // the days chosen, Monday first, without repeats; null when there is no restriction (none chosen, or all seven)
     function days(list) {
         var chosen = {};
-        (Array.isArray(list) ? list : []).forEach(function (day) {
+        // PHP writes an array with gaps in its keys as an object ({"0": 1, "2": 3}): its values are the days
+        var given = Array.isArray(list) ? list : (list && typeof list === 'object' ? Object.keys(list).map(function (k) { return list[k]; }) : []);
+        given.forEach(function (day) {
             day = Number(day);
             if (day === -1) { [1, 2, 3, 4, 5].forEach(function (d) { chosen[d] = true; }); } else if (day >= 0 && day <= 6) { chosen[day] = true; }
         });
@@ -115,10 +119,12 @@
         return new Date(wall - zoneOffset(typeof value === 'object' ? value.timezone : 'UTC', wall));
     }
 
-    // "31 de outubro de 2026 às 14:00 BRT" in the language and zone of the user; null if the browser cannot
+    // "31 de outubro de 2026 às 14:00 BRT" (or "GMT-3", the browser decides) in the language and zone of the user; null if the browser cannot
     function dateText(when) {
         try {
-            return new Intl.DateTimeFormat(zone.locale, {timeZone: zone.timeZone, day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short'}).format(when);
+            dateFormat = dateFormat || new Intl.DateTimeFormat(zone.locale, {timeZone: zone.timeZone, day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short'});
+
+            return dateFormat.format(when);
         } catch (e) {
             return null;
         }
