@@ -13,7 +13,7 @@ const fs     = require('node:fs');
 const {execFileSync} = require('node:child_process');
 
 const WORDS = {
-    hour: '%hour%h', hour_minutes: '%hour%h%minutes%m', at: 'às %time%', window: '%start% às %end%', range: '%from%–%to%',
+    hour: '%hour%h', hour_minutes: '%hour%h%minutes%m', at: 'Às %time%', window: 'Entre %start% e %end%', range: '%from%–%to%',
     day_0: 'Dom', day_1: 'Seg', day_2: 'Ter', day_3: 'Qua', day_4: 'Qui', day_5: 'Sex', day_6: 'Sáb',
     date_plain: 'esperar até %full%', date_inaction: 'por %full%',
 };
@@ -251,7 +251,7 @@ test('the texts of the Preview tab are put on the nodes now and after every Maut
 });
 
 const WINDOW_EVENT = {triggerMode: 'interval', triggerRestrictedStartHour: {date: '1970-01-01 10:00:00.000000'}, triggerRestrictedStopHour: '16:20', triggerRestrictedDaysOfWeek: [1, 3, 4]};
-const HOURS = 'ri-time-line 10h às 16h20m';
+const HOURS = 'ri-time-line Entre 10h e 16h20m';
 const DAYS = 'ri-calendar-line Seg, Qua, Qui';
 
 test('the schedule is a line per fact under the wait text, in the same strip, and follows the edits', () => {
@@ -340,7 +340,7 @@ test('after an edit core stores the event AFTER the label update: the lines are 
 
     assert.strictEqual(result, 'core-result');
     assert.deepStrictEqual(order, ['label', 'store']);
-    assert.deepStrictEqual(extraLines(strips(n)[0]), ['ri-time-line às 9h30m']);
+    assert.deepStrictEqual(extraLines(strips(n)[0]), ['ri-time-line Às 9h30m']);
 });
 
 test('opening the form (no eventId), or a deleted event, does not touch the strip', () => {

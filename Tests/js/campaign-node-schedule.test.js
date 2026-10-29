@@ -9,7 +9,7 @@ const assert = require('node:assert');
 const api    = require('../../Resources/js/campaign-node-schedule.js');
 
 const WORDS = {
-    hour: '%hour%h', hour_minutes: '%hour%h%minutes%m', at: 'às %time%', window: '%start% às %end%', range: '%from%–%to%',
+    hour: '%hour%h', hour_minutes: '%hour%h%minutes%m', at: 'Às %time%', window: 'Entre %start% e %end%', range: '%from%–%to%',
     day_0: 'Dom', day_1: 'Seg', day_2: 'Ter', day_3: 'Qua', day_4: 'Qui', day_5: 'Sex', day_6: 'Sáb',
     date_plain: 'esperar até %full%', date_inaction: 'por %full%',
 };
@@ -22,21 +22,21 @@ const texts = (fields) => lines(fields).map((l) => l.text);
 
 test.beforeEach(() => api.configure(WORDS, UTC));
 
-test('a window of hours: "10h às 16h20m", with a clock', () => {
-    assert.deepStrictEqual(lines({triggerRestrictedStartHour: '10:00', triggerRestrictedStopHour: '16:20'}), [{icon: CLOCK, text: '10h às 16h20m'}]);
-    assert.deepStrictEqual(texts({triggerRestrictedStartHour: '08:30', triggerRestrictedStopHour: '17:45'}), ['8h30m às 17h45m']);
+test('a window of hours: "Entre 10h e 16h20m", with a clock', () => {
+    assert.deepStrictEqual(lines({triggerRestrictedStartHour: '10:00', triggerRestrictedStopHour: '16:20'}), [{icon: CLOCK, text: 'Entre 10h e 16h20m'}]);
+    assert.deepStrictEqual(texts({triggerRestrictedStartHour: '08:30', triggerRestrictedStopHour: '17:45'}), ['Entre 8h30m e 17h45m']);
 });
 
-test('a fixed hour: "às 9h30m"', () => {
-    assert.deepStrictEqual(lines({triggerHour: '09:30'}), [{icon: CLOCK, text: 'às 9h30m'}]);
-    assert.deepStrictEqual(texts({triggerHour: '14:00'}), ['às 14h']);
-    assert.deepStrictEqual(texts({triggerHour: '00:05'}), ['às 0h05m']);
+test('a fixed hour: "Às 9h30m"', () => {
+    assert.deepStrictEqual(lines({triggerHour: '09:30'}), [{icon: CLOCK, text: 'Às 9h30m'}]);
+    assert.deepStrictEqual(texts({triggerHour: '14:00'}), ['Às 14h']);
+    assert.deepStrictEqual(texts({triggerHour: '00:05'}), ['Às 0h05m']);
 });
 
 test('a time may be "H:i", the object a DateTime has after json_encode, or an ISO date', () => {
-    assert.deepStrictEqual(texts({triggerHour: {date: '1970-01-01 09:30:00.000000', timezone_type: 3, timezone: 'UTC'}}), ['às 9h30m']);
-    assert.deepStrictEqual(texts({triggerHour: '2026-10-29T09:30:00+00:00'}), ['às 9h30m']);
-    assert.deepStrictEqual(texts({triggerHour: '9:05'}), ['às 9h05m']);
+    assert.deepStrictEqual(texts({triggerHour: {date: '1970-01-01 09:30:00.000000', timezone_type: 3, timezone: 'UTC'}}), ['Às 9h30m']);
+    assert.deepStrictEqual(texts({triggerHour: '2026-10-29T09:30:00+00:00'}), ['Às 9h30m']);
+    assert.deepStrictEqual(texts({triggerHour: '9:05'}), ['Às 9h05m']);
 });
 
 test('a window needs both ends: one alone shows nothing', () => {
@@ -81,7 +81,7 @@ test('values that are not a day are ignored', () => {
 test('hour, window and days together: three lines, in that order', () => {
     assert.deepStrictEqual(
         lines({triggerHour: '09:30', triggerRestrictedStartHour: '10:00', triggerRestrictedStopHour: '16:20', triggerRestrictedDaysOfWeek: [1, 3, 4]}),
-        [{icon: CLOCK, text: 'às 9h30m'}, {icon: CLOCK, text: '10h às 16h20m'}, {icon: CALENDAR, text: 'Seg, Qua, Qui'}],
+        [{icon: CLOCK, text: 'Às 9h30m'}, {icon: CLOCK, text: 'Entre 10h e 16h20m'}, {icon: CALENDAR, text: 'Seg, Qua, Qui'}],
     );
 });
 
