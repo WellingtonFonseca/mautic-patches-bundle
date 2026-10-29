@@ -548,7 +548,7 @@ function emailTable(present) {
 test('EMAIL_FLAGS: A/B test, translation and draft, in the order they are shown, each with a color of its own', () => {
     assert.deepStrictEqual(api.EMAIL_FLAGS.map((f) => f.key), ['abtest', 'translation', 'draft']);
     assert.deepStrictEqual(api.EMAIL_FLAGS.map((f) => f.modifier), ['abtest', 'translation', 'draft']);
-    assert.deepStrictEqual(api.EMAIL_FLAGS.map((f) => f.icon), ['ri-test-tube-fill', 'ri-translate', 'ri-draft-line']);
+    assert.deepStrictEqual(api.EMAIL_FLAGS.map((f) => f.icon), ['ri-test-tube-fill', 'ri-translate-2', 'ri-draft-line']);
 });
 
 test('addStatusColumn (email): an email of campaigns has the Campanha badge after the status, and nothing else', () => {
@@ -571,7 +571,7 @@ test('addStatusColumn (email): the type comes first, then A/B test, translation 
     assert.deepStrictEqual(status.children.slice(1).map(badgeParts), [
         ['patches-badge--emailtype patches-extra-badge', 'ri-pie-chart-fill', 'Broadcast', 'Broadcast'],
         ['patches-badge--abtest patches-extra-badge', 'ri-test-tube-fill', 'Teste A/B', 'Teste A/B'],
-        ['patches-badge--translation patches-extra-badge', 'ri-translate', 'Tradução', 'Tradução'],
+        ['patches-badge--translation patches-extra-badge', 'ri-translate-2', 'Tradução', 'Tradução'],
         ['patches-badge--draft patches-extra-badge', 'ri-draft-line', 'Rascunho', 'Rascunho'],
     ]);
     assert.strictEqual(nameCell.children.length, 0, 'the icons of core are gone from the name');
