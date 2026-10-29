@@ -221,16 +221,14 @@
         root.mauticPatchesStatusLabels = true;
 
         // the labels of a list that is in the page, and of every list loaded later
-        place(root.document);
-        colorCounts(root.document);
-        addStatusColumns(root.document, cfg);
-        addContactStatusColumn(root.document, cfg);
-        root.document.addEventListener('DOMContentLoaded', function () { place(root.document); addStatusColumns(root.document, cfg); addContactStatusColumn(root.document, cfg); });
+        var draw = function () { place(root.document); colorCounts(root.document); addStatusColumns(root.document, cfg); addContactStatusColumn(root.document, cfg); };
+        draw();
+        root.document.addEventListener('DOMContentLoaded', draw);
         var pending = false;
         new root.MutationObserver(function () {
             if (pending) { return; }
             pending = true;
-            root.requestAnimationFrame(function () { pending = false; place(root.document); colorCounts(root.document); addStatusColumns(root.document, cfg); addContactStatusColumn(root.document, cfg); });
+            root.requestAnimationFrame(function () { pending = false; draw(); });
         }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true});
     }
 
@@ -341,7 +339,7 @@
     ];
 
     /** The plain "Status" header (not a sort link) that goes right after the first header of `head`. */
-    function statusHeader(doc, head, first, columnClass, title) {
+    function statusHeader(doc, first, columnClass, title) {
         var th = doc.createElement('th'), box = doc.createElement('span'), text = doc.createElement('span');
         th.className = columnClass + ' pa-0';
         th.setAttribute('scope', 'col');
@@ -372,7 +370,7 @@
         if (!first) { return false; }
         var columnClass = 'col-patches-status col-' + spec.kind + '-status';
 
-        statusHeader(doc, head, first, columnClass, cfg.column);
+        statusHeader(doc, first, columnClass, cfg.column);
 
         var rows = table.querySelectorAll('tbody tr');
         for (var k = 0; k < rows.length; k++) {
@@ -404,9 +402,9 @@
      * the badge follows: HSM has no channel of its own (the n8n plugin checks `sms` for SMS and HSM), so its badge follows `sms`.
      */
     var CONTACT_CHANNELS = [
-        {key: 'email', dnc: 'email', icon: 'ri-mail-line'},
-        {key: 'sms', dnc: 'sms', icon: 'ri-message-2-line'},
-        {key: 'hsm', dnc: 'sms', icon: 'ri-whatsapp-line'}
+        {key: 'email', dnc: 'email', icon: 'ri-mail-line', word: 'contactEmail'},
+        {key: 'sms', dnc: 'sms', icon: 'ri-message-2-line', word: 'contactSms'},
+        {key: 'hsm', dnc: 'sms', icon: 'ri-whatsapp-line', word: 'contactHsm'}
     ];
 
     /** The Do Not Contact channels of a row: core prints a red label with an `ico-<channel>` icon beside the name for each one. */
@@ -428,7 +426,7 @@
             return {
                 channel: c.key,
                 icon: c.icon,
-                text: cfg['contact' + c.key.charAt(0).toUpperCase() + c.key.slice(1)], // only the name of the channel: the color tells the state
+                text: cfg[c.word], // only the name of the channel: the color tells the state
                 modifier: isBlocked ? 'failed' : 'production'
             };
         });
@@ -446,7 +444,7 @@
         if (!table || !/^\/s\/contacts(?:\/\d+)?$/.test(root.location.pathname) || table.querySelector('th.col-patches-status')) { return false; }
         var head = table.querySelector('thead tr'), first = head && head.querySelector('th');
         if (!first) { return false; }
-        statusHeader(doc, head, first, 'col-patches-status col-contact-status', cfg.column);
+        statusHeader(doc, first, 'col-patches-status col-contact-status', cfg.column);
 
         var rows = table.querySelectorAll('tbody tr');
         for (var k = 0; k < rows.length; k++) {
@@ -455,7 +453,7 @@
             var td = doc.createElement('td'), box = doc.createElement('div'), badges = contactBadges(blockedChannels(rows[k]), cfg);
             td.className = 'col-patches-status col-contact-status';
             box.className = 'patches-status-box';
-            for (var j = 0; j < badges.length; j++) { box.appendChild(extraBadge(doc, {icon: badges[j].icon, text: badges[j].text, modifier: badges[j].modifier, extra: 'patches-contact-badge'})); }
+            for (var j = 0; j < badges.length; j++) { box.appendChild(extraBadge(doc, badges[j])); }
             td.appendChild(box);
             cell.parentNode.insertBefore(td, cell.nextSibling);
         }
