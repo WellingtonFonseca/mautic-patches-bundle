@@ -119,7 +119,7 @@
         campaign: {icon: 'ri-mail-send-fill', word: 'emailCampaign'}
     };
     var EMAIL_FLAGS = [
-        {key: 'abtest', icon: 'ri-organization-chart', selector: 'i.ri-organization-chart', modifier: 'abtest', word: 'emailAbtest'},
+        {key: 'abtest', icon: 'ri-test-tube-fill', selector: 'i.ri-organization-chart', modifier: 'abtest', word: 'emailAbtest'},
         {key: 'translation', icon: 'ri-translate', selector: 'i.ri-translate', modifier: 'translation', word: 'emailTranslation'},
         {key: 'draft', icon: 'ri-draft-line', selector: 'i.fa-file', modifier: 'draft', word: 'emailDraft'}
     ];
