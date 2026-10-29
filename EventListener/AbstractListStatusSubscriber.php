@@ -39,7 +39,7 @@ abstract class AbstractListStatusSubscriber implements EventSubscriberInterface
      * in the campaign list the reentry one, in the segment list the global / filters / warning ones, beside it are 22px circles with a play / stop / reload icon; on hover one opens to the right and
      * shows the word, as the status badge of the n8n campaign card. They sit side by side in the flow of the cell; opening one widens the column and the browser lays out the table (no script). The 76px minimum of the word badge does not apply to them.
      */
-    public const ICON_BADGE_STYLE = '#leadListTable td,#campaignTable td,#userTable td,table.email-list td{white-space:nowrap}'
+    public const ICON_BADGE_STYLE = '#leadListTable td,#campaignTable td,#userTable td,table.email-list td,#leadTable td{white-space:nowrap}'
         .'td.col-patches-status .patches-status-box{display:flex;align-items:center;gap:6px;height:22px}'
         .'td.col-patches-status :is(.patches-status-label,.patches-extra-badge){position:relative;z-index:2;flex:none;display:inline-flex;box-sizing:border-box;height:22px;min-width:0;max-width:22px;margin:0;padding:0;gap:0;'
         .'justify-content:flex-start;overflow:hidden;transition:max-width .2s ease,box-shadow .2s ease}'

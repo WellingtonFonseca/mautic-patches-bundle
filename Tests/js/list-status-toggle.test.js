@@ -477,3 +477,49 @@ test('the reentry badge carries the shared extra-badge class too', () => {
 
     assert.match(items(rows[0].children[1])[1].className, /patches-extra-badge/);
 });
+
+/** A contact row whose name cell holds the red labels core prints for the Do Not Contact channels given. */
+const contactRow = (channels) => ({
+    querySelectorAll: (selector) => (selector === 'td:not(.col-patches-status) .label-danger > i[class*="ico-"]'
+        ? channels.map((c) => ({className: 'ri-prohibited-line ico-' + c})) : [])
+});
+const contactCfg = {contactEmail: 'Email', contactSms: 'SMS', contactHsm: 'HSM'};
+
+test('blockedChannels: the channel of every red label core prints beside the name', () => {
+    assert.deepStrictEqual(api.blockedChannels(contactRow([])), {});
+    assert.deepStrictEqual(api.blockedChannels(contactRow(['email'])), {email: true});
+    assert.deepStrictEqual(api.blockedChannels(contactRow(['email', 'sms'])), {email: true, sms: true});
+});
+
+test('blockedChannels: an icon without an ico-<channel> class is not a channel', () => {
+    const row = {querySelectorAll: () => [{className: 'ri-prohibited-line'}, {className: 'ri-prohibited-line ico-sms'}]};
+
+    assert.deepStrictEqual(api.blockedChannels(row), {sms: true});
+});
+
+test('contactBadges: email, SMS and HSM in this order, all green when nothing is blocked', () => {
+    const badges = api.contactBadges({}, contactCfg);
+
+    assert.deepStrictEqual(badges.map((b) => b.channel), ['email', 'sms', 'hsm']);
+    assert.deepStrictEqual(badges.map((b) => b.modifier), ['production', 'production', 'production']);
+    assert.deepStrictEqual(badges.map((b) => b.text), ['Email', 'SMS', 'HSM']);
+    assert.deepStrictEqual(badges.map((b) => b.icon), ['ri-mail-line', 'ri-message-2-line', 'ri-whatsapp-line']);
+});
+
+test('contactBadges: a blocked email is red and leaves the others green', () => {
+    const badges = api.contactBadges({email: true}, contactCfg);
+
+    assert.deepStrictEqual(badges.map((b) => b.modifier), ['failed', 'production', 'production']);
+    assert.strictEqual(badges[0].text, 'Email', 'the text is the channel, the color says it is blocked');
+});
+
+test('contactBadges: HSM follows the sms channel, so a blocked sms makes SMS and HSM red', () => {
+    const badges = api.contactBadges({sms: true}, contactCfg);
+
+    assert.deepStrictEqual(badges.map((b) => b.modifier), ['production', 'failed', 'failed']);
+    assert.strictEqual(badges[2].text, 'HSM');
+});
+
+test('contactBadges: a channel that is not one of ours (push, whatsapp) changes nothing', () => {
+    assert.deepStrictEqual(api.contactBadges({push: true}, contactCfg).map((b) => b.modifier), ['production', 'production', 'production']);
+});

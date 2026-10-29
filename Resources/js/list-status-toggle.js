@@ -194,11 +194,13 @@
         place(root.document);
         colorCounts(root.document);
         addStatusColumns(root.document, cfg);
+        addContactStatusColumn(root.document, cfg);
+        root.document.addEventListener('DOMContentLoaded', function () { addContactStatusColumn(root.document, cfg); });
         var pending = false;
         new root.MutationObserver(function () {
             if (pending) { return; }
             pending = true;
-            root.requestAnimationFrame(function () { pending = false; place(root.document); colorCounts(root.document); addStatusColumns(root.document, cfg); });
+            root.requestAnimationFrame(function () { pending = false; place(root.document); colorCounts(root.document); addStatusColumns(root.document, cfg); addContactStatusColumn(root.document, cfg); });
         }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true});
     }
 
@@ -307,6 +309,21 @@
         {table: 'table.email-list', kind: 'email'}
     ];
 
+    /** The plain "Status" header (not a sort link) that goes right after the first header of `head`. */
+    function statusHeader(doc, head, first, columnClass, title) {
+        var th = doc.createElement('th'), box = doc.createElement('span'), text = doc.createElement('span');
+        th.className = columnClass + ' pa-0';
+        th.setAttribute('scope', 'col');
+        box.className = 'btn btn-ghost btn-block jc-space-between';
+        box.style.pointerEvents = 'none';
+        box.style.color = 'inherit'; // a ghost button takes the link color; the other headers are black
+        text.className = 'fw-b';
+        text.textContent = title;
+        box.appendChild(text);
+        th.appendChild(box);
+        first.parentNode.insertBefore(th, first.nextSibling);
+    }
+
     /**
      * The status of a list is a column of its own, right after the menu column (before "Prefixo", the avatar and "Nome"): a header
      * `th.col-patches-status` and, in every row, a cell that holds the label (core, or this script, prints it with the name). The
@@ -322,17 +339,7 @@
         if (!first) { return false; }
         var columnClass = 'col-patches-status col-' + spec.kind + '-status';
 
-        var th = doc.createElement('th'), box = doc.createElement('span'), text = doc.createElement('span');
-        th.className = columnClass + ' pa-0';
-        th.setAttribute('scope', 'col');
-        box.className = 'btn btn-ghost btn-block jc-space-between';
-        box.style.pointerEvents = 'none';
-        box.style.color = 'inherit'; // a ghost button takes the link color; the other headers are black
-        text.className = 'fw-b';
-        text.textContent = cfg.column;
-        box.appendChild(text);
-        th.appendChild(box);
-        first.parentNode.insertBefore(th, first.nextSibling);
+        statusHeader(doc, head, first, columnClass, cfg.column);
 
         var rows = table.querySelectorAll('tbody tr');
         for (var k = 0; k < rows.length; k++) {
@@ -353,6 +360,70 @@
             if (status === 'published' || status === 'unpublished') { fillLabel(label, view(status, cfg)); }
             if (label.getAttribute('data-restart') === '1') { box.appendChild(restartBadge(doc, cfg.restart)); }
             if (spec.kind === 'segment') { moveSegmentFlags(doc, rows[k], box, cfg); }
+        }
+
+        return true;
+    }
+
+    /**
+     * The channels of the contact list: the badge of each shows whether the contact may receive on it. `dnc` is the Do Not Contact channel of core
+     * the badge follows: HSM has no channel of its own (the n8n plugin checks `sms` for SMS and HSM), so its badge follows `sms`.
+     */
+    var CONTACT_CHANNELS = [
+        {key: 'email', dnc: 'email', icon: 'ri-mail-line'},
+        {key: 'sms', dnc: 'sms', icon: 'ri-message-2-line'},
+        {key: 'hsm', dnc: 'sms', icon: 'ri-whatsapp-line'}
+    ];
+
+    /** The Do Not Contact channels of a row: core prints a red label with an `ico-<channel>` icon beside the name for each one. */
+    function blockedChannels(row) {
+        var icons = row.querySelectorAll('td:not(.col-patches-status) .label-danger > i[class*="ico-"]'), blocked = {};
+        for (var k = 0; k < icons.length; k++) {
+            var m = /(?:^|\s)ico-([\w-]+)/.exec(icons[k].className);
+            if (m) { blocked[m[1]] = true; }
+        }
+
+        return blocked;
+    }
+
+    /** The badges of a contact: [{channel, icon, text, modifier}], text is the name of the channel; red when the channel is blocked, green when it is not. */
+    function contactBadges(blocked, cfg) {
+        return CONTACT_CHANNELS.map(function (c) {
+            var isBlocked = blocked[c.dnc] === true;
+
+            return {
+                channel: c.key,
+                icon: c.icon,
+                text: cfg['contact' + c.key.charAt(0).toUpperCase() + c.key.slice(1)], // only the name of the channel: the color tells the state
+                modifier: isBlocked ? 'failed' : 'production'
+            };
+        });
+    }
+
+    /**
+     * The Status column of the contact list (only the list at /s/contacts, not the contact tables of a segment or campaign): one icon badge per
+     * channel (email, SMS, HSM), green when the contact can receive and red when it is on the Do Not Contact list of the channel. Built from the red
+     * labels core prints beside the name (hidden by CSS). Once per drawing of the table; returns whether it added the column.
+     */
+    function addContactStatusColumn(doc, cfg) {
+        // not while the page is still being parsed: a table that is half there would get its column once, with rows missing (the setup runs again at DOMContentLoaded)
+        if (doc.readyState === 'loading') { return false; }
+        var table = doc.querySelector('#leadTable');
+        if (!table || !/^\/s\/contacts(?:\/\d+)?$/.test(root.location.pathname) || table.querySelector('th.col-patches-status')) { return false; }
+        var head = table.querySelector('thead tr'), first = head && head.querySelector('th');
+        if (!first) { return false; }
+        statusHeader(doc, head, first, 'col-patches-status col-contact-status', cfg.column);
+
+        var rows = table.querySelectorAll('tbody tr');
+        for (var k = 0; k < rows.length; k++) {
+            var cell = rows[k].querySelector('td');
+            if (!cell) { continue; }
+            var td = doc.createElement('td'), box = doc.createElement('div'), badges = contactBadges(blockedChannels(rows[k]), cfg);
+            td.className = 'col-patches-status col-contact-status';
+            box.className = 'patches-status-box';
+            for (var j = 0; j < badges.length; j++) { box.appendChild(extraBadge(doc, {icon: badges[j].icon, text: badges[j].text, modifier: badges[j].modifier, extra: 'patches-contact-badge'})); }
+            td.appendChild(box);
+            cell.parentNode.insertBefore(td, cell.nextSibling);
         }
 
         return true;
@@ -435,7 +506,13 @@
         syncEmails($, cfg);
     }
 
-    var api = {addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
+    function installContact($, Mautic, cfg) {
+        if (root.mauticPatchesContactStatus) { return; }
+        root.mauticPatchesContactStatus = true;
+        setup(cfg);
+    }
+
+    var api = {addContactStatusColumn: addContactStatusColumn, blockedChannels: blockedChannels, contactBadges: contactBadges, CONTACT_CHANNELS: CONTACT_CHANNELS, installContact: installContact, addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
