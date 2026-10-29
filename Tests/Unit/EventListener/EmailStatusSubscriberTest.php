@@ -67,6 +67,9 @@ class EmailStatusSubscriberTest extends TestCase
     public function testTheCoreIconIsHiddenInTheEmailTableAndTheHoverHasTheColorOfTheNewStatus(): void
     {
         $css = EmailStatusSubscriber::STYLE;
+
+        // the icons core prints next to the name (A/B test, translation, segment email, draft) are hidden from the first paint, only in their tooltip spans
+        $this->assertStringContainsString('table.email-list td:not(.col-patches-status) span[data-toggle="tooltip"]:has(>i:is(.ri-organization-chart,.ri-translate,.ri-pie-chart-line,.fa-file)){display:none!important}', $css);
         $this->assertStringContainsString('table.email-list i[class*="email-publish-icon"]{display:none!important}', $css);
         $this->assertStringContainsString('[data-email-status-action="deactivate"]:hover{background-color:var(--support-error)', $css);
         $this->assertStringContainsString('[data-email-status-action="activate"]:hover{background-color:var(--support-success)', $css);

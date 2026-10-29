@@ -66,4 +66,22 @@ class DarkThemeToastSubscriberTest extends TestCase
         $this->assertStringNotContainsString('theme="light"', $this->css());
         $this->assertStringNotContainsString('solarized-light', $this->css());
     }
+
+    #[DataProvider('themes')]
+    public function testThePlainLinksTheirHoverAndTheCloseButtonShareOneRuleWithTheTextColor(string $theme): void
+    {
+        $root = ':root[theme="'.$theme.'"] .alert-growl';
+        $plain = $root.':not(.alert-growl--warning):not(.alert-growl--error)';
+
+        $this->assertStringContainsString($plain.' a,'.$plain.' a:hover,'.$root.' .close{color:var(--text-primary)}', $this->css());
+    }
+
+    #[DataProvider('themes')]
+    public function testTheBoxRuleHasTheShadowAndTheColoredBorderIsLeftToCore(string $theme): void
+    {
+        $css = $this->css();
+
+        $this->assertStringContainsString(':root[theme="'.$theme.'"] .alert-growl{background:color-mix(in srgb,var(--layer-02) 94%,transparent);color:var(--text-primary);box-shadow:0 2px 8px rgba(0,0,0,.45)}', $css);
+        $this->assertStringNotContainsString('border-left', $css, 'the yellow and red borders stay core\'s');
+    }
 }
