@@ -6,27 +6,53 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
+use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use Mautic\CoreBundle\Helper\UserHelper;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignNodeScheduleSubscriber;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Mautic\UserBundle\Entity\User;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class CampaignNodeScheduleSubscriberTest extends TestCase
 {
-    private function subscriber(): CampaignNodeScheduleSubscriber
+    /**
+     * @param array<string, mixed> $system the system's settings (locale, default_timezone)
+     */
+    private function subscriber(?User $user = null, array $system = ['locale' => 'pt_BR', 'default_timezone' => 'UTC']): CampaignNodeScheduleSubscriber
     {
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(static fn (string $key): string => '<'.$key.'>&');
+        $userHelper = $this->createMock(UserHelper::class);
+        // a guest must give null, not a new empty user: the argument is part of what is tested
+        $userHelper->method('getUser')->with(true)->willReturn($user);
+        $parameters = $this->createMock(CoreParametersHelper::class);
+        $parameters->method('get')->willReturnCallback(static fn (string $name) => $system[$name] ?? null);
 
-        return new CampaignNodeScheduleSubscriber($translator);
+        return new CampaignNodeScheduleSubscriber($translator, $userHelper, $parameters);
+    }
+
+    private function user(?string $locale, ?string $timezone): User
+    {
+        $user = new User();
+        $user->setLocale($locale);
+        $user->setTimezone($timezone);
+
+        return $user;
+    }
+
+    /** @return array<int, string> */
+    private function contentOf(CampaignNodeScheduleSubscriber $subscriber, string $context = 'page.header.left'): array
+    {
+        $event = new CustomContentEvent('some_view', $context);
+        $subscriber->injectViewCustomContent($event);
+
+        return $event->getContent();
     }
 
     private function content(string $context = 'page.header.left'): string
     {
-        $event = new CustomContentEvent('some_view', $context);
-        $this->subscriber()->injectViewCustomContent($event);
-
-        return implode('', $event->getContent());
+        return implode('', $this->contentOf($this->subscriber(), $context));
     }
 
     public function testTheScriptCarriesTheFormatterAndConfiguresItWithTheWords(): void
@@ -38,6 +64,7 @@ class CampaignNodeScheduleSubscriberTest extends TestCase
         $this->assertStringContainsString('root.mauticPatchesScheduleApi', $content);
         $this->assertStringContainsString(';window.mauticPatchesScheduleApi.configure({"hour":', $content);
         $this->assertStringContainsString('"day_6":', $content);
+        $this->assertStringContainsString('"date_plain":', $content);
     }
 
     public function testEveryWordTheFormatterReadsIsGiven(): void
@@ -70,7 +97,57 @@ class CampaignNodeScheduleSubscriberTest extends TestCase
 
         $this->assertSame('<mautic.patches.campaign.schedule.at>&', $words['at']);
         $this->assertSame('<mautic.patches.campaign.schedule.day_6>&', $words['day_6']);
-        $this->assertCount(12, $words);
+        $this->assertCount(14, $words);
+        $this->assertSame('<mautic.campaign.connection.trigger.date.label>&', $words['date_plain']);
+        $this->assertSame('<mautic.campaign.connection.trigger.date.label_inaction>&', $words['date_inaction']);
+    }
+
+    public function testTheZoneIsTheUsersOwnSettingWhenThereIsOne(): void
+    {
+        $zone = $this->subscriber($this->user('en_US', 'America/Sao_Paulo'))->zone();
+
+        $this->assertSame(['locale' => 'en-US', 'timeZone' => 'America/Sao_Paulo'], $zone);
+    }
+
+    public function testTheZoneFallsBackToTheSystemSettingsTheWayCoreDoesAtLogin(): void
+    {
+        $system = ['locale' => 'pt_BR', 'default_timezone' => 'America/Sao_Paulo'];
+
+        $this->assertSame(['locale' => 'pt-BR', 'timeZone' => 'America/Sao_Paulo'], $this->subscriber($this->user(null, null), $system)->zone());
+        $this->assertSame(['locale' => 'pt-BR', 'timeZone' => 'America/Sao_Paulo'], $this->subscriber($this->user('', ''), $system)->zone());
+        $this->assertSame(['locale' => 'pt-BR', 'timeZone' => 'America/Sao_Paulo'], $this->subscriber(null, $system)->zone());
+    }
+
+    public function testTheUserCanSetOnlyOneOfThem(): void
+    {
+        $system = ['locale' => 'pt_BR', 'default_timezone' => 'America/Sao_Paulo'];
+
+        $this->assertSame(['locale' => 'en-US', 'timeZone' => 'America/Sao_Paulo'], $this->subscriber($this->user('en_US', null), $system)->zone());
+        $this->assertSame(['locale' => 'pt-BR', 'timeZone' => 'Europe/Lisbon'], $this->subscriber($this->user(null, 'Europe/Lisbon'), $system)->zone());
+    }
+
+    public function testAZoneOrLocaleThatIsMissingOrNotKnownBecomesUtcAndEnglish(): void
+    {
+        $this->assertSame(['locale' => 'en-US', 'timeZone' => 'UTC'], $this->subscriber(null, [])->zone());
+        $this->assertSame(['locale' => 'en-US', 'timeZone' => 'UTC'], $this->subscriber(null, ['locale' => '', 'default_timezone' => ''])->zone());
+        $this->assertSame('UTC', $this->subscriber($this->user(null, 'Nowhere/Land'), [])->zone()['timeZone']);
+        $this->assertSame('UTC', $this->subscriber(null, ['default_timezone' => 'brt'])->zone()['timeZone']);
+    }
+
+    public function testTheScriptConfiguresTheFormatterWithTheZoneToo(): void
+    {
+        $content = implode('', $this->contentOf($this->subscriber($this->user('pt_BR', 'America/Sao_Paulo'))));
+
+        $this->assertStringContainsString('},{"locale":"pt-BR","timeZone":"America\/Sao_Paulo"});</script>', $content);
+    }
+
+    public function testTheLocaleCannotCloseTheScriptTagEither(): void
+    {
+        $slash   = chr(92);
+        $content = implode('', $this->contentOf($this->subscriber($this->user('x</script>&y', 'UTC'))));
+
+        $this->assertStringNotContainsString('</script>&', $content);
+        $this->assertStringContainsString('"locale":"x'.$slash.'u003C'.$slash.'/script'.$slash.'u003E'.$slash.'u0026y"', $content);
     }
 
     public function testOnlyThePageHeaderGetsTheScript(): void
@@ -96,7 +173,10 @@ class CampaignNodeScheduleSubscriberTest extends TestCase
     {
         $ini = parse_ini_file(__DIR__.'/../../../Translations/'.$locale.'/messages.ini') ?: [];
 
-        foreach (array_keys($this->subscriber()->words()) as $name) {
+        // the date templates are core's own keys, translated by core's language pack
+        $own = array_filter(array_keys($this->subscriber()->words()), static fn (string $name): bool => !str_starts_with($name, 'date_'));
+        $this->assertCount(12, $own);
+        foreach ($own as $name) {
             $this->assertNotEmpty($ini['mautic.patches.campaign.schedule.'.$name] ?? '', "$locale: $name");
         }
     }

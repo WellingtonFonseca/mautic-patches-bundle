@@ -15,11 +15,12 @@ const {execFileSync} = require('node:child_process');
 const WORDS = {
     hour: '%hour%h', hour_minutes: '%hour%h%minutes%m', at: 'às %time%', window: '%start% às %end%', range: '%from%–%to%',
     day_0: 'Dom', day_1: 'Seg', day_2: 'Ter', day_3: 'Qua', day_4: 'Qui', day_5: 'Sex', day_6: 'Sáb',
+    date_plain: 'esperar até %full%', date_inaction: 'por %full%',
 };
 
 // the formatter of the lines, loaded on the fake page with the words of the language
 function loadFormatter(win) {
-    vm.runInNewContext(`${fs.readFileSync(path.resolve(__dirname, '../../Resources/js/campaign-node-schedule.js'), 'utf8')}; window.mauticPatchesScheduleApi.configure(${JSON.stringify(WORDS)});`, {window: win});
+    vm.runInNewContext(`${fs.readFileSync(path.resolve(__dirname, '../../Resources/js/campaign-node-schedule.js'), 'utf8')}; window.mauticPatchesScheduleApi.configure(${JSON.stringify(WORDS)}, {locale: 'pt-BR', timeZone: 'America/Sao_Paulo'});`, {window: win});
 }
 
 const AUTOLOAD = process.env.AUTOLOAD || '/var/www/html/vendor/autoload.php';
@@ -384,6 +385,55 @@ test('the Preview tab: the schedules left by the page are put on the nodes with 
     win.mauticPatchesPreviewSchedules = {};
     win.mauticPatchesApplyWaits();
     assert.deepStrictEqual(extraLines(strips(preview)[0]), []);
+});
+
+const DATE_EVENT = {triggerMode: 'date', triggerDate: {date: '2026-10-31 17:00:00.000000', timezone_type: 3, timezone: 'UTC'}};
+
+test('the builder writes the date of a wait until a date in the language and time zone of the user', () => {
+    const n = fakeNode();
+    const {Mautic} = load(connection({}), {CampaignEvent_1: 'esperar até October 31, 2026 5:00 pm UTC'}, n, [], {campaignBuilderCanvasEvents: {1: DATE_EVENT}});
+
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    assert.match(waitText(strips(n)[0]), /^esperar até 31 de outubro de 2026 às 14:00 /);
+});
+
+test('the builder keeps the plain text after a condition and writes the date in it too', () => {
+    const n = fakeNode();
+    const conn = connection({});
+    conn.sourceId = 'cond';
+    n.node.getAttribute = () => 'condition';
+    const {Mautic} = load(conn, {CampaignEvent_1: 'por October 31, 2026 5:00 pm UTC'}, n, [{from: 'por %full%', to: 'esperar até %full%'}], {campaignBuilderCanvasEvents: {1: DATE_EVENT}});
+
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    assert.match(waitText(strips(n)[0]), /^esperar até 31 de outubro de 2026 às 14:00 /);
+});
+
+test('the Preview tab writes the date too, from the ISO date the page leaves', () => {
+    const preview = fakeNode();
+    const win = {};
+    loadFormatter(win);
+    const document = {head: {appendChild() {}}, createElement() { return makeElement(preview.type); }, getElementById: () => null,
+        querySelector: (sel) => (sel === '#preview-container #CampaignEvent_172' ? preview.node : null)};
+    vm.runInNewContext(script(), {Mautic: {campaignBuilderLabels: {}, campaignBuilderInstance: null, onPageLoad() {}}, window: win, document, mQuery: () => {}});
+
+    win.mauticPatchesPreviewWaits = {CampaignEvent_172: 'esperar até October 31, 2026 5:00 pm UTC'};
+    win.mauticPatchesPreviewSchedules = {CampaignEvent_172: {triggerMode: 'date', triggerDate: '2026-10-31T17:00:00+00:00'}};
+    win.mauticPatchesApplyWaits();
+
+    assert.match(waitText(strips(preview)[0]), /^esperar até 31 de outubro de 2026 às 14:00 /);
+    assert.deepStrictEqual(extraLines(strips(preview)[0]), [], 'a date has no hours or days lines');
+});
+
+test('without the formatter on the page core\'s text of a date wait stays', () => {
+    const n = fakeNode();
+    const {Mautic} = load(connection({}), {CampaignEvent_1: 'esperar até October 31, 2026 5:00 pm UTC'}, n, [], {});
+    Mautic.campaignBuilderCanvasEvents = {1: DATE_EVENT};
+
+    Mautic.campaignBuilderUpdateLabel('CampaignEvent_1');
+
+    assert.strictEqual(waitText(strips(n)[0]), 'esperar até October 31, 2026 5:00 pm UTC');
 });
 
 const REWRITES = [

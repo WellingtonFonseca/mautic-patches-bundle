@@ -11,14 +11,16 @@ const api    = require('../../Resources/js/campaign-node-schedule.js');
 const WORDS = {
     hour: '%hour%h', hour_minutes: '%hour%h%minutes%m', at: 'às %time%', window: '%start% às %end%', range: '%from%–%to%',
     day_0: 'Dom', day_1: 'Seg', day_2: 'Ter', day_3: 'Qua', day_4: 'Qui', day_5: 'Sex', day_6: 'Sáb',
+    date_plain: 'esperar até %full%', date_inaction: 'por %full%',
 };
+const UTC = {locale: 'pt-BR', timeZone: 'UTC'};
 const CLOCK = 'ri-time-line';
 const CALENDAR = 'ri-calendar-line';
 
 const lines = (fields) => api.format({triggerMode: 'interval', ...fields});
 const texts = (fields) => lines(fields).map((l) => l.text);
 
-test.beforeEach(() => api.configure(WORDS));
+test.beforeEach(() => api.configure(WORDS, UTC));
 
 test('a window of hours: "10h às 16h20m", with a clock', () => {
     assert.deepStrictEqual(lines({triggerRestrictedStartHour: '10:00', triggerRestrictedStopHour: '16:20'}), [{icon: CLOCK, text: '10h às 16h20m'}]);
@@ -97,4 +99,114 @@ test('the words of another language are used, and a placeholder the language lac
 
     assert.deepStrictEqual(texts({triggerHour: '09:30'}), ['at 9:30']);
     assert.deepStrictEqual(texts({triggerRestrictedStartHour: '10:00', triggerRestrictedStopHour: '16:20'}), ['10:00 to 16:20 %zone%']);
+});
+
+// ---- the date of a wait until a date, in the language and the time zone of the user
+
+const EN = 'esperar até October 31, 2026 5:00 pm UTC';
+const dated = (fields) => ({triggerMode: 'date', ...fields});
+const OCT31 = {date: '2026-10-31 17:00:00.000000', timezone_type: 3, timezone: 'UTC'};
+
+test('the date is written in the language of the user, in UTC when that is the zone', () => {
+    assert.match(api.localizeDate(EN, dated({triggerDate: OCT31})), /^esperar até 31 de outubro de 2026 às 17:00 UTC$/);
+});
+
+test('the date is written in the time zone of the user: 17:00 UTC is 14:00 in São Paulo', () => {
+    api.configure(WORDS, {locale: 'pt-BR', timeZone: 'America/Sao_Paulo'});
+
+    assert.match(api.localizeDate(EN, dated({triggerDate: OCT31})), /^esperar até 31 de outubro de 2026 às 14:00 /);
+});
+
+test('another language: English month names and a 12-hour clock', () => {
+    api.configure({...WORDS, date_plain: 'wait until %full%'}, {locale: 'en-US', timeZone: 'UTC'});
+
+    assert.match(api.localizeDate('wait until October 31, 2026 5:00 pm UTC', dated({triggerDate: OCT31})), /^wait until October 31, 2026 at 5:00 PM UTC$/);
+});
+
+test('the no path of a decision keeps its own template ("por ...")', () => {
+    assert.match(api.localizeDate('por October 31, 2026 5:00 pm UTC', dated({triggerDate: OCT31})), /^por 31 de outubro de 2026 às 17:00 UTC$/);
+});
+
+test('a date may come as an ISO string with its offset, as "Y-m-d H:i:s" (UTC), or written in another zone', () => {
+    const at = (triggerDate) => api.localizeDate(EN, dated({triggerDate}));
+
+    assert.match(at('2026-10-31T17:00:00+00:00'), /às 17:00 UTC$/);
+    assert.match(at('2026-10-31T14:00:00-03:00'), /às 17:00 UTC$/);
+    assert.match(at('2026-10-31T17:00:00Z'), /às 17:00 UTC$/);
+    assert.match(at('2026-10-31 17:00:00'), /às 17:00 UTC$/);
+    assert.match(at({date: '2026-10-31 14:00:00.000000', timezone_type: 3, timezone: 'America/Sao_Paulo'}), /às 17:00 UTC$/);
+    assert.match(at({date: '2026-10-31 20:00:00.000000', timezone_type: 1, timezone: '+03:00'}), /às 17:00 UTC$/);
+    assert.match(at({date: '2026-10-31 12:00:00.000000', timezone_type: 1, timezone: '-0500'}), /às 17:00 UTC$/);
+    assert.match(at({date: '2026-10-31 17:00:00.000000'}), /às 17:00 UTC$/, 'no zone given: UTC');
+});
+
+test('a text that is not core\'s date text, or an event without a date, is left as it is', () => {
+    assert.strictEqual(api.localizeDate('esperar 2 dias', dated({triggerDate: OCT31})), 'esperar 2 dias');
+    assert.strictEqual(api.localizeDate(EN, null), EN);
+    assert.strictEqual(api.localizeDate(EN, {triggerMode: 'interval', triggerDate: OCT31}), EN);
+    assert.strictEqual(api.localizeDate(EN, dated({})), EN);
+    assert.strictEqual(api.localizeDate(EN, dated({triggerDate: 'not a date'})), EN);
+    assert.strictEqual(api.localizeDate('', dated({triggerDate: OCT31})), '');
+});
+
+test('a locale or a zone the browser does not know leaves core\'s text as it is', () => {
+    api.configure(WORDS, {locale: 'pt-BR', timeZone: 'Nowhere/Land'});
+    assert.strictEqual(api.localizeDate(EN, dated({triggerDate: OCT31})), EN);
+
+    api.configure(WORDS, {locale: 'not a locale', timeZone: 'UTC'});
+    assert.strictEqual(api.localizeDate(EN, dated({triggerDate: OCT31})), EN);
+});
+
+test('a template that has text after the date keeps it, and one without %full% never matches', () => {
+    api.configure({...WORDS, date_plain: 'esperar até %full% (horário do usuário)', date_inaction: 'sem data aqui'}, UTC);
+
+    assert.match(api.localizeDate('esperar até October 31, 2026 5:00 pm UTC (horário do usuário)', dated({triggerDate: OCT31})), /^esperar até 31 de outubro de 2026 às 17:00 UTC \(horário do usuário\)$/);
+    assert.strictEqual(api.localizeDate('sem data aqui', dated({triggerDate: OCT31})), 'sem data aqui');
+    assert.strictEqual(api.localizeDate('esperar até October 31, 2026 5:00 pm UTC', dated({triggerDate: OCT31})), 'esperar até October 31, 2026 5:00 pm UTC', 'the end of the text must match the template');
+});
+
+test('without configure() the date is written in English, UTC', () => {
+    api.configure(null, null);
+
+    assert.strictEqual(api.localizeDate(EN, dated({triggerDate: OCT31})), EN, 'no template known: core\'s text stays');
+    api.configure({date_plain: 'wait until %full%'});
+    assert.match(api.localizeDate('wait until x', dated({triggerDate: OCT31})), /^wait until October 31, 2026 at 5:00 PM UTC$/);
+});
+
+test('a date written in a zone with daylight saving time lands on the right instant, also right after the change', () => {
+    const at = (date, timeZone) => api.localizeDate(EN, dated({triggerDate: {date, timezone_type: 3, timezone: timeZone}}));
+
+    // New York 2026-03-08 03:30 is EDT (UTC-4) because the clocks moved forward at 02:00: 07:30 UTC
+    assert.match(at('2026-03-08 03:30:00.000000', 'America/New_York'), /às 07:30 UTC$/);
+    // the day before it is EST (UTC-5)
+    assert.match(at('2026-03-07 03:30:00.000000', 'America/New_York'), /às 08:30 UTC$/);
+});
+
+test('midnight and noon in a named zone are not mixed up with a 12-hour clock', () => {
+    const at = (date) => api.localizeDate(EN, dated({triggerDate: {date, timezone_type: 3, timezone: 'America/Sao_Paulo'}}));
+
+    assert.match(at('2026-10-31 00:30:00.000000'), /às 03:30 UTC$/);
+    assert.match(at('2026-10-31 12:30:00.000000'), /às 15:30 UTC$/);
+});
+
+test('the month and the day of a named zone are read as written (a month is not shifted by one)', () => {
+    assert.match(api.localizeDate(EN, dated({triggerDate: {date: '2026-01-15 12:00:00.000000', timezone_type: 3, timezone: 'Europe/Lisbon'}})), /^esperar até 15 de janeiro de 2026 às 12:00 UTC$/);
+});
+
+test('a date with no zone is UTC whatever the zone of the browser is', () => {
+    const before = process.env.TZ;
+    process.env.TZ = 'Asia/Tokyo';
+    try {
+        assert.match(api.localizeDate(EN, dated({triggerDate: {date: '2026-10-31 17:00:00.000000'}})), /às 17:00 UTC$/);
+        assert.match(api.localizeDate(EN, dated({triggerDate: '2026-10-31 17:00:00'})), /às 17:00 UTC$/);
+    } finally {
+        if (before === undefined) { delete process.env.TZ; } else { process.env.TZ = before; }
+    }
+});
+
+test('the start and the end of a template must not overlap: "aba" is not "ab %full% ba"', () => {
+    api.configure({...WORDS, date_plain: 'ab%full%ba', date_inaction: 'x %full% y'}, UTC);
+
+    assert.strictEqual(api.localizeDate('aba', dated({triggerDate: OCT31})), 'aba');
+    assert.match(api.localizeDate('abOctober 31, 2026 5:00 pm UTCba', dated({triggerDate: OCT31})), /^ab31 de outubro de 2026 às 17:00 UTCba$/);
 });

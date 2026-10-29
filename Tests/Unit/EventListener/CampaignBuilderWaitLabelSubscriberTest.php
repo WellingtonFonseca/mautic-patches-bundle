@@ -99,8 +99,10 @@ class CampaignBuilderWaitLabelSubscriberTest extends TestCase
         $js = $this->content();
 
         $this->assertStringContainsString('window.mauticPatchesScheduleApi', $js);
-        $this->assertStringContainsString('scheduleOf(events[domEventId.replace("CampaignEvent_","")])', $js);
-        $this->assertStringContainsString('scheduleOf(schedules[id])', $js);
+        $this->assertStringContainsString('var event=events[domEventId.replace("CampaignEvent_","")];', $js);
+        $this->assertStringContainsString('dated(label,event),scheduleOf(event)', $js);
+        $this->assertStringContainsString('dated(waits[id],schedules[id]),scheduleOf(schedules[id])', $js);
+        $this->assertStringContainsString('api.localizeDate(label,event)', $js);
         $this->assertStringContainsString('window.mauticPatchesPreviewSchedules', $js);
     }
 

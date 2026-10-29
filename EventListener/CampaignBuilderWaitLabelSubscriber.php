@@ -128,6 +128,8 @@ class CampaignBuilderWaitLabelSubscriber implements EventSubscriberInterface
             .'}'
             // what the formatter (CampaignNodeScheduleSubscriber) makes of the fields of an event; no lines without it
             .'function scheduleOf(event){var api=window.mauticPatchesScheduleApi;return api?api.format(event):[];}'
+            // core's text of a wait until a date, with the date in the language and time zone of the user
+            .'function dated(label,event){var api=window.mauticPatchesScheduleApi;return api?api.localizeDate(label,event):label;}'
             // the strip on a node: created, rewritten or removed; the preview of the campaign page uses it too
             .'window.mauticPatchesSetWait=function(node,label,lines){'
             .'var type=node?node.querySelector(".campaign-event-type"):null;'
@@ -150,7 +152,7 @@ class CampaignBuilderWaitLabelSubscriber implements EventSubscriberInterface
             .'var waits=window.mauticPatchesPreviewWaits||{};'
             .'var schedules=window.mauticPatchesPreviewSchedules||{};'
             .'Object.keys(waits).forEach(function(id){'
-            .'window.mauticPatchesSetWait(document.querySelector("#preview-container #"+id),waits[id],scheduleOf(schedules[id]));'
+            .'window.mauticPatchesSetWait(document.querySelector("#preview-container #"+id),dated(waits[id],schedules[id]),scheduleOf(schedules[id]));'
             .'});'
             .'};'
             // after a condition the no path waits like any event: the inaction text is turned back into the plain one
@@ -186,7 +188,8 @@ class CampaignBuilderWaitLabelSubscriber implements EventSubscriberInterface
             .'});'
             .'});'
             .'var events=Mautic.campaignBuilderCanvasEvents||{};'
-            .'window.mauticPatchesSetWait(document.getElementById(domEventId),label,scheduleOf(events[domEventId.replace("CampaignEvent_","")]));'
+            .'var event=events[domEventId.replace("CampaignEvent_","")];'
+            .'window.mauticPatchesSetWait(document.getElementById(domEventId),dated(label,event),scheduleOf(event));'
             .'}'
             // core calls the label update BEFORE it stores the edited event in Mautic.campaignBuilderCanvasEvents, so after an edit the
             // schedule is read again once core is done

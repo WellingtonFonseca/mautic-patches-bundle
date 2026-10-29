@@ -111,14 +111,21 @@ class CampaignPreviewWaitSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * The fields of an interval event that say WHEN it sends (hour, window of hours, days of the week), in the shape of the event
-     * the builder holds (Mautic.campaignBuilderCanvasEvents), so the one formatter of the page (campaign-node-schedule.js) reads both.
-     * null when the event has none of them: no extra lines.
+     * The fields of an event that say WHEN it sends, in the shape of the event the builder holds (Mautic.campaignBuilderCanvasEvents),
+     * so the one formatter of the page (campaign-node-schedule.js) reads both: for an interval wait the hour, the window of hours and
+     * the days of the week; for a wait until a date the date (ISO, with its offset), which the formatter writes in the language and
+     * time zone of the user. null when there is nothing to show: no extra lines, core's text as it is.
      *
      * @return array<string, mixed>|null
      */
     public static function schedule(Event $event): ?array
     {
+        if (Event::TRIGGER_MODE_DATE === $event->getTriggerMode()) {
+            $date = $event->getTriggerDate();
+
+            return null === $date ? null : ['triggerMode' => Event::TRIGGER_MODE_DATE, 'triggerDate' => $date->format('c')];
+        }
+
         if (Event::TRIGGER_MODE_INTERVAL !== $event->getTriggerMode()) {
             return null;
         }

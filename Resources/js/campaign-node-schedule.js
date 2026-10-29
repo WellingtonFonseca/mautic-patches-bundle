@@ -8,6 +8,9 @@
  * (CampaignNodeScheduleSubscriber calls configure() with them).
  *
  * Days of the week follow core's form: 0 Sunday ... 6 Saturday, -1 "week days" (Monday to Friday). Shown Monday first.
+ *
+ * It also writes the date of a "wait until a date" event in the language and the time zone of the user (localizeDate): core's text
+ * ("wait until October 31, 2026 5:00 pm UTC") has English month names and the system time zone, whatever the user's settings.
  */
 (function (root) {
     'use strict';
@@ -16,8 +19,13 @@
     var CLOCK = 'ri-time-line';
     var CALENDAR = 'ri-calendar-line';
     var words = {};
+    var zone = {locale: 'en-US', timeZone: 'UTC'};
 
-    function configure(t) { words = t || {}; }
+    // the words of the language, and the locale ("pt-BR") and IANA time zone ("America/Sao_Paulo") of the user
+    function configure(t, z) {
+        words = t || {};
+        zone = {locale: (z && z.locale) || 'en-US', timeZone: (z && z.timeZone) || 'UTC'};
+    }
 
     function fill(text, values) {
         return String(text || '').replace(/%(\w+)%/g, function (all, name) { return Object.prototype.hasOwnProperty.call(values, name) ? values[name] : all; });
@@ -68,6 +76,74 @@
         return out.join(', ');
     }
 
+    // how far (ms) the wall clock of a zone is ahead of UTC at an instant
+    function offsetAt(ms, timeZone) {
+        var v = {};
+        new Intl.DateTimeFormat('en-US', {timeZone: timeZone, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric'})
+            .formatToParts(new Date(ms)).forEach(function (p) { v[p.type] = Number(p.value); });
+
+        return Date.UTC(v.year, v.month - 1, v.day, v.hour, v.minute, v.second) - Math.floor(ms / 1000) * 1000;
+    }
+
+    // the offset (ms) of the zone a date was written in: UTC, "+03:00" or a name ("America/Sao_Paulo") at that wall time
+    function zoneOffset(name, wallMs) {
+        if (!name || name === 'UTC' || name === 'Z') { return 0; }
+        var fixed = /^([+-])(\d{2}):?(\d{2})$/.exec(name);
+        if (fixed) { return (fixed[1] === '-' ? -1 : 1) * (Number(fixed[2]) * 60 + Number(fixed[3])) * 60000; }
+        try {
+            var first = offsetAt(wallMs, name);
+
+            return offsetAt(wallMs - first, name);
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    // the Date of a core date: an ISO string with its offset, "Y-m-d H:i:s" (UTC), or the {date, timezone} object a DateTime has after json_encode
+    function instant(value) {
+        if (!value) { return null; }
+        var text = typeof value === 'object' ? value.date : String(value);
+        if (/T.*(?:Z|[+-]\d{2}:?\d{2})$/.test(text || '')) {
+            var iso = new Date(text);
+
+            return isNaN(iso.getTime()) ? null : iso;
+        }
+        var m = /(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/.exec(text || '');
+        if (!m) { return null; }
+        var wall = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), Number(m[6] || 0));
+
+        return new Date(wall - zoneOffset(typeof value === 'object' ? value.timezone : 'UTC', wall));
+    }
+
+    // "31 de outubro de 2026 às 14:00 BRT" in the language and zone of the user; null if the browser cannot
+    function dateText(when) {
+        try {
+            return new Intl.DateTimeFormat(zone.locale, {timeZone: zone.timeZone, day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short'}).format(when);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // core's text of a "wait until a date" event with its English date replaced by ours. The text is matched against the two templates
+    // of the language ("esperar até %full%", the no path's "por %full%"), so any language works. Anything else is returned as it is.
+    function localizeDate(label, event) {
+        if (!label || !event || event.triggerMode !== 'date') { return label; }
+        var when = instant(event.triggerDate);
+        var full = when ? dateText(when) : null;
+        if (!full) { return label; }
+
+        var templates = [words.date_plain, words.date_inaction];
+        for (var i = 0; i < templates.length; i++) {
+            var parts = String(templates[i] || '').split('%full%');
+            if (parts.length !== 2) { continue; }
+            var head = parts[0];
+            var tail = parts[1];
+            if (label.length >= head.length + tail.length && label.indexOf(head) === 0 && label.slice(label.length - tail.length) === tail) { return head + full + tail; }
+        }
+
+        return label;
+    }
+
     // the lines for the strip, [{icon, text}]: the fixed hour, the window of hours, the days. Empty when there is nothing to show.
     function format(event) {
         var lines = [];
@@ -85,7 +161,7 @@
         return lines;
     }
 
-    root.mauticPatchesScheduleApi = {configure: configure, format: format};
+    root.mauticPatchesScheduleApi = {configure: configure, format: format, localizeDate: localizeDate};
 
     if (typeof module !== 'undefined' && module.exports) { module.exports = root.mauticPatchesScheduleApi; }
 })(typeof window !== 'undefined' ? window : this);

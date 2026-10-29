@@ -178,10 +178,25 @@ class CampaignPreviewWaitSubscriberTest extends TestCase
         $this->assertNull(CampaignPreviewWaitSubscriber::schedule($this->intervalEvent(null, null, null, [])));
     }
 
-    public function testOnlyAnIntervalWaitHasASchedule(): void
+    public function testAnImmediateEventHasNoSchedule(): void
     {
         $this->assertNull(CampaignPreviewWaitSubscriber::schedule($this->intervalEvent('09:30', '10:00', '16:00', [1], Event::TRIGGER_MODE_IMMEDIATE)));
-        $this->assertNull(CampaignPreviewWaitSubscriber::schedule($this->intervalEvent('09:30', '10:00', '16:00', [1], Event::TRIGGER_MODE_DATE)));
+    }
+
+    public function testAWaitUntilADateCarriesItsDateWithItsOffsetNotTheHours(): void
+    {
+        $event = $this->intervalEvent('09:30', '10:00', '16:00', [1], Event::TRIGGER_MODE_DATE);
+        $event->setTriggerDate(new \DateTime('2026-10-31 17:00:00', new \DateTimeZone('UTC')));
+
+        $this->assertSame(['triggerMode' => 'date', 'triggerDate' => '2026-10-31T17:00:00+00:00'], CampaignPreviewWaitSubscriber::schedule($event));
+
+        $event->setTriggerDate(new \DateTime('2026-10-31 14:00:00', new \DateTimeZone('America/Sao_Paulo')));
+        $this->assertSame('2026-10-31T14:00:00-03:00', CampaignPreviewWaitSubscriber::schedule($event)['triggerDate'], 'the offset is the date\'s own, so the instant is right');
+    }
+
+    public function testAWaitUntilADateWithoutADateHasNoSchedule(): void
+    {
+        $this->assertNull(CampaignPreviewWaitSubscriber::schedule($this->intervalEvent(null, null, null, [], Event::TRIGGER_MODE_DATE)));
     }
 
     public function testTheScriptCarriesTheScheduleOfTheNodeThatHasOne(): void
