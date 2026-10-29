@@ -8,7 +8,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * The script of the status badge of the Mautic lists (Resources/js/list-status-toggle.js) and the call that installs one list on it,
- * for the status subscribers (segment, campaign, user, email). The file is served as a static asset with a filemtime() version, so the
+ * for the status subscribers (segment, campaign, user, email, contact). The file is served as a static asset with a filemtime() version, so the
  * browser keeps it: inlining it in every page, once per subscriber, cost about 57 KB per page load. The call is skipped when the file
  * did not load (the page keeps working, without the badge). Each install is guarded in the script, so the repeated `<script src>` of
  * the four subscribers runs the file again but does the work once.
@@ -28,6 +28,20 @@ final class StatusScript
             'inactive'   => $translator->trans('mautic.core.form.inactive'),
             'activate'   => $translator->trans('mautic.patches.segment.activate'),
             'deactivate' => $translator->trans('mautic.patches.segment.deactivate'),
+            'column'     => $translator->trans('mautic.patches.status.column'),
+            'restart'    => $translator->trans('mautic.patches.campaign.restart'),
+            'global'     => $translator->trans('mautic.patches.segment.global'),
+            'filters'    => $translator->trans('mautic.patches.segment.filters'),
+            'rebuild'    => $translator->trans('mautic.patches.segment.not_rebuilt'),
+            'slow'       => $translator->trans('mautic.patches.segment.slow_build'),
+            'contactEmail'   => $translator->trans('mautic.patches.contact.status.email'),
+            'contactSms'     => $translator->trans('mautic.patches.contact.status.sms'),
+            'contactHsm'     => $translator->trans('mautic.patches.contact.status.hsm'),
+            'emailCampaign'    => $translator->trans('mautic.patches.email.type.campaign'),
+            'emailBroadcast'   => $translator->trans('mautic.patches.email.type.broadcast'),
+            'emailAbtest'      => $translator->trans('mautic.patches.email.abtest'),
+            'emailTranslation' => $translator->trans('mautic.patches.email.translation'),
+            'emailDraft'       => $translator->trans('mautic.patches.email.draft'),
             'style'      => $style,
         ];
         $mtime = @filemtime(dirname(__DIR__).'/'.self::PATH);

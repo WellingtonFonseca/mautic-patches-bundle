@@ -3,6 +3,13 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-10-28
+- A coluna Status das listas de segmentos, campanhas, usuários e emails mostra o status como um ícone (play verde, stop vermelho) que abre ao passar o mouse; Ativar e Desativar é o primeiro item do menu da linha
+- O badge de status abre dentro da coluna, sem empurrar nem cobrir as outras, e os nomes não quebram de linha
+- Campanhas que deixam o contato entrar de novo têm o selo azul Reingresso ao lado do status
+- Os ícones do nome do segmento viram selos na coluna Status: Global (um globo), Filtros e os avisos vermelhos de segmento sem atualizar e de montagem lenta, com o número
+- A lista de contatos tem a coluna Status com Email, SMS e HSM: verde quando o contato pode receber e vermelho quando está em Não Contatar do canal
+- A lista de emails mostra o tipo (Campanha ou Broadcast) e os selos de Teste A/B, Tradução e Rascunho na coluna Status, cada um com a sua cor
+- A notificação que aparece na tela (toast) fica escura e legível nos temas Escuro e Solarized Escuro
 - Novo histórico de mudanças por dia (este arquivo), em uma aba própria do modal do plugin em Configurações > Plugins
 - O plugin ganhou o tile "Mautic Patches" em Configurações > Plugins, já ligado e com o ícone do curativo (versão 0.6.0)
 
