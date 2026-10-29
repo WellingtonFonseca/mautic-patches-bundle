@@ -525,7 +525,8 @@ test('contactBadges: a channel that is not one of ours (push, whatsapp) changes 
 });
 
 const ecfg = Object.assign({emailCampaign: 'Campanha', emailBroadcast: 'Broadcast', emailAbtest: 'Teste A/B', emailTranslation: 'Tradução', emailDraft: 'Rascunho'}, ccfg);
-const EMAIL = {abtest: 'i.ri-organization-chart', translation: 'i.ri-translate', draft: 'i.fa-file', broadcast: 'i.ri-pie-chart-line'};
+const T = 'span[data-toggle="tooltip"] > ';
+const EMAIL = {abtest: T + 'i.ri-organization-chart', translation: T + 'i.ri-translate', draft: T + 'i.fa-file', broadcast: T + 'i.ri-pie-chart-line'};
 
 /** An email row whose name cell holds the tooltip spans core prints (one icon each) for the flags in `present`. */
 function emailTable(present) {
@@ -533,7 +534,7 @@ function emailTable(present) {
     const row = rows[0], nameCell = row.cells[2], found = {};
     for (const key of present) {
         const span = node('span'), icon = node('i');
-        icon.className = EMAIL[key].slice(2).split('.').join(' ');
+        icon.className = EMAIL[key].split('> i.')[1].split('.').join(' ');
         span.appendChild(icon);
         nameCell.appendChild(span);
         found[EMAIL[key]] = icon;
@@ -586,4 +587,18 @@ test('addStatusColumn: the other lists never look for the icons of the email lis
     api.addStatusColumn(doc, campaignSpec, ccfg);
 
     assert.ok(!asked.some((s) => /organization-chart|ri-translate|fa-file|pie-chart/.test(s)), asked.join(','));
+});
+
+test('isContactListPath: the contact list and its pages, also under a subdirectory or index.php; not a contact, a segment or another list', () => {
+    assert.strictEqual(api.isContactListPath('/s/contacts'), true);
+    assert.strictEqual(api.isContactListPath('/s/contacts/2'), true);
+    assert.strictEqual(api.isContactListPath('/mautic/s/contacts'), true);
+    assert.strictEqual(api.isContactListPath('/index.php/s/contacts/3'), true);
+    assert.strictEqual(api.isContactListPath('/s/contacts/view/5'), false);
+    assert.strictEqual(api.isContactListPath('/s/segments/view/5'), false);
+    assert.strictEqual(api.isContactListPath('/s/companies'), false);
+});
+
+test('the email icons are looked for only in the tooltip spans core prints next to the name, so no other icon of the row is taken', () => {
+    assert.ok(api.EMAIL_FLAGS.every((f) => f.selector.startsWith('span[data-toggle="tooltip"] > i.')));
 });

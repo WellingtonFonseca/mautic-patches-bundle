@@ -47,8 +47,8 @@ class ContactStatusSubscriberTest extends TestCase
         }
     }
 
-    public function testCoresRedLabelBesideTheNameIsHiddenOutsideTheColumn(): void
+    public function testCoresRedLabelsOfEmailAndSmsAreHiddenOnlyInATableWithTheColumn(): void
     {
-        $this->assertStringContainsString('#leadTable td:not(.col-patches-status) .pull-right:has(>.label-danger>i[class*="ico-"]){display:none!important}', ContactStatusSubscriber::STYLE);
+        $this->assertStringContainsString('#leadTable:has(th.col-contact-status) td:not(.col-patches-status) .label-danger:has(>i.ico-email,>i.ico-sms){display:none!important}', ContactStatusSubscriber::STYLE);
     }
 }

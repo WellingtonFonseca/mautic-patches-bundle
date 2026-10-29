@@ -119,11 +119,11 @@
         campaign: {icon: 'ri-mail-send-fill', word: 'emailCampaign'}
     };
     var EMAIL_FLAGS = [
-        {key: 'abtest', icon: 'ri-test-tube-fill', selector: 'i.ri-organization-chart', modifier: 'abtest', word: 'emailAbtest'},
-        {key: 'translation', icon: 'ri-translate-2', selector: 'i.ri-translate', modifier: 'translation', word: 'emailTranslation'},
-        {key: 'draft', icon: 'ri-draft-line', selector: 'i.fa-file', modifier: 'draft', word: 'emailDraft'}
+        {key: 'abtest', icon: 'ri-test-tube-fill', selector: 'span[data-toggle="tooltip"] > i.ri-organization-chart', modifier: 'abtest', word: 'emailAbtest'},
+        {key: 'translation', icon: 'ri-translate-2', selector: 'span[data-toggle="tooltip"] > i.ri-translate', modifier: 'translation', word: 'emailTranslation'},
+        {key: 'draft', icon: 'ri-draft-line', selector: 'span[data-toggle="tooltip"] > i.fa-file', modifier: 'draft', word: 'emailDraft'}
     ];
-    var EMAIL_BROADCAST_ICON = 'i.ri-pie-chart-line';
+    var EMAIL_BROADCAST_ICON = 'span[data-toggle="tooltip"] > i.ri-pie-chart-line';
 
     /** Moves the icons of an email row out of the name cell into badges at the end of the box of its Status cell: the type first. */
     function moveEmailFlags(doc, row, box, cfg) {
@@ -213,9 +213,14 @@
 
     /** What both lists share, once per page: the style of the list and the placing of the labels. */
     function setup(cfg) {
-        var style = root.document.createElement('style');
-        style.textContent = cfg.style;
-        root.document.head.appendChild(style);
+        // every ajax page change runs the injected script again: a style already in the page is not added twice
+        root.mauticPatchesStyles = root.mauticPatchesStyles || {};
+        if (!root.mauticPatchesStyles[cfg.style]) {
+            root.mauticPatchesStyles[cfg.style] = true;
+            var style = root.document.createElement('style');
+            style.textContent = cfg.style;
+            root.document.head.appendChild(style);
+        }
 
         if (root.mauticPatchesStatusLabels) { return; }
         root.mauticPatchesStatusLabels = true;
@@ -432,6 +437,11 @@
         });
     }
 
+    /** Whether a path is the contact list itself (Mautic may be served under a subdirectory or index.php): /s/contacts and its pages, not a contact's page. */
+    function isContactListPath(path) {
+        return /\/s\/contacts(?:\/\d+)?$/.test(path);
+    }
+
     /**
      * The Status column of the contact list (only the list at /s/contacts, not the contact tables of a segment or campaign): one icon badge per
      * channel (email, SMS, HSM), green when the contact can receive and red when it is on the Do Not Contact list of the channel. Built from the red
@@ -441,7 +451,7 @@
         // not while the page is still being parsed: a table that is half there would get its column once, with rows missing (the setup runs again at DOMContentLoaded)
         if (doc.readyState === 'loading') { return false; }
         var table = doc.querySelector('#leadTable');
-        if (!table || !/^\/s\/contacts(?:\/\d+)?$/.test(root.location.pathname) || table.querySelector('th.col-patches-status')) { return false; }
+        if (!table || !isContactListPath(root.location.pathname) || table.querySelector('th.col-patches-status')) { return false; }
         var head = table.querySelector('thead tr'), first = head && head.querySelector('th');
         if (!first) { return false; }
         statusHeader(doc, first, 'col-patches-status col-contact-status', cfg.column);
@@ -544,7 +554,7 @@
         setup(cfg);
     }
 
-    var api = {EMAIL_FLAGS: EMAIL_FLAGS, EMAIL_TYPES: EMAIL_TYPES, addContactStatusColumn: addContactStatusColumn, blockedChannels: blockedChannels, contactBadges: contactBadges, CONTACT_CHANNELS: CONTACT_CHANNELS, installContact: installContact, addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
+    var api = {EMAIL_FLAGS: EMAIL_FLAGS, EMAIL_TYPES: EMAIL_TYPES, addContactStatusColumn: addContactStatusColumn, isContactListPath: isContactListPath, blockedChannels: blockedChannels, contactBadges: contactBadges, CONTACT_CHANNELS: CONTACT_CHANNELS, installContact: installContact, addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
