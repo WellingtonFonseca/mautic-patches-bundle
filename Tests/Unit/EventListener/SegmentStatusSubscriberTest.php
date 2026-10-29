@@ -89,8 +89,17 @@ class SegmentStatusSubscriberTest extends TestCase
     {
         $css = SegmentStatusSubscriber::STYLE;
         $this->assertStringContainsString('i[class*="lead-list-publish-icon"]{display:none!important}', $css);
-        // the description under the name is hidden, only in the rows that have the label (segment and campaign lists)
-        $this->assertStringContainsString('td:has(.patches-status-label) > div:is(.text-muted,.text-secondary){display:none!important}', $css);
+        // the description under the name is hidden in the lists whose label moved to the Status column (segment, campaign, email)
+        $this->assertStringContainsString('#leadListTable td > div:is(.text-muted,.text-secondary),#campaignTable td > div:is(.text-muted,.text-secondary),table.email-list td > div:is(.text-muted,.text-secondary){display:none!important}', $css);
+        // the icon badge of the Status column is part of the style, with no fixed width
+        $this->assertStringContainsString('td.col-patches-status :is(.patches-status-label,.patches-extra-badge){position:relative;z-index:2;flex:none;display:inline-flex;', $css);
+        $this->assertStringContainsString('max-width:22px;', $css);
+        // the badges sit in a box that keeps the table from reflowing while one opens
+        $this->assertStringContainsString('td.col-patches-status .patches-status-box{display:flex;align-items:center;gap:6px;height:22px}', $css);
+        // the icons of core next to the name are hidden from the first paint, and the badges beside the status are blue (flag) or get more room (wide)
+        $this->assertStringContainsString('#leadListTable td:not(.col-patches-status) :is(i.ri-group-2-fill,i.ri-filter-2-fill,label:has(>i.ri-error-warning-line),label:has(>i.ri-time-line)){display:none!important}', $css);
+        $this->assertStringContainsString('.patches-badge--flag,.patches-badge--restart{background-color:#1e88e5}', $css);
+        $this->assertStringContainsString('.patches-extra-badge--wide:hover{max-width:260px}', $css);
         // "Atualizado em ..." is as large as the table
         $this->assertStringContainsString('.segment-last-built small{font-size:14px}', $css);
         // the contact count is a translucent badge of the same family

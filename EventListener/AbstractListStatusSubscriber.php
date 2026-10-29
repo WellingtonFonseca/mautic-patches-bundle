@@ -36,6 +36,26 @@ abstract class AbstractListStatusSubscriber implements EventSubscriberInterface
         // Mautic 7 prints the contact count as a span with the link inside: the link takes the badge's color
         .'.patches-badge a{color:inherit}';
 
+    /**
+     * The badges of the Status column of the lists (segment, campaign, user, email: Resources/js/list-status-toggle.js, addStatusColumn): the status and,
+     * in the campaign list the reentry one, in the segment list the global / filters / warning ones, beside it are 22px circles with a play / stop / reload icon; on hover one opens to the right and
+     * shows the word, as the status badge of the n8n campaign card. They sit side by side in the flow of the cell; opening one widens the column and the browser lays out the table (no script). The 76px minimum of the word badge does not apply to them.
+     */
+    public const ICON_BADGE_STYLE = '#leadListTable td,#campaignTable td,#userTable td,table.email-list td,#leadTable td{white-space:nowrap}'
+        .'td.col-patches-status .patches-status-box{display:flex;align-items:center;gap:6px;height:22px}'
+        .'td.col-patches-status :is(.patches-status-label,.patches-extra-badge){position:relative;z-index:2;flex:none;display:inline-flex;box-sizing:border-box;height:22px;min-width:0;max-width:22px;margin:0;padding:0;gap:0;'
+        .'justify-content:flex-start;overflow:hidden;transition:max-width .2s ease,box-shadow .2s ease}'
+        .'td.col-patches-status :is(.patches-status-label,.patches-extra-badge):hover{z-index:3;max-width:140px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0}'
+        .'td.col-patches-status :is(.patches-status-label,.patches-extra-badge)>i{flex:0 0 22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center}'
+        .'td.col-patches-status .patches-icon-badge__text{padding:0 10px 0 0;opacity:0;transition:opacity .15s ease .05s}'
+        .'td.col-patches-status :is(.patches-status-label,.patches-extra-badge):hover .patches-icon-badge__text{opacity:1}'
+        // the badges beside the status: informative blue (reentry, global, filters; the red ones are patches-badge--failed); a long word (the warnings of the segment list) gets more room
+        .'.patches-badge--flag,.patches-badge--restart{background-color:#1e88e5}'
+        .'td.col-patches-status .patches-extra-badge--wide:hover{max-width:260px}'
+        // the badges of the email list: one color for the type (campaign and broadcast share it), one for each of A/B test, translation and draft
+        .'.patches-badge--emailtype{background-color:#00897b}.patches-badge--abtest{background-color:#7e57c2}'
+        .'.patches-badge--translation{background-color:#4285f4}.patches-badge--draft{background-color:#546e7a}';
+
     public function __construct(
         protected TranslatorInterface $translator,
         protected CorePermissions $security

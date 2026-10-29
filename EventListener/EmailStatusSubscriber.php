@@ -22,6 +22,8 @@ class EmailStatusSubscriber extends AbstractListStatusSubscriber
 {
     // the badge's own style (the pill, its width, hidden until placed) is AbstractListStatusSubscriber::BADGE_STYLE and SegmentStatusSubscriber::STYLE, on every page
     public const STYLE = 'table.email-list i[class*="email-publish-icon"]{display:none!important}'
+        // the icons core prints next to the name (A/B test, translation, segment email, draft) are badges in the Status column (the script): hidden from the first paint
+        .'table.email-list td:not(.col-patches-status) span[data-toggle="tooltip"]:has(>i:is(.ri-organization-chart,.ri-translate,.ri-pie-chart-line,.fa-file)){display:none!important}'
         .'a[data-email-status-action]:hover{color:var(--text-inverse)!important}'
         .'a[data-email-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-email-status-action="activate"]:hover{background-color:var(--support-success)!important}'

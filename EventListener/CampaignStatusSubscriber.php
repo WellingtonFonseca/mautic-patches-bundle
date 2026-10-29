@@ -9,15 +9,17 @@ use Mautic\CampaignBundle\Entity\Campaign;
 /**
  * The same as SegmentStatusSubscriber, for the campaign list: the active / inactive toggle next to the name (an icon that is easy to hit
  * by mistake, with the status told only by its color) becomes
- *  - a label at the start of the name ("Ativo" green, "Inativo" red, informative, not a link, all with the width of "Inativo");
+ *  - a label in a "Status" column of its own, right after the menu column (the script adds the column and moves the label there):
+ *    an icon in a circle (play on green = active, stop on red = inactive, informative, not a link) that opens on hover to show the word
+ *    ("Ativo" / "Inativo"), the way the status badge of the n8n campaign card does;
  *  - "Desativar" / "Ativar" as the FIRST item of the three-dots menu (Delete is the last), red / green on hover like the status it
  *    leads to; only for who may edit the campaign.
  * Core's flow is kept: the menu item clicks core's icon (hidden), so deactivating asks for the confirmation of core
  * (Mautic.confirmationCampaignPublishStatus) and activating does not. The label follows core's icon. See
  * Resources/js/list-status-toggle.js (installCampaign).
  *
- * The label goes in the 'campaign.name' hook, which core prints INSIDE the name link: the script moves it out, to the start of the
- * block. Injected like SegmentStatusSubscriber.
+ * The label goes in the 'campaign.name' hook, which core prints INSIDE the name link: the script moves it out, into the Status column.
+ * Injected like SegmentStatusSubscriber.
  */
 class CampaignStatusSubscriber extends AbstractListStatusSubscriber
 {
@@ -57,6 +59,12 @@ class CampaignStatusSubscriber extends AbstractListStatusSubscriber
     protected function mayEdit(object $item): bool
     {
         return $this->security->hasEntityAccess('campaign:campaigns:editown', 'campaign:campaigns:editother', $item->getCreatedBy());
+    }
+
+    /** A campaign that lets its contacts enter again carries the marker the script turns into the reentry badge. */
+    protected function labelAttributes(object $item): string
+    {
+        return $item->allowRestart() ? ' data-restart="1"' : '';
     }
 
     protected function nameContext(): ?string
