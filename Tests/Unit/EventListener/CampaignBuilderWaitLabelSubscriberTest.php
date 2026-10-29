@@ -65,7 +65,7 @@ class CampaignBuilderWaitLabelSubscriberTest extends TestCase
         $js = $this->content();
 
         $this->assertStringContainsString('campaign-event-wait', $js);
-        $this->assertStringContainsString('ri-time-line', $js);
+        $this->assertStringContainsString('ri-hourglass-line', $js);
         $this->assertStringContainsString('type.insertBefore(strip,type.firstChild)', $js);
         $this->assertStringContainsString('i.revalidate(n)', $js);
         $this->assertStringContainsString('requestAnimationFrame(', $js);
@@ -75,8 +75,53 @@ class CampaignBuilderWaitLabelSubscriberTest extends TestCase
     {
         $js = $this->content();
 
-        $this->assertStringContainsString('window.mauticPatchesSetWait=function(node,label)', $js);
-        $this->assertStringContainsString('else if(strip.lastChild.textContent===label){return;}', $js);
+        $this->assertStringContainsString('window.mauticPatchesSetWait=function(node,label,lines)', $js);
+        $this->assertStringContainsString('if(text.textContent!==label){text.textContent=label;changed=true;}', $js);
+        $this->assertStringContainsString('if(changed){revalidate(node);}', $js);
+    }
+
+    public function testTheWaitLineHasTheHourglassAndTheScheduleLinesComeUnderIt(): void
+    {
+        $js = $this->content();
+
+        $this->assertStringContainsString('<i class="ri-hourglass-line"></i><span class="campaign-event-wait-text"></span>', $js);
+        $this->assertStringNotContainsString('ri-time-line', $js, 'the clock is the icon of the hours line, which the formatter names');
+        $this->assertStringContainsString('extra.className="campaign-event-wait-extra"', $js);
+        $this->assertStringContainsString('row.className="campaign-event-wait-line"', $js);
+        $this->assertStringContainsString('strip.appendChild(extra)', $js);
+        // the lines are rebuilt only when they changed
+        $this->assertStringContainsString('if(extra&&extra.getAttribute("data-lines")===sig){return false;}', $js);
+        $this->assertStringContainsString('if(!lines.length){if(extra){extra.remove();return true;}return false;}', $js);
+    }
+
+    public function testTheBuilderAndThePreviewAskTheFormatterForTheLines(): void
+    {
+        $js = $this->content();
+
+        $this->assertStringContainsString('window.mauticPatchesScheduleApi', $js);
+        $this->assertStringContainsString('var event=events[domEventId.replace("CampaignEvent_","")];', $js);
+        $this->assertStringContainsString('dated(label,event),scheduleOf(event)', $js);
+        $this->assertStringContainsString('dated(waits[id],schedules[id]),scheduleOf(schedules[id])', $js);
+        $this->assertStringContainsString('api.localizeDate(label,event)', $js);
+        $this->assertStringContainsString('window.mauticPatchesPreviewSchedules', $js);
+    }
+
+    public function testTheLinesAreReadAgainAfterCoreStoresTheEditedEvent(): void
+    {
+        $js = $this->content();
+
+        $this->assertStringContainsString('var original=Mautic.campaignEventOnLoad;', $js);
+        $this->assertStringContainsString('if(!original||original.mauticPatchesSchedule){return;}', $js);
+        $this->assertStringContainsString('function patch(){patchEdit();', $js);
+    }
+
+    public function testTheStripIsAColumnOfLines(): void
+    {
+        $style = CampaignBuilderWaitLabelSubscriber::STYLE;
+
+        $this->assertStringContainsString('.campaign-event-wait{display:flex;flex-direction:column;', $style);
+        $this->assertStringContainsString('.campaign-event-wait-line{display:flex;align-items:center;gap:6px}', $style);
+        $this->assertStringContainsString('.campaign-event-wait-extra{display:flex;flex-direction:column', $style);
     }
 
     public function testTheStripUsesTheThemeVariablesAndJoinsTheCard(): void
