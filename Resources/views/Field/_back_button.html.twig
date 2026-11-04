@@ -1,0 +1,17 @@
+{# The back button of the pages of the clone, as core's pages have it (indexButton, above the title). Core's pt_BR text of close_back names its placeholder %alvo%, not %target%: both are given. #}
+{% set target = 'mautic.lead.field.header.index'|trans %}
+{% include '@MauticCore/Helper/button.html.twig' with {
+    buttons: [
+        {
+            label: 'mautic.core.close_back'|trans({'%target%': target, '%alvo%': target}),
+            size: 'xs',
+            variant: 'tertiary',
+            icon: 'ri-arrow-left-line',
+            href: path('mautic_contactfield_index'),
+            attributes: {
+                'data-toggle': 'ajax',
+                'class': 'btn-back mb-lg'
+            }
+        }
+    ]
+} %}

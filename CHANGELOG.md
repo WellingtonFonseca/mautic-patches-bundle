@@ -2,6 +2,13 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-04
+- A lista de Campos Personalizados tem Exportar definição e Importar definição no menu de opções, para clonar os campos entre instâncias
+- A exportação mostra todos os campos de contatos e de empresas, ativos e inativos, com o status de cada um, e o botão Copiar avisa com uma notificação
+- A importação mostra primeiro o que seria criado, ativado e inativado, sem salvar nada; depois de Confirmar, cria os campos que faltam e ativa ou inativa os que já existem
+- Um campo que já existe mantém o rótulo e o tipo, e um campo identificador único (como o email) nunca é inativado; os segmentos que usam um campo inativado aparecem na conferência
+- As telas de exportar e importar têm o botão Voltar
+
 ## 2026-10-29
 - A faixa de espera do node (no construtor e na aba Pré-visualizar) mostra, abaixo de "Esperar 3 dias", o horário e os dias programados: "Entre 10h e 19h", "Às 9h30m" e "Seg, Qua, Qui"; não precisa mais abrir o node para saber quando ele dispara
 - A data de uma espera até uma data aparece no idioma e no fuso horário do usuário, em vez do inglês e do UTC do core
