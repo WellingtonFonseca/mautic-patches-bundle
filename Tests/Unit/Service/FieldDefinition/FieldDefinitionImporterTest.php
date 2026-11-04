@@ -39,7 +39,7 @@ class FieldDefinitionImporterTest extends TestCase
     {
         $this->violations = new ConstraintViolationList();
         $this->repository = $this->createMock(LeadFieldRepository::class);
-        $this->repository->method('findOneBy')->willReturnCallback(fn (array $by): ?LeadField => $this->existing[$by['alias']] ?? null);
+        $this->repository->method('findAll')->willReturnCallback(fn (): array => array_values($this->existing));
         $this->fieldModel = $this->createMock(FieldModel::class);
         $this->fieldModel->method('getRepository')->willReturn($this->repository);
         $this->fieldModel->method('getFieldSegments')->willReturnCallback(fn (LeadField $f): array => $this->segments[$f->getAlias()] ?? []);
@@ -87,7 +87,7 @@ class FieldDefinitionImporterTest extends TestCase
         $off = $this->exists('off', true);
         $this->exists('same', true);
         $this->fieldModel->expects($this->never())->method('saveEntity');
-        $this->repository->expects($this->never())->method('saveEntity');
+        $this->repository->expects($this->never())->method('saveEntities');
 
         $result = $this->importer()->import(
             self::json(self::field('brand_new'), self::field('on', ['isPublished' => true]), self::field('off', ['isPublished' => false]), self::field('same')),
@@ -126,7 +126,7 @@ class FieldDefinitionImporterTest extends TestCase
     {
         $on  = $this->exists('on', false, 'number');
         $off = $this->exists('off', true);
-        $this->repository->expects($this->exactly(2))->method('saveEntity');
+        $this->repository->expects($this->once())->method('saveEntities')->with($this->callback(fn (array $fields): bool => 2 === count($fields)));
         $this->fieldModel->expects($this->never())->method('saveEntity');
 
         $this->importer()->import(self::json(self::field('on', ['isPublished' => true, 'type' => 'text']), self::field('off', ['isPublished' => false])));
@@ -151,7 +151,7 @@ class FieldDefinitionImporterTest extends TestCase
     public function testAUniqueIdentifierIsNotDeactivated(): void
     {
         $email = $this->exists('email', true, 'email', true);
-        $this->repository->expects($this->never())->method('saveEntity');
+        $this->repository->expects($this->never())->method('saveEntities');
 
         $result = $this->importer()->import(self::json(self::field('email', ['isPublished' => false])));
 
@@ -192,7 +192,7 @@ class FieldDefinitionImporterTest extends TestCase
         $this->exists('on', false);
         $this->violations->add(new ConstraintViolation('too long', 'too long', ['%n%' => '5'], null, 'label', null));
         $this->fieldModel->expects($this->never())->method('saveEntity');
-        $this->repository->expects($this->never())->method('saveEntity');
+        $this->repository->expects($this->never())->method('saveEntities');
 
         try {
             $this->importer()->import(self::json(self::field('on', ['isPublished' => true]), self::field('bad')));

@@ -33,14 +33,13 @@ class FieldDefinitionImporter
      */
     public function import(string $json, bool $apply = true): FieldDefinitionImportResult
     {
-        $wanted = $this->parser->parse($json);
-        $plan   = $this->plan($wanted);
+        $plan = $this->plan($this->parser->parse($json));
 
         if (!$apply) {
             return $plan['result'];
         }
 
-        return $plan['result']->withColumnsInBackground($this->apply($plan));
+        return $plan['result']->withColumnsInBackground($this->apply($plan['new'], $plan['toggle']));
     }
 
     /**
@@ -58,16 +57,16 @@ class FieldDefinitionImporter
         $new    = [];
         $toggle = [];
         $same   = 0;
+        $fields = $this->fieldsByAlias();
 
         foreach ($wanted as $entry) {
             $name     = $entry['object'].': '.$entry['alias'];
-            $existing = $this->fieldModel->getRepository()->findOneBy(['alias' => $entry['alias']]);
+            $existing = $fields[$entry['alias']] ?? null;
 
             if (null === $existing) {
-                $field  = $this->buildField($entry);
-                $failed = $this->violations($field, $name);
-                $errors = array_merge($errors, $failed);
-                $new[$name] = $field;
+                $field = $this->buildField($entry);
+                array_push($errors, ...$this->violations($field, $name));
+                $new[$name]         = $field;
                 $lists['created'][] = $name;
 
                 continue;
@@ -128,6 +127,19 @@ class FieldDefinitionImporter
     }
 
     /**
+     * @return array<string, LeadField> every field of this instance, by alias (unique in both objects)
+     */
+    private function fieldsByAlias(): array
+    {
+        $fields = [];
+        foreach ($this->fieldModel->getRepository()->findAll() as $field) {
+            $fields[$field->getAlias()] = $field;
+        }
+
+        return $fields;
+    }
+
+    /**
      * @param array<string, mixed> $entry
      */
     private function buildField(array $entry): LeadField
@@ -181,38 +193,32 @@ class FieldDefinitionImporter
     }
 
     /**
-     * @param array{result: FieldDefinitionImportResult, new: array<string, LeadField>, toggle: array<int, array{0: LeadField, 1: bool}>} $plan
+     * @param array<string, LeadField>              $new
+     * @param array<int, array{0: LeadField, 1: bool}> $toggle
      *
      * @return string[] the new fields whose column a background job makes
      */
-    private function apply(array $plan): array
+    private function apply(array $new, array $toggle): array
     {
         $inBackground = [];
-        foreach ($plan['new'] as $name => $field) {
-            if (!$this->saveNew($field)) {
+        foreach ($new as $name => $field) {
+            try {
+                $this->fieldModel->saveEntity($field);
+            } catch (AbortColumnCreateException) {
+                // core saved the field and a background job makes the column (create_custom_field_in_background)
                 $inBackground[] = $name;
             }
         }
 
-        foreach ($plan['toggle'] as [$field, $published]) {
+        $switched = [];
+        foreach ($toggle as [$field, $published]) {
             $field->setIsPublished($published);
-            $this->fieldModel->getRepository()->saveEntity($field);
+            $switched[] = $field;
+        }
+        if ([] !== $switched) {
+            $this->fieldModel->getRepository()->saveEntities($switched);
         }
 
         return $inBackground;
-    }
-
-    /**
-     * @return bool false when core saved the field and left the column to a background job (create_custom_field_in_background)
-     */
-    private function saveNew(LeadField $field): bool
-    {
-        try {
-            $this->fieldModel->saveEntity($field);
-        } catch (AbortColumnCreateException) {
-            return false;
-        }
-
-        return true;
     }
 }
