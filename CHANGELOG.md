@@ -8,6 +8,7 @@ Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD`
 - A importação mostra primeiro o que seria criado, ativado e inativado, sem salvar nada; depois de Confirmar, cria os campos que faltam e ativa ou inativa os que já existem
 - Um campo que já existe mantém o rótulo e o tipo, e um campo identificador único (como o email) nunca é inativado; os segmentos que usam um campo inativado aparecem na conferência
 - As telas de exportar e importar têm o botão Voltar
+- A lista de Campos Personalizados tem a coluna Status, como segmentos e campanhas: ícone play verde ou stop vermelho, e Ativar / Desativar é o primeiro item do menu da linha; o campo email, que o Mautic não deixa inativar, fica com o ícone cinza e sem o item
 
 ## 2026-10-29
 - A faixa de espera do node (no construtor e na aba Pré-visualizar) mostra, abaixo de "Esperar 3 dias", o horário e os dias programados: "Entre 10h e 19h", "Às 9h30m" e "Seg, Qua, Qui"; não precisa mais abrir o node para saber quando ele dispara
