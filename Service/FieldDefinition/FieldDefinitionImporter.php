@@ -33,97 +33,93 @@ class FieldDefinitionImporter
      */
     public function import(string $json, bool $apply = true): FieldDefinitionImportResult
     {
-        $plan = $this->plan($this->parser->parse($json));
+        $plan   = $this->plan($this->parser->parse($json));
+        $result = $plan->result();
 
         if (!$apply) {
-            return $plan['result'];
+            return $result;
         }
 
-        return $plan['result']->withColumnsInBackground($this->apply($plan['new'], $plan['toggle']));
+        return $result->withColumnsInBackground($this->apply($plan->newFields(), $plan->toggled()));
     }
 
     /**
      * @param array<int, array<string, mixed>> $wanted
      *
-     * @return array{result: FieldDefinitionImportResult, new: array<string, LeadField>, toggle: array<int, array{0: LeadField, 1: bool}>}
-     *
      * @throws FieldDefinitionImportException
      */
-    private function plan(array $wanted): array
+    private function plan(array $wanted): FieldDefinitionPlan
     {
-        $errors = [];
-        $lists  = ['created' => [], 'activated' => [], 'deactivated' => [], 'keptType' => [], 'keptIdentifier' => []];
-        $inUse  = [];
-        $new    = [];
-        $toggle = [];
-        $same   = 0;
+        $plan   = new FieldDefinitionPlan();
         $fields = $this->fieldsByAlias();
 
         foreach ($wanted as $entry) {
-            $name     = $entry['object'].': '.$entry['alias'];
             $existing = $fields[$entry['alias']] ?? null;
 
             if (null === $existing) {
-                $field = $this->buildField($entry);
-                array_push($errors, ...$this->violations($field, $name));
-                $new[$name]         = $field;
-                $lists['created'][] = $name;
+                $this->planNew($plan, $entry);
 
                 continue;
             }
 
-            if ($existing->getObject() !== $entry['object']) {
-                $errors[] = $this->translator->trans('mautic.patches.field_definition.error.other_object', ['%field%' => $entry['alias'], '%object%' => $existing->getObject()]);
-
-                continue;
-            }
-
-            if ($existing->getType() !== $entry['type']) {
-                $lists['keptType'][] = $name;
-            }
-
-            if ($existing->getIsPublished() === $entry['isPublished']) {
-                ++$same;
-
-                continue;
-            }
-
-            if ($entry['isPublished']) {
-                $lists['activated'][] = $name;
-                $toggle[]             = [$existing, true];
-
-                continue;
-            }
-
-            if ($existing->getIsUniqueIdentifier()) {
-                $lists['keptIdentifier'][] = $name;
-
-                continue;
-            }
-
-            $lists['deactivated'][] = $name;
-            $toggle[]               = [$existing, false];
-            $segments               = $this->segmentNames($existing);
-            if ([] !== $segments) {
-                $inUse[$name] = $segments;
-            }
+            $this->planExisting($plan, $entry, $existing);
         }
 
-        if ([] !== $errors) {
-            throw new FieldDefinitionImportException($errors);
+        $plan->assertValid();
+
+        return $plan;
+    }
+
+    /**
+     * @param array<string, mixed> $entry
+     */
+    private function planNew(FieldDefinitionPlan $plan, array $entry): void
+    {
+        $name  = $entry['object'].': '.$entry['alias'];
+        $field = $this->buildField($entry);
+
+        $plan->fail($this->violations($field, $name));
+        $plan->create($name, $field);
+    }
+
+    /**
+     * Only the status of a field that exists can change: its label, type and options stay.
+     *
+     * @param array<string, mixed> $entry
+     */
+    private function planExisting(FieldDefinitionPlan $plan, array $entry, LeadField $existing): void
+    {
+        $name = $entry['object'].': '.$entry['alias'];
+
+        if ($existing->getObject() !== $entry['object']) {
+            $plan->fail([$this->translator->trans('mautic.patches.field_definition.error.other_object', ['%field%' => $entry['alias'], '%object%' => $existing->getObject()])]);
+
+            return;
         }
 
-        $result = new FieldDefinitionImportResult(
-            $lists['created'],
-            $lists['activated'],
-            $lists['deactivated'],
-            $inUse,
-            $lists['keptType'],
-            $lists['keptIdentifier'],
-            $same
-        );
+        if ($existing->getType() !== $entry['type']) {
+            $plan->keepType($name);
+        }
 
-        return ['result' => $result, 'new' => $new, 'toggle' => $toggle];
+        if ($existing->getIsPublished() === $entry['isPublished']) {
+            $plan->keepAsIs();
+
+            return;
+        }
+
+        if ($entry['isPublished']) {
+            $plan->activate($name, $existing);
+
+            return;
+        }
+
+        if ($existing->getIsUniqueIdentifier()) {
+            $plan->keepIdentifier($name);
+
+            return;
+        }
+
+        $plan->deactivate($name, $existing, $this->segmentNames($existing));
     }
 
     /**
