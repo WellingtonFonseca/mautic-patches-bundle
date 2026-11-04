@@ -20,7 +20,10 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class FieldDefinitionController extends CommonController
 {
-    private const PERMISSION = 'lead:fields:full';
+    /** One rule for the pages and for the buttons that lead to them (FieldDefinitionButtonSubscriber). */
+    public const PERMISSION = 'lead:fields:full';
+
+    private const INDEX_ROUTE = 'mautic_contactfield_index';
 
     public function exportAction(FieldDefinitionExporter $exporter): Response
     {
@@ -28,16 +31,7 @@ class FieldDefinitionController extends CommonController
             return $this->accessDenied();
         }
 
-        return $this->delegateView([
-            'returnUrl'       => $this->generateUrl('mautic_patches_field_definition_export'),
-            'viewParameters'  => ['json' => $exporter->toJson()],
-            'contentTemplate' => '@MauticPatches/Field/export_definition.html.twig',
-            'passthroughVars' => [
-                'activeLink'    => '#mautic_contactfield_index',
-                'mauticContent' => 'leadfield',
-                'route'         => $this->generateUrl('mautic_patches_field_definition_export'),
-            ],
-        ]);
+        return $this->view('export_definition', 'mautic_patches_field_definition_export', ['json' => $exporter->toJson()]);
     }
 
     public function importFormAction(FormFactoryInterface $formFactory): Response
@@ -58,56 +52,47 @@ class FieldDefinitionController extends CommonController
             return $this->accessDenied();
         }
 
-        $request = $this->getCurrentRequest();
-        $form    = $this->createImportForm($formFactory);
-        $form->handleRequest($request);
+        $form = $this->createImportForm($formFactory);
+        $form->handleRequest($this->getCurrentRequest());
 
         $json      = (string) ($form->get('definition')->getData() ?? '');
         $confirmed = '1' === (string) $form->get('confirmed')->getData();
 
         // the form's token: without it a page of another site could post an import for a logged-in admin
         if (!$form->isSubmitted() || !$form->isValid()) {
-            return $this->renderImportForm($this->createImportForm($formFactory, false, $json), [$this->translator->trans('mautic.patches.field_definition.error.token')]);
+            return $this->renderErrors($formFactory, $json, [$this->translator->trans('mautic.patches.field_definition.error.token')]);
         }
 
-        // first the check: what the import WOULD do, nothing saved; the person confirms it on the next submit
-        if (!$confirmed) {
-            return $this->checkStep($formFactory, $importer, $alerts, $json);
-        }
-
+        // the first submit only checks (nothing saved); the person confirms on the next one
         try {
-            $result = $importer->import($json);
+            $result = $importer->import($json, $confirmed);
         } catch (FieldDefinitionImportException $e) {
-            return $this->renderImportForm($this->createImportForm($formFactory, false, $json), $e->getErrors());
+            return $this->renderErrors($formFactory, $json, $e->getErrors());
         }
 
-        return $this->delegateView([
-            'returnUrl'       => $this->generateUrl('mautic_contactfield_index'),
-            'viewParameters'  => ['done' => true, 'doneAlerts' => $alerts->fromResult($result)],
-            'contentTemplate' => '@MauticPatches/Field/import_definition.html.twig',
-            'passthroughVars' => ['activeLink' => '#mautic_contactfield_index', 'mauticContent' => 'leadfield', 'route' => $this->generateUrl('mautic_patches_field_definition_import')],
-        ]);
-    }
-
-    private function checkStep(FormFactoryInterface $formFactory, FieldDefinitionImporter $importer, FieldDefinitionImportAlerts $alerts, string $json): Response
-    {
-        try {
-            $check = $importer->import($json, false);
-        } catch (FieldDefinitionImportException $e) {
-            return $this->renderImportForm($this->createImportForm($formFactory, false, $json), $e->getErrors());
+        if ($confirmed) {
+            return $this->view('import_definition', 'mautic_patches_field_definition_import', ['done' => true, 'doneAlerts' => $alerts->fromResult($result)]);
         }
 
         return $this->renderImportForm(
-            $this->createImportForm($formFactory, true, $json, $check->hasChanges()),
+            $this->createImportForm($formFactory, true, $json, $result->hasChanges()),
             [],
-            $alerts->fromResult($check, true),
-            $check->hasChanges()
+            $alerts->fromResult($result, true),
+            $result->hasChanges()
         );
+    }
+
+    /**
+     * @param string[] $errors
+     */
+    private function renderErrors(FormFactoryInterface $formFactory, string $json, array $errors): Response
+    {
+        return $this->renderImportForm($this->createImportForm($formFactory, false, $json), $errors);
     }
 
     private function createImportForm(FormFactoryInterface $formFactory, bool $confirming = false, string $json = '', bool $canConfirm = true): FormInterface
     {
-        $cancel = $this->generateUrl('mautic_contactfield_index');
+        $cancel = $this->generateUrl(self::INDEX_ROUTE);
 
         return $formFactory->create(FieldDefinitionImportType::class, ['definition' => $json], [
             'action'         => $this->generateUrl('mautic_patches_field_definition_import_save'),
@@ -123,13 +108,27 @@ class FieldDefinitionController extends CommonController
      */
     private function renderImportForm(FormInterface $form, array $errors, array $checkAlerts = [], bool $canConfirm = true): Response
     {
-        $route = $this->generateUrl('mautic_patches_field_definition_import');
+        return $this->view('import_definition', 'mautic_patches_field_definition_import', [
+            'done'        => false,
+            'form'        => $form->createView(),
+            'errors'      => $errors,
+            'checkAlerts' => $checkAlerts,
+            'canConfirm'  => $canConfirm,
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $parameters
+     */
+    private function view(string $template, string $route, array $parameters): Response
+    {
+        $url = $this->generateUrl($route);
 
         return $this->delegateView([
-            'returnUrl'       => $route,
-            'viewParameters'  => ['done' => false, 'form' => $form->createView(), 'errors' => $errors, 'checkAlerts' => $checkAlerts, 'canConfirm' => $canConfirm],
-            'contentTemplate' => '@MauticPatches/Field/import_definition.html.twig',
-            'passthroughVars' => ['activeLink' => '#mautic_contactfield_index', 'mauticContent' => 'leadfield', 'route' => $route],
+            'returnUrl'       => $url,
+            'viewParameters'  => $parameters,
+            'contentTemplate' => '@MauticPatches/Field/'.$template.'.html.twig',
+            'passthroughVars' => ['activeLink' => '#'.self::INDEX_ROUTE, 'mauticContent' => 'leadfield', 'route' => $url],
         ]);
     }
 }

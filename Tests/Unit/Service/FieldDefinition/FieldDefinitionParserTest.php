@@ -17,7 +17,12 @@ class FieldDefinitionParserTest extends TestCase
         $translator = $this->createMock(TranslatorInterface::class);
         // the key and the parameters are the message: a test reads WHICH problem was found
         $translator->method('trans')->willReturnCallback(
-            fn (string $id, array $p = []): string => str_replace('mautic.patches.field_definition.error.', '', $id).($p ? ' '.implode(',', $p) : '')
+            function (string $id, array $p = []): string {
+                $prefix = 'mautic.patches.field_definition.error.';
+                $this->assertStringStartsWith($prefix, $id);
+
+                return substr($id, strlen($prefix)).($p ? ' '.implode(',', $p) : '');
+            }
         );
 
         return new FieldDefinitionParser($translator);

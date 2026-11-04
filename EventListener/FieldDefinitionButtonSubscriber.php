@@ -8,6 +8,7 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomButtonEvent;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
+use MauticPlugin\MauticPatchesBundle\Controller\FieldDefinitionController;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -33,7 +34,7 @@ class FieldDefinitionButtonSubscriber implements EventSubscriberInterface
     {
         if (ButtonHelper::LOCATION_PAGE_ACTIONS !== $event->getLocation()
             || 'mautic_contactfield_index' !== $event->getRoute()
-            || !$this->security->isGranted('lead:fields:full')) {
+            || !$this->security->isGranted(FieldDefinitionController::PERMISSION)) {
             return;
         }
 

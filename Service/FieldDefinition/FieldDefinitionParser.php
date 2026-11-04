@@ -22,6 +22,14 @@ class FieldDefinitionParser
     }
 
     /**
+     * @param array<string, string> $parameters
+     */
+    private function error(string $key, array $parameters = []): string
+    {
+        return $this->translator->trans('mautic.patches.field_definition.error.'.$key, $parameters);
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      *
      * @throws FieldDefinitionImportException
@@ -31,7 +39,7 @@ class FieldDefinitionParser
         $data = json_decode($json, true);
 
         if (!is_array($data)) {
-            throw new FieldDefinitionImportException([$this->translator->trans('mautic.patches.field_definition.error.json')]);
+            throw new FieldDefinitionImportException([$this->error('json')]);
         }
 
         $errors = $this->checkHeader($data);
@@ -39,19 +47,20 @@ class FieldDefinitionParser
             throw new FieldDefinitionImportException($errors);
         }
 
+        $types  = (new FormFieldHelper())->getTypes();
         $fields = [];
         $seen   = [];
         foreach ($data['fields'] as $position => $raw) {
             $name = is_array($raw) && is_string($raw['alias'] ?? null) ? $raw['alias'] : '#'.($position + 1);
 
             if (isset($seen[$name])) {
-                $errors[] = $this->translator->trans('mautic.patches.field_definition.error.repeated', ['%field%' => $name]);
+                $errors[] = $this->error('repeated', ['%field%' => $name]);
 
                 continue;
             }
             $seen[$name] = true;
 
-            $fieldErrors = $this->checkField($raw, $name);
+            $fieldErrors = $this->checkField($raw, $name, $types);
             if ([] !== $fieldErrors) {
                 array_push($errors, ...$fieldErrors);
 
@@ -76,33 +85,35 @@ class FieldDefinitionParser
     private function checkHeader(array $data): array
     {
         if (FieldDefinitionExporter::FORMAT !== ($data['format'] ?? null)) {
-            return [$this->translator->trans('mautic.patches.field_definition.error.format')];
+            return [$this->error('format')];
         }
 
         if (FieldDefinitionExporter::VERSION !== ($data['version'] ?? null)) {
-            return [$this->translator->trans('mautic.patches.field_definition.error.version')];
+            return [$this->error('version')];
         }
 
         if (!is_array($data['fields'] ?? null) || [] === $data['fields']) {
-            return [$this->translator->trans('mautic.patches.field_definition.error.no_fields')];
+            return [$this->error('no_fields')];
         }
 
         return [];
     }
 
     /**
+     * @param array<string, mixed> $types the field types this instance knows (the keys)
+     *
      * @return string[]
      */
-    private function checkField(mixed $raw, string $name): array
+    private function checkField(mixed $raw, string $name, array $types): array
     {
         if (!is_array($raw)) {
-            return [$this->translator->trans('mautic.patches.field_definition.error.not_object', ['%field%' => $name])];
+            return [$this->error('not_object', ['%field%' => $name])];
         }
 
         $errors = [];
         foreach (['object', 'alias', 'label', 'type'] as $key) {
             if (!is_string($raw[$key] ?? null) || '' === trim($raw[$key])) {
-                $errors[] = $this->translator->trans('mautic.patches.field_definition.error.missing_key', ['%field%' => $name, '%key%' => $key]);
+                $errors[] = $this->error('missing_key', ['%field%' => $name, '%key%' => $key]);
             }
         }
         if ([] !== $errors) {
@@ -110,24 +121,24 @@ class FieldDefinitionParser
         }
 
         if (!preg_match('/^[a-z][a-z0-9_]*$/', $raw['alias'])) {
-            $errors[] = $this->translator->trans('mautic.patches.field_definition.error.alias', ['%field%' => $name]);
+            $errors[] = $this->error('alias', ['%field%' => $name]);
         }
         if (!in_array($raw['object'], self::OBJECTS, true)) {
-            $errors[] = $this->translator->trans('mautic.patches.field_definition.error.object', ['%field%' => $name, '%value%' => $raw['object']]);
+            $errors[] = $this->error('object', ['%field%' => $name, '%value%' => $raw['object']]);
         }
-        if (!array_key_exists($raw['type'], (new FormFieldHelper())->getTypes())) {
-            $errors[] = $this->translator->trans('mautic.patches.field_definition.error.type', ['%field%' => $name, '%value%' => $raw['type']]);
+        if (!isset($types[$raw['type']])) {
+            $errors[] = $this->error('type', ['%field%' => $name, '%value%' => $raw['type']]);
         }
         if (isset($raw['group']) && !in_array($raw['group'], self::GROUPS, true)) {
-            $errors[] = $this->translator->trans('mautic.patches.field_definition.error.group', ['%field%' => $name, '%value%' => (string) json_encode($raw['group'])]);
+            $errors[] = $this->error('group', ['%field%' => $name, '%value%' => (string) json_encode($raw['group'])]);
         }
         foreach (self::FLAGS as $flag) {
             if (isset($raw[$flag]) && !is_bool($raw[$flag])) {
-                $errors[] = $this->translator->trans('mautic.patches.field_definition.error.flag', ['%field%' => $name, '%key%' => $flag]);
+                $errors[] = $this->error('flag', ['%field%' => $name, '%key%' => $flag]);
             }
         }
         if (isset($raw['properties']) && !is_array($raw['properties'])) {
-            $errors[] = $this->translator->trans('mautic.patches.field_definition.error.properties', ['%field%' => $name]);
+            $errors[] = $this->error('properties', ['%field%' => $name]);
         }
 
         return $errors;

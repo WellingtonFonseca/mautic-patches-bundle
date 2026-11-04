@@ -24,6 +24,8 @@ class FieldDefinitionImportType extends AbstractType
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $confirming = $options['confirming'];
+
         // two steps: the JSON is first CHECKED (nothing is saved), then confirmed with the same text, now read only, so what was checked is what is imported
         $builder->add('definition', TextareaType::class, [
             'label'    => 'mautic.patches.field_definition.import.label',
@@ -32,22 +34,22 @@ class FieldDefinitionImportType extends AbstractType
                 'class'    => 'form-control',
                 'rows'     => 24,
                 'style'    => 'font-family:monospace;white-space:pre',
-                'readonly' => $options['confirming'] ? 'readonly' : null,
+                'readonly' => $confirming ? 'readonly' : null,
             ]),
         ]);
 
-        $builder->add('confirmed', HiddenType::class, ['data' => $options['confirming'] ? '1' : '0', 'mapped' => false]);
+        $builder->add('confirmed', HiddenType::class, ['data' => $confirming ? '1' : '0', 'mapped' => false]);
 
         // a check that finds nothing to do keeps the save button hidden (not removed) so that Limpar can bring Conferir back
-        $confirm = $options['confirming'] && $options['can_confirm'];
+        $confirm = $confirming && $options['can_confirm'];
         $buttons = [
             'apply_text'     => false,
             'save_text'      => $confirm ? 'mautic.patches.field_definition.import.confirm' : 'mautic.patches.field_definition.import.check',
             'save_icon'      => $confirm ? 'ri-upload-2-line' : 'ri-search-line',
-            'save_class'     => 'btn btn-primary btn-save'.($options['confirming'] && !$options['can_confirm'] ? ' hide' : ''),
+            'save_class'     => 'btn btn-primary btn-save'.($confirming && !$options['can_confirm'] ? ' hide' : ''),
             'cancel_onclick' => $options['cancel_onclick'],
         ];
-        if ($options['confirming']) {
+        if ($confirming) {
             $buttons['pre_extra_buttons'] = [[
                 'name'  => 'reset',
                 'label' => 'mautic.patches.field_definition.import.reset',
