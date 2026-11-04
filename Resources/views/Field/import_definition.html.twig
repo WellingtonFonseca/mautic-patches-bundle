@@ -1,0 +1,43 @@
+{#
+  Import of a field definition: the pasted JSON is checked (the alerts say what would be done, nothing is saved), then confirmed,
+  and the page shows what was done. Alert colors are Bootstrap's.
+#}
+{% extends '@MauticCore/Default/content.html.twig' %}
+
+{% block mauticContent %}leadfield{% endblock %}
+
+{% block preHeader %}{{ include('@MauticPatches/Field/_back_button.html.twig') }}{% endblock %}
+
+{% block headerTitle %}{{ 'mautic.patches.field_definition.import.title'|trans }}{% endblock %}
+
+{% block content %}
+    <div class="box-layout">
+        <div class="col-md-9 bg-auto height-auto bg-white">
+            <div class="pa-md">
+                {% if done %}
+                    {% for alert in doneAlerts %}
+                        {{ include('@MauticPatches/Field/_import_alert.html.twig', {'alert': alert, 'class': 'field-definition-done'}) }}
+                    {% endfor %}
+                {% else %}
+                    {{ form_start(form) }}
+                    {# no text over a check that found nothing: its alert says it #}
+                    {% if checkAlerts is empty or canConfirm %}
+                        <p class="help-block field-definition-help">{{ (checkAlerts is empty ? 'mautic.patches.field_definition.import.help' : 'mautic.patches.field_definition.import.preview_help')|trans }}</p>
+                    {% endif %}
+                    {% for alert in checkAlerts %}
+                        {{ include('@MauticPatches/Field/_import_alert.html.twig', {'alert': alert, 'class': 'field-definition-check'}) }}
+                    {% endfor %}
+                    {% if errors is not empty %}
+                        <div class="alert alert-danger" id="field-definition-errors">
+                            <ul class="mb-0">
+                                {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    {{ form_row(form.definition) }}
+                    {{ form_end(form) }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

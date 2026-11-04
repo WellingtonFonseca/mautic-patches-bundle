@@ -1,0 +1,8 @@
+<div class="alert alert-{{ alert.type }} {{ class }}">
+    <p class="{{ alert.items is empty ? 'mb-0' : '' }}">{{ alert.message }}</p>
+    {% if alert.items is not empty %}
+        <ul class="mb-0">
+            {% for item in alert.items %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+    {% endif %}
+</div>

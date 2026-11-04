@@ -69,4 +69,16 @@ class RoutesTest extends TestCase
             }
         }
     }
+
+    public function testTheFieldDefinitionPathsDoNotMatchCoresImportRoute(): void
+    {
+        $routes = $this->config()['routes']['main'];
+
+        // core's /s/{object}/import would take /s/field-definition/import first (the list of Importações)
+        $this->assertSame('/field-definition/clone-export', $routes['mautic_patches_field_definition_export']['path']);
+        $this->assertSame('GET', $routes['mautic_patches_field_definition_import']['method']);
+        $this->assertSame('/field-definition/clone-import', $routes['mautic_patches_field_definition_import']['path']);
+        $this->assertSame('POST', $routes['mautic_patches_field_definition_import_save']['method']);
+        $this->assertSame($routes['mautic_patches_field_definition_import']['path'], $routes['mautic_patches_field_definition_import_save']['path']);
+    }
 }
