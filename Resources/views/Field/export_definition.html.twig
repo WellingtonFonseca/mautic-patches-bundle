@@ -1,0 +1,28 @@
+{#
+  The definition of every contact and company field as JSON, read only (a <pre>, never a form field). The Copy button reads its text.
+#}
+{% extends '@MauticCore/Default/content.html.twig' %}
+
+{% block mauticContent %}leadfield{% endblock %}
+
+{% block indexButton %}{{ include('@MauticPatches/Field/_back_button.html.twig') }}{% endblock %}
+
+{% block headerTitle %}{{ 'mautic.patches.field_definition.export.title'|trans }}{% endblock %}
+
+{% block content %}
+    <div class="box-layout">
+        <div class="col-md-9 bg-auto height-auto bg-white">
+            <div class="pa-md">
+                <p class="help-block">{{ 'mautic.patches.field_definition.export.help'|trans }}</p>
+                {# the text of the toast is in data-copied; the toast is core's own (Mautic.setFlashes), the one every notification uses #}
+                <p>
+                    <button type="button" class="btn btn-primary btn-nospin" id="field-definition-copy" data-copied="{{ 'mautic.patches.field_definition.export.copied'|trans }}"
+                            onclick="var b = this; var t = mQuery('#field-definition-json').text(); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { Mautic.setFlashes(Mautic.addInfoFlashMessage(b.getAttribute('data-copied'))); }, function () { var r = document.createRange(); r.selectNodeContents(document.getElementById('field-definition-json')); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); });">
+                        <i class="ri-file-copy-line"></i> {{ 'mautic.patches.field_definition.export.copy'|trans }}
+                    </button>
+                </p>
+                <pre id="field-definition-json" style="max-height:600px;overflow:auto">{{ json }}</pre>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -102,6 +102,22 @@ return [
                 'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\SegmentFilterValuesController::valuesAction',
                 'method'     => 'GET',
             ],
+            // Clone of the contact and company fields: the definition as JSON (Exportar) and its import (check, then confirm).
+            'mautic_patches_field_definition_export' => [
+                'path'       => '/field-definition/clone-export',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\FieldDefinitionController::exportAction',
+                'method'     => 'GET',
+            ],
+            'mautic_patches_field_definition_import' => [
+                'path'       => '/field-definition/clone-import',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\FieldDefinitionController::importFormAction',
+                'method'     => 'GET',
+            ],
+            'mautic_patches_field_definition_import_save' => [
+                'path'       => '/field-definition/clone-import',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\FieldDefinitionController::importSaveAction',
+                'method'     => 'POST',
+            ],
             // Settings > Performance: where the time of the API goes, and the live diagnostics.
             'mautic_patches_performance' => [
                 'path'       => '/performance',
