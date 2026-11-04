@@ -183,12 +183,13 @@ function campaignTable(rowCount, labelled = true, status = 'published', restart 
         }
         row.cells = cells;
         row.querySelector = (selector) => (selector === 'td' ? row.children[0] : (selector === '.patches-status-label' ? row.label || null : null));
+        row.querySelectorAll = (selector) => (selector === 'td' ? row.children : []);
         rows.push(row);
     }
     const table = {
         querySelector(selector) {
             if (selector === 'th.col-patches-status') { return headRow.children.find((c) => c.className.includes('col-patches-status')) || null; }
-            if (selector === 'thead tr') { return {querySelector: () => headRow.children[0]}; }
+            if (selector === 'thead tr') { return {querySelector: () => headRow.children[0], querySelectorAll: (s) => (s === 'th' ? headRow.children : [])}; }
             if (selector === '.patches-status-label') { return rows.find((r) => r.label) ? {} : null; }
             return null;
         },
@@ -261,7 +262,7 @@ test('addStatusColumn: no campaign table, or a table without a header, is left a
 
 test('addStatusColumn: a row without any cell is skipped, the others still get theirs', () => {
     const {doc, rows} = campaignTable(2);
-    rows[0].querySelector = () => null;
+    rows[0].querySelectorAll = () => [];
 
     assert.strictEqual(api.addStatusColumn(doc, campaignSpec, ccfg), true);
 
@@ -337,21 +338,26 @@ test('addStatusColumn: a spinning status label still gets the reentry badge', ()
     assert.strictEqual(items(rows[0].children[1]).length, 2);
 });
 
-test('COLUMNS: the four lists that have a Status column, each with its table and kind', () => {
+test('COLUMNS: the five lists that have a Status column, each with its table and kind', () => {
     assert.deepStrictEqual(api.COLUMNS.map((c) => [c.kind, c.table]), [
-        ['segment', '#leadListTable'], ['campaign', '#campaignTable'], ['user', '#userTable'], ['email', 'table.email-list'],
+        ['segment', '#leadListTable'], ['campaign', '#campaignTable'], ['user', '#userTable'], ['email', 'table.email-list'], ['field', '#leadFieldTable'],
     ]);
+});
+
+test('COLUMNS: only the field list puts its Status column after the second column (the first one is a drag handle)', () => {
+    assert.deepStrictEqual(api.COLUMNS.map((c) => c.after || 0), [0, 0, 0, 0, 1]);
 });
 
 test('addStatusColumn: every list gets the same column, with its own kind in the class', () => {
     for (const spec of api.COLUMNS) {
         const {doc, headRow, rows} = campaignTable(1, true, 'unpublished', false, spec.table);
+        const at = (spec.after || 0) + 1;
 
         assert.strictEqual(api.addStatusColumn(doc, spec, ccfg), true, spec.kind);
 
-        assert.strictEqual(headRow.children[1].className, `col-patches-status col-${spec.kind}-status pa-0`);
-        assert.strictEqual(rows[0].children[1].className, `col-patches-status col-${spec.kind}-status`);
-        assert.deepStrictEqual(items(rows[0].children[1])[0].children.map((c) => c.className), ['ri-stop-fill', 'patches-icon-badge__text']);
+        assert.strictEqual(headRow.children[at].className, `col-patches-status col-${spec.kind}-status pa-0`);
+        assert.strictEqual(rows[0].children[at].className, `col-patches-status col-${spec.kind}-status`);
+        assert.deepStrictEqual(items(rows[0].children[at])[0].children.map((c) => c.className), ['ri-stop-fill', 'patches-icon-badge__text']);
     }
 });
 
@@ -614,4 +620,32 @@ test('addStatusColumn: nothing is read or added while the page is still being pa
 
 test('addContactStatusColumn: nothing is read or added while the page is still being parsed', () => {
     assert.strictEqual(api.addContactStatusColumn(loadingDoc(), contactCfg), false);
+});
+
+test('lockFields: a field whose core icon is disabled gets the gray badge in place of green or red; the others keep theirs', () => {
+    const classes = (initial) => { const set = new Set(initial); return {set, contains: (c) => set.has(c), add: (...c) => c.forEach((x) => set.add(x)), remove: (...c) => c.forEach((x) => set.delete(x))}; };
+    const row = (iconClasses, labelClasses) => {
+        const label = {classList: classes(labelClasses)}, icon = {classList: classes(iconClasses)};
+        return {label, icon, querySelector: (s) => (s === '.patches-status-label' ? label : (s.includes('lead-field-publish-icon') ? icon : null))};
+    };
+    const locked = row(['disabled'], ['patches-badge--production']), open = row([], ['patches-badge--failed']), noIcon = row([], ['patches-badge--production']);
+    noIcon.querySelector = (s) => (s === '.patches-status-label' ? noIcon.label : null);
+    const doc = {querySelectorAll: (s) => (s === '#leadFieldTable tbody tr' ? [locked, open, noIcon] : [])};
+
+    api.lockFields(doc);
+
+    assert.deepStrictEqual([...locked.label.classList.set], ['patches-badge--locked']);
+    assert.deepStrictEqual([...open.label.classList.set], ['patches-badge--failed']);
+    assert.deepStrictEqual([...noIcon.label.classList.set], ['patches-badge--production']);
+});
+
+test('lockFields: a badge that is already gray is not written again (a class write wakes the observer of the list and would loop)', () => {
+    const writes = [];
+    const label = {classList: {contains: (c) => c === 'patches-badge--locked', add: (...c) => writes.push(c), remove: (...c) => writes.push(c)}};
+    const icon = {classList: {contains: (c) => c === 'disabled'}};
+    const row = {querySelector: (s) => (s === '.patches-status-label' ? label : icon)};
+
+    api.lockFields({querySelectorAll: () => [row]});
+
+    assert.deepStrictEqual(writes, []);
 });

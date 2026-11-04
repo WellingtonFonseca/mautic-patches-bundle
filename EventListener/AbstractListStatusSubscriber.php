@@ -41,7 +41,7 @@ abstract class AbstractListStatusSubscriber implements EventSubscriberInterface
      * in the campaign list the reentry one, in the segment list the global / filters / warning ones, beside it are 22px circles with a play / stop / reload icon; on hover one opens to the right and
      * shows the word, as the status badge of the n8n campaign card. They sit side by side in the flow of the cell; opening one widens the column and the browser lays out the table (no script). The 76px minimum of the word badge does not apply to them.
      */
-    public const ICON_BADGE_STYLE = '#leadListTable td,#campaignTable td,#userTable td,table.email-list td,#leadTable td{white-space:nowrap}'
+    public const ICON_BADGE_STYLE = '#leadListTable td,#campaignTable td,#userTable td,table.email-list td,#leadTable td,#leadFieldTable td{white-space:nowrap}'
         .'td.col-patches-status .patches-status-box{display:flex;align-items:center;gap:6px;height:22px}'
         .'td.col-patches-status :is(.patches-status-label,.patches-extra-badge){position:relative;z-index:2;flex:none;display:inline-flex;box-sizing:border-box;height:22px;min-width:0;max-width:22px;margin:0;padding:0;gap:0;'
         .'justify-content:flex-start;overflow:hidden;transition:max-width .2s ease,box-shadow .2s ease}'
@@ -54,7 +54,9 @@ abstract class AbstractListStatusSubscriber implements EventSubscriberInterface
         .'td.col-patches-status .patches-extra-badge--wide:hover{max-width:260px}'
         // the badges of the email list: one color for the type (campaign and broadcast share it), one for each of A/B test, translation and draft
         .'.patches-badge--emailtype{background-color:#00897b}.patches-badge--abtest{background-color:#7e57c2}'
-        .'.patches-badge--translation{background-color:#4285f4}.patches-badge--draft{background-color:#546e7a}';
+        .'.patches-badge--translation{background-color:#4285f4}.patches-badge--draft{background-color:#546e7a}'
+        // the field list: a field whose status core does not let change (email, a column still being made) is gray
+        .'.patches-badge--locked{background-color:#9e9e9e}';
 
     public function __construct(
         protected TranslatorInterface $translator,
