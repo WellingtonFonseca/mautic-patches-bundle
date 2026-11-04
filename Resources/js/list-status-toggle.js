@@ -340,7 +340,9 @@
         {table: '#leadListTable', kind: 'segment'},
         {table: '#campaignTable', kind: 'campaign'},
         {table: '#userTable', kind: 'user'},
-        {table: 'table.email-list', kind: 'email'}
+        {table: 'table.email-list', kind: 'email'},
+        // the field list starts with a drag handle: its Status column goes after the SECOND column (the menu), `after` counts from 0
+        {table: '#leadFieldTable', kind: 'field', after: 1}
     ];
 
     /** The plain "Status" header (not a sort link) that goes right after the first header of `head`. */
@@ -371,7 +373,7 @@
         var table = doc.querySelector(spec.table);
         // not before a label exists: the user and email lists get theirs from the script (syncNamedRows), which finds the name cell by its position
         if (!table || table.querySelector('th.col-patches-status') || !table.querySelector('.patches-status-label')) { return false; }
-        var head = table.querySelector('thead tr'), first = head && head.querySelector('th');
+        var head = table.querySelector('thead tr'), after = spec.after || 0, first = head && head.querySelectorAll('th')[after];
         if (!first) { return false; }
         var columnClass = 'col-patches-status col-' + spec.kind + '-status';
 
@@ -379,7 +381,7 @@
 
         var rows = table.querySelectorAll('tbody tr');
         for (var k = 0; k < rows.length; k++) {
-            var cell = rows[k].querySelector('td');
+            var cell = rows[k].querySelectorAll('td')[after];
             if (!cell) { continue; }
             var td = doc.createElement('td'), label = rows[k].querySelector('.patches-status-label');
             td.className = columnClass;
@@ -534,6 +536,32 @@
         syncNamedRows($, cfg, 'table.email-list', 'email', 'data-email-status-action', 'td:nth-child(2) > div');
     }
 
+    /**
+     * A field whose status core does not let change (its toggle icon is `disabled`: the email field, a field whose column is still being made)
+     * has a gray badge, with the icon of its status, and no menu item (the server adds none).
+     */
+    function lockFields(doc) {
+        var rows = doc.querySelectorAll('#leadFieldTable tbody tr');
+        for (var k = 0; k < rows.length; k++) {
+            var label = rows[k].querySelector('.patches-status-label'), icon = iconOf(rows[k], 'lead-field');
+            if (!label || !icon || !icon.classList.contains('disabled') || label.classList.contains('patches-badge--locked')) { continue; }
+            label.classList.remove('patches-badge--production', 'patches-badge--failed');
+            label.classList.add('patches-badge--locked');
+        }
+    }
+
+    function syncFields($, cfg) {
+        syncNamedRows($, cfg, '#leadFieldTable', 'lead-field', 'data-field-status-action', 'td:nth-child(3) > span');
+        lockFields(root.document);
+    }
+
+    function installField($, Mautic, cfg) {
+        if (!$ || root.mauticPatchesFieldStatus) { return; }
+        root.mauticPatchesFieldStatus = true;
+        installIconDriven($, cfg, 'lead-field', 'data-field-status-action', syncFields);
+        syncFields($, cfg);
+    }
+
     function installUser($, Mautic, cfg) {
         if (!$ || root.mauticPatchesUserStatus) { return; }
         root.mauticPatchesUserStatus = true;
@@ -554,7 +582,7 @@
         setup(cfg);
     }
 
-    var api = {EMAIL_FLAGS: EMAIL_FLAGS, EMAIL_TYPES: EMAIL_TYPES, addContactStatusColumn: addContactStatusColumn, isContactListPath: isContactListPath, blockedChannels: blockedChannels, contactBadges: contactBadges, CONTACT_CHANNELS: CONTACT_CHANNELS, installContact: installContact, addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
+    var api = {EMAIL_FLAGS: EMAIL_FLAGS, EMAIL_TYPES: EMAIL_TYPES, addContactStatusColumn: addContactStatusColumn, isContactListPath: isContactListPath, blockedChannels: blockedChannels, contactBadges: contactBadges, CONTACT_CHANNELS: CONTACT_CHANNELS, installContact: installContact, addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, installField: installField, lockFields: lockFields, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
