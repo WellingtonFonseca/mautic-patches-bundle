@@ -19,7 +19,7 @@
             'target': container,
             'tmpl': tmpl,
             'overlayDisabled': true,
-            'list_actions': toolbarActions|default(''),
+            'list_actions': toolbarActions,
         }) }}
         <div id="{{ container|trim('#') }}">
             {{ include('@MauticPatches/Contact/contacts_table_body.html.twig') }}

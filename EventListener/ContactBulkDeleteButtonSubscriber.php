@@ -14,7 +14,7 @@ use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Adds "Apagar contatos em lote" to the page actions menu (the gear) of the contact list in red like core's delete items
+ * Adds "Excluir em lote" (Delete in bulk) to the page actions menu (the gear) of the contact list in red like core's delete items
  * (`a.danger`), for who may delete other users' contacts.
  */
 class ContactBulkDeleteButtonSubscriber implements EventSubscriberInterface

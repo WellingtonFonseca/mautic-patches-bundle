@@ -45,7 +45,8 @@ class ContactBulkDeleteButtonSubscriberTest extends TestCase
         $this->assertSame('ajax', $buttons[0]['attr']['data-toggle']);
         $this->assertSame('danger', $buttons[0]['attr']['class']);
         $this->assertSame('mautic.patches.contact_bulk_delete.menu', $buttons[0]['btnText']);
-        $this->assertLessThan(0, $buttons[0]['priority']);
+        $this->assertSame(-100, $buttons[0]['priority']); // last in the gear menu
+        $this->assertSame('ri-delete-bin-line', $buttons[0]['iconClass']);
     }
 
     public function testNothingWithoutPermissionOnAnotherRouteOrAnotherLocation(): void

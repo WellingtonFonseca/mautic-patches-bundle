@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Controller;
 
+use Mautic\CoreBundle\Controller\CommonController;
 use Mautic\CoreBundle\Factory\PageHelperFactoryInterface;
-use Mautic\CoreBundle\Controller\FormController;
 use MauticPlugin\MauticPatchesBundle\Service\ContactBulkDelete\ContactBulkDeleter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
  * repeats the POST until nothing is left. Only for who may delete other users' contacts, and the search is never
  * empty (an empty search would match every contact).
  */
-class ContactBulkDeleteController extends FormController
+class ContactBulkDeleteController extends CommonController
 {
     use ContactsTableTrait;
 
@@ -30,7 +30,6 @@ class ContactBulkDeleteController extends FormController
         }
 
         return $this->delegateView([
-            'viewParameters'  => ['batchSize' => ContactBulkDeleter::BATCH_SIZE],
             'contentTemplate' => '@MauticPatches/Contact/bulk_delete.html.twig',
             'passthroughVars' => [
                 'activeLink'    => '#mautic_contact_index',
@@ -42,48 +41,48 @@ class ContactBulkDeleteController extends FormController
 
     public function countAction(Request $request, ContactBulkDeleter $deleter): Response
     {
-        return $this->withSearch($request, 'query', static fn (string $search): array => ['total' => $deleter->count($search)]);
+        return $this->withSearch($request, static fn (string $search): array => ['total' => $deleter->count($search)]);
     }
 
     /**
      * The contacts of the search as the contact list table (see ContactsTableTrait), what "Delete all" will delete. The first load
      * (a GET with ?search=) keeps the search in the session, the sorting and paging that follow read it from there.
      *
-     * @param int|string $objectId always 0: the route needs one, the table's pagination builds its links from it
+     * The route has an `objectId` (always 0) because the table's pagination builds its links from it; this action does not need it.
+     *
      * @param int|string $page
      */
-    public function contactsAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, $objectId = 0, $page = 1): Response
+    public function contactsAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, ContactBulkDeleter $deleter, $page = 1): Response
     {
         return $this->contactsTable($request, $pageHelperFactory, [
-            'entityId'   => 0,
-            'routeId'    => 0,
-            'page'       => (int) $page,
-            'sessionVar' => 'contactBulkDelete',
-            'route'      => 'mautic_patches_contact_bulk_delete_contacts',
-            'container'  => '#contact-bulk-delete-result',
-            'permission' => self::PERMISSION,
-            'orderBy'    => 'l.id',
+            'entityId'       => 0,
+            'page'           => (int) $page,
+            'sessionVar'     => 'contactBulkDelete',
+            'route'          => 'mautic_patches_contact_bulk_delete_contacts',
+            'container'      => '#contact-bulk-delete-result',
+            'permission'     => self::PERMISSION,
+            'orderBy'        => 'l.id',
+            'orderByDir'     => 'ASC',
+            'forceFilter'    => $deleter->force(...),
             'toolbarActions' => $this->renderView('@MauticPatches/Contact/bulk_delete_button.html.twig'),
-            'orderByDir' => 'ASC',
         ]);
     }
 
     public function deleteAction(Request $request, ContactBulkDeleter $deleter): Response
     {
-        return $this->withSearch($request, 'request', static fn (string $search): array => $deleter->deleteBatch($search));
+        return $this->withSearch($request, static fn (string $search): array => $deleter->deleteBatch($search));
     }
 
     /**
-     * @param 'query'|'request'                  $source
-     * @param callable(string): array<mixed>     $action
+     * @param callable(string): array<mixed> $action
      */
-    private function withSearch(Request $request, string $source, callable $action): Response
+    private function withSearch(Request $request, callable $action): Response
     {
         if (!$this->security->isGranted(self::PERMISSION)) {
             return new JsonResponse(['error' => 'access_denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $search = trim((string) $request->{$source}->get('search', ''));
+        $search = trim((string) ($request->isMethod('POST') ? $request->request : $request->query)->get('search', ''));
 
         if ('' === $search) {
             return new JsonResponse(['error' => 'empty_search'], Response::HTTP_BAD_REQUEST);

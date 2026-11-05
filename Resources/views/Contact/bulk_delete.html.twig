@@ -28,9 +28,9 @@
              data-confirm-word="{{ 'mautic.patches.contact_bulk_delete.confirm_word'|trans }}"
              data-confirm-type="{{ 'mautic.patches.contact_bulk_delete.confirm_type'|trans({'%word%': 'mautic.patches.contact_bulk_delete.confirm_word'|trans}) }}"
              data-progress="{{ 'mautic.patches.contact_bulk_delete.progress'|trans }}"
-             data-deleting="{{ 'mautic.patches.contact_bulk_delete.deleting'|trans }}"
              data-done="{{ 'mautic.patches.contact_bulk_delete.done'|trans }}"
-             data-error="{{ 'mautic.patches.contact_bulk_delete.error.generic'|trans }}">
+             data-error="{{ 'mautic.patches.contact_bulk_delete.error.generic'|trans }}"
+             data-count-error="{{ 'mautic.patches.contact_bulk_delete.error.count'|trans }}">
             <div id="contact-bulk-delete-banner" role="status" hidden></div>
             <div id="contact-bulk-delete-progress" hidden>
                 <div class="alert alert-info"><i class="ri-loader-3-line ri-spin"></i> {{ 'mautic.patches.contact_bulk_delete.deleting'|trans }}</div>
@@ -58,12 +58,11 @@
     var bar = document.getElementById('contact-bulk-delete-bar');
     var countLine = document.getElementById('contact-bulk-delete-count');
     var total = 0;
+    var searched = '';
+    var timer = null;
 
     // the button is part of the table, which is loaded again at the end: always looked up when used
     function runBtn() { return document.getElementById('contact-bulk-delete-run'); }
-
-    var searched = '';
-    var timer = null;
 
     function fill(text, vars) {
         Object.keys(vars).forEach(function (k) { text = text.replace('%' + k + '%', vars[k]); });
@@ -120,7 +119,9 @@
             showBanner(total > 0 ? 'danger' : 'info', foundText(total));
             mQuery(runBtn()).data('message', fill(box.getAttribute('data-confirm'), {count: total}));
             runBtn().disabled = total === 0;
-        }, function () { showBanner('warning', fill(box.getAttribute('data-error'), {done: 0})); });
+        }, function () {
+            if (barText() === search) { showBanner('warning', box.getAttribute('data-count-error')); } // a failure of an older text is not news
+        });
     }
 
     // The one alert slot, above the guide text: the count of what will be deleted (red, to catch the eye), a failure (yellow) and, at the
@@ -165,7 +166,7 @@
         function next() {
             call(box.getAttribute('data-batch-url'), 'POST', search).then(function (data) {
                 done += data.deleted;
-                if (data.deleted === 0 || data.remaining === 0) { return finish(); }
+                if (data.done) { return finish(); }
                 setProgress(done);
                 next();
             }, function () {
