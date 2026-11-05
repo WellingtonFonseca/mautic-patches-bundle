@@ -1,6 +1,8 @@
 {#
-  Contact list gear > Excluir em lote. The script asks for a preview (GET) and then posts one batch at a time until nothing is
-  left; see ContactBulkDeleteController. The texts come from data attributes, the confirmation is core's own
+  Contact list gear > Excluir em lote. Top to bottom: the banner of the last result, the progress (only while it deletes), the form
+  (help, the count, the contact list table with its own filter bar and the delete button at the end of it). The filter bar of the table IS the search:
+  when its text changes, the script asks for the count of that search (GET) and turns the delete on; the delete posts one batch at a
+  time until nothing is left; see ContactBulkDeleteController. The texts come from data attributes, the confirmation is core's own
   (Mautic.showConfirmation, the same modal as every delete): its confirm button calls Mautic.patchesBulkDeleteRun. The modal gets
   a box where the word of the language (EXCLUIR, DELETE) must be typed before the confirm button works: a click alone is not enough.
 #}
@@ -15,8 +17,8 @@
     <div class="col-md-9 bg-auto height-auto bg-white">
         <div class="pa-md" id="contact-bulk-delete"
              data-count-url="{{ path('mautic_patches_contact_bulk_delete_count') }}"
-             data-table-url="{{ path('mautic_patches_contact_bulk_delete_contacts', {'objectId': 0, 'page': 1}) }}"
              data-batch-url="{{ path('mautic_patches_contact_bulk_delete_batch') }}"
+             data-table-url="{{ path('mautic_patches_contact_bulk_delete_contacts', {'objectId': 0, 'page': 1}) }}"
              data-found="{{ 'mautic.patches.contact_bulk_delete.found'|trans }}"
              data-found-one="{{ 'mautic.patches.contact_bulk_delete.found_one'|trans }}"
              data-found-none="{{ 'mautic.patches.contact_bulk_delete.found_none'|trans }}"
@@ -28,22 +30,6 @@
              data-done="{{ 'mautic.patches.contact_bulk_delete.done'|trans }}"
              data-error="{{ 'mautic.patches.contact_bulk_delete.error.generic'|trans }}"
              data-empty="{{ 'mautic.patches.contact_bulk_delete.error.empty_search'|trans }}">
-            <p class="help-block">{{ 'mautic.patches.contact_bulk_delete.help'|trans }}</p>
-            <div class="form-group">
-                <label class="control-label" for="contact-bulk-delete-search">{{ 'mautic.patches.contact_bulk_delete.search'|trans }}</label>
-                <input type="text" id="contact-bulk-delete-search" class="form-control" autocomplete="off">
-            </div>
-            <p>
-                <button type="button" class="btn btn-secondary btn-nospin" id="contact-bulk-delete-preview">
-                    <i class="ri-search-line"></i> {{ 'mautic.patches.contact_bulk_delete.preview'|trans }}
-                </button>
-                <button type="button" class="btn btn-danger btn-nospin" id="contact-bulk-delete-run" disabled
-                        data-message="" data-confirm-text="{{ 'mautic.core.form.delete'|trans }}" data-cancel-text="{{ 'mautic.core.form.cancel'|trans }}"
-                        data-confirm-callback="patchesBulkDeleteRun">
-                    <i class="ri-delete-bin-line"></i> {{ 'mautic.patches.contact_bulk_delete.delete'|trans }}
-                </button>
-            </p>
-            <p id="contact-bulk-delete-status" class="text-muted" role="status"></p>
             <div id="contact-bulk-delete-banner" role="status" hidden></div>
             <div id="contact-bulk-delete-progress" hidden>
                 <div class="alert alert-info"><i class="ri-loader-3-line ri-spin"></i> {{ 'mautic.patches.contact_bulk_delete.deleting'|trans }}</div>
@@ -52,7 +38,11 @@
                 </div>
                 <p class="text-muted mt-sm" id="contact-bulk-delete-count"></p>
             </div>
-            <div class="page-list" id="contact-bulk-delete-result"></div>
+            <div id="contact-bulk-delete-form">
+                <p class="help-block">{{ 'mautic.patches.contact_bulk_delete.help'|trans }}</p>
+                <p id="contact-bulk-delete-status" class="text-muted" role="status"></p>
+                <div class="page-list" id="contact-bulk-delete-result"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -61,17 +51,20 @@
     var box = document.getElementById('contact-bulk-delete');
     if (!box) { return; }
 
-    var input = document.getElementById('contact-bulk-delete-search');
-    var previewBtn = document.getElementById('contact-bulk-delete-preview');
-    var runBtn = document.getElementById('contact-bulk-delete-run');
-    var status = document.getElementById('contact-bulk-delete-status');
-    var result = mQuery('#contact-bulk-delete-result');
+    var BAR = '#search-contact-bulk-delete-result';
+    var form = document.getElementById('contact-bulk-delete-form');
     var banner = document.getElementById('contact-bulk-delete-banner');
     var progress = document.getElementById('contact-bulk-delete-progress');
     var bar = document.getElementById('contact-bulk-delete-bar');
     var countLine = document.getElementById('contact-bulk-delete-count');
+    var status = document.getElementById('contact-bulk-delete-status');
     var total = 0;
-    var previewed = '';
+
+    // the button is part of the table, which is loaded again at the end: always looked up when used
+    function runBtn() { return document.getElementById('contact-bulk-delete-run'); }
+
+    var searched = '';
+    var timer = null;
 
     function fill(text, vars) {
         Object.keys(vars).forEach(function (k) { text = text.replace('%' + k + '%', vars[k]); });
@@ -99,21 +92,36 @@
         });
     }
 
-    // the table of the contact list (ContactsTableTrait): its first load keeps the search in the session, sorting and paging read it there
-    function loadTable(search) {
-        mQuery.get(box.getAttribute('data-table-url'), {search: search}, function (response) {
+    // the table of the contact list (ContactsTableTrait) with its filter bar: its first load keeps the search in the session, the
+    // bar's live search, sorting and paging read it there
+    function loadTable() {
+        mQuery.get(box.getAttribute('data-table-url'), {search: ''}, function (response) {
             response.target = '#contact-bulk-delete-result';
             Mautic.processPageContent(response);
         }).fail(function (request, textStatus, error) { Mautic.processAjaxError(request, textStatus, error); });
     }
 
-    function reset() {
-        runBtn.disabled = true;
-        previewed = '';
+    function barText() {
+        var field = document.querySelector(BAR);
+
+        return field ? field.value.trim() : '';
     }
 
-    function lock(value) {
-        previewBtn.disabled = input.disabled = value;
+    // The delete is on only for the search that was counted: any change of the bar turns it off until the new count arrives.
+    function reset() {
+        if (runBtn()) { runBtn().disabled = true; }
+        searched = '';
+    }
+
+    function count(search) {
+        call(box.getAttribute('data-count-url'), 'GET', search).then(function (data) {
+            if (barText() !== search || !runBtn()) { return; } // the text changed while this was asking (the newer count wins) or the table is not there
+            total = data.total;
+            searched = search;
+            status.textContent = foundText(total);
+            mQuery(runBtn()).data('message', fill(box.getAttribute('data-confirm'), {count: total}));
+            runBtn().disabled = total === 0;
+        }, function () { status.textContent = fill(box.getAttribute('data-error'), {done: 0}); });
     }
 
     function showBanner(type, text) {
@@ -131,22 +139,21 @@
     }
 
     function run() {
-        var search = previewed;
+        var search = searched;
         var done = 0;
-        runBtn.disabled = true;
-        lock(true);
-        // what was on screen (the count line and the table) gives its place to the progress, so the eye has one thing to follow
-        status.textContent = '';
+        reset();
+        // the form (help, button, table) gives its place to the progress: the eye has one thing to follow
         banner.hidden = true;
-        result.empty();
+        form.hidden = true;
         progress.hidden = false;
         setProgress(0);
 
         function stop(type, text) {
             progress.hidden = true;
+            form.hidden = false;
+            status.textContent = '';
+            loadTable(); // the table again, from an empty search, with what is left
             showBanner(type, text);
-            previewed = '';
-            lock(false);
         }
 
         function finish() {
@@ -172,12 +179,12 @@
     // the confirm button of core's confirmation modal calls this by name
     Mautic.patchesBulkDeleteRun = function () {
         Mautic.dismissConfirmation();
-        if (previewed) { run(); }
+        if (searched) { run(); }
     };
 
     // core's modal has the question and the buttons; the box goes between them and keeps the confirm button off until the word is typed
     function askTheWord() {
-        Mautic.showConfirmation(runBtn);
+        Mautic.showConfirmation(runBtn());
         var content = mQuery('.confirmation-modal').last().find('.modal-content').first();
         var confirmBtn = content.find('#confirm');
         var word = box.getAttribute('data-confirm-word').toUpperCase();
@@ -194,24 +201,19 @@
         typed.trigger('focus');
     }
 
-    runBtn.addEventListener('click', askTheWord);
-    input.addEventListener('input', reset);
+    mQuery(box).on('click', '#contact-bulk-delete-run', askTheWord);
 
-    previewBtn.addEventListener('click', function () {
-        var search = input.value.trim();
+    // The bar of the table is the search. Core's live search filters the table; this asks for the count of the same text.
+    mQuery(box).on('input', BAR, function () {
+        var search = barText();
         reset();
-        result.empty();
-        banner.hidden = true;
-        if (!search) { status.textContent = box.getAttribute('data-empty'); return; }
-        call(box.getAttribute('data-count-url'), 'GET', search).then(function (data) {
-            total = data.total;
-            previewed = search;
-            status.textContent = foundText(total);
-            if (total > 0) { loadTable(search); }
-            mQuery(runBtn).data('message', fill(box.getAttribute('data-confirm'), {count: total}));
-            runBtn.disabled = total === 0;
-        }, function () { status.textContent = fill(box.getAttribute('data-error'), {done: 0}); });
+        clearTimeout(timer);
+        status.textContent = search ? '' : box.getAttribute('data-empty');
+        if (search) { timer = setTimeout(function () { count(search); }, 400); }
     });
+
+    loadTable();
+    status.textContent = box.getAttribute('data-empty');
 }());
 </script>
 {% endblock %}

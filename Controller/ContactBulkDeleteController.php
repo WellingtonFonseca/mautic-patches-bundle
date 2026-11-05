@@ -63,8 +63,8 @@ class ContactBulkDeleteController extends FormController
             'container'  => '#contact-bulk-delete-result',
             'permission' => self::PERMISSION,
             'orderBy'    => 'l.id',
+            'toolbarActions' => $this->renderView('@MauticPatches/Contact/bulk_delete_button.html.twig'),
             'orderByDir' => 'ASC',
-            'searchBar'  => false,
         ]);
     }
 
