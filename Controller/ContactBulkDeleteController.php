@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Controller;
 
-use Mautic\CoreBundle\Factory\PageHelperFactoryInterface;
 use Mautic\CoreBundle\Controller\CommonController;
+use Mautic\CoreBundle\Factory\PageHelperFactoryInterface;
 use MauticPlugin\MauticPatchesBundle\Service\ContactBulkDelete\ContactBulkDeleter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -52,7 +52,7 @@ class ContactBulkDeleteController extends CommonController
      *
      * @param int|string $page
      */
-    public function contactsAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, $page = 1): Response
+    public function contactsAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, ContactBulkDeleter $deleter, $page = 1): Response
     {
         return $this->contactsTable($request, $pageHelperFactory, [
             'entityId'       => 0,
@@ -63,6 +63,7 @@ class ContactBulkDeleteController extends CommonController
             'permission'     => self::PERMISSION,
             'orderBy'        => 'l.id',
             'orderByDir'     => 'ASC',
+            'forceFilter'    => $deleter->force(...),
             'toolbarActions' => $this->renderView('@MauticPatches/Contact/bulk_delete_button.html.twig'),
         ]);
     }

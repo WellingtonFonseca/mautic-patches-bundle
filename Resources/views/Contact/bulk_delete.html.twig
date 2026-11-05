@@ -29,7 +29,8 @@
              data-confirm-type="{{ 'mautic.patches.contact_bulk_delete.confirm_type'|trans({'%word%': 'mautic.patches.contact_bulk_delete.confirm_word'|trans}) }}"
              data-progress="{{ 'mautic.patches.contact_bulk_delete.progress'|trans }}"
              data-done="{{ 'mautic.patches.contact_bulk_delete.done'|trans }}"
-             data-error="{{ 'mautic.patches.contact_bulk_delete.error.generic'|trans }}">
+             data-error="{{ 'mautic.patches.contact_bulk_delete.error.generic'|trans }}"
+             data-count-error="{{ 'mautic.patches.contact_bulk_delete.error.count'|trans }}">
             <div id="contact-bulk-delete-banner" role="status" hidden></div>
             <div id="contact-bulk-delete-progress" hidden>
                 <div class="alert alert-info"><i class="ri-loader-3-line ri-spin"></i> {{ 'mautic.patches.contact_bulk_delete.deleting'|trans }}</div>
@@ -118,7 +119,9 @@
             showBanner(total > 0 ? 'danger' : 'info', foundText(total));
             mQuery(runBtn()).data('message', fill(box.getAttribute('data-confirm'), {count: total}));
             runBtn().disabled = total === 0;
-        }, function () { showBanner('warning', fill(box.getAttribute('data-error'), {done: 0})); });
+        }, function () {
+            if (barText() === search) { showBanner('warning', box.getAttribute('data-count-error')); } // a failure of an older text is not news
+        });
     }
 
     // The one alert slot, above the guide text: the count of what will be deleted (red, to catch the eye), a failure (yellow) and, at the

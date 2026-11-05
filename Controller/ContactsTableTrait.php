@@ -42,10 +42,11 @@ trait ContactsTableTrait
      * @param array{
      *     entityId: int, page: int, sessionVar: string, route: string, container: string,
      *     permission: string|string[], joinTable?: string, idColumn?: string, contactFilter?: array<int|string, int|array<string, bool|string>>,
-     *     orderBy: string, orderByDir?: string, additionalJoins?: array<int, array<string, string>>, routeId?: int, toolbarActions?: string
+     *     orderBy: string, orderByDir?: string, additionalJoins?: array<int, array<string, string>>, routeId?: int, toolbarActions?: string, forceFilter?: callable(string): string
      * } $spec container = the selector of the tab pane the table is loaded into (the target of sorting/paging);
      *         orderByDir = the direction of the default order (DESC); additionalJoins = extra joins of the query (core's format);
      *         routeId = the `objectId` of the route, when it is not the id the join table is filtered by (entityId);
+     *         forceFilter = the `force` part of the search for a given search text (the contact list's own rule);
      *         toolbarActions = HTML of buttons at the end of the search bar (the place of "Novo" in the contact list);
      *         no joinTable = every contact of the search, like the contact list (the bulk delete page)
      */
@@ -107,7 +108,7 @@ trait ContactsTableTrait
             'withTotalCount' => true,
             'start'          => $start,
             'limit'          => $limit,
-            'filter'         => ['string' => $search, 'force' => []],
+            'filter'         => ['string' => $search, 'force' => isset($spec['forceFilter']) ? $spec['forceFilter']($search) : []],
             'orderBy'        => $orderBy,
             'orderByDir'     => $orderByDir,
             'route'          => $route,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Service\ContactBulkDelete;
 
 use Mautic\LeadBundle\Model\LeadModel;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Counts the contacts of a contact-list search and deletes them in batches. The search is the one of the contact
@@ -15,8 +16,19 @@ class ContactBulkDeleter
 {
     private const BATCH_SIZE = 200;
 
-    public function __construct(private LeadModel $leadModel)
+    public function __construct(private LeadModel $leadModel, private TranslatorInterface $translator)
     {
+    }
+
+    /**
+     * What the contact list adds to a search: anonymous visitors are left out unless the search asks for them (core's LeadController).
+     * One rule for the table, the count and the delete, so the three always agree on which contacts a search means.
+     */
+    public function force(string $search): string
+    {
+        $anonymous = $this->translator->trans('mautic.lead.lead.searchcommand.isanonymous');
+
+        return str_contains($search, $anonymous) ? '' : ' !'.$anonymous;
     }
 
     public function count(string $search): int
@@ -52,7 +64,7 @@ class ContactBulkDeleter
     private function query(string $search, int $limit): array
     {
         return [
-            'filter'     => ['string' => $search],
+            'filter'     => ['string' => $search, 'force' => $this->force($search)],
             'start'      => 0,
             'limit'      => $limit,
             'orderBy'    => 'l.id',
