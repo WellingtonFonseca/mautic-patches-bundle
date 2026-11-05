@@ -1,6 +1,6 @@
 {#
-  Contact list gear > Excluir em lote. Top to bottom: the banner of the last result, the progress (only while it deletes), the form
-  (the guide text or the count, the contact list table with its own filter bar and the delete button at the end of it). The filter bar of the table IS the search:
+  Contact list gear > Excluir em lote. Top to bottom: the alert (the count, a failure or the result of the last delete), the progress (only while it deletes), the form
+  (the guide text, the contact list table with its own filter bar and the delete button at the end of it). The filter bar of the table IS the search:
   when its text changes, the script asks for the count of that search (GET) and turns the delete on; the delete posts one batch at a
   time until nothing is left; see ContactBulkDeleteController. The texts come from data attributes, the confirmation is core's own
   (Mautic.showConfirmation, the same modal as every delete): its confirm button calls Mautic.patchesBulkDeleteRun. The modal gets
@@ -13,6 +13,8 @@
 {% block headerTitle %}{{ 'mautic.patches.contact_bulk_delete.header'|trans }}{% endblock %}
 
 {% block content %}
+{# core's .alert sets its own display, which wins over the hidden attribute: a hidden alert would stay on screen #}
+<style>#contact-bulk-delete-banner[hidden] { display: none !important; }</style>
 <div class="box-layout">
     <div class="col-md-9 bg-auto height-auto bg-white">
         <div class="pa-md" id="contact-bulk-delete"
@@ -28,8 +30,7 @@
              data-progress="{{ 'mautic.patches.contact_bulk_delete.progress'|trans }}"
              data-deleting="{{ 'mautic.patches.contact_bulk_delete.deleting'|trans }}"
              data-done="{{ 'mautic.patches.contact_bulk_delete.done'|trans }}"
-             data-error="{{ 'mautic.patches.contact_bulk_delete.error.generic'|trans }}"
-             data-guide="{{ 'mautic.patches.contact_bulk_delete.guide'|trans }}">
+             data-error="{{ 'mautic.patches.contact_bulk_delete.error.generic'|trans }}">
             <div id="contact-bulk-delete-banner" role="status" hidden></div>
             <div id="contact-bulk-delete-progress" hidden>
                 <div class="alert alert-info"><i class="ri-loader-3-line ri-spin"></i> {{ 'mautic.patches.contact_bulk_delete.deleting'|trans }}</div>
@@ -39,7 +40,7 @@
                 <p class="text-muted mt-sm" id="contact-bulk-delete-count"></p>
             </div>
             <div id="contact-bulk-delete-form">
-                <div id="contact-bulk-delete-status" class="mb-md" role="status"></div>
+                <div id="contact-bulk-delete-guide" class="mb-md">{{ 'mautic.patches.contact_bulk_delete.guide'|trans }}</div>
                 <div class="page-list" id="contact-bulk-delete-result"></div>
             </div>
         </div>
@@ -56,7 +57,6 @@
     var progress = document.getElementById('contact-bulk-delete-progress');
     var bar = document.getElementById('contact-bulk-delete-bar');
     var countLine = document.getElementById('contact-bulk-delete-count');
-    var status = document.getElementById('contact-bulk-delete-status');
     var total = 0;
 
     // the button is part of the table, which is loaded again at the end: always looked up when used
@@ -68,14 +68,6 @@
     function fill(text, vars) {
         Object.keys(vars).forEach(function (k) { text = text.replace('%' + k + '%', vars[k]); });
         return text;
-    }
-
-    // The line above the table: the guide (how to search) in normal text, the count of what will be deleted in a red alert to catch the
-    // eye, a failure in a yellow one.
-    function setStatus(text, kind) {
-        status.className = kind ? 'alert alert-' + kind : 'mb-md';
-        status.textContent = text;
-        status.hidden = !text;
     }
 
     function foundText(n) {
@@ -125,12 +117,14 @@
             if (barText() !== search || !runBtn()) { return; } // the text changed while this was asking (the newer count wins) or the table is not there
             total = data.total;
             searched = search;
-            setStatus(foundText(total), total > 0 ? 'danger' : '');
+            showBanner(total > 0 ? 'danger' : 'info', foundText(total));
             mQuery(runBtn()).data('message', fill(box.getAttribute('data-confirm'), {count: total}));
             runBtn().disabled = total === 0;
-        }, function () { setStatus(fill(box.getAttribute('data-error'), {done: 0}), 'warning'); });
+        }, function () { showBanner('warning', fill(box.getAttribute('data-error'), {done: 0})); });
     }
 
+    // The one alert slot, above the guide text: the count of what will be deleted (red, to catch the eye), a failure (yellow) and, at the
+    // end, the result of the delete (green).
     function showBanner(type, text) {
         banner.className = 'alert alert-' + type;
         banner.textContent = text;
@@ -158,7 +152,6 @@
         function stop(type, text) {
             progress.hidden = true;
             form.hidden = false;
-            setStatus(box.getAttribute('data-guide'));
             loadTable(); // the table again, from an empty search, with what is left
             showBanner(type, text);
         }
@@ -215,12 +208,11 @@
         var search = barText();
         reset();
         clearTimeout(timer);
-        setStatus(search ? '' : box.getAttribute('data-guide'));
+        banner.hidden = true; // the old count or result goes; the new count comes in a moment
         if (search) { timer = setTimeout(function () { count(search); }, 400); }
     });
 
     loadTable();
-    setStatus(box.getAttribute('data-guide'));
 }());
 </script>
 {% endblock %}
