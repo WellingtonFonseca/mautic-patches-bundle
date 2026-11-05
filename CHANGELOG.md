@@ -2,6 +2,15 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-05
+- A lista de contatos tem, na engrenagem, a opção vermelha Excluir em lote, para excluir milhares de contatos de uma vez (por exemplo, depois de uma importação errada)
+- A tela mostra a tabela de contatos com a barra de busca; a barra é a busca, a mesma da lista de contatos, e o total encontrado aparece em um alerta vermelho antes de excluir
+- O botão vermelho Excluir fica no fim da barra e só liga depois que a busca é contada; a busca vazia não é aceita
+- A confirmação é o modal do Mautic e pede para digitar a palavra EXCLUIR (DELETE em inglês); só clicar não basta
+- A exclusão roda de 200 em 200, com uma barra de progresso no lugar do formulário; no fim, um alerta verde e a notificação dizem quantos contatos foram excluídos
+- Como na lista de contatos, os visitantes anônimos ficam de fora da busca, da contagem e da exclusão, a menos que a busca peça is:anonymous
+- Só quem pode excluir contatos de outros usuários vê a opção
+
 ## 2026-11-04
 - A lista de Campos Personalizados tem Exportar definição e Importar definição no menu de opções, para clonar os campos entre instâncias
 - A exportação mostra todos os campos de contatos e de empresas, ativos e inativos, com o status de cada um, e o botão Copiar avisa com uma notificação

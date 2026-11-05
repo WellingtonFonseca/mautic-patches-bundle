@@ -42,11 +42,14 @@ trait ContactsTableTrait
     /**
      * @param array{
      *     entityId: int, page: int, sessionVar: string, route: string, container: string,
-     *     permission: string|string[], joinTable: string, idColumn: string, contactFilter: array<int|string, int|array<string, bool|string>>,
-     *     orderBy: string, orderByDir?: string, additionalJoins?: array<int, array<string, string>>, routeId?: int
+     *     permission: string|string[], joinTable?: string, idColumn?: string, contactFilter?: array<int|string, int|array<string, bool|string>>,
+     *     orderBy: string, orderByDir?: string, additionalJoins?: array<int, array<string, string>>, routeId?: int, toolbarActions?: string, forceFilter?: callable(string): string
      * } $spec container = the selector of the tab pane the table is loaded into (the target of sorting/paging);
      *         orderByDir = the direction of the default order (DESC); additionalJoins = extra joins of the query (core's format);
-     *         routeId = the `objectId` of the route, when it is not the id the join table is filtered by (entityId)
+     *         routeId = the `objectId` of the route, when it is not the id the join table is filtered by (entityId);
+     *         forceFilter = the `force` part of the search for a given search text (the contact list's own rule);
+     *         toolbarActions = HTML of buttons at the end of the search bar (the place of "Novo" in the contact list);
+     *         no joinTable = every contact of the search, like the contact list (the bulk delete page)
      */
     private function contactsTable(Request $request, PageHelperFactoryInterface $pageHelperFactory, array $spec): Response
     {
@@ -70,6 +73,7 @@ trait ContactsTableTrait
             'container'     => '#'.$bodyId,
             'outer'         => $outer,
             'toolbar'       => $withBar,
+            'toolbarActions' => $spec['toolbarActions'] ?? '',
             'searchId'      => 'search-'.ltrim($outer, '#'),
             'searchValue'   => '',
             'searchAction'  => $baseUrl,
@@ -101,28 +105,15 @@ trait ContactsTableTrait
         $start      = max(0, (1 === $page) ? 0 : (($page - 1) * $limit));
         $columns    = $this->columnsDictionary->getColumns();
 
-        /** @var LeadRepository $repo */
-        $repo = $this->getModel('lead')->getRepository();
-        // What the model's getEntities() gives its repository before it searches: the current user (`is:mine` and the owner
-        // commands need it). The translator the search commands need is autowired into the repository on 7 (CommonRepository's
-        // #[Required] method; there is no setTranslator() as on 5).
-        $repo->setCurrentUser($this->user);
-        $contacts = $repo->getEntityContacts(
-            [
-                'withTotalCount' => true,
-                'start'          => $start,
-                'limit'          => $limit,
-                'filter'         => ['string' => $search, 'force' => []],
-                'orderBy'        => $orderBy,
-                'orderByDir'     => $orderByDir,
-                'route'          => $route,
-            ],
-            $spec['joinTable'],
-            $entityId,
-            $spec['contactFilter'],
-            $spec['idColumn'],
-            $spec['additionalJoins'] ?? null
-        );
+        $contacts = $this->findContacts($spec, [
+            'withTotalCount' => true,
+            'start'          => $start,
+            'limit'          => $limit,
+            'filter'         => ['string' => $search, 'force' => isset($spec['forceFilter']) ? $spec['forceFilter']($search) : []],
+            'orderBy'        => $orderBy,
+            'orderByDir'     => $orderByDir,
+            'route'          => $route,
+        ]);
         $count = (int) $contacts['count'];
 
         if ($count && $count < ($start + 1)) {
@@ -158,5 +149,28 @@ trait ContactsTableTrait
             'contentTemplate' => $template,
             'passthroughVars' => $pass,
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $spec
+     * @param array<string, mixed> $query
+     *
+     * @return array{results: mixed, count: int|string}
+     */
+    private function findContacts(array $spec, array $query): array
+    {
+        if (!isset($spec['joinTable'])) {
+            // The contact list's own query (the model gives its repository the translator and the user for the search commands).
+            return $this->getModel('lead')->getEntities($query);
+        }
+
+        /** @var LeadRepository $repo */
+        $repo = $this->getModel('lead')->getRepository();
+        // What the model's getEntities() gives its repository before it searches: the current user (`is:mine` and the owner
+        // commands need it). The translator the search commands need is autowired into the repository on 7 (CommonRepository's
+        // #[Required] method; there is no setTranslator() as on 5).
+        $repo->setCurrentUser($this->user);
+
+        return $repo->getEntityContacts($query, $spec['joinTable'], $spec['entityId'], $spec['contactFilter'], $spec['idColumn'], $spec['additionalJoins'] ?? null);
     }
 }

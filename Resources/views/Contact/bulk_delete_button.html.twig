@@ -1,0 +1,11 @@
+{#
+  The red "Excluir" button at the end of the filter bar of the table (the place of "Novo" in the contact list), as the `extraHtml` of the toolbar's page_actions (on 5: its `list_actions`). It is part of the table's first load, so it comes back off (disabled) every time the table is loaded; the page script
+  (bulk_delete.html.twig) turns it on for a counted search and listens to it by delegation. The confirmation is core's
+  (Mautic.showConfirmation reads the data- attributes; the question is set by the script when the search is counted).
+#}
+<button type="button" class="btn btn-danger btn-nospin" id="contact-bulk-delete-run" disabled
+        title="{{ 'mautic.patches.contact_bulk_delete.delete'|trans }}"
+        data-message="" data-confirm-text="{{ 'mautic.core.form.delete'|trans }}" data-cancel-text="{{ 'mautic.core.form.cancel'|trans }}"
+        data-confirm-callback="patchesBulkDeleteRun">
+    {{ 'mautic.core.form.delete'|trans }} <i class="ri-delete-bin-line"></i>
+</button>
