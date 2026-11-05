@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Delete many contacts at once: the page, the count of a search, its table and one batch per POST. The page script
+ * Delete many contacts at once: the page, its table (which brings the total of the search) and one batch per POST. The page script
  * repeats the POST until nothing is left. Only for who may delete other users' contacts, and the search is never
  * empty (an empty search would match every contact).
  */
@@ -37,11 +37,6 @@ class ContactBulkDeleteController extends CommonController
                 'route'         => $this->generateUrl('mautic_patches_contact_bulk_delete'),
             ],
         ]);
-    }
-
-    public function countAction(Request $request, ContactBulkDeleter $deleter): Response
-    {
-        return $this->withSearch($request, static fn (string $search): array => ['total' => $deleter->count($search)]);
     }
 
     /**
