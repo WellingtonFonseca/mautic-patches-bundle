@@ -40,7 +40,7 @@
             </div>
             <div id="contact-bulk-delete-form">
                 <p class="help-block">{{ 'mautic.patches.contact_bulk_delete.help'|trans }}</p>
-                <p id="contact-bulk-delete-status" class="text-muted" role="status"></p>
+                <div id="contact-bulk-delete-status" class="text-muted" role="status"></div>
                 <div class="page-list" id="contact-bulk-delete-result"></div>
             </div>
         </div>
@@ -69,6 +69,13 @@
     function fill(text, vars) {
         Object.keys(vars).forEach(function (k) { text = text.replace('%' + k + '%', vars[k]); });
         return text;
+    }
+
+    // The count of what will be deleted is a red alert, to catch the eye; the hint and a failure are quieter.
+    function setStatus(text, kind) {
+        status.className = kind ? 'alert alert-' + kind : 'text-muted';
+        status.textContent = text;
+        status.hidden = !text;
     }
 
     function foundText(n) {
@@ -118,10 +125,10 @@
             if (barText() !== search || !runBtn()) { return; } // the text changed while this was asking (the newer count wins) or the table is not there
             total = data.total;
             searched = search;
-            status.textContent = foundText(total);
+            setStatus(foundText(total), total > 0 ? 'danger' : '');
             mQuery(runBtn()).data('message', fill(box.getAttribute('data-confirm'), {count: total}));
             runBtn().disabled = total === 0;
-        }, function () { status.textContent = fill(box.getAttribute('data-error'), {done: 0}); });
+        }, function () { setStatus(fill(box.getAttribute('data-error'), {done: 0}), 'warning'); });
     }
 
     function showBanner(type, text) {
@@ -151,7 +158,7 @@
         function stop(type, text) {
             progress.hidden = true;
             form.hidden = false;
-            status.textContent = '';
+            setStatus('');
             loadTable(); // the table again, from an empty search, with what is left
             showBanner(type, text);
         }
@@ -208,12 +215,12 @@
         var search = barText();
         reset();
         clearTimeout(timer);
-        status.textContent = search ? '' : box.getAttribute('data-empty');
+        setStatus(search ? '' : box.getAttribute('data-empty'));
         if (search) { timer = setTimeout(function () { count(search); }, 400); }
     });
 
     loadTable();
-    status.textContent = box.getAttribute('data-empty');
+    setStatus(box.getAttribute('data-empty'));
 }());
 </script>
 {% endblock %}
