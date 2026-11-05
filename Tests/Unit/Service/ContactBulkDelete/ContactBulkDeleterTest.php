@@ -43,19 +43,33 @@ class ContactBulkDeleterTest extends TestCase
         self::assertSame(650, (new ContactBulkDeleter($this->model))->count('x'));
     }
 
-    public function testDeleteBatchDeletesTheFoundIdsAndReportsWhatRemains(): void
+    public function testDeleteBatchDeletesTheFoundIdsAndIsDoneWhenTheBatchIsNotFull(): void
     {
-        $this->model->method('getEntities')->willReturn(['results' => [3 => $this->contact(3, 'a'), 9 => $this->contact(9, 'b')], 'count' => 10]);
+        $this->model->expects(self::once())->method('getEntities')->with([
+            'filter'     => ['string' => 'x'],
+            'start'      => 0,
+            'limit'      => 5,
+            'orderBy'    => 'l.id',
+            'orderByDir' => 'ASC',
+        ])->willReturn([3 => $this->contact(3, 'a'), 9 => $this->contact(9, 'b')]);
         $this->model->expects(self::once())->method('deleteEntities')->with([3, 9]);
 
-        self::assertSame(['deleted' => 2, 'remaining' => 8], (new ContactBulkDeleter($this->model))->deleteBatch('x', 2));
+        self::assertSame(['deleted' => 2, 'done' => true], (new ContactBulkDeleter($this->model))->deleteBatch('x', 5));
+    }
+
+    public function testDeleteBatchIsNotDoneWhenTheBatchIsFull(): void
+    {
+        $this->model->method('getEntities')->willReturn([3 => $this->contact(3, 'a'), 9 => $this->contact(9, 'b')]);
+        $this->model->expects(self::once())->method('deleteEntities')->with([3, 9]);
+
+        self::assertSame(['deleted' => 2, 'done' => false], (new ContactBulkDeleter($this->model))->deleteBatch('x', 2));
     }
 
     public function testDeleteBatchWithNoMatchDeletesNothing(): void
     {
-        $this->model->method('getEntities')->willReturn(['results' => [], 'count' => 0]);
+        $this->model->method('getEntities')->willReturn([]);
         $this->model->expects(self::never())->method('deleteEntities');
 
-        self::assertSame(['deleted' => 0, 'remaining' => 0], (new ContactBulkDeleter($this->model))->deleteBatch('x'));
+        self::assertSame(['deleted' => 0, 'done' => true], (new ContactBulkDeleter($this->model))->deleteBatch('x'));
     }
 }

@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Service\ContactBulkDelete;
 
-use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Model\LeadModel;
 
 /**
- * Finds the contacts of a contact-list search and deletes them in batches. The search is the one of the contact
+ * Counts the contacts of a contact-list search and deletes them in batches. The search is the one of the contact
  * list. LeadModel::getEntities() gives the repository its translator and current user; without them the search
  * commands (email:x) fail.
  */
 class ContactBulkDeleter
 {
-    public const BATCH_SIZE = 200;
+    private const BATCH_SIZE = 200;
 
     public function __construct(private LeadModel $leadModel)
     {
@@ -22,43 +21,42 @@ class ContactBulkDeleter
 
     public function count(string $search): int
     {
-        return $this->find($search, 1)['count'];
+        $found = $this->leadModel->getEntities($this->query($search, 1) + ['withTotalCount' => true]);
+
+        return (int) $found['count'];
     }
 
     /**
-     * Deletes up to $limit contacts of the search. The deleted ones leave the result set, so the next call
-     * finds the next ones.
+     * Deletes up to $limit contacts of the search. The deleted ones leave the result set, so the next call finds the next ones.
+     * `done` is true when the batch was not full: nothing is left, so the caller does not need one more (empty) request, and the
+     * batch does not pay for a count of the whole search each time.
      *
-     * @return array{deleted: int, remaining: int}
+     * @return array{deleted: int, done: bool}
      */
     public function deleteBatch(string $search, int $limit = self::BATCH_SIZE): array
     {
-        $found = $this->find($search, $limit);
-        $ids   = array_map('intval', array_keys($found['results']));
+        $ids = array_keys($this->leadModel->getEntities($this->query($search, $limit)));
 
         if ([] === $ids) {
-            return ['deleted' => 0, 'remaining' => 0];
+            return ['deleted' => 0, 'done' => true];
         }
 
         $this->leadModel->deleteEntities($ids);
 
-        return ['deleted' => count($ids), 'remaining' => max(0, $found['count'] - count($ids))];
+        return ['deleted' => count($ids), 'done' => count($ids) < $limit];
     }
 
     /**
-     * @return array{results: array<int, Lead>, count: int}
+     * @return array<string, mixed>
      */
-    private function find(string $search, int $limit): array
+    private function query(string $search, int $limit): array
     {
-        $found = $this->leadModel->getEntities([
-            'filter'         => ['string' => $search],
-            'start'          => 0,
-            'limit'          => $limit,
-            'orderBy'        => 'l.id',
-            'orderByDir'     => 'ASC',
-            'withTotalCount' => true,
-        ]);
-
-        return ['results' => $found['results'], 'count' => (int) $found['count']];
+        return [
+            'filter'     => ['string' => $search],
+            'start'      => 0,
+            'limit'      => $limit,
+            'orderBy'    => 'l.id',
+            'orderByDir' => 'ASC',
+        ];
     }
 }

@@ -28,7 +28,6 @@
              data-confirm-word="{{ 'mautic.patches.contact_bulk_delete.confirm_word'|trans }}"
              data-confirm-type="{{ 'mautic.patches.contact_bulk_delete.confirm_type'|trans({'%word%': 'mautic.patches.contact_bulk_delete.confirm_word'|trans}) }}"
              data-progress="{{ 'mautic.patches.contact_bulk_delete.progress'|trans }}"
-             data-deleting="{{ 'mautic.patches.contact_bulk_delete.deleting'|trans }}"
              data-done="{{ 'mautic.patches.contact_bulk_delete.done'|trans }}"
              data-error="{{ 'mautic.patches.contact_bulk_delete.error.generic'|trans }}">
             <div id="contact-bulk-delete-banner" role="status" hidden></div>
@@ -58,12 +57,11 @@
     var bar = document.getElementById('contact-bulk-delete-bar');
     var countLine = document.getElementById('contact-bulk-delete-count');
     var total = 0;
+    var searched = '';
+    var timer = null;
 
     // the button is part of the table, which is loaded again at the end: always looked up when used
     function runBtn() { return document.getElementById('contact-bulk-delete-run'); }
-
-    var searched = '';
-    var timer = null;
 
     function fill(text, vars) {
         Object.keys(vars).forEach(function (k) { text = text.replace('%' + k + '%', vars[k]); });
@@ -165,7 +163,7 @@
         function next() {
             call(box.getAttribute('data-batch-url'), 'POST', search).then(function (data) {
                 done += data.deleted;
-                if (data.deleted === 0 || data.remaining === 0) { return finish(); }
+                if (data.done) { return finish(); }
                 setProgress(done);
                 next();
             }, function () {

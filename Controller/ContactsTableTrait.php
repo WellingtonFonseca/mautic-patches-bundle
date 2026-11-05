@@ -61,7 +61,7 @@ trait ContactsTableTrait
         $bodyId     = ltrim($outer, '#').'-table';
         $baseUrl    = $this->generateUrl($route, ['objectId' => $routeId]);
         // core's own requests of a list (search, sorting, paging, the page size) all carry `tmpl`; the first load of the tab does not
-        $firstLoad  = 'GET' === $request->getMethod() && !$request->query->has('tmpl') && !$request->query->has('body');
+        $withBar    = 'GET' === $request->getMethod() && !$request->query->has('tmpl') && !$request->query->has('body');
         $view       = [
             'page'          => $page,
             'tmpl'          => $sessionVar.'Contacts',
@@ -70,7 +70,7 @@ trait ContactsTableTrait
             // the target of sorting, paging and the search: the table's own element, so the search bar stays
             'container'     => '#'.$bodyId,
             'outer'         => $outer,
-            'toolbar'       => $firstLoad,
+            'toolbar'       => $withBar,
             'toolbarActions' => $spec['toolbarActions'] ?? '',
             'searchId'      => 'search-'.ltrim($outer, '#'),
             'searchValue'   => '',
@@ -90,7 +90,7 @@ trait ContactsTableTrait
         }
 
         $session = $request->getSession();
-        $search  = $firstLoad
+        $search  = $withBar
             ? (string) $request->query->get('search', '')
             : $request->get('search', $session->get('mautic.'.$sessionVar.'.contact.filter', ''));
         $session->set('mautic.'.$sessionVar.'.contact.filter', $search);
