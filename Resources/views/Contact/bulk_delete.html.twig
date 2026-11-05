@@ -1,7 +1,8 @@
 {#
   Contact list gear > Excluir em lote. The script asks for a preview (GET) and then posts one batch at a time until nothing is
   left; see ContactBulkDeleteController. The texts come from data attributes, the confirmation is core's own
-  (Mautic.showConfirmation, the same modal as every delete): its confirm button calls Mautic.patchesBulkDeleteRun.
+  (Mautic.showConfirmation, the same modal as every delete): its confirm button calls Mautic.patchesBulkDeleteRun. The modal gets
+  a box where the word of the language (EXCLUIR, DELETE) must be typed before the confirm button works: a click alone is not enough.
 #}
 {% extends '@MauticCore/Default/content.html.twig' %}
 
@@ -20,6 +21,8 @@
              data-found-one="{{ 'mautic.patches.contact_bulk_delete.found_one'|trans }}"
              data-found-none="{{ 'mautic.patches.contact_bulk_delete.found_none'|trans }}"
              data-confirm="{{ 'mautic.patches.contact_bulk_delete.confirm'|trans }}"
+             data-confirm-word="{{ 'mautic.patches.contact_bulk_delete.confirm_word'|trans }}"
+             data-confirm-type="{{ 'mautic.patches.contact_bulk_delete.confirm_type'|trans({'%word%': 'mautic.patches.contact_bulk_delete.confirm_word'|trans}) }}"
              data-progress="{{ 'mautic.patches.contact_bulk_delete.progress'|trans }}"
              data-done="{{ 'mautic.patches.contact_bulk_delete.done'|trans }}"
              data-error="{{ 'mautic.patches.contact_bulk_delete.error.generic'|trans }}"
@@ -35,7 +38,7 @@
                 </button>
                 <button type="button" class="btn btn-danger btn-nospin" id="contact-bulk-delete-run" disabled
                         data-message="" data-confirm-text="{{ 'mautic.core.form.delete'|trans }}" data-cancel-text="{{ 'mautic.core.form.cancel'|trans }}"
-                        data-confirm-callback="patchesBulkDeleteRun" onclick="Mautic.showConfirmation(this); return false;">
+                        data-confirm-callback="patchesBulkDeleteRun">
                     <i class="ri-delete-bin-line"></i> {{ 'mautic.patches.contact_bulk_delete.delete'|trans }}
                 </button>
             </p>
@@ -135,6 +138,26 @@
         if (previewed) { run(); }
     };
 
+    // core's modal has the question and the buttons; the box goes between them and keeps the confirm button off until the word is typed
+    function askTheWord() {
+        Mautic.showConfirmation(runBtn);
+        var content = mQuery('.confirmation-modal').last().find('.modal-content').first();
+        var confirmBtn = content.find('#confirm');
+        var word = box.getAttribute('data-confirm-word').toUpperCase();
+        var typed = mQuery('<input type="text" class="form-control" autocomplete="off" id="contact-bulk-delete-word">');
+        var group = mQuery('<div class="form-group pa-md mb-0 text-left" />')
+            .append(mQuery('<label class="control-label" for="contact-bulk-delete-word" />').text(box.getAttribute('data-confirm-type')))
+            .append(typed);
+        content.children('.modal-header').after(group);
+        confirmBtn.prop('disabled', true);
+        typed.on('input', function () { confirmBtn.prop('disabled', typed.val().trim().toUpperCase() !== word); });
+        typed.on('keydown', function (event) {
+            if (event.key === 'Enter' && !confirmBtn.prop('disabled')) { confirmBtn.click(); }
+        });
+        typed.trigger('focus');
+    }
+
+    runBtn.addEventListener('click', askTheWord);
     input.addEventListener('input', reset);
 
     previewBtn.addEventListener('click', function () {
