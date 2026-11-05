@@ -24,6 +24,7 @@
              data-confirm-word="{{ 'mautic.patches.contact_bulk_delete.confirm_word'|trans }}"
              data-confirm-type="{{ 'mautic.patches.contact_bulk_delete.confirm_type'|trans({'%word%': 'mautic.patches.contact_bulk_delete.confirm_word'|trans}) }}"
              data-progress="{{ 'mautic.patches.contact_bulk_delete.progress'|trans }}"
+             data-deleting="{{ 'mautic.patches.contact_bulk_delete.deleting'|trans }}"
              data-done="{{ 'mautic.patches.contact_bulk_delete.done'|trans }}"
              data-error="{{ 'mautic.patches.contact_bulk_delete.error.generic'|trans }}"
              data-empty="{{ 'mautic.patches.contact_bulk_delete.error.empty_search'|trans }}">
@@ -43,6 +44,14 @@
                 </button>
             </p>
             <p id="contact-bulk-delete-status" class="text-muted" role="status"></p>
+            <div id="contact-bulk-delete-banner" role="status" hidden></div>
+            <div id="contact-bulk-delete-progress" hidden>
+                <div class="alert alert-info"><i class="ri-loader-3-line ri-spin"></i> {{ 'mautic.patches.contact_bulk_delete.deleting'|trans }}</div>
+                <div class="progress" style="height: 24px;">
+                    <div class="progress-bar progress-bar-danger" id="contact-bulk-delete-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="width: 0%; min-width: 3em; line-height: 24px;">0%</div>
+                </div>
+                <p class="text-muted mt-sm" id="contact-bulk-delete-count"></p>
+            </div>
             <div class="page-list" id="contact-bulk-delete-result"></div>
         </div>
     </div>
@@ -57,6 +66,10 @@
     var runBtn = document.getElementById('contact-bulk-delete-run');
     var status = document.getElementById('contact-bulk-delete-status');
     var result = mQuery('#contact-bulk-delete-result');
+    var banner = document.getElementById('contact-bulk-delete-banner');
+    var progress = document.getElementById('contact-bulk-delete-progress');
+    var bar = document.getElementById('contact-bulk-delete-bar');
+    var countLine = document.getElementById('contact-bulk-delete-count');
     var total = 0;
     var previewed = '';
 
@@ -103,29 +116,53 @@
         previewBtn.disabled = input.disabled = value;
     }
 
+    function showBanner(type, text) {
+        banner.className = 'alert alert-' + type;
+        banner.textContent = text;
+        banner.hidden = false;
+    }
+
+    function setProgress(done) {
+        var percent = total > 0 ? Math.min(100, Math.round(done / total * 100)) : 100;
+        bar.style.width = percent + '%';
+        bar.setAttribute('aria-valuenow', percent);
+        bar.textContent = percent + '%';
+        countLine.textContent = fill(box.getAttribute('data-progress'), {done: done, total: total});
+    }
+
     function run() {
         var search = previewed;
         var done = 0;
         runBtn.disabled = true;
         lock(true);
+        // what was on screen (the count line and the table) gives its place to the progress, so the eye has one thing to follow
+        status.textContent = '';
+        banner.hidden = true;
+        result.empty();
+        progress.hidden = false;
+        setProgress(0);
 
-        function finish() {
-            status.textContent = fill(box.getAttribute('data-done'), {count: done});
-            result.empty();
+        function stop(type, text) {
+            progress.hidden = true;
+            showBanner(type, text);
             previewed = '';
             lock(false);
+        }
+
+        function finish() {
+            var text = fill(box.getAttribute('data-done'), {count: done});
+            stop('success', text);
+            Mautic.setFlashes(Mautic.addInfoFlashMessage(text));
         }
 
         function next() {
             call(box.getAttribute('data-batch-url'), 'POST', search).then(function (data) {
                 done += data.deleted;
                 if (data.deleted === 0 || data.remaining === 0) { return finish(); }
-                status.textContent = fill(box.getAttribute('data-progress'), {done: done, total: total});
+                setProgress(done);
                 next();
             }, function () {
-                status.textContent = fill(box.getAttribute('data-error'), {done: done});
-                previewed = '';
-                lock(false);
+                stop('danger', fill(box.getAttribute('data-error'), {done: done}));
             });
         }
 
@@ -164,6 +201,7 @@
         var search = input.value.trim();
         reset();
         result.empty();
+        banner.hidden = true;
         if (!search) { status.textContent = box.getAttribute('data-empty'); return; }
         call(box.getAttribute('data-count-url'), 'GET', search).then(function (data) {
             total = data.total;
