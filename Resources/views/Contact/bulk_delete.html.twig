@@ -1,0 +1,156 @@
+{#
+  Contact list gear > Excluir em lote. The script asks for a preview (GET) and then posts one batch at a time until nothing is
+  left; see ContactBulkDeleteController. The texts come from data attributes, the confirmation is core's own
+  (Mautic.showConfirmation, the same modal as every delete): its confirm button calls Mautic.patchesBulkDeleteRun.
+#}
+{% extends '@MauticCore/Default/content.html.twig' %}
+
+{% block mauticContent %}patchesContactBulkDelete{% endblock %}
+
+{% block headerTitle %}{{ 'mautic.patches.contact_bulk_delete.header'|trans }}{% endblock %}
+
+{% block content %}
+<div class="box-layout">
+    <div class="col-md-9 bg-auto height-auto bg-white">
+        <div class="pa-md" id="contact-bulk-delete"
+             data-count-url="{{ path('mautic_patches_contact_bulk_delete_count') }}"
+             data-table-url="{{ path('mautic_patches_contact_bulk_delete_contacts', {'objectId': 0, 'page': 1}) }}"
+             data-batch-url="{{ path('mautic_patches_contact_bulk_delete_batch') }}"
+             data-found="{{ 'mautic.patches.contact_bulk_delete.found'|trans }}"
+             data-found-one="{{ 'mautic.patches.contact_bulk_delete.found_one'|trans }}"
+             data-found-none="{{ 'mautic.patches.contact_bulk_delete.found_none'|trans }}"
+             data-confirm="{{ 'mautic.patches.contact_bulk_delete.confirm'|trans }}"
+             data-progress="{{ 'mautic.patches.contact_bulk_delete.progress'|trans }}"
+             data-done="{{ 'mautic.patches.contact_bulk_delete.done'|trans }}"
+             data-error="{{ 'mautic.patches.contact_bulk_delete.error.generic'|trans }}"
+             data-empty="{{ 'mautic.patches.contact_bulk_delete.error.empty_search'|trans }}">
+            <p class="help-block">{{ 'mautic.patches.contact_bulk_delete.help'|trans }}</p>
+            <div class="form-group">
+                <label class="control-label" for="contact-bulk-delete-search">{{ 'mautic.patches.contact_bulk_delete.search'|trans }}</label>
+                <input type="text" id="contact-bulk-delete-search" class="form-control" autocomplete="off">
+            </div>
+            <p>
+                <button type="button" class="btn btn-secondary btn-nospin" id="contact-bulk-delete-preview">
+                    <i class="ri-search-line"></i> {{ 'mautic.patches.contact_bulk_delete.preview'|trans }}
+                </button>
+                <button type="button" class="btn btn-danger btn-nospin" id="contact-bulk-delete-run" disabled
+                        data-message="" data-confirm-text="{{ 'mautic.core.form.delete'|trans }}" data-cancel-text="{{ 'mautic.core.form.cancel'|trans }}"
+                        data-confirm-callback="patchesBulkDeleteRun" onclick="Mautic.showConfirmation(this); return false;">
+                    <i class="ri-delete-bin-line"></i> {{ 'mautic.patches.contact_bulk_delete.delete'|trans }}
+                </button>
+            </p>
+            <p id="contact-bulk-delete-status" class="text-muted" role="status"></p>
+            <div class="page-list" id="contact-bulk-delete-result"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    var box = document.getElementById('contact-bulk-delete');
+    if (!box) { return; }
+
+    var input = document.getElementById('contact-bulk-delete-search');
+    var previewBtn = document.getElementById('contact-bulk-delete-preview');
+    var runBtn = document.getElementById('contact-bulk-delete-run');
+    var status = document.getElementById('contact-bulk-delete-status');
+    var result = mQuery('#contact-bulk-delete-result');
+    var total = 0;
+    var previewed = '';
+
+    function fill(text, vars) {
+        Object.keys(vars).forEach(function (k) { text = text.replace('%' + k + '%', vars[k]); });
+        return text;
+    }
+
+    function foundText(n) {
+        if (n === 0) { return box.getAttribute('data-found-none'); }
+        if (n === 1) { return box.getAttribute('data-found-one'); }
+        return fill(box.getAttribute('data-found'), {count: n});
+    }
+
+    function call(url, method, search) {
+        var opts = {method: method, credentials: 'same-origin', headers: {'X-Requested-With': 'XMLHttpRequest'}};
+        if (method === 'POST') {
+            opts.headers['X-CSRF-Token'] = mauticAjaxCsrf; // core's ajax calls send it; the server refuses a POST without it
+            opts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+            opts.body = 'search=' + encodeURIComponent(search);
+        } else {
+            url += '?search=' + encodeURIComponent(search);
+        }
+        return fetch(url, opts).then(function (r) {
+            if (!r.ok) { throw new Error(r.status); }
+            return r.json();
+        });
+    }
+
+    // the table of the contact list (ContactsTableTrait): its first load keeps the search in the session, sorting and paging read it there
+    function loadTable(search) {
+        mQuery.get(box.getAttribute('data-table-url'), {search: search}, function (response) {
+            response.target = '#contact-bulk-delete-result';
+            Mautic.processPageContent(response);
+        }).fail(function (request, textStatus, error) { Mautic.processAjaxError(request, textStatus, error); });
+    }
+
+    function reset() {
+        runBtn.disabled = true;
+        previewed = '';
+    }
+
+    function lock(value) {
+        previewBtn.disabled = input.disabled = value;
+    }
+
+    function run() {
+        var search = previewed;
+        var done = 0;
+        runBtn.disabled = true;
+        lock(true);
+
+        function finish() {
+            status.textContent = fill(box.getAttribute('data-done'), {count: done});
+            result.empty();
+            previewed = '';
+            lock(false);
+        }
+
+        function next() {
+            call(box.getAttribute('data-batch-url'), 'POST', search).then(function (data) {
+                done += data.deleted;
+                if (data.deleted === 0 || data.remaining === 0) { return finish(); }
+                status.textContent = fill(box.getAttribute('data-progress'), {done: done, total: total});
+                next();
+            }, function () {
+                status.textContent = fill(box.getAttribute('data-error'), {done: done});
+                previewed = '';
+                lock(false);
+            });
+        }
+
+        next();
+    }
+
+    // the confirm button of core's confirmation modal calls this by name
+    Mautic.patchesBulkDeleteRun = function () {
+        Mautic.dismissConfirmation();
+        if (previewed) { run(); }
+    };
+
+    input.addEventListener('input', reset);
+
+    previewBtn.addEventListener('click', function () {
+        var search = input.value.trim();
+        reset();
+        result.empty();
+        if (!search) { status.textContent = box.getAttribute('data-empty'); return; }
+        call(box.getAttribute('data-count-url'), 'GET', search).then(function (data) {
+            total = data.total;
+            previewed = search;
+            status.textContent = foundText(total);
+            if (total > 0) { loadTable(search); }
+            mQuery(runBtn).data('message', fill(box.getAttribute('data-confirm'), {count: total}));
+            runBtn.disabled = total === 0;
+        }, function () { status.textContent = fill(box.getAttribute('data-error'), {done: 0}); });
+    });
+}());
+</script>
+{% endblock %}
