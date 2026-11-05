@@ -42,11 +42,11 @@ trait ContactsTableTrait
      * @param array{
      *     entityId: int, page: int, sessionVar: string, route: string, container: string,
      *     permission: string|string[], joinTable?: string, idColumn?: string, contactFilter?: array<int|string, int|array<string, bool|string>>,
-     *     orderBy: string, orderByDir?: string, additionalJoins?: array<int, array<string, string>>, routeId?: int, searchBar?: bool
+     *     orderBy: string, orderByDir?: string, additionalJoins?: array<int, array<string, string>>, routeId?: int, toolbarActions?: string
      * } $spec container = the selector of the tab pane the table is loaded into (the target of sorting/paging);
      *         orderByDir = the direction of the default order (DESC); additionalJoins = extra joins of the query (core's format);
      *         routeId = the `objectId` of the route, when it is not the id the join table is filtered by (entityId);
-     *         searchBar = false when the page has its own search box (the first load then brings the table in its element, no bar);
+     *         toolbarActions = HTML of buttons at the end of the search bar (the place of "Novo" in the contact list);
      *         no joinTable = every contact of the search, like the contact list (the bulk delete page)
      */
     private function contactsTable(Request $request, PageHelperFactoryInterface $pageHelperFactory, array $spec)
@@ -70,8 +70,8 @@ trait ContactsTableTrait
             // the target of sorting, paging and the search: the table's own element, so the search bar stays
             'container'     => '#'.$bodyId,
             'outer'         => $outer,
-            'firstLoad'     => $firstLoad,
-            'toolbar'       => $firstLoad && ($spec['searchBar'] ?? true),
+            'toolbar'       => $firstLoad,
+            'toolbarActions' => $spec['toolbarActions'] ?? '',
             'searchId'      => 'search-'.ltrim($outer, '#'),
             'searchValue'   => '',
             'searchAction'  => $baseUrl,

@@ -4,15 +4,14 @@
   The first load of the tab (a GET) comes with the search bar of the contact list (core's list toolbar) over the table, in one panel;
   what the tab does next (search, sorting, paging, the page size: POSTs) only replaces the table, so the bar keeps its place, its text
   and its focus. `container` is the selector of the table's own element (inside the tab's pane); `outer` the tab's pane.
-  Variables: firstLoad (the table comes in its element), toolbar (the bar comes too: a first load of a tab with no search box of its own), searchId, searchValue, searchAction, container, outer and the ones of
+  Variables: toolbar (true on the first load), toolbarActions (HTML at the end of the bar), searchId, searchValue, searchAction, container, outer and the ones of
   contacts_table_body.html.twig.
 #}
 {% extends '@MauticCore/Default/raw_output.html.twig' %}
 
 {% block content %}
-{% if firstLoad %}
+{% if toolbar %}
     <div class="panel panel-default bdr-t-wdh-0 mb-0">
-        {% if toolbar %}
         {{ include('@MauticCore/Helper/list_toolbar.html.twig', {
             'searchId': searchId,
             'searchValue': searchValue,
@@ -20,8 +19,8 @@
             'target': container,
             'tmpl': tmpl,
             'overlayDisabled': true,
+            'list_actions': toolbarActions|default(''),
         }) }}
-        {% endif %}
         <div id="{{ container|trim('#') }}">
             {{ include('@MauticPatches/Contact/contacts_table_body.html.twig') }}
         </div>
