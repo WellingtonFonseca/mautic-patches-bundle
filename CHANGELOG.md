@@ -8,6 +8,7 @@ Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD`
 - O botão vermelho Excluir fica no fim da barra e só liga depois que a busca é contada; a busca vazia não é aceita
 - A confirmação é o modal do Mautic e pede para digitar a palavra EXCLUIR (DELETE em inglês); só clicar não basta
 - A exclusão roda de 200 em 200, com uma barra de progresso no lugar do formulário; no fim, um alerta verde e a notificação dizem quantos contatos foram excluídos
+- Como na lista de contatos, os visitantes anônimos ficam de fora da busca, da contagem e da exclusão, a menos que a busca peça is:anonymous
 - Só quem pode excluir contatos de outros usuários vê a opção
 
 ## 2026-11-04
