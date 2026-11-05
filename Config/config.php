@@ -123,6 +123,29 @@ $patchesConfig = [
                 'path'       => '/performance',
                 'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\PerformanceController::indexAction',
             ],
+            // Contact list gear > Delete contacts in bulk: the page, the count of a search, its table and one delete batch per POST.
+            'mautic_patches_contact_bulk_delete' => [
+                'path'       => '/contacts-bulk-delete',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\ContactBulkDeleteController::indexAction',
+                'method'     => 'GET',
+            ],
+            'mautic_patches_contact_bulk_delete_count' => [
+                'path'       => '/contacts-bulk-delete/count',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\ContactBulkDeleteController::countAction',
+                'method'     => 'GET',
+            ],
+            // The table of the contacts the search finds: the contact list table, as in the segment and campaign pages.
+            'mautic_patches_contact_bulk_delete_contacts' => [
+                'path'         => '/contacts-bulk-delete/{objectId}/contacts/{page}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\ContactBulkDeleteController::contactsAction',
+                'requirements' => ['objectId' => '\\d+', 'page' => '\\d+'],
+                'defaults'     => ['objectId' => 0, 'page' => 1],
+            ],
+            'mautic_patches_contact_bulk_delete_batch' => [
+                'path'       => '/contacts-bulk-delete/batch',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\ContactBulkDeleteController::deleteAction',
+                'method'     => 'POST',
+            ],
         ],
         'api' => [
             'mautic_patches_api_segment_rebuild' => [
