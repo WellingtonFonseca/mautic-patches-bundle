@@ -147,7 +147,8 @@ trait ContactsTableTrait
                 'security'    => $this->security,
             ]),
             'contentTemplate' => $template,
-            'passthroughVars' => $pass,
+            // every answer says which search it is for and its total: a page with its own button reads them in OnLoad (bulk delete), keep them
+            'passthroughVars' => $pass + ['contactsTotal' => $count, 'contactsSearch' => $search],
         ]);
     }
 

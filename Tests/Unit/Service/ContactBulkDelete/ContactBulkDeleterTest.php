@@ -38,18 +38,19 @@ class ContactBulkDeleterTest extends TestCase
         return $lead;
     }
 
-    public function testCountReturnsTheTotalOfTheSearch(): void
+    public function testABlankSearchNeverReachesTheModel(): void
     {
-        $this->model->expects(self::once())->method('getEntities')->with([
-            'filter'         => ['string' => 'x', 'force' => ' !is:anonymous'],
-            'start'          => 0,
-            'limit'          => 1,
-            'orderBy'        => 'l.id',
-            'orderByDir'     => 'ASC',
-            'withTotalCount' => true,
-        ])->willReturn(['results' => [7 => $this->contact(7, 'a@x.com')], 'count' => '650']);
+        $this->model->expects(self::never())->method('getEntities');
+        $this->model->expects(self::never())->method('deleteEntities');
 
-        self::assertSame(650, $this->deleter()->count('x'));
+        foreach (['', ' ', "\t\n"] as $blank) {
+            try {
+                $this->deleter()->deleteBatch($blank);
+                self::fail('a blank search must be refused');
+            } catch (\InvalidArgumentException $e) {
+                self::assertStringContainsString('every contact', $e->getMessage());
+            }
+        }
     }
 
     public function testDeleteBatchDeletesTheFoundIdsAndIsDoneWhenTheBatchIsNotFull(): void
