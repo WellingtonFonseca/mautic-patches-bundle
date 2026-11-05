@@ -77,7 +77,7 @@ class ContactBulkDeleteController extends CommonController
             return new JsonResponse(['error' => 'access_denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $search = trim((string) ($request->isMethod('POST') ? $request->request : $request->query)->get('search', ''));
+        $search = trim((string) $request->request->get('search', ''));
 
         if ('' === $search) {
             return new JsonResponse(['error' => 'empty_search'], Response::HTTP_BAD_REQUEST);

@@ -58,7 +58,8 @@
     }
 
     function install($, Mautic) {
-        var page = null; // what the page that is open holds: its elements, the total of the counted search and that search
+        var total = 0;      // the total of the counted search
+        var searched = '';  // the search that was counted: the only one the delete may post
 
         function el(id) { return document.getElementById(id); }
 
@@ -85,7 +86,7 @@
 
         function hideBanner() { el('contact-bulk-delete-banner').hidden = true; }
 
-        function text(name) { return page.box.getAttribute('data-' + name); }
+        function text(name) { return el('contact-bulk-delete').getAttribute('data-' + name); }
 
         function postBatch(search) {
             var options = {
@@ -118,29 +119,29 @@
         // The delete is on only for the search whose total came with the table: any change of the bar turns it off until the next answer.
         function reset() {
             setRunEnabled(false);
-            page.searched = '';
+            searched = '';
         }
 
         // Core calls this after every load of the table, with the response of the server.
         function onTable(response) {
-            if (!page || !response || typeof response.contactsSearch !== 'string') { return; }
+            if (!el('contact-bulk-delete') || !response || typeof response.contactsSearch !== 'string') { return; }
             var search = barText();
             if (response.contactsSearch.trim() !== search) { return; } // the answer of an older text: the newer one is on its way
             if (!search) { return; } // (the button is already off: the change of the text turned it off)
-            page.total = response.contactsTotal;
-            page.searched = search;
-            showBanner(page.total > 0 ? 'danger' : 'info', foundText({none: text('found-none'), one: text('found-one'), many: text('found')}, page.total));
-            $(runBtn()).data('message', fill(text('confirm'), {count: page.total}));
-            setRunEnabled(page.total > 0);
+            total = response.contactsTotal;
+            searched = search;
+            showBanner(total > 0 ? 'danger' : 'info', foundText({none: text('found-none'), one: text('found-one'), many: text('found')}, total));
+            $(runBtn()).data('message', fill(text('confirm'), {count: total}));
+            setRunEnabled(total > 0);
         }
 
         function setProgress(done) {
-            var value = percent(done, page.total);
+            var value = percent(done, total);
             var bar = el('contact-bulk-delete-bar');
             bar.style.width = value + '%';
             bar.setAttribute('aria-valuenow', value);
             bar.textContent = value + '%';
-            el('contact-bulk-delete-count').textContent = fill(text('progress'), {done: done, total: page.total});
+            el('contact-bulk-delete-count').textContent = fill(text('progress'), {done: done, total: total});
         }
 
         function stop(type, message) {
@@ -151,7 +152,7 @@
         }
 
         function run() {
-            var search = page.searched;
+            var search = searched;
             reset();
             // the form (guide, table with its bar and button) gives its place to the progress: the eye has one thing to follow
             hideBanner();
@@ -169,7 +170,7 @@
         // the confirm button of core's confirmation modal calls this by name
         Mautic.patchesBulkDeleteRun = function () {
             Mautic.dismissConfirmation();
-            if (page && page.searched) { run(); }
+            if (searched) { run(); }
         };
 
         // core's modal has the question and the buttons; the box goes between them and keeps the confirm button off until the word is typed
@@ -194,7 +195,8 @@
         Mautic.patchesContactBulkDeleteOnLoad = function () {
             var box = el('contact-bulk-delete');
             if (!box) { return; }
-            page = {box: box, total: 0, searched: ''};
+            total = 0;
+            searched = '';
             $(box).on('click', '#contact-bulk-delete-run', askTheWord);
             // a change of the text: the old count and the delete go; the new total comes with the table the live search loads
             $(box).on('input', BAR, function () { reset(); hideBanner(); });
