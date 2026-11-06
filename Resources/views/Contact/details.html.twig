@@ -8,6 +8,10 @@
         width: 1100px;
         max-width: 95vw;
     }
+    /* A value with no space (a URL, a token) has no break opportunity: without this the cell, and the table, grow to the length of the text. */
+    .mautic-patches-contact-details td {
+        overflow-wrap: anywhere;
+    }
 </style>
 <div class="mautic-patches-contact-details">
     {% set groups = fields|keys %}
