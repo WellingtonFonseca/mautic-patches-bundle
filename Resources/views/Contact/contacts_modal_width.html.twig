@@ -3,11 +3,21 @@
   shared modal is narrow by default, so only a modal holding the given class is widened (:has). Half way, rounded up to a whole
   pixel, between 1100px and 95vw: the table has all the columns of the contact list, and 95vw was too wide. The fixed width is for
   browsers without round(). One place for the modals: change it here. Variable: modalClass (the class of the modal's body).
+  The same style breaks a long value with no space (a token, a URL) inside its cell: it has no break opportunity, and without
+  overflow-wrap (and white-space: normal, the contact table cells are nowrap) the table (the filter values of a segment, a contact column) grows to the length of the text and leaves the modal.
 #}
 <style>
     .modal-dialog:has(.{{ modalClass }}) {
         width: 1310px;
         width: round(up, calc((1100px + 95vw) / 2), 1px);
         max-width: 95vw;
+    }
+    .modal-dialog:has(.{{ modalClass }}) td,
+    .modal-dialog:has(.{{ modalClass }}) th {
+        overflow-wrap: anywhere;
+    }
+    /* The cells of the contact list table are nowrap (core, by the id #leadTable: this selector needs the id to win), and overflow-wrap does nothing on nowrap text. */
+    .modal-dialog:has(.{{ modalClass }}) #leadTable td {
+        white-space: normal;
     }
 </style>
