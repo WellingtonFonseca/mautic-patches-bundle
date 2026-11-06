@@ -2,6 +2,9 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-06
+- Os modais do contato, do segmento e dos contatos aguardando de um passo da campanha quebram a linha de um valor longo sem espaços (um código, um link) dentro da célula; antes a tabela ficava com milhares de pixels e saía do modal
+
 ## 2026-11-05
 - A lista de contatos tem, na engrenagem, a opção vermelha Excluir em lote, para excluir milhares de contatos de uma vez (por exemplo, depois de uma importação errada)
 - A tela mostra a tabela de contatos com a barra de busca; a barra é a busca, a mesma da lista de contatos, e o total encontrado aparece em um alerta vermelho antes de excluir
