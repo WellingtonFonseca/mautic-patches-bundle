@@ -4,24 +4,27 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\EventListener;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Routing\RouterInterface;
 
 /**
- * Keeps the user on the contact list after the preferences modal (ContactPreferencesButtonSubscriber) is saved.
- * Core answers the save with the contact PAGE as the new main content. When the request comes from the contact list
- * (its Referer is /s/contacts or /s/contacts/{page}), the page content of that answer is swapped for the list itself,
- * read with a sub request of the same URL (so the search and the page of the user stay), and the modal still closes
- * and the list shows the new Status. A save from the contact page (any other Referer) is not touched, and neither
- * is a form with errors (no closeModal in its answer).
+ * Keeps the user on the contact list after the preferences modal is saved: core answers with the contact PAGE, so for
+ * a save made from the list (Referer /s/contacts[/page]) the answer's content is swapped for the list itself, read
+ * with a sub request of the same URL. Why and what is left alone: wiki/patches-contact-preferences.md.
  */
 class ContactPreferencesStayOnListSubscriber implements EventSubscriberInterface
 {
-    private const LIST_PATH = '#^/s/contacts(/\d+)?$#';
+    public function __construct(
+        private RouterInterface $router,
+        private LoggerInterface $logger
+    ) {
+    }
 
     public static function getSubscribedEvents(): array
     {
@@ -52,26 +55,26 @@ class ContactPreferencesStayOnListSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $response->setData($list + ['closeModal' => 1, 'updateMainContent' => true]);
+        $response->setData(['closeModal' => 1, 'updateMainContent' => true] + $list);
     }
 
     private function isPreferencesSave(Request $request): bool
     {
         return $request->isMethod(Request::METHOD_POST)
+            && $request->hasSession()
             && 'mautic_contact_action' === $request->attributes->get('_route')
             && 'contactFrequency' === $request->attributes->get('objectAction');
     }
 
     private function listUrl(Request $request): ?string
     {
-        $referer = parse_url((string) $request->headers->get('Referer'), PHP_URL_PATH);
-        if (!\is_string($referer) || !preg_match(self::LIST_PATH, $referer)) {
+        $referer = parse_url((string) $request->headers->get('Referer'));
+        $path    = $referer['path'] ?? '';
+        if (!preg_match('#^'.preg_quote($this->router->generate('mautic_contact_index'), '#').'(/\d+)?$#', $path)) {
             return null;
         }
 
-        $query = parse_url((string) $request->headers->get('Referer'), PHP_URL_QUERY);
-
-        return $request->getSchemeAndHttpHost().$referer.(\is_string($query) ? '?'.$query : '');
+        return $request->getSchemeAndHttpHost().$path.(isset($referer['query']) ? '?'.$referer['query'] : '');
     }
 
     /**
@@ -84,6 +87,12 @@ class ContactPreferencesStayOnListSubscriber implements EventSubscriberInterface
         $subResponse = $event->getKernel()->handle($sub, HttpKernelInterface::SUB_REQUEST);
         $list        = json_decode((string) $subResponse->getContent(), true);
 
-        return $subResponse->isSuccessful() && \is_array($list) && isset($list['newContent']) ? $list : null;
+        if ($subResponse->isSuccessful() && \is_array($list) && isset($list['newContent'])) {
+            return $list;
+        }
+
+        $this->logger->warning('Contact preferences saved, but the contact list could not be read to stay on it.', ['url' => $listUrl, 'status' => $subResponse->getStatusCode()]);
+
+        return null;
     }
 }
