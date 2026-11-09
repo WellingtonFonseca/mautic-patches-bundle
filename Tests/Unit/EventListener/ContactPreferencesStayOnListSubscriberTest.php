@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactPreferencesStayOnListSubscriber;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -14,6 +15,7 @@ use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Routing\RouterInterface;
 
 class ContactPreferencesStayOnListSubscriberTest extends TestCase
 {
@@ -22,13 +24,30 @@ class ContactPreferencesStayOnListSubscriberTest extends TestCase
     /** @var list<Request> */
     private array $subRequests = [];
 
-    private function save(string $referer, string $method = 'POST', string $action = 'contactFrequency'): Request
+    private LoggerInterface&\PHPUnit\Framework\MockObject\MockObject $logger;
+
+    protected function setUp(): void
+    {
+        $this->logger = $this->createMock(LoggerInterface::class);
+    }
+
+    private function subscriber(): ContactPreferencesStayOnListSubscriber
+    {
+        $router = $this->createMock(RouterInterface::class);
+        $router->method('generate')->with('mautic_contact_index')->willReturn('/s/contacts');
+
+        return new ContactPreferencesStayOnListSubscriber($router, $this->logger);
+    }
+
+    private function save(string $referer, string $method = 'POST', string $action = 'contactFrequency', bool $session = true): Request
     {
         $request = Request::create('http://mautic.test/s/contacts/contactFrequency/9', $method);
         $request->headers->set('Referer', $referer);
         $request->attributes->set('_route', 'mautic_contact_action');
         $request->attributes->set('objectAction', $action);
-        $request->setSession(new Session(new MockArraySessionStorage()));
+        if ($session) {
+            $request->setSession(new Session(new MockArraySessionStorage()));
+        }
 
         return $request;
     }
@@ -43,7 +62,7 @@ class ContactPreferencesStayOnListSubscriberTest extends TestCase
             return new JsonResponse(['newContent' => 'THE LIST', 'route' => '/s/contacts'], $listStatus);
         });
         $response = new JsonResponse($answer);
-        (new ContactPreferencesStayOnListSubscriber())->onResponse(new ResponseEvent($kernel, $request, $type, $response));
+        $this->subscriber()->onResponse(new ResponseEvent($kernel, $request, $type, $response));
 
         return $response;
     }
@@ -87,11 +106,13 @@ class ContactPreferencesStayOnListSubscriberTest extends TestCase
         yield 'form with errors' => [$self->save('http://mautic.test/s/contacts'), ['newContent' => 'FORM'], HttpKernelInterface::MAIN_REQUEST];
         yield 'opening the modal (GET)' => [$self->save('http://mautic.test/s/contacts', 'GET'), self::VIEW, HttpKernelInterface::MAIN_REQUEST];
         yield 'another action' => [$self->save('http://mautic.test/s/contacts', 'POST', 'email'), self::VIEW, HttpKernelInterface::MAIN_REQUEST];
+        yield 'no session' => [$self->save('http://mautic.test/s/contacts', 'POST', 'contactFrequency', false), self::VIEW, HttpKernelInterface::MAIN_REQUEST];
         yield 'sub request' => [$self->save('http://mautic.test/s/contacts'), self::VIEW, HttpKernelInterface::SUB_REQUEST];
     }
 
-    public function testKeepsCoresAnswerWhenTheListCannotBeRead(): void
+    public function testKeepsCoresAnswerAndLogsWhenTheListCannotBeRead(): void
     {
+        $this->logger->expects($this->once())->method('warning')->with($this->stringContains('could not be read'), ['url' => 'http://mautic.test/s/contacts', 'status' => 500]);
         $response = $this->answerTo($this->save('http://mautic.test/s/contacts'), self::VIEW, HttpKernelInterface::MAIN_REQUEST, 500);
 
         $this->assertSame(self::VIEW, json_decode((string) $response->getContent(), true));
