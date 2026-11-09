@@ -2,6 +2,10 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-09
+- O menu de três pontos de cada contato da lista tem a opção Preferências, que abre o mesmo modal da página do contato, para ativar ou desativar Email e SMS do contato sem sair da lista
+- Ao salvar, o modal fecha e você continua na lista, com a busca e a página que estava usando, e a coluna Status mostra o novo estado
+
 ## 2026-11-06
 - Os modais do contato, do segmento e dos contatos aguardando de um passo da campanha quebram a linha de um valor longo sem espaços (um código, um link) dentro da célula; antes a tabela ficava com milhares de pixels e saía do modal
 
