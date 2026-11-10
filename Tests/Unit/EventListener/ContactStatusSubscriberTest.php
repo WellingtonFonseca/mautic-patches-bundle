@@ -49,6 +49,6 @@ class ContactStatusSubscriberTest extends TestCase
 
     public function testCoresRedLabelsOfEmailAndSmsAreHiddenOnlyInATableWithTheColumn(): void
     {
-        $this->assertStringContainsString('#leadTable:has(th.col-contact-status) td:not(.col-patches-status) .label-danger:has(>i.ico-email,>i.ico-sms){display:none!important}', ContactStatusSubscriber::STYLE);
+        $this->assertStringContainsString('#leadTable:has(th.col-contact-status) td:not(.col-patches-status) .label-danger:has(>i.ico-email,>i.ico-sms,>i.ico-whatsapp){display:none!important}', ContactStatusSubscriber::STYLE);
     }
 }

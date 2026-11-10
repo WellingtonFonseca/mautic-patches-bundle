@@ -23,7 +23,7 @@ class ContactStatusSubscriber implements EventSubscriberInterface
 {
     // core's red labels of the email and sms channels (dnc_small.html.twig) beside the name: the column shows them instead. Only in a table that HAS the
     // column (the contacts tab of a segment or campaign, the company's contacts and the other channels keep core's labels) and from the moment it is there
-    public const STYLE = '#leadTable:has(th.col-contact-status) td:not(.col-patches-status) .label-danger:has(>i.ico-email,>i.ico-sms){display:none!important}';
+    public const STYLE = '#leadTable:has(th.col-contact-status) td:not(.col-patches-status) .label-danger:has(>i.ico-email,>i.ico-sms,>i.ico-whatsapp){display:none!important}';
 
     public function __construct(private TranslatorInterface $translator)
     {
