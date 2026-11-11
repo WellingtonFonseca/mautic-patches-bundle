@@ -2,6 +2,9 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-11
+- Novo ícone do plugin: o curativo sobre o disco azul do Mautic, com sombra longa, no tile de Configurações > Plugins e na lista de plugins
+
 ## 2026-11-09
 - O menu de três pontos de cada contato da lista tem a opção Preferências, que abre o mesmo modal da página do contato, para ativar ou desativar Email e SMS do contato sem sair da lista
 - Ao salvar, o modal fecha e você continua na lista, com a busca e a página que estava usando, e a coluna Status mostra o novo estado
