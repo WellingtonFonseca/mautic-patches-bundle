@@ -1,0 +1,39 @@
+{#
+  The pane of the "Histórico" tab of an email: a table with the date, the user and the changes of each save. Shared by the email page
+  (audit_tab.html.twig, which moves it into the tabs) and the email edit page (audit_form_tab.html.twig).
+
+  Variables
+    - rows  list of {date, user, action, changes: list of {field, old, new}} (Service/AuditLog/AuditTrail)
+#}
+<div class="tab-pane bdr-w-0" id="patches-audit-container">
+    {% if rows %}
+    <div class="table-responsive">
+        <table class="table table-hover patches-audit-table">
+            <thead>
+                <tr>
+                    <th>{{ 'mautic.patches.audit.date'|trans }}</th>
+                    <th>{{ 'mautic.patches.audit.user'|trans }}</th>
+                    <th>{{ 'mautic.patches.audit.action'|trans }}</th>
+                    <th>{{ 'mautic.patches.audit.changes'|trans }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+                <tr>
+                    <td>{{ dateToFull(row.date) }}</td>
+                    <td>{{ row.user }}</td>
+                    <td>{{ ('mautic.patches.audit.action.' ~ row.action)|trans }}</td>
+                    <td>
+                        {% for change in row.changes %}
+                            <div class="patches-audit-change"><strong>{{ change.field }}</strong>: {% if change.old != '' %}<span class="text-muted">{{ change.old }}</span> &rarr; {% endif %}{{ change.new }}</div>
+                        {% endfor %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted pa-md">{{ 'mautic.patches.audit.none'|trans }}</p>
+    {% endif %}
+</div>

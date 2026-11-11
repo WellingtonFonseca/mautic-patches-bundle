@@ -1,0 +1,14 @@
+{#
+  The "Histórico" tab on the email edit page (EmailAuditTabSubscriber): the same pane as on the email page, in core's own tab
+  hooks 'email.tabs' (the tab link) and 'email.tabs.content' (the pane), so no script is needed.
+
+  Variables
+    - rows  list of {date, user, action, changes: list of {field, old, new}}; null when only the tab link is drawn
+#}
+{% if rows is null %}
+<li>
+    <a href="#patches-audit-container" role="tab" data-toggle="tab">{{ 'mautic.patches.audit.tab'|trans }}</a>
+</li>
+{% else %}
+{% include '@MauticPatches/Email/_audit_pane.html.twig' with {'rows': rows} only %}
+{% endif %}
