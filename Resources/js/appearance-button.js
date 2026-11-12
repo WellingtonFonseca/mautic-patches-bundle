@@ -5,6 +5,9 @@
  * radio of it writes both at once. The icon is a moon on a light theme (click: go dark) and a sun on a dark one.
  *
  * The radios are marked when the modal opens, from storage or from <html>: the markup does not know the browser's choice.
+ *
+ * PREFIX, the attributes and the theme list copy core's contract (UserBundle Assets/js/user.js and CoreBundle Assets/js/1.core.js): a key
+ * or a theme renamed in core must be renamed here.
  */
 (function (root) {
     'use strict';
@@ -31,9 +34,10 @@
     }
 
     function markRadios($, doc, storage) {
+        var choice = {};
+        Object.keys(DEFAULTS).forEach(function (name) { choice[name] = currentChoice(doc, storage, name); });
         $(RADIOS).each(function () {
-            var name = this.getAttribute('data-attribute-toggle');
-            this.checked = this.getAttribute('data-attribute-value') === currentChoice(doc, storage, name);
+            this.checked = this.getAttribute('data-attribute-value') === choice[this.getAttribute('data-attribute-toggle')];
         });
     }
 
@@ -61,7 +65,7 @@
         if (icon) { icon.className = iconFor(doc.documentElement.getAttribute('theme')) + ' ri-xl'; }
     }
 
-    function addButton($, Mautic, doc, config) {
+    function addButton(Mautic, doc, config) {
         var bar = doc.querySelector('.navbar-right');
         if (!bar || doc.querySelector('.patches-appearance-button')) { return false; }
 
@@ -78,10 +82,12 @@
     }
 
     function install($, Mautic, doc, storage, config) {
-        if (!$ || !Mautic || !doc) { return; }
+        // the script is injected on every page header: one set of handlers only
+        if (doc.mauticPatchesAppearanceInstalled) { return; }
+        doc.mauticPatchesAppearanceInstalled = true;
 
         var start = function () {
-            addButton($, Mautic, doc, config);
+            addButton(Mautic, doc, config);
             new MutationObserver(function () { showIcon(doc); }).observe(doc.documentElement, {attributes: true, attributeFilter: ['theme']});
         };
         if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', start); } else { start(); }
@@ -92,7 +98,7 @@
         $(doc).on('shown.bs.modal', '#MauticSharedModal', function () { markRadios($, doc, storage); });
     }
 
-    var api = {install: install, iconFor: iconFor, isDark: isDark, currentChoice: currentChoice, applyChoice: applyChoice, buildButton: buildButton};
+    var api = {install: install, iconFor: iconFor, currentChoice: currentChoice, applyChoice: applyChoice};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

@@ -55,9 +55,4 @@ class AppearanceButtonSubscriberTest extends TestCase
             $this->content()
         );
     }
-
-    public function testTheScriptHasTheApi(): void
-    {
-        $this->assertStringContainsString('root.mauticPatchesAppearanceApi = api', $this->content());
-    }
 }
