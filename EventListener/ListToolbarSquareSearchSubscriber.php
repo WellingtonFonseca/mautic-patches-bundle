@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * toolbar: `.list-toolbar > .btn:only-of-type + .input-group > input`. A list with the funnel button (Segments) has two buttons, so the rule
  * misses and the input stays square. The lists without a funnel (Custom Fields, Custom Objects, WhatsApp messages and numbers) showed the
  * rounded input next to the gear. The same selector, later in the page, squares it.
- * Twin of the rule in the Custom Objects plugin (Assets/css/custom-objects.css): plugins stay independent.
+ * The gear menu opens to the left for the same screens. Twin of the rules in the Custom Objects plugin (Assets/css/custom-objects.css): plugins stay independent.
  */
 class ListToolbarSquareSearchSubscriber implements EventSubscriberInterface
 {
@@ -38,6 +38,8 @@ class ListToolbarSquareSearchSubscriber implements EventSubscriberInterface
 
     public static function style(): string
     {
-        return '.list-toolbar > .btn:only-of-type + .input-group > input{border-radius:0}';
+        return '.list-toolbar > .btn:only-of-type + .input-group > input{border-radius:0}'
+            // the gear menu sits at the right edge: opening to the left keeps long items (Histórico de importação) on screen
+            .'.list-toolbar .dropdown > .dropdown-menu{left:auto;right:0}';
     }
 }
