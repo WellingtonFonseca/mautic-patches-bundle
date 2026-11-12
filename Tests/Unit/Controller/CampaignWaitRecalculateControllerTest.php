@@ -11,6 +11,7 @@ use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventAccessTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignWaitRecalculateController;
 use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignEditPermission;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitRecalculator;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -19,8 +20,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
- * The two endpoints behind the "Recalculate dates" button of the modal of a Wait node (Preview tab): the simulation (reads, answers
- * what would change) and the application (writes). The simulation needs the campaign's view permission like the modal itself;
+ * The two endpoints behind the "Recalculate dates" button of the Ações tab, for a Wait step: the simulation (reads, answers
+ * what would change) and the application (writes). The simulation needs the campaign's view permission like the Ações tab;
  * applying needs its edit permission, and only a Wait node can be recalculated.
  */
 #[AllowMockObjectsWithoutExpectations]
@@ -91,7 +92,7 @@ class CampaignWaitRecalculateControllerTest extends TestCase
         $this->recalculator->method('plan')->with($this->event)->willReturn(self::PLAN);
         $this->recalculator->expects($this->never())->method('apply');
 
-        $response = $this->controller()->simulateAction($this->recalculator, 42);
+        $response = $this->controller()->simulateAction($this->recalculator, new CampaignEditPermission($this->security), 42);
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame(['summary' => self::PLAN['summary'], 'canApply' => true], $this->json($response));
@@ -102,14 +103,14 @@ class CampaignWaitRecalculateControllerTest extends TestCase
         $this->granted = ['campaign:campaigns:viewown' => true];
         $this->recalculator->method('plan')->willReturn(self::PLAN);
 
-        $this->assertFalse($this->json($this->controller()->simulateAction($this->recalculator, 42))['canApply']);
+        $this->assertFalse($this->json($this->controller()->simulateAction($this->recalculator, new CampaignEditPermission($this->security), 42))['canApply']);
     }
 
     public function testNothingToChangeCannotBeApplied(): void
     {
         $this->recalculator->method('plan')->willReturn(['rows' => [], 'summary' => ['total' => 5, 'changed' => 0, 'leaving_now' => 0, 'unchanged' => 5, 'without_date' => 0]]);
 
-        $this->assertFalse($this->json($this->controller()->simulateAction($this->recalculator, 42))['canApply']);
+        $this->assertFalse($this->json($this->controller()->simulateAction($this->recalculator, new CampaignEditPermission($this->security), 42))['canApply']);
     }
 
     public function testApplyingPlansAgainAndWritesTheDates(): void
@@ -117,7 +118,7 @@ class CampaignWaitRecalculateControllerTest extends TestCase
         $this->recalculator->method('plan')->with($this->event)->willReturn(self::PLAN);
         $this->recalculator->expects($this->once())->method('apply')->with(self::PLAN)->willReturn(5);
 
-        $response = $this->controller()->applyAction($this->recalculator, 42);
+        $response = $this->controller()->applyAction($this->recalculator, new CampaignEditPermission($this->security), 42);
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame(['applied' => 5, 'summary' => self::PLAN['summary']], $this->json($response));
@@ -128,7 +129,7 @@ class CampaignWaitRecalculateControllerTest extends TestCase
         $this->granted = ['campaign:campaigns:viewown' => true];
         $this->recalculator->expects($this->never())->method('apply');
 
-        $this->assertSame(403, $this->statusOf(fn () => $this->controller()->applyAction($this->recalculator, 42)));
+        $this->assertSame(403, $this->statusOf(fn () => $this->controller()->applyAction($this->recalculator, new CampaignEditPermission($this->security), 42)));
     }
 
     public function testNoViewPermissionIsA403ForTheSimulation(): void
@@ -136,15 +137,15 @@ class CampaignWaitRecalculateControllerTest extends TestCase
         $this->granted = [];
         $this->recalculator->expects($this->never())->method('plan');
 
-        $this->assertSame(403, $this->statusOf(fn () => $this->controller()->simulateAction($this->recalculator, 42)));
+        $this->assertSame(403, $this->statusOf(fn () => $this->controller()->simulateAction($this->recalculator, new CampaignEditPermission($this->security), 42)));
     }
 
     public function testAnUnknownEventIsA404(): void
     {
         $this->event = null;
 
-        $this->assertSame(404, $this->controller()->simulateAction($this->recalculator, 42)->getStatusCode());
-        $this->assertSame(404, $this->controller()->applyAction($this->recalculator, 42)->getStatusCode());
+        $this->assertSame(404, $this->controller()->simulateAction($this->recalculator, new CampaignEditPermission($this->security), 42)->getStatusCode());
+        $this->assertSame(404, $this->controller()->applyAction($this->recalculator, new CampaignEditPermission($this->security), 42)->getStatusCode());
     }
 
     public function testOnlyAWaitNodeCanBeRecalculated(): void
@@ -152,8 +153,8 @@ class CampaignWaitRecalculateControllerTest extends TestCase
         $this->event = $this->waitEvent('email.send');
         $this->recalculator->expects($this->never())->method('plan');
 
-        $this->assertSame(404, $this->controller()->simulateAction($this->recalculator, 42)->getStatusCode());
-        $this->assertSame(404, $this->controller()->applyAction($this->recalculator, 42)->getStatusCode());
+        $this->assertSame(404, $this->controller()->simulateAction($this->recalculator, new CampaignEditPermission($this->security), 42)->getStatusCode());
+        $this->assertSame(404, $this->controller()->applyAction($this->recalculator, new CampaignEditPermission($this->security), 42)->getStatusCode());
     }
 }
 
