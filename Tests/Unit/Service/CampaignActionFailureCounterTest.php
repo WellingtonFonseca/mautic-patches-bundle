@@ -27,7 +27,7 @@ class CampaignActionFailureCounterTest extends TestCase
         $this->assertSame([], (new CampaignActionFailureCounter($connection))->countByEvent([]));
     }
 
-    public function testReturnsTheFailedContactsPerStepAsIntegers(): void
+    public function testCountsTheFailedOrRetriedLogsPerStepAsIntegers(): void
     {
         $result = $this->createMock(Result::class);
         $result->method('fetchAllAssociative')->willReturn([['event_id' => '7', 'failed' => '4'], ['event_id' => '9', 'failed' => '1']]);
@@ -37,7 +37,7 @@ class CampaignActionFailureCounterTest extends TestCase
             ->with(
                 'SELECT l.event_id, COUNT(*) AS failed FROM '.MAUTIC_TABLE_PREFIX.'campaign_lead_event_log l'
                     .' INNER JOIN '.MAUTIC_TABLE_PREFIX.'campaign_lead_event_failed_log f ON f.log_id = l.id'
-                    .' WHERE l.event_id IN (:ids) AND l.metadata LIKE :flag GROUP BY l.event_id',
+                    .' WHERE l.event_id IN (:ids) AND (l.is_scheduled = 1 OR l.metadata LIKE :flag) GROUP BY l.event_id',
                 ['ids' => [7, 9, 11], 'flag' => '%s:6:"failed";i:1;%'],
                 ['ids' => Connection::PARAM_INT_ARRAY]
             )->willReturn($result);

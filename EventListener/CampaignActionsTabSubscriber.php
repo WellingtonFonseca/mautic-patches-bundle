@@ -10,8 +10,8 @@ use MauticPlugin\MauticPatchesBundle\Service\CampaignActionFailureCounter;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * A second "Ações" tab on the campaign page, beside core's read-only one: each action step is the title of a collapse, which
- * will hold the contacts that failed on that step (wiki/patches-campaign-actions-tab.md). Core's page has the hooks 'tabs' and
+ * A second "Ações" tab on the campaign page, beside core's read-only one: each action step is a row of badges (completed, failed, scheduled, waiting); the failed and
+ * waiting ones are buttons that load the contacts of that state in the table below (wiki/patches-campaign-actions-tab.md). Core's page has the hooks 'tabs' and
  * 'tabs.content', so its template is not touched.
  */
 class CampaignActionsTabSubscriber implements EventSubscriberInterface
@@ -59,27 +59,42 @@ class CampaignActionsTabSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * The share of each state among the contacts that reached the step (completed + failed + waiting), so the three add up to 100%. Core's
+     * The share of each state among the contacts that reached the step (completed + failed + waiting), so the four add up to 100%. Core's
      * own yesPercent of an action is about the yes path, not the completed ones, and its pending count already leaves the failures out.
+     * The pending contacts of a step with an hours / days restriction are held for the window (scheduled); the others wait for a wait
+     * or a date. Core writes the same log for both, so only the step's own settings tell them apart.
      *
-     * @param array<string, mixed> $action core's event of the page (logCountProcessed, logCountForPending)
+     * @param array<string, mixed> $action core's event of the page (logCountProcessed, logCountForPending, the trigger settings)
      *
-     * @return array{completed: float, failed: float, waiting: float}
+     * @return array{completed: float, failed: float, scheduled: float, waiting: float}
      */
     private function sharesOf(array $action, int $failed): array
     {
         $completed = (int) ($action['logCountProcessed'] ?? 0);
-        $waiting   = (int) ($action['logCountForPending'] ?? 0);
-        $reached   = $completed + $failed + $waiting;
-
-        if (0 === $reached) {
-            return ['completed' => 0.0, 'failed' => 0.0, 'waiting' => 0.0];
-        }
+        $pending   = (int) ($action['logCountForPending'] ?? 0);
+        $reached   = $completed + $failed + $pending;
+        $share     = static fn (int $count): float => 0 === $reached ? 0.0 : round($count / $reached * 100, 1);
+        $held      = $this->isRestricted($action);
 
         return [
-            'completed' => round($completed / $reached * 100, 1),
-            'failed'    => round($failed / $reached * 100, 1),
-            'waiting'   => round($waiting / $reached * 100, 1),
+            'completed' => $share($completed),
+            'failed'    => $share($failed),
+            'scheduled' => $held ? $share($pending) : 0.0,
+            'waiting'   => $held ? 0.0 : $share($pending),
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $action
+     */
+    private function isRestricted(array $action): bool
+    {
+        foreach (['triggerHour', 'triggerRestrictedStartHour', 'triggerRestrictedStopHour', 'triggerRestrictedDaysOfWeek'] as $key) {
+            if (!empty($action[$key])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

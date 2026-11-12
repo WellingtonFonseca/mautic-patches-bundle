@@ -60,7 +60,7 @@ class CampaignActionsTabSubscriberTest extends TestCase
         $this->assertSame($this->events['action'], $templates[0]['vars']['actions']);
         // 1 completed, 2 failed and 1 waiting: 25%, 50% and 25% of the 4 contacts that reached the step; a step nobody reached is all zero
         $this->assertSame(
-            [3 => ['completed' => 25.0, 'failed' => 50.0, 'waiting' => 25.0], 5 => ['completed' => 0.0, 'failed' => 0.0, 'waiting' => 0.0]],
+            [3 => ['completed' => 25.0, 'failed' => 50.0, 'scheduled' => 0.0, 'waiting' => 25.0], 5 => ['completed' => 0.0, 'failed' => 0.0, 'scheduled' => 0.0, 'waiting' => 0.0]],
             $templates[0]['vars']['shares']
         );
     }
@@ -74,7 +74,59 @@ class CampaignActionsTabSubscriberTest extends TestCase
 
         (new CampaignActionsTabSubscriber($counter))->inject($event);
 
-        $this->assertSame(['completed' => 33.3, 'failed' => 66.7, 'waiting' => 0.0], $event->getTemplates()[0]['vars']['shares'][3]);
+        $this->assertSame(['completed' => 33.3, 'failed' => 66.7, 'scheduled' => 0.0, 'waiting' => 0.0], $event->getTemplates()[0]['vars']['shares'][3]);
+    }
+
+    /**
+     * @return iterable<string, array{0: string, 1: mixed}>
+     */
+    public static function restrictionProvider(): iterable
+    {
+        yield 'a fixed hour' => ['triggerHour', '10:00'];
+        yield 'a start hour' => ['triggerRestrictedStartHour', '10:00'];
+        yield 'a stop hour' => ['triggerRestrictedStopHour', '16:00'];
+        yield 'days of the week' => ['triggerRestrictedDaysOfWeek', [1, 2]];
+    }
+
+    /**
+     * The pending contacts of a step with an hours / days restriction are held for the window: they show as scheduled, not waiting.
+     */
+    #[DataProvider('restrictionProvider')]
+    public function testThePendingOfARestrictedStepAreScheduled(string $key, mixed $value): void
+    {
+        $counter = $this->createMock(CampaignActionFailureCounter::class);
+        $counter->method('countByEvent')->willReturn([]);
+        $events = ['action' => [['id' => 3, 'name' => 'a', 'logCountProcessed' => 1, 'logCountForPending' => 3, $key => $value]]];
+        $event  = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]);
+
+        (new CampaignActionsTabSubscriber($counter))->inject($event);
+
+        $this->assertSame(['completed' => 25.0, 'failed' => 0.0, 'scheduled' => 75.0, 'waiting' => 0.0], $event->getTemplates()[0]['vars']['shares'][3]);
+    }
+
+    public function testEmptyRestrictionsLeaveThePendingWaiting(): void
+    {
+        $counter = $this->createMock(CampaignActionFailureCounter::class);
+        $counter->method('countByEvent')->willReturn([]);
+        // what core gives a step with no restriction: nulls and an empty list of days
+        $action = ['id' => 3, 'name' => 'a', 'logCountProcessed' => 0, 'logCountForPending' => 2, 'triggerHour' => null,
+            'triggerRestrictedStartHour' => null, 'triggerRestrictedStopHour' => null, 'triggerRestrictedDaysOfWeek' => []];
+        $event = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => ['action' => [$action]]]);
+
+        (new CampaignActionsTabSubscriber($counter))->inject($event);
+
+        $this->assertSame(['completed' => 0.0, 'failed' => 0.0, 'scheduled' => 0.0, 'waiting' => 100.0], $event->getTemplates()[0]['vars']['shares'][3]);
+    }
+
+    public function testAStepWithoutCoresCountsHasOnlyItsFailures(): void
+    {
+        $counter = $this->createMock(CampaignActionFailureCounter::class);
+        $counter->method('countByEvent')->willReturn([3 => 2]);
+        $event = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => ['action' => [['id' => 3, 'name' => 'a']]]]);
+
+        (new CampaignActionsTabSubscriber($counter))->inject($event);
+
+        $this->assertSame(['completed' => 0.0, 'failed' => 100.0, 'scheduled' => 0.0, 'waiting' => 0.0], $event->getTemplates()[0]['vars']['shares'][3]);
     }
 
     public function testAsksTheFailuresWithIntegerIds(): void
