@@ -1,0 +1,25 @@
+{#
+  The pane of the second "Ações" tab of the campaign page (CampaignActionsTabSubscriber): core's hook 'tabs.content'.
+  One collapse per action step, closed by default. Variable: actions (core's events['action'] of the page, in its order).
+#}
+<div class="tab-pane fade in bdr-w-0" id="patches-actions-container">
+    <div class="panel-group patches-actions" id="patches-actions-accordion" role="tablist">
+        {% for action in actions %}
+            {% set paneId = 'patches-action-' ~ action.id %}
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab">
+                    <h5 class="panel-title">
+                        <a class="collapsed" role="button" data-toggle="collapse" href="#{{ paneId }}" aria-expanded="false" aria-controls="{{ paneId }}">
+                            {{ action.name }}
+                        </a>
+                    </h5>
+                </div>
+                <div id="{{ paneId }}" class="panel-collapse collapse" role="tabpanel">
+                    <div class="panel-body text-secondary">
+                        {{ 'mautic.patches.campaign.actions_tab.empty'|trans }}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
