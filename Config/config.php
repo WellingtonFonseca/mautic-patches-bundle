@@ -59,6 +59,25 @@ return [
                 'requirements' => ['objectId' => '\\d+', 'page' => '\\d+'],
                 'defaults'     => ['page' => 1],
             ],
+            // The one table under the second "Ações" tab of the campaign page: the failed / the waiting contacts of one action step.
+            'mautic_patches_campaign_action_failed_contacts' => [
+                'path'         => '/campaign-action/{objectId}/failed/{page}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignActionContactsController::failedAction',
+                'requirements' => ['objectId' => '\\d+', 'page' => '\\d+'],
+                'defaults'     => ['page' => 1],
+            ],
+            'mautic_patches_campaign_action_none_contacts' => [
+                'path'         => '/campaign-action/{objectId}/none/{page}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignActionContactsController::noneAction',
+                'requirements' => ['objectId' => '\\d+', 'page' => '\\d+'],
+                'defaults'     => ['page' => 1],
+            ],
+            'mautic_patches_campaign_action_waiting_contacts' => [
+                'path'         => '/campaign-action/{objectId}/waiting/{page}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignActionContactsController::waitingAction',
+                'requirements' => ['objectId' => '\\d+', 'page' => '\\d+'],
+                'defaults'     => ['page' => 1],
+            ],
             // The "Recalculate dates" button of the modal of a Wait node: the simulation (reads) and the application (writes).
             'mautic_patches_campaign_wait_recalculate_simulate' => [
                 'path'         => '/campaign-wait/{eventId}/recalculate/simulate',

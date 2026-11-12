@@ -1,30 +1,88 @@
 {#
   The pane of the second "Ações" tab of the campaign page (CampaignActionsTabSubscriber): core's hook 'tabs.content'.
-  One collapse per action step, closed by default. Variables: actions (core's events['action'] of the page, in its order), shares (event id => completed, failed and waiting, each in % of the contacts that reached the step).
+  One row per action step with four badges (completed, failed, scheduled, waiting: each in % of the contacts that reached the step,
+  the four add up to 100%), then ONE contacts table. The failed, scheduled and waiting badges are buttons: a click loads the contacts of
+  that state of that step into the table (CampaignActionContactsController); scheduled and waiting are the same contacts (the step's
+  settings decide which badge they show in), so both load the waiting list. Variables: actions (core's events['action'] of the page, in
+  its order), shares (event id => completed, failed, scheduled, waiting).
 #}
+{% set badges = [
+    {key: 'completed', label: 'success', icon: 'ri-check-line', route: null},
+    {key: 'failed', label: 'danger', icon: 'ri-error-warning-line', route: 'mautic_patches_campaign_action_failed_contacts'},
+    {key: 'scheduled', label: 'warning', icon: 'ri-time-line', route: 'mautic_patches_campaign_action_waiting_contacts'},
+    {key: 'waiting', label: 'info', icon: 'ri-hourglass-line', route: 'mautic_patches_campaign_action_waiting_contacts'},
+] %}
+<style>
+    #patches-actions-container .patches-actions-badge{display:inline-flex;align-items:center;justify-content:center;gap:4px;width:68px;height:22px;padding:0;border:0;line-height:1;vertical-align:middle}
+    #patches-actions-container button.patches-actions-badge{cursor:pointer}
+    #patches-actions-container button.patches-actions-badge.active{box-shadow:0 0 0 2px var(--text-primary,#222)}
+    /* the row is only the heading (no body), whose bottom corners are square in core: the panel clips it to its own round corners */
+    #patches-actions-container .panel{overflow:hidden}
+</style>
 <div class="tab-pane fade in bdr-w-0" id="patches-actions-container">
-    <div class="panel-group patches-actions" id="patches-actions-accordion" role="tablist">
+    <div class="patches-actions">
         {% for action in actions %}
-            {% set paneId = 'patches-action-' ~ action.id %}
-            <div class="panel panel-default">
-                <div class="panel-heading" role="tab">
+            <div class="panel panel-default mb-xs" data-event-id="{{ action.id }}">
+                <div class="panel-heading">
                     <h5 class="panel-title">
-                        <a class="collapsed" role="button" data-toggle="collapse" href="#{{ paneId }}" aria-expanded="false" aria-controls="{{ paneId }}">
-                            <span class="patches-actions-badges" style="margin-right:8px">
-                                <span class="label label-success" data-toggle="tooltip" title="{{ 'mautic.patches.campaign.actions_tab.completed'|trans }}"><i class="ri-check-line"></i> {{ shares[action.id].completed }}%</span>
-                                <span class="label label-danger" data-toggle="tooltip" title="{{ 'mautic.patches.campaign.actions_tab.failed'|trans }}"><i class="ri-error-warning-line"></i> {{ shares[action.id].failed }}%</span>
-                                <span class="label label-warning" data-toggle="tooltip" title="{{ 'mautic.patches.campaign.actions_tab.waiting'|trans }}"><i class="ri-hourglass-line"></i> {{ shares[action.id].waiting }}%</span>
-                            </span>
-                            {{ action.name }}
-                        </a>
+                        <span class="patches-actions-badges" style="margin-right:8px">
+                            {% for badge in badges %}
+                                {% set text %}<i class="{{ badge.icon }}"></i> {{ attribute(shares[action.id], badge.key) }}%{% endset %}
+                                {% set title = ('mautic.patches.campaign.actions_tab.' ~ badge.key)|trans %}
+                                {% if badge.route %}
+                                    <button type="button" class="label label-{{ badge.label }} patches-actions-badge" data-state="{{ badge.key }}" data-toggle="tooltip" data-trigger="hover" title="{{ title }}"
+                                            data-target-url="{{ path(badge.route, {'objectId': action.id, 'page': 1}) }}">{{ text }}</button>
+                                {% else %}
+                                    <span class="label label-{{ badge.label }} patches-actions-badge" data-state="{{ badge.key }}" data-toggle="tooltip" title="{{ title }}">{{ text }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                        {{ action.name }}
                     </h5>
-                </div>
-                <div id="{{ paneId }}" class="panel-collapse collapse" role="tabpanel">
-                    <div class="panel-body text-secondary">
-                        {{ 'mautic.patches.campaign.actions_tab.empty'|trans }}
-                    </div>
                 </div>
             </div>
         {% endfor %}
     </div>
+    {# empty until a button is clicked: the empty table is loaded when the tab is first shown #}
+    <div class="page-list mt-md" id="patches-actions-table"
+         data-target-url="{{ path('mautic_patches_campaign_action_none_contacts', {'objectId': (actions|first).id, 'page': 1}) }}">
+        <div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>
+    </div>
 </div>
+<script>
+    (function () {
+        if (window.mauticPatchesActionsTab) {
+            return;
+        }
+        window.mauticPatchesActionsTab = true;
+        function load(url) {
+            mQuery('#patches-actions-table').html('<div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>');
+            mQuery.get(url, function (response) {
+                response.target = '#patches-actions-table';
+                Mautic.processPageContent(response);
+            }).fail(function (request, status, error) {
+                // a 403 / 404 / expired session: core's own error handling, not a spinner that never goes away
+                Mautic.processAjaxError(request, status, error);
+            });
+        }
+        // The first show of the tab: the empty table (no button clicked yet).
+        mQuery(document).on('shown.bs.tab', 'a[href="#patches-actions-container"]', function () {
+            var table = document.getElementById('patches-actions-table');
+            if (table && !table.hasAttribute('data-loaded')) {
+                table.setAttribute('data-loaded', '1');
+                load(table.getAttribute('data-target-url'));
+            }
+        });
+        // One table for every button: a click marks the button and loads its list into the table, replacing the last one.
+        document.addEventListener('click', function (event) {
+            var button = event.target && event.target.closest ? event.target.closest('#patches-actions-container button.patches-actions-badge') : null;
+            if (!button) {
+                return;
+            }
+            document.querySelectorAll('#patches-actions-container button.patches-actions-badge.active').forEach(function (other) { other.classList.remove('active'); });
+            button.classList.add('active');
+            document.getElementById('patches-actions-table').setAttribute('data-loaded', '1');
+            load(button.getAttribute('data-target-url'));
+        });
+    })();
+</script>

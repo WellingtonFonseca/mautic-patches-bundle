@@ -8,6 +8,7 @@ use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Entity\Event;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventAccessTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventPendingController;
+use MauticPlugin\MauticPatchesBundle\Controller\CampaignActionContactsController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignPendingContactsController;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,6 +34,7 @@ class CampaignEventAccessTest extends TestCase
     {
         yield 'the modal body' => [CampaignEventPendingController::class];
         yield 'the modal table' => [CampaignPendingContactsController::class];
+        yield 'the table of the actions tab' => [CampaignActionContactsController::class];
     }
 
     public function testTheRuleAnswersNotFoundAndAccessDeniedAndOtherwiseGivesTheEvent(): void

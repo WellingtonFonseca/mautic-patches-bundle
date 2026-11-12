@@ -6,6 +6,7 @@ namespace MauticPlugin\MauticPatchesBundle\Controller;
 
 use Mautic\CampaignBundle\Controller\CampaignController;
 use Mautic\CoreBundle\Factory\PageHelperFactoryInterface;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignActionContactSql;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -49,16 +50,7 @@ class CampaignPendingContactsController extends CampaignController
             'joinTable'       => 'campaign_leads',
             'idColumn'        => 'campaign_id',
             // the contact has a log of this event that is still scheduled, and not a failed one, on either path (core counts both)
-            'contactFilter'   => [[
-                'expr'     => 'formula',
-                'internal' => true,
-                'val'      => sprintf(
-                    'EXISTS (SELECT 1 FROM %1$scampaign_lead_event_log evlog WHERE evlog.lead_id = entity.lead_id AND evlog.event_id = %2$d AND evlog.is_scheduled = 1'
-                    .' AND NOT EXISTS (SELECT 1 FROM %1$scampaign_lead_event_failed_log failed WHERE failed.log_id = evlog.id))',
-                    MAUTIC_TABLE_PREFIX,
-                    $eventId
-                ),
-            ]],
+            'contactFilter'   => [['expr' => 'formula', 'internal' => true, 'val' => (new CampaignActionContactSql())->waiting($eventId)]],
             'orderBy'         => 'entity.date_added',
             'orderByDir'      => 'DESC',
         ]);

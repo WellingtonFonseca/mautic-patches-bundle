@@ -7,6 +7,8 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Controller;
 use Mautic\CampaignBundle\Controller\CampaignController;
 use Mautic\LeadBundle\Controller\ListController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignContactsController;
+use MauticPlugin\MauticPatchesBundle\Controller\CampaignActionContactsController;
+use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventAccessTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignPendingContactsController;
 use MauticPlugin\MauticPatchesBundle\Controller\ContactsTableTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\SegmentContactsController;
@@ -44,6 +46,21 @@ class ContactsTabControllersTest extends TestCase
         $this->assertStringContainsString('{objectId}', $route['path'], 'the trait builds its urls with objectId');
         $this->assertArrayNotHasKey('mautic_patches_campaign_event_done_contacts', $routes, 'the check (done count) opens nothing');
         $this->assertArrayNotHasKey('mautic_patches_campaign_event_done', $routes);
+    }
+
+    public function testTheTableOfTheActionsTabUsesTheSameTraitWithOneRoutePerState(): void
+    {
+        $this->assertTrue(is_subclass_of(CampaignActionContactsController::class, CampaignController::class));
+        $this->assertContains(ContactsTableTrait::class, class_uses(CampaignActionContactsController::class));
+        $this->assertContains(CampaignEventAccessTrait::class, class_uses(CampaignActionContactsController::class));
+
+        $routes = (require __DIR__.'/../../../Config/config.php')['routes']['main'];
+        foreach (['failed', 'waiting', 'none'] as $state) {
+            $route = $routes['mautic_patches_campaign_action_'.$state.'_contacts'];
+            $this->assertSame(CampaignActionContactsController::class.'::'.$state.'Action', $route['controller']);
+            $this->assertStringContainsString('{objectId}', $route['path'], 'the trait builds its urls with objectId');
+            $this->assertStringContainsString('/'.$state.'/', $route['path']);
+        }
     }
 
     /**
