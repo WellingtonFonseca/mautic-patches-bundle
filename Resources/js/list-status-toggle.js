@@ -582,7 +582,7 @@
         setup(cfg);
     }
 
-    var api = {EMAIL_FLAGS: EMAIL_FLAGS, EMAIL_TYPES: EMAIL_TYPES, addContactStatusColumn: addContactStatusColumn, isContactListPath: isContactListPath, blockedChannels: blockedChannels, contactBadges: contactBadges, CONTACT_CHANNELS: CONTACT_CHANNELS, installContact: installContact, addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, installField: installField, lockFields: lockFields, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
+    var api = {extraBadge: extraBadge, EMAIL_FLAGS: EMAIL_FLAGS, EMAIL_TYPES: EMAIL_TYPES, addContactStatusColumn: addContactStatusColumn, isContactListPath: isContactListPath, blockedChannels: blockedChannels, contactBadges: contactBadges, CONTACT_CHANNELS: CONTACT_CHANNELS, installContact: installContact, addStatusColumn: addStatusColumn, addStatusColumns: addStatusColumns, COLUMNS: COLUMNS, SEGMENT_FLAGS: SEGMENT_FLAGS, install: install, installCampaign: installCampaign, toggleUpdate: toggleUpdate, installUser: installUser, installEmail: installEmail, installField: installField, lockFields: lockFields, statusOf: statusOf, view: view, place: place, colorCounts: colorCounts, withoutAlias: withoutAlias};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
