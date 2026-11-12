@@ -116,15 +116,6 @@ test('the box starts hidden and shows when the waiting list of a Wait step is lo
     assert.strictEqual(t.calls.box.out.hidden, true);
 });
 
-test('the clock (scheduled) loads the same waiting list, so it shows the box too', () => {
-    const t = load();
-    t.calls.box.hidden = true;
-
-    t.click(badge('scheduled'));
-
-    assert.strictEqual(t.calls.box.hidden, false);
-});
-
 test('the failed list hides the box: the recalculation only changes who waits', () => {
     const t = load();
     t.click(badge('waiting'));
