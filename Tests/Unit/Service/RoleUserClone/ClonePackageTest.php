@@ -6,6 +6,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service\RoleUserClone;
 
 use MauticPlugin\MauticPatchesBundle\Exception\ClonePackageException;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\ClonePackage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class ClonePackageTest extends TestCase
@@ -69,9 +70,7 @@ class ClonePackageTest extends TestCase
         $package->decrypt((string) json_encode($decoded), $key);
     }
 
-    /**
-     * @dataProvider badTexts
-     */
+    #[DataProvider('badTexts')]
     public function testATextThatIsNotAPackageIsRefused(string $text): void
     {
         $this->expectException(ClonePackageException::class);
@@ -147,10 +146,9 @@ class ClonePackageTest extends TestCase
     }
 
     /**
-     * @dataProvider wrongHeaders
-     *
      * @param array<string, mixed> $override
      */
+    #[DataProvider('wrongHeaders')]
     public function testAGoodBodyUnderAnotherFormatOrVersionIsRefused(array $override): void
     {
         $package = new ClonePackage();

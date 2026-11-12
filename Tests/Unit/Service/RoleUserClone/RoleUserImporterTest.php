@@ -12,6 +12,7 @@ use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\ClonePackage;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\RoleSerializer;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\RoleUserImporter;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\UserSerializer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -300,10 +301,9 @@ class RoleUserImporterTest extends TestCase
     }
 
     /**
-     * @dataProvider badUsers
-     *
      * @param array<string, mixed> $override
      */
+    #[DataProvider('badUsers')]
     public function testAnInvalidUserEntryIsSkipped(array $override): void
     {
         $this->existingRole('Gestão');
@@ -382,10 +382,9 @@ class RoleUserImporterTest extends TestCase
     }
 
     /**
-     * @dataProvider badPackages
-     *
      * @param array<string, mixed> $data
      */
+    #[DataProvider('badPackages')]
     public function testAPackageOfAnotherShapeIsRefused(array $data): void
     {
         [$text, $key] = $this->sealed($data);
@@ -418,10 +417,9 @@ class RoleUserImporterTest extends TestCase
     }
 
     /**
-     * @dataProvider badRoleEntries
-     *
      * @param mixed $entry
      */
+    #[DataProvider('badRoleEntries')]
     public function testAnInvalidRoleEntryIsSkippedWhateverIsWrong(mixed $entry, int $id, string $name): void
     {
         $result = $this->importPackage([$entry, $this->roleEntry('Boa')]);
@@ -500,10 +498,9 @@ class RoleUserImporterTest extends TestCase
     }
 
     /**
-     * @dataProvider badUserParts
-     *
      * @param array<string, mixed> $override
      */
+    #[DataProvider('badUserParts')]
     public function testEveryRequiredTextOfAUserMustHaveContent(array $override): void
     {
         $this->existingRole('Gestão');

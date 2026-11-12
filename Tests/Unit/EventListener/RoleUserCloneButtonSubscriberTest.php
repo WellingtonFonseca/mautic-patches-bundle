@@ -11,6 +11,7 @@ use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\UserBundle\Entity\Role;
 use Mautic\UserBundle\Entity\User;
 use MauticPlugin\MauticPatchesBundle\EventListener\RoleUserCloneButtonSubscriber;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RouterInterface;
@@ -56,9 +57,7 @@ class RoleUserCloneButtonSubscriberTest extends TestCase
         $this->assertSame([CoreEvents::VIEW_INJECT_CUSTOM_BUTTONS => ['injectViewButtons', 0]], RoleUserCloneButtonSubscriber::getSubscribedEvents());
     }
 
-    /**
-     * @dataProvider lists
-     */
+    #[DataProvider('lists')]
     public function testTheGearGetsExportAllInTheModalAndImportAsAPage(string $route, string $kind): void
     {
         $buttons = $this->buttons($this->subscriber(true), ButtonHelper::LOCATION_PAGE_ACTIONS, $route);
@@ -82,9 +81,7 @@ class RoleUserCloneButtonSubscriberTest extends TestCase
         return ['roles' => ['mautic_role_index', 'roles'], 'users' => ['mautic_user_index', 'users']];
     }
 
-    /**
-     * @dataProvider rows
-     */
+    #[DataProvider('rows')]
     public function testEachRowGetsItsOwnExportInTheModal(string $route, string $kind, string $class): void
     {
         $buttons = $this->buttons($this->subscriber(true), ButtonHelper::LOCATION_LIST_ACTIONS, $route, $this->entity($class, 42));
@@ -113,9 +110,7 @@ class RoleUserCloneButtonSubscriberTest extends TestCase
         $this->assertSame([], $this->buttons($this->subscriber(true), ButtonHelper::LOCATION_LIST_ACTIONS, 'mautic_user_index'));
     }
 
-    /**
-     * @dataProvider tables
-     */
+    #[DataProvider('tables')]
     public function testTheBulkMenuGetsOneButtonThatOpensTheModalWithTheCheckedRows(string $route, string $kind, string $table): void
     {
         $buttons = $this->buttons($this->subscriber(true), ButtonHelper::LOCATION_BULK_ACTIONS, $route);

@@ -16,7 +16,10 @@ class AppearanceButtonSubscriberTest extends TestCase
     private function content(string $context = 'page.header.left'): string
     {
         $router = $this->createMock(RouterInterface::class);
-        $router->method('generate')->with('mautic_patches_appearance_modal')->willReturn('/s/appearance-modal');
+        $router->method('generate')->willReturnMap([
+            ['mautic_patches_appearance_modal', [], RouterInterface::ABSOLUTE_PATH, '/s/appearance-modal'],
+            ['mautic_patches_appearance_save', [], RouterInterface::ABSOLUTE_PATH, '/s/appearance-modal/save'],
+        ]);
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')->with('mautic.user.account.appearance')->willReturn('Aparência');
 
@@ -40,10 +43,10 @@ class AppearanceButtonSubscriberTest extends TestCase
         $this->assertSame('', $this->content('something.else'));
     }
 
-    public function testTheScriptGetsTheModalUrlAndTheTranslatedLabel(): void
+    public function testTheScriptGetsTheTwoUrlsAndTheTranslatedLabel(): void
     {
         $this->assertStringContainsString(
-            'install(mQuery,Mautic,document,window.localStorage,{"url":"/s/appearance-modal","label":"Aparência"});',
+            'install(mQuery,Mautic,document,{"url":"/s/appearance-modal","saveUrl":"/s/appearance-modal/save","label":"Aparência"});',
             $this->content()
         );
     }

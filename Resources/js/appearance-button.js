@@ -1,43 +1,29 @@
 /*
- * A sun / moon button left of the notification bell opens the Appearance modal (accent colors and theme cards, the body comes from
- * AppearanceModalController). Core keeps a choice in two places: the attribute of <html> (`theme`, `accent`) and localStorage
- * (`m-toggle-setting-<name>`), and applies it only when the Save of the profile form is clicked. The modal has no form, so a click on a
- * radio of it writes both at once. The icon is a moon on a light theme (click: go dark) and a sun on a dark one.
+ * A sun / moon button left of the notification bell opens the Appearance modal (the theme cards, the body comes from
+ * AppearanceModalController). Core 7 keeps the theme as a preference of the user: base.html.twig renders `theme` on <html> from it on
+ * every page and the profile form saves it. The modal has no form, so a click on a card sets the attribute of <html> at once and
+ * posts the theme to the plugin, which saves the preference. The icon is a moon on a light theme (click: go dark) and a sun on a dark one.
  *
- * The radios are marked when the modal opens, from storage or from <html>: the markup does not know the browser's choice.
- *
- * PREFIX, the attributes and the theme list copy core's contract (UserBundle Assets/js/user.js and CoreBundle Assets/js/1.core.js): a key
- * or a theme renamed in core must be renamed here.
+ * The radios are marked when the modal opens from the attribute of <html>: the markup does not know the user's theme.
  */
 (function (root) {
     'use strict';
 
-    var PREFIX = 'm-toggle-setting-';
     var DARK = ['dark', 'solarized-dark', 'freire'];
-    var DEFAULTS = {theme: 'light', accent: '01'};
+    var DEFAULTS = {theme: 'light'};
     var RADIOS = '.mautic-patches-appearance input[data-attribute-toggle]';
 
     function isDark(theme) { return DARK.indexOf(theme) !== -1; }
 
     function iconFor(theme) { return isDark(theme) ? 'ri-sun-line' : 'ri-moon-line'; }
 
-    function currentChoice(doc, storage, name) {
-        var saved = null;
-        try { saved = storage.getItem(PREFIX + name); } catch (e) { saved = null; }
-
-        return saved || doc.documentElement.getAttribute(name) || DEFAULTS[name];
+    function currentChoice(doc, name) {
+        return doc.documentElement.getAttribute(name) || DEFAULTS[name];
     }
 
-    function applyChoice(doc, storage, name, value) {
-        doc.documentElement.setAttribute(name, value);
-        try { storage.setItem(PREFIX + name, value); } catch (e) { /* blocked storage: the choice lasts until the next page load */ }
-    }
-
-    function markRadios($, doc, storage) {
-        var choice = {};
-        Object.keys(DEFAULTS).forEach(function (name) { choice[name] = currentChoice(doc, storage, name); });
+    function markRadios($, doc) {
         $(RADIOS).each(function () {
-            this.checked = this.getAttribute('data-attribute-value') === choice[this.getAttribute('data-attribute-toggle')];
+            this.checked = this.getAttribute('data-attribute-value') === currentChoice(doc, this.getAttribute('data-attribute-toggle'));
         });
     }
 
@@ -81,7 +67,15 @@
         return true;
     }
 
-    function install($, Mautic, doc, storage, config) {
+    /** Applies the card at once and saves it; the page keeps the new theme even when the save is slow or fails (the error is core's). */
+    function choose($, doc, config, name, value) {
+        doc.documentElement.setAttribute(name, value);
+        var data = {};
+        data[name] = value;
+        $.post(config.saveUrl, data);
+    }
+
+    function install($, Mautic, doc, config) {
         // the script is injected on every page header: one set of handlers only
         if (doc.mauticPatchesAppearanceInstalled) { return; }
         doc.mauticPatchesAppearanceInstalled = true;
@@ -93,12 +87,12 @@
         if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', start); } else { start(); }
 
         $(doc).on('change', RADIOS, function () {
-            applyChoice(doc, storage, this.getAttribute('data-attribute-toggle'), this.getAttribute('data-attribute-value'));
+            choose($, doc, config, this.getAttribute('data-attribute-toggle'), this.getAttribute('data-attribute-value'));
         });
-        $(doc).on('shown.bs.modal', '#MauticSharedModal', function () { markRadios($, doc, storage); });
+        $(doc).on('shown.bs.modal', '#MauticSharedModal', function () { markRadios($, doc); });
     }
 
-    var api = {install: install, iconFor: iconFor, currentChoice: currentChoice, applyChoice: applyChoice};
+    var api = {install: install, iconFor: iconFor, currentChoice: currentChoice, choose: choose};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

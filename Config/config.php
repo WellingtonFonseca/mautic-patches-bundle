@@ -44,6 +44,12 @@ $patchesConfig = [
                 'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\AppearanceModalController::modalAction',
                 'method'     => 'GET',
             ],
+            // Saves the theme chosen in that modal as the user's preference (core 7 reads it on every page, see AppearanceModalController).
+            'mautic_patches_appearance_save' => [
+                'path'       => '/appearance-modal/save',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\AppearanceModalController::saveAction',
+                'method'     => 'POST',
+            ],
             // The details modal of the segment list: the tabs of the segment page.
             'mautic_patches_segment_details' => [
                 'path'         => '/segment-details/{id}',
