@@ -8,8 +8,8 @@ use Mautic\CampaignBundle\Entity\Event;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The rule of the campaign node modals about the event in their URL, in one place for the controller of the modal's body
- * (CampaignEventPendingController) and the one of its table (CampaignPendingContactsController): an unknown event, or one
+ * The rule about the campaign event in a URL, in one place for the table of the second "Ações" tab (CampaignActionContactsController)
+ * and the "Recalculate dates" routes (CampaignWaitRecalculateController): an unknown event, or one
  * without a campaign, is a 404; a user who cannot view the campaign (own / other) gets a 403. Needs a core controller
  * (getModel, security, notFound, accessDenied).
  */
@@ -34,7 +34,7 @@ trait CampaignEventAccessTrait
     }
 
     /**
-     * Whether the user can edit the event's campaign (own / other): the recalculation of a Wait node changes dates, it is not a view.
+     * Whether the user can edit the event's campaign (own / other): the recalculation of a Wait step changes dates, it is not a view.
      */
     private function canEditCampaign(Event $event): bool
     {

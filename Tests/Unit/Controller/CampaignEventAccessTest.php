@@ -7,22 +7,22 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Controller;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Entity\Event;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventAccessTrait;
-use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventPendingController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignActionContactsController;
-use MauticPlugin\MauticPatchesBundle\Controller\CampaignPendingContactsController;
+use MauticPlugin\MauticPatchesBundle\Controller\CampaignWaitRecalculateController;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The two controllers of the campaign node modals (the body and its table) answer to the same rule about the event: 404 when
- * the event or its campaign is missing, 403 without the campaign's view permission. It lives in one trait, so they cannot drift.
+ * The controllers that take a campaign event in their URL (the table of the second "Ações" tab, the "Recalculate dates" routes) answer
+ * to the same rule about the event: 404 when the event or its campaign is missing, 403 without the campaign's view permission. It
+ * lives in one trait, so they cannot drift.
  */
 class CampaignEventAccessTest extends TestCase
 {
     /**
      * @dataProvider controllers
      */
-    public function testBothControllersUseTheSharedRule(string $controller): void
+    public function testEveryControllerUsesTheSharedRule(string $controller): void
     {
         $this->assertContains(CampaignEventAccessTrait::class, class_uses($controller));
     }
@@ -32,9 +32,8 @@ class CampaignEventAccessTest extends TestCase
      */
     public static function controllers(): iterable
     {
-        yield 'the modal body' => [CampaignEventPendingController::class];
-        yield 'the modal table' => [CampaignPendingContactsController::class];
         yield 'the table of the actions tab' => [CampaignActionContactsController::class];
+        yield 'the recalculation of a Wait step' => [CampaignWaitRecalculateController::class];
     }
 
     public function testTheRuleAnswersNotFoundAndAccessDeniedAndOtherwiseGivesTheEvent(): void

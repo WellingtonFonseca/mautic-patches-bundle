@@ -12,10 +12,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The two endpoints of the "Recalculate dates" button in the modal of a Wait node (Preview tab of the campaign page):
+ * The two endpoints of the "Recalculate dates" box of a Wait step (second "Ações" tab of the campaign page):
  *  - GET  /s/campaign-wait/{eventId}/recalculate/simulate: what the current rule would do to the contacts that wait (reads only);
  *  - POST /s/campaign-wait/{eventId}/recalculate/apply:    writes those dates.
- * The simulation has the access rule of the modal (view the campaign); applying needs the campaign's edit permission. Only a Wait
+ * The simulation has the access rule of the campaign page (view the campaign); applying needs the campaign's edit permission. Only a Wait
  * node (patches.wait_relative) has this: any other event is a 404.
  */
 class CampaignWaitRecalculateController extends CommonController

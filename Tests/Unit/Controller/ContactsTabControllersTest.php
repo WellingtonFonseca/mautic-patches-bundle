@@ -9,7 +9,6 @@ use Mautic\LeadBundle\Controller\ListController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignContactsController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignActionContactsController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventAccessTrait;
-use MauticPlugin\MauticPatchesBundle\Controller\CampaignPendingContactsController;
 use MauticPlugin\MauticPatchesBundle\Controller\ContactsTableTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\SegmentContactsController;
 use PHPUnit\Framework\TestCase;
@@ -34,18 +33,13 @@ class ContactsTabControllersTest extends TestCase
         $this->assertContains(ContactsTableTrait::class, class_uses(CampaignContactsController::class));
     }
 
-    public function testThePendingTableOfTheCampaignNodeUsesTheSameTrait(): void
+    public function testTheNodeCountsOfTheCampaignPreviewOpenNoList(): void
     {
-        $this->assertTrue(is_subclass_of(CampaignPendingContactsController::class, CampaignController::class));
-        $this->assertContains(ContactsTableTrait::class, class_uses(CampaignPendingContactsController::class));
-        $this->assertCount(1, (new \ReflectionMethod(CampaignPendingContactsController::class, 'setColumnsDictionary'))->getAttributes(Required::class));
-
+        // the contacts of a step are listed on the second "Ações" tab only: the counts of a node open nothing
         $routes = (require __DIR__.'/../../../Config/config.php')['routes']['main'];
-        $route  = $routes['mautic_patches_campaign_event_pending_contacts'];
-        $this->assertSame(CampaignPendingContactsController::class.'::pendingContactsAction', $route['controller']);
-        $this->assertStringContainsString('{objectId}', $route['path'], 'the trait builds its urls with objectId');
-        $this->assertArrayNotHasKey('mautic_patches_campaign_event_done_contacts', $routes, 'the check (done count) opens nothing');
-        $this->assertArrayNotHasKey('mautic_patches_campaign_event_done', $routes);
+        foreach (['mautic_patches_campaign_event_pending', 'mautic_patches_campaign_event_pending_contacts', 'mautic_patches_campaign_event_done'] as $name) {
+            $this->assertArrayNotHasKey($name, $routes);
+        }
     }
 
     public function testTheTableOfTheActionsTabUsesTheSameTraitWithOneRoutePerState(): void
