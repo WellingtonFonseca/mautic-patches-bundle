@@ -127,7 +127,7 @@ class CampaignBuilderWaitLabelSubscriberTest extends TestCase
     public function testThePreviewIsNotScaledAndStillKeepsItsNodesInPlace(): void
     {
         // not "none": a transform is what makes .preview the box its absolutely positioned nodes are placed in
-        $this->assertStringContainsString('.preview{transform:scale(1)}', CampaignBuilderWaitLabelSubscriber::STYLE);
+        $this->assertStringContainsString('#campaign-builder.preview{transform:scale(1)}', CampaignBuilderWaitLabelSubscriber::STYLE);
     }
 
     public function testTheStripUsesTheThemeVariablesAndJoinsTheCard(): void
