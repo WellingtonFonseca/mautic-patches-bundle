@@ -82,8 +82,7 @@ class EmailAuditTabSubscriberTest extends TestCase
 
         (new EmailAuditTabSubscriber($model))->injectTab($event);
 
-        $this->assertSame('@MauticPatches/Email/audit_form_tab.html.twig', $event->getTemplates()[0]['template']);
-        $this->assertNull($event->getTemplates()[0]['vars']['rows']);
+        $this->assertSame('@MauticPatches/Email/audit_form_link.html.twig', $event->getTemplates()[0]['template']);
     }
 
     public function testTheEditPageGetsThePaneWithTheRowsOfTheEmail(): void
@@ -95,7 +94,7 @@ class EmailAuditTabSubscriberTest extends TestCase
 
         (new EmailAuditTabSubscriber($model))->injectTab($event);
 
-        $this->assertSame('@MauticPatches/Email/audit_form_tab.html.twig', $event->getTemplates()[0]['template']);
+        $this->assertSame('@MauticPatches/Email/audit_form_pane.html.twig', $event->getTemplates()[0]['template']);
         $this->assertSame('create', $event->getTemplates()[0]['vars']['rows'][0]['action']);
     }
 
