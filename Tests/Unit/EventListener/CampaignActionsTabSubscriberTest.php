@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignActionsTabSubscriber;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignActionFailureCounter;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -16,9 +17,20 @@ class CampaignActionsTabSubscriberTest extends TestCase
 
     /** @var array<string, list<array<string, mixed>>> */
     private array $events = [
-        'action'   => [['id' => 3, 'name' => 'Enviar HSM'], ['id' => 5, 'name' => 'Esperar']],
+        'action'   => [
+            ['id' => 3, 'name' => 'Enviar HSM', 'logCountProcessed' => 1, 'logCountForPending' => 1],
+            ['id' => 5, 'name' => 'Esperar', 'logCountProcessed' => 0, 'logCountForPending' => 0],
+        ],
         'decision' => [['id' => 4, 'name' => 'Abriu o email']],
     ];
+
+    private function subscriber(): CampaignActionsTabSubscriber
+    {
+        $counter = $this->createMock(CampaignActionFailureCounter::class);
+        $counter->method('countByEvent')->willReturn([3 => 2]);
+
+        return new CampaignActionsTabSubscriber($counter);
+    }
 
     public function testSubscribesToCustomContentEvent(): void
     {
@@ -29,7 +41,7 @@ class CampaignActionsTabSubscriberTest extends TestCase
     {
         $event = new CustomContentEvent(self::VIEW, 'tabs', ['events' => $this->events]);
 
-        (new CampaignActionsTabSubscriber())->inject($event);
+        $this->subscriber()->inject($event);
 
         $templates = $event->getTemplates();
         $this->assertCount(1, $templates, 'the link only, never the pane in the list of tabs');
@@ -40,12 +52,41 @@ class CampaignActionsTabSubscriberTest extends TestCase
     {
         $event = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $this->events]);
 
-        (new CampaignActionsTabSubscriber())->inject($event);
+        $this->subscriber()->inject($event);
 
         $templates = $event->getTemplates();
         $this->assertCount(1, $templates);
         $this->assertSame('@MauticPatches/Campaign/actions_tab_pane.html.twig', $templates[0]['template']);
         $this->assertSame($this->events['action'], $templates[0]['vars']['actions']);
+        // 1 completed, 2 failed and 1 waiting: 25%, 50% and 25% of the 4 contacts that reached the step; a step nobody reached is all zero
+        $this->assertSame(
+            [3 => ['completed' => 25.0, 'failed' => 50.0, 'waiting' => 25.0], 5 => ['completed' => 0.0, 'failed' => 0.0, 'waiting' => 0.0]],
+            $templates[0]['vars']['shares']
+        );
+    }
+
+    public function testSharesAreRoundedToOneDecimal(): void
+    {
+        $counter = $this->createMock(CampaignActionFailureCounter::class);
+        $counter->method('countByEvent')->willReturn([3 => 2]);
+        $events = ['action' => [['id' => 3, 'name' => 'a', 'logCountProcessed' => 1, 'logCountForPending' => 0]]];
+        $event  = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]);
+
+        (new CampaignActionsTabSubscriber($counter))->inject($event);
+
+        $this->assertSame(['completed' => 33.3, 'failed' => 66.7, 'waiting' => 0.0], $event->getTemplates()[0]['vars']['shares'][3]);
+    }
+
+    public function testAsksTheFailuresWithIntegerIds(): void
+    {
+        $counter = $this->createMock(CampaignActionFailureCounter::class);
+        $counter->expects($this->once())->method('countByEvent')
+            ->with($this->callback(static fn (array $ids): bool => [3, 5] === $ids))
+            ->willReturn([]);
+        // the ids of core's events can be strings
+        $events = ['action' => [['id' => '3', 'name' => 'a'], ['id' => '5', 'name' => 'b']]];
+
+        (new CampaignActionsTabSubscriber($counter))->inject(new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]));
     }
 
     /**
@@ -69,7 +110,7 @@ class CampaignActionsTabSubscriberTest extends TestCase
     {
         $event = new CustomContentEvent($view, $context, $vars);
 
-        (new CampaignActionsTabSubscriber())->inject($event);
+        $this->subscriber()->inject($event);
 
         $this->assertSame([], $event->getTemplates());
     }

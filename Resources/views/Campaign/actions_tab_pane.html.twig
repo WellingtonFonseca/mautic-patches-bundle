@@ -1,6 +1,6 @@
 {#
   The pane of the second "Ações" tab of the campaign page (CampaignActionsTabSubscriber): core's hook 'tabs.content'.
-  One collapse per action step, closed by default. Variable: actions (core's events['action'] of the page, in its order).
+  One collapse per action step, closed by default. Variables: actions (core's events['action'] of the page, in its order), shares (event id => completed, failed and waiting, each in % of the contacts that reached the step).
 #}
 <div class="tab-pane fade in bdr-w-0" id="patches-actions-container">
     <div class="panel-group patches-actions" id="patches-actions-accordion" role="tablist">
@@ -10,6 +10,11 @@
                 <div class="panel-heading" role="tab">
                     <h5 class="panel-title">
                         <a class="collapsed" role="button" data-toggle="collapse" href="#{{ paneId }}" aria-expanded="false" aria-controls="{{ paneId }}">
+                            <span class="patches-actions-badges" style="margin-right:8px">
+                                <span class="label label-success" data-toggle="tooltip" title="{{ 'mautic.patches.campaign.actions_tab.completed'|trans }}"><i class="ri-check-line"></i> {{ shares[action.id].completed }}%</span>
+                                <span class="label label-danger" data-toggle="tooltip" title="{{ 'mautic.patches.campaign.actions_tab.failed'|trans }}"><i class="ri-error-warning-line"></i> {{ shares[action.id].failed }}%</span>
+                                <span class="label label-warning" data-toggle="tooltip" title="{{ 'mautic.patches.campaign.actions_tab.waiting'|trans }}"><i class="ri-hourglass-line"></i> {{ shares[action.id].waiting }}%</span>
+                            </span>
                             {{ action.name }}
                         </a>
                     </h5>
