@@ -48,6 +48,13 @@ class AppearanceButtonSubscriberTest extends TestCase
         );
     }
 
+    public function testTheScriptIsTheJsFileFollowedByTheInstallCall(): void
+    {
+        $file = (string) file_get_contents(__DIR__.'/../../../Resources/js/appearance-button.js');
+
+        $this->assertStringContainsString('<script>'.$file.';mauticPatchesAppearanceApi.install(', $this->content());
+    }
+
     public function testTheButtonIsHiddenWhileTheAccountPageIsShown(): void
     {
         $this->assertStringContainsString(
