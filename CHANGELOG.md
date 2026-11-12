@@ -3,9 +3,11 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-12
-- A página da campanha tem uma nova aba Ações, depois de Contatos, no lugar da aba Ações do Mautic: cada passo de ação mostra quatro selos, concluídos, com falha, agendados e aguardando, cada um em % dos contatos que chegaram ao passo
-- Um clique nos selos com falha, agendados ou aguardando lista os contatos daquele estado em uma tabela abaixo dos passos, com a barra de busca da lista de contatos
-- Recalcular datas de um passo Esperar agora fica na aba Ações, acima da tabela, quando ela mostra os contatos agendados ou aguardando desse passo (só para quem pode editar a campanha)
+- Na aba Ações, os selos têm o mesmo visual dos selos de status das listas; na lista de segmentos, a contagem de contatos usa o selo azul ou cinza translúcido
+- A pré-visualização da campanha não reduz mais o texto a 80%: o texto do passo Esperar fica no tamanho normal
+- A página da campanha tem uma nova aba Ações, depois de Contatos, no lugar da aba Ações do Mautic: cada passo de ação mostra três selos, concluídos, com falha e aguardando, cada um em % dos contatos que chegaram ao passo
+- Um clique nos selos com falha ou aguardando lista os contatos daquele estado em uma tabela abaixo dos passos, com a barra de busca da lista de contatos
+- Recalcular datas de um passo Esperar agora fica na aba Ações, acima da tabela, quando ela mostra os contatos aguardando desse passo (só para quem pode editar a campanha)
 - As contagens dos passos na aba Pré-visualizar não abrem mais o modal de contatos: os contatos de cada passo estão na aba Ações
 - O menu lateral fica escondido atrás de uma faixa fina com uma seta; ao passar o mouse sobre a faixa, o menu abre por cima da página e fecha quando o mouse sai
 
