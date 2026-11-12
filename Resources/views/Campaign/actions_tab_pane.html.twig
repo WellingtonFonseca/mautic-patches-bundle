@@ -1,7 +1,7 @@
 {#
   The pane of the second "Ações" tab of the campaign page (CampaignActionsTabSubscriber): core's hook 'tabs.content'.
   One row per action step with four badges (completed, failed, scheduled, waiting: each in % of the contacts that reached the step,
-  the four add up to 100%), then ONE contacts table. The failed, scheduled and waiting badges are buttons: a click loads the contacts of
+  the four add up to about 100%: each is rounded on its own), then ONE contacts table. The failed, scheduled and waiting badges are buttons: a click loads the contacts of
   that state of that step into the table (CampaignActionContactsController); scheduled and waiting are the same contacts (the step's
   settings decide which badge they show in), so both load the waiting list. Above the table, the "Recalculate dates" box of a Wait step
   (CampaignWaitRecalculateScript): hidden until the waiting list of a step listed in `recalculate` is loaded. Variables: actions
@@ -90,9 +90,15 @@
         window.mauticPatchesActionsTab = true;
         // also the loader of the "Recalculate dates" box, which reloads the list after Apply
         Mautic.patchesActionsLoad = load;
+        // two quick clicks: only the last list may fill the table, whichever answer arrives last
+        var latest = 0;
         function load(url) {
+            var mine = ++latest;
             mQuery('#patches-actions-table').html('<div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>');
             mQuery.get(url, function (response) {
+                if (mine !== latest) {
+                    return;
+                }
                 response.target = '#patches-actions-table';
                 Mautic.processPageContent(response);
             }).fail(function (request, status, error) {

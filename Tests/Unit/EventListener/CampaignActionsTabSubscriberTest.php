@@ -11,6 +11,7 @@ use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignActionsTabSubscriber;
 use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignActionFailureCounter;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignEditPermission;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -35,7 +36,7 @@ class CampaignActionsTabSubscriberTest extends TestCase
         $counter = $this->createMock(CampaignActionFailureCounter::class);
         $counter->method('countByEvent')->willReturn($failed);
 
-        return new CampaignActionsTabSubscriber($counter, $security ?? $this->createMock(CorePermissions::class));
+        return new CampaignActionsTabSubscriber($counter, new CampaignEditPermission($security ?? $this->createMock(CorePermissions::class)));
     }
 
     public function testSubscribesToCustomContentEvent(): void
@@ -200,7 +201,7 @@ class CampaignActionsTabSubscriberTest extends TestCase
         // the ids of core's events can be strings
         $events = ['action' => [['id' => '3', 'name' => 'a'], ['id' => '5', 'name' => 'b']]];
 
-        (new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class)))->inject(new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]));
+        (new CampaignActionsTabSubscriber($counter, new CampaignEditPermission($this->createMock(CorePermissions::class))))->inject(new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]));
     }
 
     /**

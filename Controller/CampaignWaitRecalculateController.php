@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Controller;
 use Mautic\CampaignBundle\Entity\Event;
 use Mautic\CoreBundle\Controller\CommonController;
 use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignEditPermission;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitRecalculator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,7 +23,7 @@ class CampaignWaitRecalculateController extends CommonController
 {
     use CampaignEventAccessTrait;
 
-    public function simulateAction(RelativeWaitRecalculator $recalculator, int $eventId): Response
+    public function simulateAction(RelativeWaitRecalculator $recalculator, CampaignEditPermission $editPermission, int $eventId): Response
     {
         $event = $this->waitEventOrDeny($eventId);
 
@@ -34,11 +35,11 @@ class CampaignWaitRecalculateController extends CommonController
 
         return new JsonResponse([
             'summary'  => $summary,
-            'canApply' => $this->canEditCampaign($event) && $summary['changed'] + $summary['leaving_now'] > 0,
+            'canApply' => $editPermission->allows($event->getCampaign()) && $summary['changed'] + $summary['leaving_now'] > 0,
         ]);
     }
 
-    public function applyAction(RelativeWaitRecalculator $recalculator, int $eventId): Response
+    public function applyAction(RelativeWaitRecalculator $recalculator, CampaignEditPermission $editPermission, int $eventId): Response
     {
         $event = $this->waitEventOrDeny($eventId);
 
@@ -46,7 +47,7 @@ class CampaignWaitRecalculateController extends CommonController
             return $event;
         }
 
-        if (!$this->canEditCampaign($event)) {
+        if (!$editPermission->allows($event->getCampaign())) {
             return $this->accessDenied();
         }
 
