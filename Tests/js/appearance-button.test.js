@@ -48,3 +48,16 @@ test('applyChoice: a storage that throws still applies the attribute', () => {
     api.applyChoice(doc, {setItem() { throw new Error('blocked'); }}, 'accent', '02');
     assert.strictEqual(doc.attrs.accent, '02');
 });
+
+test('install: a second install on the same page adds no second set of handlers', () => {
+    let handlers = 0;
+  const $ = () => ({on() { handlers++; }});
+    const doc = {readyState: 'loading', addEventListener() {}};
+
+    api.install($, {}, doc, fakeStorage({}), {url: '/x', label: 'A'});
+    const first = handlers;
+    api.install($, {}, doc, fakeStorage({}), {url: '/x', label: 'A'});
+
+    assert.strictEqual(first, 2);
+    assert.strictEqual(handlers, first);
+});
