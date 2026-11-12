@@ -8,9 +8,9 @@
   Wait steps the user can edit).
 #}
 {% set badges = [
-    {key: 'completed', label: 'production', icon: 'ri-check-line', list: null},
-    {key: 'failed', label: 'failed', icon: 'ri-error-warning-line', list: 'failed'},
-    {key: 'waiting', label: 'info', icon: 'ri-hourglass-line', list: 'waiting'},
+    {key: 'completed', modifier: 'production', icon: 'ri-check-line', list: null},
+    {key: 'failed', modifier: 'failed', icon: 'ri-error-warning-line', list: 'failed'},
+    {key: 'waiting', modifier: 'info', icon: 'ri-hourglass-line', list: 'waiting'},
 ] %}
 <style>
     /* core's own read-only Ações tab is hidden, not removed: its template is not touched (its pane stays, never shown) */
@@ -36,10 +36,10 @@
                                 {% set text %}<i class="{{ badge.icon }}"></i> {{ attribute(shares[action.id], badge.key) }}%{% endset %}
                                 {% set title = ('mautic.patches.campaign.actions_tab.' ~ badge.key)|trans %}
                                 {% if badge.list %}
-                                    <button type="button" class="patches-badge patches-badge--{{ badge.label }} patches-actions-badge" data-state="{{ badge.key }}" data-list="{{ badge.list }}" data-toggle="tooltip" data-trigger="hover" title="{{ title }}"
+                                    <button type="button" class="patches-badge patches-badge--{{ badge.modifier }} patches-actions-badge" data-state="{{ badge.key }}" data-list="{{ badge.list }}" data-toggle="tooltip" data-trigger="hover" title="{{ title }}"
                                             data-target-url="{{ path('mautic_patches_campaign_action_' ~ badge.list ~ '_contacts', {'objectId': action.id, 'page': 1}) }}">{{ text }}</button>
                                 {% else %}
-                                    <span class="patches-badge patches-badge--{{ badge.label }} patches-actions-badge" data-state="{{ badge.key }}" data-toggle="tooltip" title="{{ title }}">{{ text }}</span>
+                                    <span class="patches-badge patches-badge--{{ badge.modifier }} patches-actions-badge" data-state="{{ badge.key }}" data-toggle="tooltip" title="{{ title }}">{{ text }}</span>
                                 {% endif %}
                             {% endfor %}
                         </span>
