@@ -81,4 +81,22 @@ class RoutesTest extends TestCase
         $this->assertSame('POST', $routes['mautic_patches_field_definition_import_save']['method']);
         $this->assertSame($routes['mautic_patches_field_definition_import']['path'], $routes['mautic_patches_field_definition_import_save']['path']);
     }
+
+    public function testTheRoleUserCloneRoutesTakeOnlyRolesOrUsersAndTheExportChangesNothing(): void
+    {
+        $routes     = $this->config()['routes']['main'];
+        $controller = 'MauticPlugin\\MauticPatchesBundle\\Controller\\RoleUserCloneController::';
+        $expected   = [
+            'mautic_patches_role_user_clone_export'      => ['/role-user-clone/{kind}/export', 'GET', 'exportAction'],
+            'mautic_patches_role_user_clone_import'      => ['/role-user-clone/{kind}/import', 'GET', 'importFormAction'],
+            'mautic_patches_role_user_clone_import_save' => ['/role-user-clone/{kind}/import', 'POST', 'importSaveAction'],
+        ];
+
+        foreach ($expected as $name => [$path, $method, $action]) {
+            $this->assertSame($path, $routes[$name]['path'], $name);
+            $this->assertSame($method, $routes[$name]['method'], $name);
+            $this->assertSame($controller.$action, $routes[$name]['controller'], $name);
+            $this->assertSame(['kind' => 'roles|users'], $routes[$name]['requirements'], $name);
+        }
+    }
 }
