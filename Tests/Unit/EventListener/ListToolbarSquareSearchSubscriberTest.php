@@ -55,6 +55,11 @@ class ListToolbarSquareSearchSubscriberTest extends TestCase
 
     public function testTheRuleUsesCoresSelectorAndSquaresTheInput(): void
     {
-        $this->assertSame('.list-toolbar > .btn:only-of-type + .input-group > input{border-radius:0}', ListToolbarSquareSearchSubscriber::style());
+        $this->assertStringContainsString('.list-toolbar > .btn:only-of-type + .input-group > input{border-radius:0}', ListToolbarSquareSearchSubscriber::style());
+    }
+
+    public function testTheGearMenuOpensToTheLeft(): void
+    {
+        $this->assertStringContainsString('.list-toolbar .dropdown > .dropdown-menu{left:auto;right:0}', ListToolbarSquareSearchSubscriber::style());
     }
 }
