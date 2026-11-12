@@ -1,0 +1,48 @@
+{#
+  Import of roles or users: the key and the pasted package are checked (the alerts say what would be done, nothing is saved), then
+  confirmed. Entries that cannot be imported are skipped and listed; their JSON is shown to copy.
+#}
+{% extends '@MauticCore/Default/content.html.twig' %}
+
+{% block mauticContent %}roleUserClone{% endblock %}
+
+{% block indexButton %}{{ include('@MauticPatches/RoleUserClone/_back_button.html.twig') }}{% endblock %}
+
+{% block headerTitle %}{{ ('mautic.patches.role_user_clone.import.title.'~kind)|trans }}{% endblock %}
+
+{% block content %}
+    <div class="box-layout">
+        <div class="col-md-9 bg-auto height-auto bg-white">
+            <div class="pa-md">
+                {% if done %}
+                    {% for alert in doneAlerts %}
+                        {{ include('@MauticPatches/Field/_import_alert.html.twig', {'alert': alert, 'class': 'role-user-clone-done'}) }}
+                    {% endfor %}
+                {% else %}
+                    {{ form_start(form) }}
+                    {% if checkAlerts is empty or canConfirm %}
+                        <p class="help-block role-user-clone-help">{{ (checkAlerts is empty ? 'mautic.patches.role_user_clone.import.help' : 'mautic.patches.role_user_clone.import.preview_help')|trans }}</p>
+                    {% endif %}
+                    {% for alert in checkAlerts %}
+                        {{ include('@MauticPatches/Field/_import_alert.html.twig', {'alert': alert, 'class': 'role-user-clone-check'}) }}
+                    {% endfor %}
+                    {% if errors is not empty %}
+                        <div class="alert alert-danger" id="role-user-clone-errors">
+                            <ul class="mb-0">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                {% endif %}
+                {% if failuresJson is not empty %}
+                    <h4>{{ 'mautic.patches.role_user_clone.import.failures_json'|trans }}</h4>
+                    <p class="help-block">{{ 'mautic.patches.role_user_clone.import.failures_help'|trans }}</p>
+                    {{ include('@MauticPatches/RoleUserClone/_copy_box.html.twig', {id: 'role-user-clone-failures', text: failuresJson, copied: 'mautic.patches.role_user_clone.import.failures_copied'|trans, height: 300}) }}
+                {% endif %}
+                {% if not done %}
+                    {{ form_row(form.key) }}
+                    {{ form_row(form.package) }}
+                    {{ form_end(form) }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
