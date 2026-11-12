@@ -1,0 +1,8 @@
+{# A read only text with a Copy button (the toast is core's own, Mautic.setFlashes). The text is in a <pre>, never a form field. #}
+<p>
+    <button type="button" class="btn btn-primary btn-nospin" id="{{ id }}-copy" data-copied="{{ copied }}"
+            onclick="var b = this; var t = mQuery('#{{ id }}').text(); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { Mautic.setFlashes(Mautic.addInfoFlashMessage(b.getAttribute('data-copied'))); }, function () { var r = document.createRange(); r.selectNodeContents(document.getElementById('{{ id }}')); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); });">
+        <i class="ri-file-copy-line"></i> {{ 'mautic.patches.role_user_clone.copy'|trans }}
+    </button>
+</p>
+<pre id="{{ id }}" style="max-height:{{ height|default(300) }}px;overflow:auto;white-space:{{ wrap|default('pre') }};word-break:{{ wrap is defined ? 'break-all' : 'normal' }}">{{ text }}</pre>

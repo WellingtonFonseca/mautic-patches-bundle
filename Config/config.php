@@ -123,6 +123,25 @@ return [
                 'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\FieldDefinitionController::importSaveAction',
                 'method'     => 'POST',
             ],
+            // Clone of the roles or of the users ({kind}: roles | users): the encrypted package with its key (the items are chosen in the core list), and the import (check, then confirm).
+            'mautic_patches_role_user_clone_export' => [
+                'path'         => '/role-user-clone/{kind}/export',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\RoleUserCloneController::exportAction',
+                'method'       => 'GET',
+                'requirements' => ['kind' => 'roles|users'],
+            ],
+            'mautic_patches_role_user_clone_import' => [
+                'path'         => '/role-user-clone/{kind}/import',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\RoleUserCloneController::importFormAction',
+                'method'       => 'GET',
+                'requirements' => ['kind' => 'roles|users'],
+            ],
+            'mautic_patches_role_user_clone_import_save' => [
+                'path'         => '/role-user-clone/{kind}/import',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\RoleUserCloneController::importSaveAction',
+                'method'       => 'POST',
+                'requirements' => ['kind' => 'roles|users'],
+            ],
             // Settings > Performance: where the time of the API goes, and the live diagnostics.
             'mautic_patches_performance' => [
                 'path'       => '/performance',
