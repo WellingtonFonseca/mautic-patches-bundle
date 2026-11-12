@@ -6,6 +6,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Result;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignActionContactSql;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignActionFailureCounter;
 use PHPUnit\Framework\TestCase;
 
@@ -24,7 +25,7 @@ class CampaignActionFailureCounterTest extends TestCase
         $connection = $this->createMock(Connection::class);
         $connection->expects($this->never())->method('executeQuery');
 
-        $this->assertSame([], (new CampaignActionFailureCounter($connection))->countByEvent([]));
+        $this->assertSame([], (new CampaignActionFailureCounter($connection, new CampaignActionContactSql()))->countByEvent([]));
     }
 
     public function testCountsTheFailedOrRetriedLogsPerStepAsIntegers(): void
@@ -37,11 +38,11 @@ class CampaignActionFailureCounterTest extends TestCase
             ->with(
                 'SELECT l.event_id, COUNT(*) AS failed FROM '.MAUTIC_TABLE_PREFIX.'campaign_lead_event_log l'
                     .' INNER JOIN '.MAUTIC_TABLE_PREFIX.'campaign_lead_event_failed_log f ON f.log_id = l.id'
-                    .' WHERE l.event_id IN (:ids) AND (l.is_scheduled = 1 OR l.metadata LIKE :flag) GROUP BY l.event_id',
-                ['ids' => [7, 9, 11], 'flag' => '%s:6:"failed";i:1;%'],
+                    .' WHERE l.event_id IN (:ids) AND (l.is_scheduled = 1 OR l.metadata LIKE \'%s:6:"failed";i:1;%\') GROUP BY l.event_id',
+                ['ids' => [7, 9, 11]],
                 ['ids' => Connection::PARAM_INT_ARRAY]
             )->willReturn($result);
 
-        $this->assertSame([7 => 4, 9 => 1], (new CampaignActionFailureCounter($connection))->countByEvent([7, 9, 11]));
+        $this->assertSame([7 => 4, 9 => 1], (new CampaignActionFailureCounter($connection, new CampaignActionContactSql()))->countByEvent([7, 9, 11]));
     }
 }

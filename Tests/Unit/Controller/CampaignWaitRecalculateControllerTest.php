@@ -16,8 +16,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The two endpoints behind the "Recalculate dates" button of the modal of a Wait node (Preview tab): the simulation (reads, answers
- * what would change) and the application (writes). The simulation needs the campaign's view permission like the modal itself;
+ * The two endpoints behind the "Recalculate dates" button of the Ações tab, for a Wait step: the simulation (reads, answers
+ * what would change) and the application (writes). The simulation needs the campaign's view permission like the Ações tab;
  * applying needs its edit permission, and only a Wait node can be recalculated.
  */
 class CampaignWaitRecalculateControllerTest extends TestCase

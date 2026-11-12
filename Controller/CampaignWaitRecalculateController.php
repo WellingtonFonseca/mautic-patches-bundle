@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
  *  - GET  /s/campaign-wait/{eventId}/recalculate/simulate: what the current rule would do to the contacts that wait (reads only);
  *  - POST /s/campaign-wait/{eventId}/recalculate/apply:    writes those dates.
  * The simulation has the access rule of the campaign page (view the campaign); applying needs the campaign's edit permission. Only a Wait
- * node (patches.wait_relative) has this: any other event is a 404.
+ * step (patches.wait_relative) has this: any other event is a 404.
  */
 class CampaignWaitRecalculateController extends CommonController
 {

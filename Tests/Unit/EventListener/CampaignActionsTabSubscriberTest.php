@@ -27,12 +27,15 @@ class CampaignActionsTabSubscriberTest extends TestCase
         'decision' => [['id' => 4, 'name' => 'Abriu o email']],
     ];
 
-    private function subscriber(): CampaignActionsTabSubscriber
+    /**
+     * @param array<int, int> $failed what the failure counter answers
+     */
+    private function subscriber(array $failed = [3 => 2], ?CorePermissions $security = null): CampaignActionsTabSubscriber
     {
         $counter = $this->createMock(CampaignActionFailureCounter::class);
-        $counter->method('countByEvent')->willReturn([3 => 2]);
+        $counter->method('countByEvent')->willReturn($failed);
 
-        return new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class));
+        return new CampaignActionsTabSubscriber($counter, $security ?? $this->createMock(CorePermissions::class));
     }
 
     public function testSubscribesToCustomContentEvent(): void
@@ -70,12 +73,10 @@ class CampaignActionsTabSubscriberTest extends TestCase
 
     public function testSharesAreRoundedToOneDecimal(): void
     {
-        $counter = $this->createMock(CampaignActionFailureCounter::class);
-        $counter->method('countByEvent')->willReturn([3 => 2]);
         $events = ['action' => [['id' => 3, 'name' => 'a', 'logCountProcessed' => 1, 'logCountForPending' => 0]]];
         $event  = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]);
 
-        (new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class)))->inject($event);
+        $this->subscriber([3 => 2])->inject($event);
 
         $this->assertSame(['completed' => 33.3, 'failed' => 66.7, 'scheduled' => 0.0, 'waiting' => 0.0], $event->getTemplates()[0]['vars']['shares'][3]);
     }
@@ -87,15 +88,13 @@ class CampaignActionsTabSubscriberTest extends TestCase
      */
     private function recalculateOf(array $vars, bool $canEdit, ?string $checkedOwner = '7'): array
     {
-        $counter = $this->createMock(CampaignActionFailureCounter::class);
-        $counter->method('countByEvent')->willReturn([]);
         $security = $this->createMock(CorePermissions::class);
         $security->method('hasEntityAccess')
             ->with('campaign:campaigns:editown', 'campaign:campaigns:editother', $checkedOwner)
             ->willReturn($canEdit);
         $event = new CustomContentEvent(self::VIEW, 'tabs.content', $vars);
 
-        (new CampaignActionsTabSubscriber($counter, $security))->inject($event);
+        $this->subscriber([], $security)->inject($event);
 
         return $event->getTemplates()[0]['vars']['recalculate'];
     }
@@ -152,50 +151,42 @@ class CampaignActionsTabSubscriberTest extends TestCase
     #[DataProvider('restrictionProvider')]
     public function testThePendingOfARestrictedStepAreScheduled(string $key, mixed $value): void
     {
-        $counter = $this->createMock(CampaignActionFailureCounter::class);
-        $counter->method('countByEvent')->willReturn([]);
         $events = ['action' => [['id' => 3, 'name' => 'a', 'logCountProcessed' => 1, 'logCountForPending' => 3, $key => $value]]];
         $event  = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]);
 
-        (new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class)))->inject($event);
+        $this->subscriber([])->inject($event);
 
         $this->assertSame(['completed' => 25.0, 'failed' => 0.0, 'scheduled' => 75.0, 'waiting' => 0.0], $event->getTemplates()[0]['vars']['shares'][3]);
     }
 
     public function testEmptyRestrictionsLeaveThePendingWaiting(): void
     {
-        $counter = $this->createMock(CampaignActionFailureCounter::class);
-        $counter->method('countByEvent')->willReturn([]);
         // what core gives a step with no restriction: nulls and an empty list of days
         $action = ['id' => 3, 'name' => 'a', 'logCountProcessed' => 0, 'logCountForPending' => 2, 'triggerHour' => null,
             'triggerRestrictedStartHour' => null, 'triggerRestrictedStopHour' => null, 'triggerRestrictedDaysOfWeek' => []];
         $event = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => ['action' => [$action]]]);
 
-        (new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class)))->inject($event);
+        $this->subscriber([])->inject($event);
 
         $this->assertSame(['completed' => 0.0, 'failed' => 0.0, 'scheduled' => 0.0, 'waiting' => 100.0], $event->getTemplates()[0]['vars']['shares'][3]);
     }
 
     public function testAStepWithoutCoresCountsHasOnlyItsFailures(): void
     {
-        $counter = $this->createMock(CampaignActionFailureCounter::class);
-        $counter->method('countByEvent')->willReturn([3 => 2]);
         $event = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => ['action' => [['id' => 3, 'name' => 'a']]]]);
 
-        (new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class)))->inject($event);
+        $this->subscriber([3 => 2])->inject($event);
 
         $this->assertSame(['completed' => 0.0, 'failed' => 100.0, 'scheduled' => 0.0, 'waiting' => 0.0], $event->getTemplates()[0]['vars']['shares'][3]);
     }
 
     public function testCoresCountsMayComeAsText(): void
     {
-        $counter = $this->createMock(CampaignActionFailureCounter::class);
-        $counter->method('countByEvent')->willReturn([3 => 1]);
         // the counts of core's events come from the database and can be strings
         $events = ['action' => [['id' => '3', 'name' => 'a', 'logCountProcessed' => '2', 'logCountForPending' => '1']]];
         $event  = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]);
 
-        (new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class)))->inject($event);
+        $this->subscriber([3 => 1])->inject($event);
 
         $this->assertSame(['completed' => 50.0, 'failed' => 25.0, 'scheduled' => 0.0, 'waiting' => 25.0], $event->getTemplates()[0]['vars']['shares']['3']);
     }

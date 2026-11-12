@@ -14,7 +14,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 /**
  * A second "Ações" tab on the campaign page, beside core's read-only one: each action step is a row of badges (completed, failed, scheduled, waiting); the failed and
  * waiting ones are buttons that load the contacts of that state in the table below; the waiting list of a Wait step also gets the
- * "Recalculate dates" box (CampaignWaitRecalculateScriptSubscriber) for who can edit the campaign (wiki/patches-campaign-actions-tab.md). Core's page has the hooks 'tabs' and
+ * "Recalculate dates" box (CampaignWaitRecalculateScript) for who can edit the campaign (wiki/patches-campaign-actions-tab.md). Core's page has the hooks 'tabs' and
  * 'tabs.content', so its template is not touched.
  */
 class CampaignActionsTabSubscriber implements EventSubscriberInterface

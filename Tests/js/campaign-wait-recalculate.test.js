@@ -1,4 +1,4 @@
-// Runs the REAL script of the "Recalculate dates" box of the second "Ações" tab (taken from CampaignWaitRecalculateScriptSubscriber, not
+// Runs the REAL script of the "Recalculate dates" box of the second "Ações" tab (taken from CampaignWaitRecalculateScript::SCRIPT, not
 // copied) against a small fake browser: the click handler on the document, the badge buttons of the step rows (a row of a Wait step the
 // user can edit carries the simulate and apply urls) and the box above the contacts table.
 //
@@ -13,10 +13,10 @@ const vm     = require('node:vm');
 const {execFileSync} = require('node:child_process');
 
 const AUTOLOAD   = process.env.AUTOLOAD || '/var/www/html/vendor/autoload.php';
-const CLASS_FILE = path.resolve(__dirname, '../../EventListener/CampaignWaitRecalculateScriptSubscriber.php');
+const CLASS_FILE = path.resolve(__dirname, '../../Service/CampaignWaitRecalculateScript.php');
 
 const SCRIPT = execFileSync('php', ['-r',
-    `require ${JSON.stringify(AUTOLOAD)}; require ${JSON.stringify(CLASS_FILE)}; echo MauticPlugin\\MauticPatchesBundle\\EventListener\\CampaignWaitRecalculateScriptSubscriber::script();`,
+    `require ${JSON.stringify(AUTOLOAD)}; require ${JSON.stringify(CLASS_FILE)}; echo MauticPlugin\\MauticPatchesBundle\\Service\\CampaignWaitRecalculateScript::SCRIPT;`,
 ], {encoding: 'utf8'});
 
 // A DOM element as much as the script uses it: children, text, a class, a click handler. Setting innerHTML to '' empties it.
@@ -56,9 +56,10 @@ function row(eventId) {
     return {getAttribute: (name) => attrs[name]};
 }
 
-// A badge button of a step row: `state` is its data-state (failed, scheduled, waiting).
+// A badge button of a step row: `state` is its data-state (failed, scheduled, waiting); its data-list is the list it loads, as the pane sets it.
 function badge(state, eventId = '41') {
-    const attrs = {'data-state': state, 'data-target-url': `/s/campaign-action/${eventId}/waiting/1`};
+    const list = state === 'failed' ? 'failed' : 'waiting';
+    const attrs = {'data-state': state, 'data-list': list, 'data-target-url': `/s/campaign-action/${eventId}/${list}/1`};
 
     return {
         getAttribute: (name) => attrs[name],
