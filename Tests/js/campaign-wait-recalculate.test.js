@@ -56,7 +56,7 @@ function row(eventId) {
     return {getAttribute: (name) => attrs[name]};
 }
 
-// A badge button of a step row: `state` is its data-state (failed, scheduled, waiting); its data-list is the list it loads, as the pane sets it.
+// A badge button of a step row: `state` is its data-state (failed, waiting); its data-list is the list it loads, as the pane sets it.
 function badge(state, eventId = '41') {
     const list = state === 'failed' ? 'failed' : 'waiting';
     const attrs = {'data-state': state, 'data-list': list, 'data-target-url': `/s/campaign-action/${eventId}/${list}/1`};
