@@ -30,9 +30,11 @@ abstract class AbstractListStatusSubscriber implements EventSubscriberInterface
         .'.patches-badge--production{background-color:#43a047}'
         .'.patches-badge--failed{background-color:#e53935}'
         .'.patches-badge--pending{background-color:#fb8c00}'
-        // the translucent ones: the contact count of the segment list (--info has contacts, --neutral is empty)
-        .'.patches-badge--info{background-color:rgba(30,136,229,.16);color:#1e88e5;box-shadow:inset 0 0 0 1px rgba(30,136,229,.45)}'
-        .'.patches-badge--neutral{background-color:rgba(120,120,120,.16);color:var(--text-secondary,#6f6f6f);box-shadow:inset 0 0 0 1px rgba(120,120,120,.4)}'
+        .'.patches-badge--info{background-color:#1e88e5}'
+        .'.patches-badge--neutral{background-color:#787878}'
+        // --soft: the translucent extra (like a Tailwind opacity) for the colors that have one: the contact count of the segment list
+        .'.patches-badge--info.patches-badge--soft{background-color:rgba(30,136,229,.16);color:#1e88e5;box-shadow:inset 0 0 0 1px rgba(30,136,229,.45)}'
+        .'.patches-badge--neutral.patches-badge--soft{background-color:rgba(120,120,120,.16);color:var(--text-secondary,#6f6f6f);box-shadow:inset 0 0 0 1px rgba(120,120,120,.4)}'
         // Mautic 7 prints the contact count as a span with the link inside: the link takes the badge's color
         .'.patches-badge a{color:inherit}';
 
