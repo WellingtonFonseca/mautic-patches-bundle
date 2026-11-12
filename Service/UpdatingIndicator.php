@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Service;
 
 /**
- * The look of "<spinner> Updating..." that the segment and campaign lists show while an update runs, and that the "Recalculate dates" of
- * the Wait node modal shows as "<spinner> Recalculating...": one place for the style and the spinner, used by the subscriber of the lists
- * (SegmentUpdateLockSubscriber) and by the Twig of the modal (pending_modal.html.twig).
+ * The look of "<spinner> Updating..." that the segment and campaign lists show while an update runs, and that the "Recalculate dates" box of
+ * the "Ações" tab shows as "<spinner> Recalculating...": one place for the style and the spinner, used by the subscriber of the lists
+ * (SegmentUpdateLockSubscriber) and by the Twig of the second "Ações" tab (actions_tab_pane.html.twig).
  */
 final class UpdatingIndicator
 {

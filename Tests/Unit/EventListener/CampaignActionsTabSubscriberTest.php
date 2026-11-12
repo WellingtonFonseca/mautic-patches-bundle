@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 
 use Mautic\CoreBundle\CoreEvents;
+use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Event\CustomContentEvent;
+use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignActionsTabSubscriber;
+use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignActionFailureCounter;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -29,7 +32,7 @@ class CampaignActionsTabSubscriberTest extends TestCase
         $counter = $this->createMock(CampaignActionFailureCounter::class);
         $counter->method('countByEvent')->willReturn([3 => 2]);
 
-        return new CampaignActionsTabSubscriber($counter);
+        return new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class));
     }
 
     public function testSubscribesToCustomContentEvent(): void
@@ -72,9 +75,64 @@ class CampaignActionsTabSubscriberTest extends TestCase
         $events = ['action' => [['id' => 3, 'name' => 'a', 'logCountProcessed' => 1, 'logCountForPending' => 0]]];
         $event  = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]);
 
-        (new CampaignActionsTabSubscriber($counter))->inject($event);
+        (new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class)))->inject($event);
 
         $this->assertSame(['completed' => 33.3, 'failed' => 66.7, 'scheduled' => 0.0, 'waiting' => 0.0], $event->getTemplates()[0]['vars']['shares'][3]);
+    }
+
+    /**
+     * @param array<string, mixed> $vars
+     *
+     * @return list<int>
+     */
+    private function recalculateOf(array $vars, bool $canEdit, ?string $checkedOwner = '7'): array
+    {
+        $counter = $this->createMock(CampaignActionFailureCounter::class);
+        $counter->method('countByEvent')->willReturn([]);
+        $security = $this->createMock(CorePermissions::class);
+        $security->method('hasEntityAccess')
+            ->with('campaign:campaigns:editown', 'campaign:campaigns:editother', $checkedOwner)
+            ->willReturn($canEdit);
+        $event = new CustomContentEvent(self::VIEW, 'tabs.content', $vars);
+
+        (new CampaignActionsTabSubscriber($counter, $security))->inject($event);
+
+        return $event->getTemplates()[0]['vars']['recalculate'];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function waitCampaignVars(): array
+    {
+        $campaign = new Campaign();
+        $campaign->setCreatedBy('7');
+        $actions = [
+            ['id' => '3', 'name' => 'Enviar HSM', 'type' => 'email.send'],
+            ['id' => '5', 'name' => 'Esperar', 'type' => RelativeWaitSubscriber::TYPE],
+            ['id' => 9, 'name' => 'Esperar de novo', 'type' => RelativeWaitSubscriber::TYPE],
+        ];
+
+        return ['events' => ['action' => $actions], 'campaign' => $campaign];
+    }
+
+    public function testTheWaitStepsCanBeRecalculatedByWhoEditsTheCampaign(): void
+    {
+        // integer ids, only the Wait steps, in their order
+        $this->assertSame([5, 9], $this->recalculateOf($this->waitCampaignVars(), true));
+    }
+
+    public function testNoStepCanBeRecalculatedWithoutTheEditAccessOfTheCampaign(): void
+    {
+        $this->assertSame([], $this->recalculateOf($this->waitCampaignVars(), false));
+    }
+
+    public function testNoStepCanBeRecalculatedWithoutTheCampaignInTheVars(): void
+    {
+        $vars = $this->waitCampaignVars();
+        unset($vars['campaign']);
+
+        $this->assertSame([], $this->recalculateOf($vars, true));
     }
 
     /**
@@ -99,7 +157,7 @@ class CampaignActionsTabSubscriberTest extends TestCase
         $events = ['action' => [['id' => 3, 'name' => 'a', 'logCountProcessed' => 1, 'logCountForPending' => 3, $key => $value]]];
         $event  = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]);
 
-        (new CampaignActionsTabSubscriber($counter))->inject($event);
+        (new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class)))->inject($event);
 
         $this->assertSame(['completed' => 25.0, 'failed' => 0.0, 'scheduled' => 75.0, 'waiting' => 0.0], $event->getTemplates()[0]['vars']['shares'][3]);
     }
@@ -113,7 +171,7 @@ class CampaignActionsTabSubscriberTest extends TestCase
             'triggerRestrictedStartHour' => null, 'triggerRestrictedStopHour' => null, 'triggerRestrictedDaysOfWeek' => []];
         $event = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => ['action' => [$action]]]);
 
-        (new CampaignActionsTabSubscriber($counter))->inject($event);
+        (new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class)))->inject($event);
 
         $this->assertSame(['completed' => 0.0, 'failed' => 0.0, 'scheduled' => 0.0, 'waiting' => 100.0], $event->getTemplates()[0]['vars']['shares'][3]);
     }
@@ -124,9 +182,22 @@ class CampaignActionsTabSubscriberTest extends TestCase
         $counter->method('countByEvent')->willReturn([3 => 2]);
         $event = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => ['action' => [['id' => 3, 'name' => 'a']]]]);
 
-        (new CampaignActionsTabSubscriber($counter))->inject($event);
+        (new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class)))->inject($event);
 
         $this->assertSame(['completed' => 0.0, 'failed' => 100.0, 'scheduled' => 0.0, 'waiting' => 0.0], $event->getTemplates()[0]['vars']['shares'][3]);
+    }
+
+    public function testCoresCountsMayComeAsText(): void
+    {
+        $counter = $this->createMock(CampaignActionFailureCounter::class);
+        $counter->method('countByEvent')->willReturn([3 => 1]);
+        // the counts of core's events come from the database and can be strings
+        $events = ['action' => [['id' => '3', 'name' => 'a', 'logCountProcessed' => '2', 'logCountForPending' => '1']]];
+        $event  = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]);
+
+        (new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class)))->inject($event);
+
+        $this->assertSame(['completed' => 50.0, 'failed' => 25.0, 'scheduled' => 0.0, 'waiting' => 25.0], $event->getTemplates()[0]['vars']['shares']['3']);
     }
 
     public function testAsksTheFailuresWithIntegerIds(): void
@@ -138,7 +209,7 @@ class CampaignActionsTabSubscriberTest extends TestCase
         // the ids of core's events can be strings
         $events = ['action' => [['id' => '3', 'name' => 'a'], ['id' => '5', 'name' => 'b']]];
 
-        (new CampaignActionsTabSubscriber($counter))->inject(new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]));
+        (new CampaignActionsTabSubscriber($counter, $this->createMock(CorePermissions::class)))->inject(new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]));
     }
 
     /**

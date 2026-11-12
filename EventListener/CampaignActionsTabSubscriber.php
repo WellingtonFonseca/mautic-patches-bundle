@@ -4,22 +4,27 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\EventListener;
 
+use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
+use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignActionFailureCounter;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * A second "Ações" tab on the campaign page, beside core's read-only one: each action step is a row of badges (completed, failed, scheduled, waiting); the failed and
- * waiting ones are buttons that load the contacts of that state in the table below (wiki/patches-campaign-actions-tab.md). Core's page has the hooks 'tabs' and
+ * waiting ones are buttons that load the contacts of that state in the table below; the waiting list of a Wait step also gets the
+ * "Recalculate dates" box (CampaignWaitRecalculateScriptSubscriber) for who can edit the campaign (wiki/patches-campaign-actions-tab.md). Core's page has the hooks 'tabs' and
  * 'tabs.content', so its template is not touched.
  */
 class CampaignActionsTabSubscriber implements EventSubscriberInterface
 {
     private const VIEW = '@MauticCampaign/Campaign/details.html.twig';
 
-    public function __construct(private CampaignActionFailureCounter $failureCounter)
-    {
+    public function __construct(
+        private CampaignActionFailureCounter $failureCounter,
+        private CorePermissions $security
+    ) {
     }
 
     public static function getSubscribedEvents(): array
@@ -55,7 +60,30 @@ class CampaignActionsTabSubscriber implements EventSubscriberInterface
             $shares[$action['id']] = $this->sharesOf($action, $failed[(int) $action['id']] ?? 0);
         }
 
-        $customContentEvent->addTemplate('@MauticPatches/Campaign/actions_tab_pane.html.twig', ['actions' => $actions, 'shares' => $shares]);
+        $customContentEvent->addTemplate('@MauticPatches/Campaign/actions_tab_pane.html.twig', [
+            'actions'     => $actions,
+            'shares'      => $shares,
+            'recalculate' => $this->recalculableIds($actions, $customContentEvent->getVars()['campaign'] ?? null),
+        ]);
+    }
+
+    /**
+     * The ids of the Wait steps whose dates the user may recalculate: the recalculation writes dates, so it needs the edit access of the
+     * campaign (own / other), as its apply route checks again.
+     *
+     * @param list<array<string, mixed>> $actions
+     *
+     * @return list<int>
+     */
+    private function recalculableIds(array $actions, ?Campaign $campaign): array
+    {
+        if (null === $campaign || !$this->security->hasEntityAccess('campaign:campaigns:editown', 'campaign:campaigns:editother', $campaign->getCreatedBy())) {
+            return [];
+        }
+
+        $waits = array_filter($actions, static fn (array $action): bool => RelativeWaitSubscriber::TYPE === ($action['type'] ?? null));
+
+        return array_values(array_map(static fn (array $action): int => (int) $action['id'], $waits));
     }
 
     /**
