@@ -5,29 +5,54 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 
 use Mautic\CoreBundle\CoreEvents;
-use Mautic\CoreBundle\Event\CustomContentEvent;
+use Mautic\CoreBundle\Event\CustomAssetsEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\SidebarRevealOnHoverSubscriber;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class SidebarRevealOnHoverSubscriberTest extends TestCase
 {
-    private function content(string $context = 'page.header.left'): string
+    private function subscriberAt(?string $path): SidebarRevealOnHoverSubscriber
     {
-        $event = new CustomContentEvent('some_view', $context);
-        (new SidebarRevealOnHoverSubscriber())->injectViewCustomContent($event);
+        $stack = new RequestStack();
+        if (null !== $path) {
+            $stack->push(Request::create($path));
+        }
 
-        return implode('', $event->getContent());
+        return new SidebarRevealOnHoverSubscriber($stack);
     }
 
-    public function testSubscribesToCustomContentEvent(): void
+    public function testTheStyleGoesInTheHeadOfTheAdmin(): void
     {
-        $this->assertArrayHasKey(CoreEvents::VIEW_INJECT_CUSTOM_CONTENT, SidebarRevealOnHoverSubscriber::getSubscribedEvents());
+        $this->assertSame('injectAssets', SidebarRevealOnHoverSubscriber::getSubscribedEvents()[CoreEvents::VIEW_INJECT_CUSTOM_ASSETS]);
+        $this->assertArrayNotHasKey(CoreEvents::VIEW_INJECT_CUSTOM_CONTENT, SidebarRevealOnHoverSubscriber::getSubscribedEvents());
+
+        $event = $this->createMock(CustomAssetsEvent::class);
+        $event->expects($this->once())->method('addStyleDeclaration')->with(SidebarRevealOnHoverSubscriber::style());
+
+        $this->subscriberAt('/s/contacts')->injectAssets($event);
     }
 
-    public function testInjectsTheStyleOnPageHeaderLeftOnly(): void
+    /**
+     * @return iterable<string, array{0: ?string}>
+     */
+    public static function notAdminProvider(): iterable
     {
-        $this->assertSame('<style>'.SidebarRevealOnHoverSubscriber::style().'</style>', $this->content());
-        $this->assertSame('', $this->content('something.else'));
+        yield 'api' => ['/api/contacts'];
+        yield 'tracking pixel' => ['/mtracking.gif'];
+        yield 'landing page' => ['/my-landing-page'];
+        yield 'no request (command)' => [null];
+    }
+
+    #[DataProvider('notAdminProvider')]
+    public function testNothingOutsideTheAdmin(?string $path): void
+    {
+        $event = $this->createMock(CustomAssetsEvent::class);
+        $event->expects($this->never())->method('addStyleDeclaration');
+
+        $this->subscriberAt($path)->injectAssets($event);
     }
 
     public function testTheMenuHidesBehindA15pxStripWithThePlayArrowAndOpensOnHover(): void

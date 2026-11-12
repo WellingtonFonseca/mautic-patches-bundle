@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\EventListener;
 
 use Mautic\CoreBundle\CoreEvents;
-use Mautic\CoreBundle\Event\CustomContentEvent;
+use Mautic\CoreBundle\Event\CustomAssetsEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Not a bug, a usability choice: the left menu of the admin gives its 230px to the page. Only a 15px strip with a play arrow stays; the
@@ -14,9 +15,17 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * menu opens it too, or a tabbed item would be off screen: :has(:focus-visible), not :focus-within, because a clicked link keeps the
  * focus (the menu navigates by ajax) and :focus-within would hold the menu open after the mouse left. Pure CSS, no state.
  * Only from core's screen-sm (768px) up: below it core already hides the menu behind its own toggle.
+ *
+ * In the <head> (CustomAssetsEvent), not on 'page.header.left': that hook is inside #app-content, which the browser paints before the
+ * <style> further down arrives, so core's 0.3s margin transition slid every loaded page from 230px to 15px. The assets event fires on
+ * every request (API, tracking pixel, landing pages): only the admin (/s/) gets the rule.
  */
 class SidebarRevealOnHoverSubscriber implements EventSubscriberInterface
 {
+    public function __construct(private RequestStack $requestStack)
+    {
+    }
+
     public const STRIP_WIDTH = 15;
 
     // core's @sidebar-left-width (variables.less)
@@ -28,17 +37,17 @@ class SidebarRevealOnHoverSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            CoreEvents::VIEW_INJECT_CUSTOM_CONTENT => 'injectViewCustomContent',
+            CoreEvents::VIEW_INJECT_CUSTOM_ASSETS => 'injectAssets',
         ];
     }
 
-    public function injectViewCustomContent(CustomContentEvent $customContentEvent): void
+    public function injectAssets(CustomAssetsEvent $assetsEvent): void
     {
-        if ('page.header.left' !== $customContentEvent->getContext()) {
+        if (!str_starts_with((string) $this->requestStack->getMainRequest()?->getPathInfo(), '/s/')) {
             return;
         }
 
-        $customContentEvent->addContent('<style>'.self::style().'</style>');
+        $assetsEvent->addStyleDeclaration(self::style());
     }
 
     public static function style(): string
