@@ -64,7 +64,11 @@ class CampaignBuilderWaitLabelSubscriber implements EventSubscriberInterface
         .'.campaign-event-wait+.campaign-event-content{border-top-left-radius:0;border-top-right-radius:0}'
         // one line per fact: the wait, then the hours and the days of the schedule (CampaignNodeScheduleSubscriber)
         .'.campaign-event-wait-line{display:flex;align-items:center;gap:6px}'
-        .'.campaign-event-wait-extra{display:flex;flex-direction:column;gap:2px}';
+        .'.campaign-event-wait-extra{display:flex;flex-direction:column;gap:2px}'
+        // core shrinks the Preview canvas to 80% (campaign.css .preview), which made the 14px text look like 11px. Not
+        // "none": any transform makes .preview the box its absolutely positioned nodes are placed in, and without one the
+        // nodes jump out of the tab
+        .'#campaign-builder.preview{transform:scale(1)}';
 
     /**
      * Core's text for an event on the no path ("entre 1 dia") is a deadline that only makes sense after a decision. After
