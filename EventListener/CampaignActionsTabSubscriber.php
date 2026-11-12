@@ -7,14 +7,14 @@ namespace MauticPlugin\MauticPatchesBundle\EventListener;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
-use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignActionFailureCounter;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignEditPermission;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * A second "Ações" tab on the campaign page, beside core's read-only one: each action step is a row of badges (completed, failed, scheduled, waiting); the failed and
  * waiting ones are buttons that load the contacts of that state in the table below; the waiting list of a Wait step also gets the
- * "Recalculate dates" box (CampaignWaitRecalculateScriptSubscriber) for who can edit the campaign (wiki/patches-campaign-actions-tab.md). Core's page has the hooks 'tabs' and
+ * "Recalculate dates" box (CampaignWaitRecalculateScript) for who can edit the campaign (wiki/patches-campaign-actions-tab.md). Core's page has the hooks 'tabs' and
  * 'tabs.content', so its template is not touched.
  */
 class CampaignActionsTabSubscriber implements EventSubscriberInterface
@@ -23,7 +23,7 @@ class CampaignActionsTabSubscriber implements EventSubscriberInterface
 
     public function __construct(
         private CampaignActionFailureCounter $failureCounter,
-        private CorePermissions $security
+        private CampaignEditPermission $editPermission
     ) {
     }
 
@@ -77,7 +77,7 @@ class CampaignActionsTabSubscriber implements EventSubscriberInterface
      */
     private function recalculableIds(array $actions, ?Campaign $campaign): array
     {
-        if (null === $campaign || !$this->security->hasEntityAccess('campaign:campaigns:editown', 'campaign:campaigns:editother', $campaign->getCreatedBy())) {
+        if (null === $campaign || !$this->editPermission->allows($campaign)) {
             return [];
         }
 
@@ -87,7 +87,7 @@ class CampaignActionsTabSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * The share of each state among the contacts that reached the step (completed + failed + waiting), so the four add up to 100%. Core's
+     * The share of each state among the contacts that reached the step (completed + failed + waiting), so the four add up to about 100% (each is rounded to one decimal on its own). Core's
      * own yesPercent of an action is about the yes path, not the completed ones, and its pending count already leaves the failures out.
      * The pending contacts of a step with an hours / days restriction are held for the window (scheduled); the others wait for a wait
      * or a date. Core writes the same log for both, so only the step's own settings tell them apart.

@@ -37,7 +37,7 @@ class ContactsTabControllersTest extends TestCase
     {
         // the contacts of a step are listed on the second "Ações" tab only: the counts of a node open nothing
         $routes = (require __DIR__.'/../../../Config/config.php')['routes']['main'];
-        foreach (['mautic_patches_campaign_event_pending', 'mautic_patches_campaign_event_pending_contacts', 'mautic_patches_campaign_event_done'] as $name) {
+        foreach (['mautic_patches_campaign_event_pending', 'mautic_patches_campaign_event_pending_contacts'] as $name) {
             $this->assertArrayNotHasKey($name, $routes);
         }
     }

@@ -35,10 +35,18 @@ class CampaignActionContactSql
     {
         return sprintf(
             'EXISTS (SELECT 1 FROM %1$scampaign_lead_event_log evlog INNER JOIN %1$scampaign_lead_event_failed_log failed ON failed.log_id = evlog.id'
-            ." WHERE evlog.lead_id = entity.lead_id AND evlog.event_id = %2\$d AND (evlog.is_scheduled = 1 OR evlog.metadata LIKE '%3\$s'))",
+            .' WHERE evlog.lead_id = entity.lead_id AND evlog.event_id = %2$d AND %3$s)',
             MAUTIC_TABLE_PREFIX,
             $eventId,
-            self::FAILED_FLAG
+            $this->failedOrRetried('evlog')
         );
+    }
+
+    /**
+     * The rule on a log that already has a failed log: the badge count (CampaignActionFailureCounter) and the list use this one copy.
+     */
+    public function failedOrRetried(string $logAlias): string
+    {
+        return sprintf("(%1\$s.is_scheduled = 1 OR %1\$s.metadata LIKE '%2\$s')", $logAlias, self::FAILED_FLAG);
     }
 }

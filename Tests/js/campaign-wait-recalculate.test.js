@@ -1,4 +1,4 @@
-// Runs the REAL script of the "Recalculate dates" box of the second "Ações" tab (taken from CampaignWaitRecalculateScriptSubscriber, not
+// Runs the REAL script of the "Recalculate dates" box of the second "Ações" tab (taken from CampaignWaitRecalculateScript::SCRIPT, not
 // copied) against a small fake browser: the click handler on the document, the badge buttons of the step rows (a row of a Wait step the
 // user can edit carries the simulate and apply urls) and the box above the contacts table.
 //
@@ -13,10 +13,10 @@ const vm     = require('node:vm');
 const {execFileSync} = require('node:child_process');
 
 const AUTOLOAD   = process.env.AUTOLOAD || '/var/www/html/vendor/autoload.php';
-const CLASS_FILE = path.resolve(__dirname, '../../EventListener/CampaignWaitRecalculateScriptSubscriber.php');
+const CLASS_FILE = path.resolve(__dirname, '../../Service/CampaignWaitRecalculateScript.php');
 
 const SCRIPT = execFileSync('php', ['-r',
-    `require ${JSON.stringify(AUTOLOAD)}; require ${JSON.stringify(CLASS_FILE)}; echo MauticPlugin\\MauticPatchesBundle\\EventListener\\CampaignWaitRecalculateScriptSubscriber::script();`,
+    `require ${JSON.stringify(AUTOLOAD)}; require ${JSON.stringify(CLASS_FILE)}; echo MauticPlugin\\MauticPatchesBundle\\Service\\CampaignWaitRecalculateScript::SCRIPT;`,
 ], {encoding: 'utf8'});
 
 // A DOM element as much as the script uses it: children, text, a class, a click handler. Setting innerHTML to '' empties it.
@@ -56,9 +56,10 @@ function row(eventId) {
     return {getAttribute: (name) => attrs[name]};
 }
 
-// A badge button of a step row: `state` is its data-state (failed, scheduled, waiting).
+// A badge button of a step row: `state` is its data-state (failed, scheduled, waiting); its data-list is the list it loads, as the pane sets it.
 function badge(state, eventId = '41') {
-    const attrs = {'data-state': state, 'data-target-url': `/s/campaign-action/${eventId}/waiting/1`};
+    const list = state === 'failed' ? 'failed' : 'waiting';
+    const attrs = {'data-state': state, 'data-list': list, 'data-target-url': `/s/campaign-action/${eventId}/${list}/1`};
 
     return {
         getAttribute: (name) => attrs[name],
@@ -79,7 +80,8 @@ function load({withBox = true} = {}) {
         getElementById: (id) => (id === 'patches-wait-recalc' ? calls.box : null),
     };
     const window  = {};
-    const Mautic  = {patchesActionsLoad: (url) => { calls.reloaded = url; }, processAjaxError: (...a) => { calls.error = a; }};
+    const Mautic  = {patchesActionsLoad: (url) => { calls.reloaded = url; }, processAjaxError: (...a) => { calls.error = a; },
+        addFlashMessage: (text) => `flash:${text}`, setFlashes: (flash) => { calls.flash = flash; }};
     const mQuery  = {
         getJSON: (url, cb) => { calls.json = url; calls.jsonCb = cb; return {fail: (fn) => { calls.jsonFail = fn; }}; },
         ajax: (options) => { calls.ajax = options; const chain = {done: (fn) => { calls.ajaxDone = fn; return chain; }, fail: (fn) => { calls.ajaxFail = fn; return chain; }}; return chain; },
@@ -252,4 +254,72 @@ test('a failed simulation or application goes through core\'s error handling and
     assert.deepStrictEqual(t.calls.error, [{status: 500}, 'error', 'Server']);
     assert.strictEqual(t.calls.box.apply.disabled, false);
     assert.strictEqual(t.calls.reloaded, undefined, 'nothing written, nothing reloaded');
+});
+
+test('a simulation that answers after another step was loaded leaves the box alone: no Apply that would post for a step not simulated', () => {
+    const t = load();
+    t.click(badge('waiting', '41'));
+    t.calls.box.start.onclick();
+    const late = t.calls.jsonCb;
+
+    t.click(badge('waiting', '77'));
+    late(plan);
+
+    assert.deepStrictEqual(visible(t.calls.box), ['start'], 'still Recalculate alone for the step on screen');
+    assert.strictEqual(t.calls.box.out.hidden, true);
+});
+
+test('a click on another badge (the failed list) also ends the run: a late answer leaves the hidden box and the table alone', () => {
+    const t = load();
+    t.click(badge('waiting', '41'));
+    t.calls.box.start.onclick();
+    t.calls.jsonCb(plan);
+    t.calls.box.apply.onclick();
+    const late = t.calls.ajaxDone;
+
+    t.click(badge('failed', '41'));
+    late({applied: 5, summary: {}});
+
+    assert.strictEqual(t.calls.box.hidden, true);
+    assert.strictEqual(t.calls.reloaded, undefined, 'the failed list on screen is not replaced');
+    assert.strictEqual(t.calls.flash, 'flash:5 recalculadas', 'the write is still told, in a notification');
+});
+
+test('a late failure of the simulation or of Apply is still shown, but leaves the box of the step on screen alone', () => {
+    const t = load();
+    t.click(badge('waiting', '41'));
+    t.calls.box.start.onclick();
+    const lateSimulation = t.calls.jsonFail;
+    t.click(badge('waiting', '77'));
+    t.calls.box.start.onclick();
+    lateSimulation({status: 500}, 'error', 'Server');
+
+    assert.deepStrictEqual(t.calls.error, [{status: 500}, 'error', 'Server'], 'core shows the error');
+    assert.strictEqual(t.calls.box.start.disabled, true, 'the simulation of the step on screen still runs');
+
+    t.calls.jsonCb(plan);
+    t.calls.box.apply.onclick();
+    const lateApply = t.calls.ajaxFail;
+    t.click(badge('waiting', '41'));
+    lateApply({status: 403}, 'error', 'Forbidden');
+
+    assert.deepStrictEqual(t.calls.error, [{status: 403}, 'error', 'Forbidden']);
+    assert.deepStrictEqual(visible(t.calls.box), ['start']);
+});
+
+test('an Apply that answers after another step was loaded tells the write in a notification and does not reload the old list', () => {
+    const t = load();
+    t.click(badge('waiting', '41'));
+    t.calls.box.start.onclick();
+    t.calls.jsonCb(plan);
+    t.calls.box.apply.onclick();
+    const late = t.calls.ajaxDone;
+
+    t.click(badge('waiting', '77'));
+    late({applied: 5, summary: {}});
+
+    assert.strictEqual(t.calls.reloaded, undefined, 'the table keeps the list of the step on screen');
+    assert.deepStrictEqual(t.calls.box.out.children, []);
+    assert.strictEqual(t.calls.flash, 'flash:5 recalculadas');
+    assert.deepStrictEqual(visible(t.calls.box), ['start']);
 });

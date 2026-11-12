@@ -26,7 +26,7 @@ class CampaignActionContactsController extends CampaignController
      */
     public function failedAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, CampaignActionContactSql $sql, $objectId, $page = 1)
     {
-        return $this->table($request, $pageHelperFactory, (int) $objectId, (int) $page, 'failed', fn (int $eventId): string => $sql->failed($eventId));
+        return $this->table($request, $pageHelperFactory, (int) $objectId, (int) $page, 'failed', $sql->failed((int) $objectId));
     }
 
     /**
@@ -35,7 +35,7 @@ class CampaignActionContactsController extends CampaignController
      */
     public function waitingAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, CampaignActionContactSql $sql, $objectId, $page = 1)
     {
-        return $this->table($request, $pageHelperFactory, (int) $objectId, (int) $page, 'waiting', fn (int $eventId): string => $sql->waiting($eventId));
+        return $this->table($request, $pageHelperFactory, (int) $objectId, (int) $page, 'waiting', $sql->waiting((int) $objectId));
     }
 
     /**
@@ -46,13 +46,10 @@ class CampaignActionContactsController extends CampaignController
      */
     public function noneAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, $objectId, $page = 1)
     {
-        return $this->table($request, $pageHelperFactory, (int) $objectId, (int) $page, 'none', static fn (): string => '1 = 0');
+        return $this->table($request, $pageHelperFactory, (int) $objectId, (int) $page, 'none', '1 = 0');
     }
 
-    /**
-     * @param callable(int): string $condition
-     */
-    private function table(Request $request, PageHelperFactoryInterface $pageHelperFactory, int $eventId, int $page, string $state, callable $condition): Response
+    private function table(Request $request, PageHelperFactoryInterface $pageHelperFactory, int $eventId, int $page, string $state, string $condition): Response
     {
         $event = $this->eventOrDeny($eventId);
 
@@ -71,7 +68,7 @@ class CampaignActionContactsController extends CampaignController
             'permission'    => 'campaign:campaigns:view',
             'joinTable'     => 'campaign_leads',
             'idColumn'      => 'campaign_id',
-            'contactFilter' => [['expr' => 'formula', 'internal' => true, 'val' => $condition($eventId)]],
+            'contactFilter' => [['expr' => 'formula', 'internal' => true, 'val' => $condition]],
             'orderBy'       => 'entity.date_added',
             'orderByDir'    => 'DESC',
         ]);

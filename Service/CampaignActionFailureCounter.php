@@ -9,11 +9,11 @@ use Doctrine\DBAL\Connection;
 /**
  * How many logs are failed or being retried on each action step of a campaign: a failed log with the 'failed' flag that
  * PendingEvent::fail() sets, or still scheduled (the retry core made). Core also writes a failed log for a contact removed from
- * the campaign: that one has neither, so it is not counted (the same rule as CampaignActionContactSql::failed) (wiki/patches-campaign-actions-tab.md).
+ * the campaign: that one has neither, so it is not counted (CampaignActionContactSql::failedOrRetried, the rule of the list too).
  */
 class CampaignActionFailureCounter
 {
-    public function __construct(private Connection $connection)
+    public function __construct(private Connection $connection, private CampaignActionContactSql $sql)
     {
     }
 
@@ -30,11 +30,11 @@ class CampaignActionFailureCounter
 
         $sql = 'SELECT l.event_id, COUNT(*) AS failed FROM '.MAUTIC_TABLE_PREFIX.'campaign_lead_event_log l'
             .' INNER JOIN '.MAUTIC_TABLE_PREFIX.'campaign_lead_event_failed_log f ON f.log_id = l.id'
-            .' WHERE l.event_id IN (:ids) AND (l.is_scheduled = 1 OR l.metadata LIKE :flag) GROUP BY l.event_id';
+            .' WHERE l.event_id IN (:ids) AND '.$this->sql->failedOrRetried('l').' GROUP BY l.event_id';
 
         $rows = $this->connection->executeQuery(
             $sql,
-            ['ids' => $eventIds, 'flag' => CampaignActionContactSql::FAILED_FLAG],
+            ['ids' => $eventIds],
             ['ids' => Connection::PARAM_INT_ARRAY]
         )->fetchAllAssociative();
 
