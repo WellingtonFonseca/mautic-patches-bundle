@@ -124,6 +124,12 @@ class CampaignBuilderWaitLabelSubscriberTest extends TestCase
         $this->assertStringContainsString('.campaign-event-wait-extra{display:flex;flex-direction:column', $style);
     }
 
+    public function testThePreviewIsNotScaledAndStillKeepsItsNodesInPlace(): void
+    {
+        // not "none": a transform is what makes .preview the box its absolutely positioned nodes are placed in
+        $this->assertStringContainsString('.preview{transform:scale(1)}', CampaignBuilderWaitLabelSubscriber::STYLE);
+    }
+
     public function testTheStripUsesTheThemeVariablesAndJoinsTheCard(): void
     {
         $this->assertStringContainsString('var(--layer-01)', CampaignBuilderWaitLabelSubscriber::STYLE);
