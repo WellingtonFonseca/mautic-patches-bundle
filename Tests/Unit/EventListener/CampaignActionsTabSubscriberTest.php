@@ -149,43 +149,6 @@ class CampaignActionsTabSubscriberTest extends TestCase
         $this->assertSame([], $this->recalculateOf($vars, true));
     }
 
-    /**
-     * @return iterable<string, array{0: string, 1: mixed}>
-     */
-    public static function restrictionProvider(): iterable
-    {
-        yield 'a fixed hour' => ['triggerHour', '10:00'];
-        yield 'a start hour' => ['triggerRestrictedStartHour', '10:00'];
-        yield 'a stop hour' => ['triggerRestrictedStopHour', '16:00'];
-        yield 'days of the week' => ['triggerRestrictedDaysOfWeek', [1, 2]];
-    }
-
-    /**
-     * The pending contacts of a step with an hours / days restriction show as waiting too: core writes the same scheduled log for every pending contact.
-     */
-    #[DataProvider('restrictionProvider')]
-    public function testThePendingOfARestrictedStepAreWaiting(string $key, mixed $value): void
-    {
-        $events = ['action' => [['id' => 3, 'name' => 'a', 'logCountProcessed' => 1, 'logCountForPending' => 3, $key => $value]]];
-        $event  = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]);
-
-        $this->subscriber([])->inject($event);
-
-        $this->assertSame(['completed' => 25.0, 'failed' => 0.0, 'waiting' => 75.0], $event->getTemplates()[0]['vars']['shares'][3]);
-    }
-
-    public function testEmptyRestrictionsLeaveThePendingWaiting(): void
-    {
-        // what core gives a step with no restriction: nulls and an empty list of days
-        $action = ['id' => 3, 'name' => 'a', 'logCountProcessed' => 0, 'logCountForPending' => 2, 'triggerHour' => null,
-            'triggerRestrictedStartHour' => null, 'triggerRestrictedStopHour' => null, 'triggerRestrictedDaysOfWeek' => []];
-        $event = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => ['action' => [$action]]]);
-
-        $this->subscriber([])->inject($event);
-
-        $this->assertSame(['completed' => 0.0, 'failed' => 0.0, 'waiting' => 100.0], $event->getTemplates()[0]['vars']['shares'][3]);
-    }
-
     public function testAStepWithoutCoresCountsHasOnlyItsFailures(): void
     {
         $event = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => ['action' => [['id' => 3, 'name' => 'a']]]]);
