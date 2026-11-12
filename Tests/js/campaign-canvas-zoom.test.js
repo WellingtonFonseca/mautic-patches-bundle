@@ -1,0 +1,209 @@
+// The maths and the wiring of the zoom of the campaign builder canvas (Resources/js/campaign-canvas-zoom.js). The real
+// effect (lines, drags, scroll) is checked in the browser (scripts/5/e2e/tests/campaign-canvas-zoom.spec.js).
+//
+//   docker exec mautic-mautic_web-1 sh -c "cd /var/www/html/docroot/plugins/MauticPatchesBundle && node --test 'Tests/js/*.test.js'"
+'use strict';
+
+const test   = require('node:test');
+const assert = require('node:assert');
+const zoom   = require('../../Resources/js/campaign-canvas-zoom.js');
+
+test('clamp keeps the zoom between 30% and 200% and on whole percents', () => {
+    assert.strictEqual(zoom.clamp(0.1), 0.3);
+    assert.strictEqual(zoom.clamp(5), 2);
+    assert.strictEqual(zoom.clamp(1.2345), 1.23);
+});
+
+test('a notch of the wheel is one step, up zooms in and down zooms out', () => {
+    assert.strictEqual(zoom.wheelZoom(1, -100), 1.1);
+    assert.strictEqual(zoom.wheelZoom(1, 100), 0.9);
+});
+
+test('a big wheel delta is still one step and a small one (a pinch) is a part of it', () => {
+    assert.strictEqual(zoom.wheelZoom(1, -500), 1.1);
+    assert.strictEqual(zoom.wheelZoom(1, -50), 1.05);
+});
+
+test('the wheel stops at the limits', () => {
+    assert.strictEqual(zoom.wheelZoom(2, -100), 2);
+    assert.strictEqual(zoom.wheelZoom(0.3, 100), 0.3);
+});
+
+test('the point under the mouse stays on the same spot of the canvas', () => {
+    // canvas spot under the point before: (scroll + point) / from; after: (scroll' + point) / to. Both are equal.
+    const scroll = 400, point = 250, from = 1, to = 1.5;
+    const next = zoom.anchoredScroll(scroll, point, from, to);
+    assert.strictEqual((next + point) / to, (scroll + point) / from);
+});
+
+test('with the point at the corner the scroll only grows by the ratio', () => {
+    assert.strictEqual(zoom.anchoredScroll(200, 0, 1, 2), 400);
+});
+
+test('fit: a campaign that is bigger than the view is scaled down to show every node, centred', () => {
+    const rects = [{x: 100, y: 100, width: 200, height: 100}, {x: 1700, y: 900, width: 200, height: 100}];
+    const view = {width: 1000, height: 600};
+    const r = zoom.fitView(rects, view, 60);
+    // the box is 1800 x 1000 plus the padding: 1920 x 1020
+    assert.strictEqual(r.zoom, zoom.clamp(Math.min(1000 / 1920, 600 / 1020)));
+    assert.strictEqual(r.zoom, 0.52);
+    // after the scale the first node is at (100 - 60) * zoom of the canvas, the box is centred in the view
+    assert.ok(Math.abs(r.left - ((100 - 60) * r.zoom - (1000 - 1920 * r.zoom) / 2)) < 1e-9);
+    // the box is 530 px high in a 600 px view: the centred top would be negative, the scroll stops at 0
+    assert.strictEqual(r.top, 0);
+});
+
+test('fit: a small campaign stays at 100% and is not blown up', () => {
+    const r = zoom.fitView([{x: 500, y: 500, width: 200, height: 100}], {width: 1600, height: 900}, 60);
+    assert.strictEqual(r.zoom, 1);
+});
+
+test('fit: never scrolls to a negative position and never goes under the minimum', () => {
+    const r = zoom.fitView([{x: 0, y: 0, width: 20000, height: 20000}], {width: 1000, height: 600}, 60);
+    assert.strictEqual(r.zoom, 0.3);
+    assert.ok(r.left >= 0 && r.top >= 0);
+});
+
+test('fit: a box narrower than the view is centred, and the scroll stops at 0 on the left too', () => {
+    const r = zoom.fitView([{x: 0, y: 0, width: 200, height: 100}], {width: 1000, height: 600}, 60);
+    assert.strictEqual(r.left, 0);
+    assert.strictEqual(r.top, 0);
+});
+
+test('the keys: + and = zoom in, - and _ zoom out, 0 resets, any other key is not a zoom key', () => {
+    assert.strictEqual(zoom.keyAction('+'), 'in');
+    assert.strictEqual(zoom.keyAction('='), 'in');
+    assert.strictEqual(zoom.keyAction('-'), 'out');
+    assert.strictEqual(zoom.keyAction('_'), 'out');
+    assert.strictEqual(zoom.keyAction('0'), 'reset');
+    assert.strictEqual(zoom.keyAction('a'), null);
+});
+
+// a minimal page: the wheel listener, the toolbar and the canvas
+function page() {
+    const listeners = {};
+    const options = {};
+    const group = [];
+    const canvas = {style: {}};
+    const nodes = [];
+    const view = {clientWidth: 1000, clientHeight: 600, scrollLeft: 0, scrollTop: 0,
+        contains: () => true, getClientRects: () => [1], getBoundingClientRect: () => ({left: 0, top: 0})};
+    const bar = {style: {}, querySelector: () => null, appendChild: (el) => group.push(el)};
+    const doc = {
+        head: {appendChild() {}},
+        createElement: () => ({style: {}, appendChild(c) { (this.children = this.children || []).push(c); }, addEventListener(n, f) { this.click = f; }, setAttribute() {}}),
+        getElementById: () => canvas,
+        querySelectorAll: () => nodes,
+        querySelector: (s) => (s.indexOf('btns-builder') > -1 ? bar : view),
+        addEventListener: (name, fn, opts) => { listeners[name] = fn; options[name] = opts; },
+    };
+    const calls = [];
+    const Mautic = {onPageLoad() {}, prepareCampaignCanvas() {}, campaignBuilderInstance: {setZoom: (z) => calls.push(['zoom', z]), repaintEverything: () => calls.push(['repaint'])}};
+    const root = {document: doc, getComputedStyle: () => ({position: 'static'})};
+    return {listeners, options, nodes, group, canvas, view, Mautic, calls, root, bar};
+}
+
+function installed() {
+    const p = page();
+    const saved = global.window;
+    // the script reads `window` once, when it is loaded; the page is handed through a fresh copy of the module
+    delete require.cache[require.resolve('../../Resources/js/campaign-canvas-zoom.js')];
+    global.window = p.root;
+    const mod = require('../../Resources/js/campaign-canvas-zoom.js');
+    global.window = saved;
+    mod.install.call(null, p.Mautic, {zoomIn: 'in', zoomOut: 'out', zoomReset: 'reset'});
+    return p;
+}
+
+test('CTRL + wheel scales the canvas, tells jsPlumb and cancels the browser zoom', () => {
+    const p = installed();
+    let prevented = false;
+    p.listeners.wheel({ctrlKey: true, deltaY: -100, clientX: 0, clientY: 0, target: {}, preventDefault() { prevented = true; }});
+    assert.ok(prevented);
+    assert.strictEqual(p.canvas.style.transform, 'scale(1.1)');
+    assert.strictEqual(p.canvas.style.transformOrigin, '0 0');
+    assert.deepStrictEqual(p.calls[0], ['zoom', 1.1]);
+});
+
+test('the wheel without CTRL is left alone', () => {
+    const p = installed();
+    let prevented = false;
+    p.listeners.wheel({ctrlKey: false, deltaY: -100, target: {}, preventDefault() { prevented = true; }});
+    assert.ok(!prevented);
+    assert.strictEqual(p.canvas.style.transform, undefined);
+});
+
+test('CTRL + "+" and CTRL + "0" zoom and reset while the builder is open', () => {
+    const p = installed();
+    let prevented = 0;
+    const key = (k) => p.listeners.keydown({key: k, ctrlKey: true, target: {tagName: 'DIV'}, preventDefault() { prevented++; }});
+    key('+');
+    assert.strictEqual(p.canvas.style.transform, 'scale(1.1)');
+    key('-');
+    key('-');
+    assert.strictEqual(p.canvas.style.transform, 'scale(0.9)');
+    key('0');
+    assert.strictEqual(p.canvas.style.transform, 'scale(1)');
+    assert.strictEqual(prevented, 4);
+});
+
+test('the keys are left alone without CTRL and inside a field', () => {
+    const p = installed();
+    let prevented = 0;
+    const base = {key: '+', target: {tagName: 'DIV'}, preventDefault() { prevented++; }};
+    p.listeners.keydown(Object.assign({}, base, {ctrlKey: false}));
+    p.listeners.keydown(Object.assign({}, base, {ctrlKey: true, target: {tagName: 'INPUT'}}));
+    assert.strictEqual(prevented, 0);
+    assert.strictEqual(p.canvas.style.transform, undefined);
+});
+
+test('the wheel listener is not passive: the browser zoom must be cancelled', () => {
+    const p = installed();
+    assert.strictEqual(p.options.wheel.passive, false);
+});
+
+test('a meta key (Mac) zooms like CTRL', () => {
+    const p = installed();
+    p.listeners.keydown({key: '+', ctrlKey: false, metaKey: true, target: {tagName: 'DIV'}, preventDefault() {}});
+    assert.strictEqual(p.canvas.style.transform, 'scale(1.1)');
+});
+
+test('jsPlumb repaints the lines after a zoom', () => {
+    const p = installed();
+    p.listeners.keydown({key: '+', ctrlKey: true, target: {tagName: 'DIV'}, preventDefault() {}});
+    assert.deepStrictEqual(p.calls, [['zoom', 1.1], ['repaint']]);
+});
+
+test('the same zoom again does nothing (no repaint of every line)', () => {
+    const p = installed();
+    p.listeners.keydown({key: '0', ctrlKey: true, target: {tagName: 'DIV'}, preventDefault() {}});
+    assert.deepStrictEqual(p.calls, []);
+});
+
+test('a canvas made later (the builder opens) gets the current zoom', () => {
+    const p = installed();
+    p.listeners.keydown({key: '+', ctrlKey: true, target: {tagName: 'DIV'}, preventDefault() {}});
+    p.calls.length = 0;
+    p.Mautic.prepareCampaignCanvas();
+    assert.deepStrictEqual(p.calls, [['zoom', 1.1], ['repaint']]);
+});
+
+test('fit ignores the nodes that are not shown (width 0)', () => {
+    const p = installed();
+    p.nodes.push({offsetWidth: 200, offsetHeight: 100, offsetLeft: 100, offsetTop: 100});
+    p.nodes.push({offsetWidth: 0, offsetHeight: 0, offsetLeft: 90000, offsetTop: 90000});
+    const buttons = p.group[0].children;
+    buttons[3].click();
+    // only the visible node counts: it fits at 100%
+    assert.strictEqual(p.canvas.style.transform, 'scale(1)');
+});
+
+test('the buttons are put in one group in the toolbar', () => {
+    const p = installed();
+    assert.strictEqual(p.group.length, 1);
+});
+
+test('a static toolbar becomes the box the buttons hang from', () => {
+    const p = installed();
+    assert.strictEqual(p.bar.style.position, 'relative');
+});
