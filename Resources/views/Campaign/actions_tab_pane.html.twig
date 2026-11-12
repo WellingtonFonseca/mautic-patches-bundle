@@ -8,14 +8,14 @@
   Wait steps the user can edit).
 #}
 {% set badges = [
-    {key: 'completed', label: 'success', icon: 'ri-check-line', list: null},
-    {key: 'failed', label: 'danger', icon: 'ri-error-warning-line', list: 'failed'},
+    {key: 'completed', label: 'production', icon: 'ri-check-line', list: null},
+    {key: 'failed', label: 'failed', icon: 'ri-error-warning-line', list: 'failed'},
     {key: 'waiting', label: 'info', icon: 'ri-hourglass-line', list: 'waiting'},
 ] %}
 <style>
     /* core's own read-only Ações tab is hidden, not removed: its template is not touched (its pane stays, never shown) */
     .nav-tabs li:has(> a[href="#actions-container"]){display:none}
-    #patches-actions-container .patches-actions-badge{display:inline-flex;align-items:center;justify-content:center;gap:4px;width:68px;height:22px;padding:0;border:0;line-height:1;vertical-align:middle}
+    #patches-actions-container .patches-actions-badge{width:68px;height:22px;padding:0;border:0;vertical-align:middle}
     #patches-actions-container button.patches-actions-badge{cursor:pointer}
     #patches-actions-container button.patches-actions-badge.active{box-shadow:0 0 0 2px var(--text-primary,#222)}
     /* the row is only the heading (no body), whose bottom corners are square in core: the panel clips it to its own round corners */
@@ -36,10 +36,10 @@
                                 {% set text %}<i class="{{ badge.icon }}"></i> {{ attribute(shares[action.id], badge.key) }}%{% endset %}
                                 {% set title = ('mautic.patches.campaign.actions_tab.' ~ badge.key)|trans %}
                                 {% if badge.list %}
-                                    <button type="button" class="label label-{{ badge.label }} patches-actions-badge" data-state="{{ badge.key }}" data-list="{{ badge.list }}" data-toggle="tooltip" data-trigger="hover" title="{{ title }}"
+                                    <button type="button" class="patches-badge patches-badge--{{ badge.label }} patches-actions-badge" data-state="{{ badge.key }}" data-list="{{ badge.list }}" data-toggle="tooltip" data-trigger="hover" title="{{ title }}"
                                             data-target-url="{{ path('mautic_patches_campaign_action_' ~ badge.list ~ '_contacts', {'objectId': action.id, 'page': 1}) }}">{{ text }}</button>
                                 {% else %}
-                                    <span class="label label-{{ badge.label }} patches-actions-badge" data-state="{{ badge.key }}" data-toggle="tooltip" title="{{ title }}">{{ text }}</span>
+                                    <span class="patches-badge patches-badge--{{ badge.label }} patches-actions-badge" data-state="{{ badge.key }}" data-toggle="tooltip" title="{{ title }}">{{ text }}</span>
                                 {% endif %}
                             {% endfor %}
                         </span>

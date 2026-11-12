@@ -206,8 +206,8 @@
             // already right: no DOM write, so no mutation to wake the observers
             if (badges[k].classList.contains(modifier) && !badges[k].classList.contains(other)) { continue; }
             badges[k].removeAttribute('size');
-            badges[k].classList.remove('label', 'label-gray', 'label-blue', 'patches-badge--info', 'patches-badge--neutral');
-            badges[k].classList.add('patches-badge', modifier);
+            badges[k].classList.remove('label', 'label-gray', 'label-blue', 'patches-badge--info', 'patches-badge--neutral', 'patches-badge--soft');
+            badges[k].classList.add('patches-badge', 'patches-badge--soft', modifier);
         }
     }
 
