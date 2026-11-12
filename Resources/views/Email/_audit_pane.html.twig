@@ -1,0 +1,59 @@
+{#
+  The pane of the "Histórico" tab of an email: a table with a row per field changed (date, user and action once per save). Shared by the email page
+  (audit_tab.html.twig, which moves it into the tabs) and the email edit page (audit_form_link and audit_form_pane).
+
+  Variables
+    - rows  list of {date, user, action, changes: list of {field, old, new}} (Service/AuditLog/AuditTrail)
+#}
+<style>
+/* One row per field; the old and the new value each in a block of code that wraps inside its column and keeps the line breaks. */
+.patches-audit-value { margin: 0; padding: 6px 8px; background-color: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.patches-audit-table td { vertical-align: top; }
+.patches-audit-table th:nth-child(n+5) { width: 32%; }
+:root[theme="dark"] .patches-audit-value, :root[theme="solarized-dark"] .patches-audit-value { background-color: var(--layer-01); border-color: var(--border-subtle-01); color: var(--text-primary); }
+</style>
+<div class="tab-pane bdr-w-0" id="patches-audit-container">
+    {% if rows %}
+    <div class="table-responsive">
+        <table class="table table-hover patches-audit-table">
+            <thead>
+                <tr>
+                    <th>{{ 'mautic.patches.audit.date'|trans }}</th>
+                    <th>{{ 'mautic.patches.audit.user'|trans }}</th>
+                    <th>{{ 'mautic.patches.audit.action'|trans }}</th>
+                    <th>{{ 'mautic.patches.audit.field'|trans }}</th>
+                    <th>{{ 'mautic.patches.audit.before'|trans }}</th>
+                    <th>{{ 'mautic.patches.audit.after'|trans }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {# One row per field; the date, the user and the action of a save span its rows. #}
+            {% for row in rows %}
+                {% set span = row.changes ? row.changes|length : 1 %}
+                {% for change in row.changes %}
+                <tr>
+                    {% if loop.first %}
+                    <td rowspan="{{ span }}">{{ dateToFull(row.date) }}</td>
+                    <td rowspan="{{ span }}">{{ row.user }}</td>
+                    <td rowspan="{{ span }}">{{ ('mautic.patches.audit.action.' ~ row.action)|trans }}</td>
+                    {% endif %}
+                    <td><strong>{{ change.field }}</strong></td>
+                    <td>{% if change.old != '' %}<pre class="patches-audit-value">{{ change.old }}</pre>{% else %}<span class="text-muted">&mdash;</span>{% endif %}</td>
+                    <td>{% if change.new != '' %}<pre class="patches-audit-value">{{ change.new }}</pre>{% else %}<span class="text-muted">&mdash;</span>{% endif %}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td>{{ dateToFull(row.date) }}</td>
+                    <td>{{ row.user }}</td>
+                    <td>{{ ('mautic.patches.audit.action.' ~ row.action)|trans }}</td>
+                    <td colspan="3" class="text-muted">&mdash;</td>
+                </tr>
+                {% endfor %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted pa-md">{{ 'mautic.patches.audit.none'|trans }}</p>
+    {% endif %}
+</div>

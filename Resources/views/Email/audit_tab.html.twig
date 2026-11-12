@@ -1,0 +1,25 @@
+{#
+  The "Histórico" tab of the email page (EmailAuditTabSubscriber): a table with the date, the user and the changes of each save.
+  Rendered where core's hook 'details.stats.graph.below' is; the script moves the tab link and the pane into the tabs of
+  "Contagem de cliques" and "Contatos" once the page is complete (that block is built after this hook).
+
+  Variables
+    - rows  list of {date, user, action, changes: list of {field, old, new}} (Service/AuditLog/AuditTrail)
+#}
+<ul class="hide" id="patches-audit-link-holder">
+    <li><a href="#patches-audit-container" role="tab" data-toggle="tab">{{ 'mautic.patches.audit.tab'|trans }}</a></li>
+</ul>
+<div class="hide" id="patches-audit-pane-holder">
+    {% include '@MauticPatches/Email/_audit_pane.html.twig' with {'rows': rows} only %}
+</div>
+<script>
+mQuery(function () {
+    var $clicks = mQuery('#clicks-container');
+    var $link = mQuery('#patches-audit-link-holder li');
+    var $pane = mQuery('#patches-audit-container');
+    if (!$clicks.length || !$link.length || !$pane.length || mQuery('.nav-tabs a[href="#patches-audit-container"]').length > 1) { return; }
+    mQuery('.nav-tabs a[href="#clicks-container"]').closest('ul').append($link);
+    $clicks.closest('.tab-content').append($pane);
+    mQuery('#patches-audit-link-holder, #patches-audit-pane-holder').remove();
+});
+</script>
