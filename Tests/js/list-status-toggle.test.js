@@ -122,6 +122,18 @@ test('colorCounts: a count with contacts is blue, an empty one is gray, and it f
     assert.ok(none.classes.has('patches-badge--neutral') && !none.classes.has('patches-badge--info'), 'a blue badge goes back to gray when the segment is emptied');
 });
 
+test('colorCounts: every count gets the --soft extra, also one that already has the right color without it', () => {
+    const badge = (text, ...own) => {
+        const classes = new Set(['col-count', ...own]);
+        return {textContent: text, removeAttribute: () => {}, classList: {contains: (n) => classes.has(n), add: (...n) => n.forEach((x) => classes.add(x)), remove: (...n) => n.forEach((x) => classes.delete(x))}, classes};
+    };
+    const fresh = badge('Ver 6 Contatos'), solid = badge('Ver 6 Contatos', 'patches-badge', 'patches-badge--info');
+    api.colorCounts({querySelectorAll: () => [fresh, solid]});
+
+    assert.ok(fresh.classes.has('patches-badge--soft'), 'a new count is translucent');
+    assert.ok(solid.classes.has('patches-badge--soft'), 'a solid blue count with the right color still becomes translucent');
+});
+
 test('toggleUpdate: the Update item of the row is shown while the campaign is active and hidden otherwise, only the one of that campaign', () => {
     const link = () => ({attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, removeAttribute(k) { delete this.attrs[k]; }});
     const mine = link(), other = link();
