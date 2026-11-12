@@ -1,0 +1,128 @@
+{#
+  The pane of the second "Ações" tab of the campaign page (CampaignActionsTabSubscriber): core's hook 'tabs.content'.
+  One row per action step with four badges (completed, failed, scheduled, waiting: each in % of the contacts that reached the step,
+  the four add up to about 100%: each is rounded on its own), then ONE contacts table. The failed, scheduled and waiting badges are buttons: a click loads the contacts of
+  that state of that step into the table (CampaignActionContactsController); scheduled and waiting are the same contacts (the step's
+  settings decide which badge they show in), so both load the waiting list. Above the table, the "Recalculate dates" box of a Wait step
+  (CampaignWaitRecalculateScript): hidden until the waiting list of a step listed in `recalculate` is loaded. Variables: actions
+  (core's events['action'] of the page, in its order), shares (event id => completed, failed, scheduled, waiting), recalculate (ids of the
+  Wait steps the user can edit).
+#}
+{% set badges = [
+    {key: 'completed', label: 'success', icon: 'ri-check-line', list: null},
+    {key: 'failed', label: 'danger', icon: 'ri-error-warning-line', list: 'failed'},
+    {key: 'scheduled', label: 'warning', icon: 'ri-time-line', list: 'waiting'},
+    {key: 'waiting', label: 'info', icon: 'ri-hourglass-line', list: 'waiting'},
+] %}
+<style>
+    /* core's own read-only Ações tab is hidden, not removed: its template is not touched (its pane stays, never shown) */
+    .nav-tabs li:has(> a[href="#actions-container"]){display:none}
+    #patches-actions-container .patches-actions-badge{display:inline-flex;align-items:center;justify-content:center;gap:4px;width:68px;height:22px;padding:0;border:0;line-height:1;vertical-align:middle}
+    #patches-actions-container button.patches-actions-badge{cursor:pointer}
+    #patches-actions-container button.patches-actions-badge.active{box-shadow:0 0 0 2px var(--text-primary,#222)}
+    /* the row is only the heading (no body), whose bottom corners are square in core: the panel clips it to its own round corners */
+    #patches-actions-container .panel{overflow:hidden}
+    {{ constant('MauticPlugin\\MauticPatchesBundle\\Service\\UpdatingIndicator::STYLE')|raw }}
+    /* core's d-flex and btn set a display that beats the hidden attribute of the parts of the box */
+    #patches-wait-recalc [hidden]{display:none!important}
+</style>
+<div class="tab-pane fade in bdr-w-0" id="patches-actions-container">
+    <div class="patches-actions">
+        {% for action in actions %}
+            <div class="panel panel-default mb-xs" data-event-id="{{ action.id }}"
+                {%- if action.id in recalculate %} data-recalc-simulate-url="{{ path('mautic_patches_campaign_wait_recalculate_simulate', {'eventId': action.id}) }}" data-recalc-apply-url="{{ path('mautic_patches_campaign_wait_recalculate_apply', {'eventId': action.id}) }}"{% endif %}>
+                <div class="panel-heading">
+                    <h5 class="panel-title">
+                        <span class="patches-actions-badges" style="margin-right:8px">
+                            {% for badge in badges %}
+                                {% set text %}<i class="{{ badge.icon }}"></i> {{ attribute(shares[action.id], badge.key) }}%{% endset %}
+                                {% set title = ('mautic.patches.campaign.actions_tab.' ~ badge.key)|trans %}
+                                {% if badge.list %}
+                                    <button type="button" class="label label-{{ badge.label }} patches-actions-badge" data-state="{{ badge.key }}" data-list="{{ badge.list }}" data-toggle="tooltip" data-trigger="hover" title="{{ title }}"
+                                            data-target-url="{{ path('mautic_patches_campaign_action_' ~ badge.list ~ '_contacts', {'objectId': action.id, 'page': 1}) }}">{{ text }}</button>
+                                {% else %}
+                                    <span class="label label-{{ badge.label }} patches-actions-badge" data-state="{{ badge.key }}" data-toggle="tooltip" title="{{ title }}">{{ text }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                        {{ action.name }}
+                    </h5>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {% if recalculate is not empty %}
+    {# The message on top; below it, ONE row of buttons: Recalculate alone, or (after a simulation that can be applied) Apply and Cancel.
+       While the simulation runs the message line is the segment's "<spinner> Updating...", here "<spinner> Recalculating...". #}
+    <div id="patches-wait-recalc" class="mt-md" hidden
+         data-text-intro="{{ 'mautic.patches.wait_relative.recalculate.intro'|trans }}"
+         data-text-changed="{{ 'mautic.patches.wait_relative.recalculate.changed'|trans }}"
+         data-text-leaving_now="{{ 'mautic.patches.wait_relative.recalculate.leaving_now'|trans }}"
+         data-text-unchanged="{{ 'mautic.patches.wait_relative.recalculate.unchanged'|trans }}"
+         data-text-nothing="{{ 'mautic.patches.wait_relative.recalculate.nothing'|trans }}"
+         data-text-applied="{{ 'mautic.patches.wait_relative.recalculate.applied'|trans }}">
+        <div class="patches-wait-recalc-running mb-md" hidden>
+            <small class="mautic-patches-updating">{{ constant('MauticPlugin\\MauticPatchesBundle\\Service\\UpdatingIndicator::SPINNER_SVG')|raw }}<span class="mautic-patches-updating-text">{{ 'mautic.patches.wait_relative.recalculate.running'|trans }}</span></small>
+        </div>
+        <div class="patches-wait-recalc-result mb-md" hidden></div>
+        {# Recalculate and Apply are both btn-primary and never shown together, but the theme draws a SECOND btn-primary of the same
+           parent as outlined (transparent): each one is in its own parent, so each is "the first". #}
+        <div class="d-flex fd-row fw-nowrap ai-center">
+            <div><button type="button" class="btn btn-primary" data-recalc="start">{{ 'mautic.patches.wait_relative.recalculate'|trans }}</button></div>
+            <div class="d-flex fd-row fw-nowrap ai-center gap-sm">
+                <button type="button" class="btn btn-primary" data-recalc="apply" hidden>{{ 'mautic.patches.wait_relative.recalculate.apply'|trans }}</button>
+                <button type="button" class="btn btn-tertiary btn-cancel" data-recalc="cancel" hidden>{{ 'mautic.core.form.cancel'|trans }}</button>
+            </div>
+        </div>
+    </div>
+    <script>{{ constant('MauticPlugin\\MauticPatchesBundle\\Service\\CampaignWaitRecalculateScript::SCRIPT')|raw }}</script>
+    {% endif %}
+    <div class="page-list mt-md" id="patches-actions-table"
+         data-target-url="{{ path('mautic_patches_campaign_action_none_contacts', {'objectId': (actions|first).id, 'page': 1}) }}">
+        <div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>
+    </div>
+</div>
+<script>
+    (function () {
+        if (window.mauticPatchesActionsTab) {
+            return;
+        }
+        window.mauticPatchesActionsTab = true;
+        // also the loader of the "Recalculate dates" box, which reloads the list after Apply
+        Mautic.patchesActionsLoad = load;
+        // two quick clicks: only the last list may fill the table, whichever answer arrives last
+        var latest = 0;
+        function load(url) {
+            var mine = ++latest;
+            mQuery('#patches-actions-table').html('<div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>');
+            mQuery.get(url, function (response) {
+                if (mine !== latest) {
+                    return;
+                }
+                response.target = '#patches-actions-table';
+                Mautic.processPageContent(response);
+            }).fail(function (request, status, error) {
+                // a 403 / 404 / expired session: core's own error handling, not a spinner that never goes away
+                Mautic.processAjaxError(request, status, error);
+            });
+        }
+        // data-loaded: a later show of the tab must not replace the list a click loaded
+        mQuery(document).on('shown.bs.tab', 'a[href="#patches-actions-container"]', function () {
+            var table = document.getElementById('patches-actions-table');
+            if (table && !table.hasAttribute('data-loaded')) {
+                table.setAttribute('data-loaded', '1');
+                load(table.getAttribute('data-target-url'));
+            }
+        });
+        document.addEventListener('click', function (event) {
+            var button = event.target && event.target.closest ? event.target.closest('#patches-actions-container button.patches-actions-badge') : null;
+            if (!button) {
+                return;
+            }
+            document.querySelectorAll('#patches-actions-container button.patches-actions-badge.active').forEach(function (other) { other.classList.remove('active'); });
+            button.classList.add('active');
+            document.getElementById('patches-actions-table').setAttribute('data-loaded', '1');
+            load(button.getAttribute('data-target-url'));
+        });
+    })();
+</script>
