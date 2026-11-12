@@ -62,4 +62,44 @@ class AuditTrailTest extends TestCase
 
         $this->assertSame(300, mb_strlen($rows[0]['changes'][0]['new']));
     }
+
+    public function testAFlagThatWentToFalseIsZeroNotEmpty(): void
+    {
+        $rows = AuditTrail::rows([['action' => 'update', 'details' => ['isPublished' => [true, false]]]]);
+
+        $this->assertSame('1', $rows[0]['changes'][0]['old']);
+        $this->assertSame('0', $rows[0]['changes'][0]['new']);
+    }
+
+    public function testALongValueIsCountedInCharactersNotBytes(): void
+    {
+        $rows = AuditTrail::rows([['action' => 'update', 'details' => ['x' => ['', str_repeat('é', 200)]]]]);
+
+        $this->assertSame(200, mb_strlen($rows[0]['changes'][0]['new']));
+    }
+
+    public function testAValueThatIsNotAnOldAndNewPairIsShownAsTheNewValue(): void
+    {
+        $rows = AuditTrail::rows([['action' => 'update', 'details' => ['onlyNew' => [1 => 'n'], 'onlyOld' => [0 => 'o']]]]);
+
+        $this->assertSame('', $rows[0]['changes'][0]['old']);
+        $this->assertSame('{"1":"n"}', $rows[0]['changes'][0]['new']);
+        $this->assertSame('', $rows[0]['changes'][1]['old']);
+        $this->assertSame('["o"]', $rows[0]['changes'][1]['new']);
+    }
+
+    public function testJsonKeepsAccentsAndSlashesAsTyped(): void
+    {
+        $rows = AuditTrail::rows([['action' => 'update', 'details' => ['x' => [['é'], ['a/b']]]]]);
+
+        $this->assertSame('["é"]', $rows[0]['changes'][0]['old']);
+        $this->assertSame('["a/b"]', $rows[0]['changes'][0]['new']);
+    }
+
+    public function testACutValueKeepsTheStartOfTheText(): void
+    {
+        $rows = AuditTrail::rows([['action' => 'update', 'details' => ['x' => ['', 'Start'.str_repeat('b', 400)]]]]);
+
+        $this->assertStringStartsWith('Start', $rows[0]['changes'][0]['new']);
+    }
 }

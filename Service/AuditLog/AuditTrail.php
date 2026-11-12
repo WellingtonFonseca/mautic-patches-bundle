@@ -28,7 +28,7 @@ final class AuditTrail
                 'date'    => $log['dateAdded'] ?? null,
                 'user'    => (string) ($log['userName'] ?? ''),
                 'action'  => (string) ($log['action'] ?? ''),
-                'changes' => self::changes($log['action'] ?? '', is_array($log['details'] ?? null) ? $log['details'] : []),
+                'changes' => self::changes(is_array($log['details'] ?? null) ? $log['details'] : []),
             ];
         }
 
@@ -40,7 +40,7 @@ final class AuditTrail
      *
      * @return list<array{field: string, old: string, new: string}>
      */
-    private static function changes(string $action, array $details): array
+    private static function changes(array $details): array
     {
         $changes = [];
 
@@ -63,7 +63,8 @@ final class AuditTrail
             return '';
         }
 
-        $text = is_scalar($value) ? (string) $value : (string) json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        // A flag is "1" or "0": false must not read as an empty value.
+        $text = is_bool($value) ? ($value ? '1' : '0') : (is_scalar($value) ? (string) $value : (string) json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         return mb_strlen($text) > self::MAX_VALUE_LENGTH ? mb_substr($text, 0, self::MAX_VALUE_LENGTH).'…' : $text;
     }

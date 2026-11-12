@@ -6,6 +6,7 @@ namespace MauticPlugin\MauticPatchesBundle\EventListener;
 
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
+use MauticPlugin\MauticPatchesBundle\Service\StatsBlockScript;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -48,22 +49,6 @@ class CampaignViewOrderSubscriber implements EventSubscriberInterface
 
     public static function script(): string
     {
-        return '(function(){'
-            .'if(window.mauticPatchesCampaignViewOrder){return;}'
-            .'window.mauticPatchesCampaignViewOrder=true;'
-            .'function reorder(){'
-            .'var $preview=mQuery("#preview-container").closest(".tab-content");'
-            .'var $menu=mQuery(".stats-menu");'
-            .'var $stats=mQuery(".stats-menu__content");'
-            .'if(!$preview.length||!$menu.length||!$stats.length){return;}'
-            // already below the preview: nothing to do
-            .'if($menu[0].compareDocumentPosition($preview[0])&Node.DOCUMENT_POSITION_PRECEDING){return;}'
-            .'$preview.after($menu,$stats);'
-            .'window.dispatchEvent(new Event("resize"));'
-            .'}'
-            .'var original=Mautic.onPageLoad;'
-            .'Mautic.onPageLoad=function(){var result=original.apply(this,arguments);reorder();return result;};'
-            .'mQuery(reorder);'
-            .'})();';
+        return StatsBlockScript::after('mauticPatchesCampaignViewOrder', '#preview-container', 'preview');
     }
 }
