@@ -1,0 +1,58 @@
+{#
+  Body of the Appearance modal: the accent colors and the theme cards of core's Account > Appearance tab (UserBundle
+  Profile/index.html.twig), with core's helper templates and strings. Core applies a choice only when the Save of the profile form is
+  clicked; here there is no form, so Resources/js/appearance-button.js applies each choice at once and keeps it in localStorage.
+  The modal is widened because the cards are a third of the body. The theme list is the one of core's tab: a theme added there is added here.
+#}
+<style>
+    .modal-dialog:has(.mautic-patches-appearance) {
+        width: 960px;
+        max-width: 95vw;
+    }
+</style>
+<div class="mautic-patches-appearance pa-md">
+    <h3 class="mt-0">{{ 'mautic.user.account.appearance.accent_colors'|trans }}</h3>
+    <div class="help-block mb-lg">{{ 'mautic.user.account.appearance.accent_help'|trans }}</div>
+    <div class="d-flex fw-wrap gap-lg mb-lg">
+        {{ include('@MauticUser/Helper/accent.html.twig', {accents: range(1, 25)}) }}
+    </div>
+    <h3 class="pt-20">{{ 'mautic.user.account.appearance.theme_preferences'|trans }}</h3>
+    <div class="help-block mb-md">{{ 'mautic.user.account.appearance.theme_help'|trans }}</div>
+    <div class="radio-group radio-cards row">
+        {{ include('@MauticUser/Helper/theme.html.twig', {
+            themes: [
+                {
+                    id: 'light',
+                    name: 'mautic.user.account.appearance.theme_light',
+                    description: 'mautic.user.account.appearance.theme_light_description',
+                    preview: '@MauticUser/Profile/images/_light_preview.html.twig',
+                    checked: true
+                },
+                {
+                    id: 'dark',
+                    name: 'mautic.user.account.appearance.theme_dark',
+                    description: 'mautic.user.account.appearance.theme_dark_description',
+                    preview: '@MauticUser/Profile/images/_dark_preview.html.twig'
+                },
+                {
+                    id: 'solarized-light',
+                    name: 'mautic.user.account.appearance.theme_solarized_light',
+                    description: 'mautic.user.account.appearance.theme_solarized_light_description',
+                    preview: 'app/bundles/UserBundle/Resources/views/Profile/images/_solarized_light_preview.svg'
+                },
+                {
+                    id: 'solarized-dark',
+                    name: 'mautic.user.account.appearance.theme_solarized_dark',
+                    description: 'mautic.user.account.appearance.theme_solarized_dark_description',
+                    preview: 'app/bundles/UserBundle/Resources/views/Profile/images/_solarized_dark_preview.svg'
+                },
+                {
+                    id: 'freire',
+                    name: 'mautic.user.account.appearance.theme_freire',
+                    description: 'mautic.user.account.appearance.theme_freire_description',
+                    preview: 'app/bundles/UserBundle/Resources/views/Profile/images/_freire_preview.svg'
+                }
+            ]
+        }) }}
+    </div>
+</div>
