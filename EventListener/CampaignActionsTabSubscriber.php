@@ -43,7 +43,6 @@ class CampaignActionsTabSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // Mautic 7: the page has no `events` (its tabs come by ajax), so the steps and core's counts are read here
         $vars    = $customContentEvent->getVars();
         $actions = $this->steps->actionSteps($vars);
 
@@ -92,12 +91,10 @@ class CampaignActionsTabSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * The share of each state among the contacts that reached the step (completed + failed + waiting), so the four add up to about 100% (each is rounded to one decimal on its own). Core's
-     * own yesPercent of an action is about the yes path, not the completed ones, and its pending count already leaves the failures out.
-     * The pending contacts of a step with an hours / days restriction are held for the window (scheduled); the others wait for a wait
-     * or a date. Core writes the same log for both, so only the step's own settings tell them apart.
+     * The share of each state among the logs that reached the step; the four add up to about 100% (each rounded on its own). The
+     * pending of a step with an hours / days restriction are held for the window (scheduled), the others wait (wiki/patches-campaign-actions-tab.md).
      *
-     * @param array<string, mixed> $action core's event of the page (logCountProcessed, logCountForPending, the trigger settings)
+     * @param array<string, mixed> $action a step of CampaignActionSteps (logCountProcessed, logCountForPending, the trigger settings)
      *
      * @return array{completed: float, failed: float, scheduled: float, waiting: float}
      */

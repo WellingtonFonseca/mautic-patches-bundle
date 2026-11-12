@@ -47,7 +47,7 @@ class CampaignActionStepsTest extends TestCase
     public function testTheActionStepsOfThePageCampaignInCoresOrder(): void
     {
         $events = $this->createMock(EventRepository::class);
-        $events->expects($this->once())->method('getCampaignEvents')->with(9)->willReturn([
+        $events->expects($this->once())->method('getCampaignEvents')->with(9, false)->willReturn([
             4 => ['id' => 4, 'eventType' => 'decision'],
             3 => ['id' => 3, 'eventType' => 'action'],
             7 => ['id' => 7, 'eventType' => 'condition'],
@@ -63,6 +63,8 @@ class CampaignActionStepsTest extends TestCase
         $events->expects($this->never())->method('getCampaignEvents');
 
         $this->assertSame([], $this->steps($events)->actionSteps([]));
+        $unsaved = $this->createStub(Campaign::class);
+        $this->assertSame([], $this->steps($events)->actionSteps(['campaign' => $unsaved]), 'a campaign not saved yet has no steps');
     }
 
     public function testCountsAreCoresProcessedAndPendingOfEachStep(): void
@@ -94,9 +96,29 @@ class CampaignActionStepsTest extends TestCase
                 return [];
             });
 
-        $this->steps(null, $logs)->withLogCounts([['id' => 3]], ['campaign' => $this->campaign(), 'dateFrom' => new \DateTime('2026-10-01 15:00'), 'dateTo' => new \DateTime('2026-10-31 15:00')]);
+        $this->steps(null, $logs)->withLogCounts([['id' => 3]], ['campaign' => $this->campaign(), 'dateFrom' => 'Oct 1, 2026', 'dateTo' => 'Oct 31, 2026']);
 
         $this->assertSame([['2026-10-01 00:00', '2026-11-01 00:00'], ['2026-10-01 00:00', '2026-11-01 00:00']], $seen);
+    }
+
+    public function testADateObjectIsReadTooWithItsTimeDropped(): void
+    {
+        $this->parameters['campaign_by_range'] = 1;
+        $logs = $this->createMock(LeadEventLogRepository::class);
+        $logs->expects($this->exactly(2))->method('getCampaignLogCounts')
+            ->with(9, $this->anything(), false, false, new \DateTimeImmutable('2026-10-01'), new \DateTimeImmutable('2026-11-01'), null, 0)->willReturn([]);
+
+        $this->steps(null, $logs)->withLogCounts([['id' => 3]], ['campaign' => $this->campaign(), 'dateFrom' => new \DateTime('2026-10-01 15:00'), 'dateTo' => new \DateTime('2026-10-31 15:00')]);
+    }
+
+    public function testARangeWithOnlyOneEndIsNoRange(): void
+    {
+        $this->parameters['campaign_by_range'] = 1;
+        $logs = $this->createMock(LeadEventLogRepository::class);
+        $logs->expects($this->exactly(2))->method('getCampaignLogCounts')
+            ->with(9, $this->anything(), false, false, null, null, null, 0)->willReturn([]);
+
+        $this->steps(null, $logs)->withLogCounts([['id' => 3]], ['campaign' => $this->campaign(), 'dateFrom' => 'Oct 1, 2026', 'dateTo' => '']);
     }
 
     public function testWithoutCampaignByRangeThePageDatesAreIgnored(): void
@@ -114,7 +136,7 @@ class CampaignActionStepsTest extends TestCase
         $logs->expects($this->never())->method('getCampaignLogCounts');
 
         $this->assertSame([], $this->steps(null, $logs)->withLogCounts([], ['campaign' => $this->campaign()]));
-        $this->assertSame([['id' => 3]], $this->steps(null, $logs)->withLogCounts([['id' => 3]], []));
+        $this->assertSame([['id' => 3], ['id' => 5]], $this->steps(null, $logs)->withLogCounts([['id' => 3], ['id' => 5]], []), 'every step back, untouched');
     }
 
     public function testTheSummaryRowsThirdValueIsTheProcessedCount(): void

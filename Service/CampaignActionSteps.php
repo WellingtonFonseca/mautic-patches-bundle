@@ -24,7 +24,8 @@ class CampaignActionSteps
     }
 
     /**
-     * The action steps of the page's campaign, in core's order, without counts (the tab link only needs to know there is one).
+     * The action steps of the page's campaign, in core's order, deleted ones included as core's tab of 7 shows them, without counts
+     * (the tab link only needs to know there is one).
      *
      * @param array<string, mixed> $pageVars the vars of core's details.html.twig
      *
@@ -32,12 +33,12 @@ class CampaignActionSteps
      */
     public function actionSteps(array $pageVars): array
     {
-        $campaign = $pageVars['campaign'] ?? null;
-        if (!$campaign instanceof Campaign || null === $campaign->getId()) {
+        $campaign = self::campaignOf($pageVars);
+        if (null === $campaign) {
             return [];
         }
 
-        $events = $this->entityManager->getRepository(Event::class)->getCampaignEvents($campaign->getId());
+        $events = $this->entityManager->getRepository(Event::class)->getCampaignEvents($campaign->getId(), false);
 
         return array_values(array_filter($events, static fn (array $event): bool => 'action' === ($event['eventType'] ?? null)));
     }
@@ -50,8 +51,8 @@ class CampaignActionSteps
      */
     public function withLogCounts(array $steps, array $pageVars): array
     {
-        $campaign = $pageVars['campaign'] ?? null;
-        if (!$campaign instanceof Campaign || [] === $steps) {
+        $campaign = self::campaignOf($pageVars);
+        if (null === $campaign || [] === $steps) {
             return $steps;
         }
 
@@ -68,7 +69,18 @@ class CampaignActionSteps
     }
 
     /**
-     * Core's range of eventStatsAction: none unless campaign_by_range, and the end day included.
+     * @param array<string, mixed> $pageVars
+     */
+    private static function campaignOf(array $pageVars): ?Campaign
+    {
+        $campaign = $pageVars['campaign'] ?? null;
+
+        return $campaign instanceof Campaign && null !== $campaign->getId() ? $campaign : null;
+    }
+
+    /**
+     * Core's range of eventStatsAction: none unless campaign_by_range, and the end day included. The page's dateFrom / dateTo are the
+     * texts of its date range form ('Oct 1, 2026'), which core turns into Y-m-d for the stats url.
      *
      * @param array<string, mixed> $pageVars
      *
@@ -79,18 +91,23 @@ class CampaignActionSteps
         $from = $pageVars['dateFrom'] ?? null;
         $to   = $pageVars['dateTo'] ?? null;
 
-        if (!$this->parameters->get('campaign_by_range') || !$from instanceof \DateTimeInterface || !$to instanceof \DateTimeInterface) {
+        if (!$this->parameters->get('campaign_by_range') || empty($from) || empty($to)) {
             return [null, null];
         }
 
-        return [
-            new \DateTimeImmutable($from->format('Y-m-d')),
-            (new \DateTimeImmutable($to->format('Y-m-d')))->modify('+1 day'),
-        ];
+        return [self::day($from), self::day($to)->modify('+1 day')];
+    }
+
+    private static function day(mixed $date): \DateTimeImmutable
+    {
+        $day = $date instanceof \DateTimeInterface ? $date->format('Y-m-d') : (string) $date;
+
+        return new \DateTimeImmutable((new \DateTimeImmutable($day))->format('Y-m-d'));
     }
 
     /**
      * A summary row per event is [no path, yes path, processed] (core's getCampaignLogCountsProcessed): the first two are all the logs.
+     * Public for its test: SummaryRepository is final on 7, so the summary branch cannot be reached with a double.
      *
      * @param array<int|string, array<int|string, int|string>> $summaryCounts
      *
