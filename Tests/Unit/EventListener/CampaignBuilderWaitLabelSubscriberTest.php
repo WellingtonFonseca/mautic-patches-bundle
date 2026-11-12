@@ -145,4 +145,12 @@ class CampaignBuilderWaitLabelSubscriberTest extends TestCase
         $this->assertStringContainsString('mQuery(patch);', $js);
         $this->assertStringContainsString('if(window.mauticPatchesWaitLabel){return;}', $js);
     }
+
+    public function testTheRewritesKeepAccentsAndEscapeTagsAndAmpersands(): void
+    {
+        $js = CampaignBuilderWaitLabelSubscriber::script([['from' => 'Espera </script> & após', 'to' => 'ok']]);
+
+        $this->assertStringContainsString('"from":"Espera \\u003C\\/script\\u003E \\u0026 após"', $js);
+        $this->assertStringNotContainsString('</script> &', $js);
+    }
 }

@@ -21,6 +21,8 @@ use MauticPlugin\CustomObjectsBundle\Segment\SegmentItemResolver;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitDateResolver;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitItemSelector;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuildLauncher;
+use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\MauticRoleUserGateway;
+use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\RoleUserGateway;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -36,6 +38,9 @@ return function (ContainerConfigurator $configurator): void {
     // Mautic Integration is, so autowiring does not load it.
     $services->load('MauticPlugin\\MauticPatchesBundle\\', '../')
         ->exclude('../{'.implode(',', array_merge(MauticCoreExtension::DEFAULT_EXCLUDES, ['Integration/MauticPatchesIntegration.php'])).',Loader}');
+
+    // The one gateway of the roles / users clone; the tests use an in-memory one.
+    $services->alias(RoleUserGateway::class, MauticRoleUserGateway::class);
 
     // The segment entity gets the repository that sorts by prefix (SegmentListRepository).
     $services->set(SegmentRepositoryListener::class)

@@ -1,0 +1,24 @@
+{#
+  Body of the shared modal of the export: the encrypted package and its key (shown only here, once: it is not saved), or a message when
+  nothing was chosen. Only a modal holding this body is widened (:has), every other use of the shared modal keeps its size.
+#}
+<style>
+    .modal-dialog:has(.mautic-patches-role-user-clone) {
+        width: 900px;
+        max-width: 95vw;
+    }
+</style>
+<div class="mautic-patches-role-user-clone pa-md">
+    {% if error is defined %}
+        <div class="alert alert-danger mb-0" id="role-user-clone-errors">{{ error }}</div>
+    {% else %}
+        <div class="alert alert-warning" id="role-user-clone-key-warning">{{ 'mautic.patches.role_user_clone.export.key_warning'|trans }}</div>
+        <h4>{{ 'mautic.patches.role_user_clone.export.key'|trans }}</h4>
+        {{ include('@MauticPatches/RoleUserClone/_copy_box.html.twig', {id: 'role-user-clone-key', text: key, copied: 'mautic.patches.role_user_clone.export.key_copied'|trans, height: 120, wrap: 'normal'}) }}
+        <h4 id="role-user-clone-package-title">{{ 'mautic.patches.role_user_clone.export.package'|trans({'%count%': count}) }}</h4>
+        {{ include('@MauticPatches/RoleUserClone/_copy_box.html.twig', {id: 'role-user-clone-package', text: package, copied: 'mautic.patches.role_user_clone.export.package_copied'|trans, height: 300, wrap: 'normal'}) }}
+    {% endif %}
+</div>
+<div class="bottom-form-buttons">
+    <button type="button" id="role-user-clone-close" class="btn btn-tertiary btn-cancel" data-dismiss="modal">{{ 'mautic.core.close'|trans }}<i class="ri-close-line"></i></button>
+</div>
