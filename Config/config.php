@@ -38,6 +38,12 @@ $patchesConfig = [
                 'method'       => 'GET',
                 'requirements' => ['id' => '\\d+'],
             ],
+            // The Appearance modal (accent colors and theme) opened by the sun / moon button left of the notification bell.
+            'mautic_patches_appearance_modal' => [
+                'path'       => '/appearance-modal',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\AppearanceModalController::modalAction',
+                'method'     => 'GET',
+            ],
             // The details modal of the segment list: the tabs of the segment page.
             'mautic_patches_segment_details' => [
                 'path'         => '/segment-details/{id}',
