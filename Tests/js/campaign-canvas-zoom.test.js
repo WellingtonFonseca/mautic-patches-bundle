@@ -80,7 +80,7 @@ test('the keys: + and = zoom in, - and _ zoom out, 0 resets, any other key is no
 });
 
 // a minimal page: the wheel listener, the toolbar and the canvas
-function page() {
+function page(withPreview) {
     const listeners = {};
     const options = {};
     const group = [];
@@ -88,23 +88,32 @@ function page() {
     const nodes = [];
     const view = {clientWidth: 1000, clientHeight: 600, scrollLeft: 0, scrollTop: 0,
         contains: () => true, getClientRects: () => [1], getBoundingClientRect: () => ({left: 0, top: 0})};
+    // the Preview tab of the campaign page: its own box that scrolls, no builder on that page
+    const inserted = [];
+    const preview = withPreview ? {clientWidth: 500, clientHeight: 500, scrollLeft: 0, scrollTop: 0,
+        contains: () => true, getClientRects: () => [1], getBoundingClientRect: () => ({left: 0, top: 0}),
+        querySelector: () => null, insertBefore: (el) => inserted.push(el), firstChild: null} : null;
     const bar = {style: {}, querySelector: () => null, appendChild: (el) => group.push(el)};
     const doc = {
         head: {appendChild() {}},
         createElement: () => ({style: {}, appendChild(c) { (this.children = this.children || []).push(c); }, addEventListener(n, f) { this.click = f; }, setAttribute() {}}),
-        getElementById: () => canvas,
+        getElementById: (id) => (id === 'CampaignCanvas' ? canvas : (id === 'preview-container' ? preview : null)),
         querySelectorAll: () => nodes,
-        querySelector: (s) => (s.indexOf('btns-builder') > -1 ? bar : view),
+        querySelector: (s) => {
+            if (withPreview) { return null; }
+
+            return s.indexOf('btns-builder') > -1 ? bar : view;
+        },
         addEventListener: (name, fn, opts) => { listeners[name] = fn; options[name] = opts; },
     };
     const calls = [];
     const Mautic = {onPageLoad() {}, prepareCampaignCanvas() {}, campaignBuilderInstance: {setZoom: (z) => calls.push(['zoom', z]), repaintEverything: () => calls.push(['repaint'])}};
     const root = {document: doc, getComputedStyle: () => ({position: 'static'})};
-    return {listeners, options, nodes, group, canvas, view, Mautic, calls, root, bar};
+    return {inserted, preview, listeners, options, nodes, group, canvas, view, Mautic, calls, root, bar};
 }
 
-function installed() {
-    const p = page();
+function installed(withPreview) {
+    const p = page(withPreview);
     const saved = global.window;
     // the script reads `window` once, when it is loaded; the page is handed through a fresh copy of the module
     delete require.cache[require.resolve('../../Resources/js/campaign-canvas-zoom.js')];
@@ -206,4 +215,72 @@ test('the buttons are put in one group in the toolbar', () => {
 test('a static toolbar becomes the box the buttons hang from', () => {
     const p = installed();
     assert.strictEqual(p.bar.style.position, 'relative');
+});
+
+test('Preview: the group goes into the box of the Preview as a sticky row, once', () => {
+    const p = installed(true);
+    assert.strictEqual(p.inserted.length, 1);
+    assert.strictEqual(p.inserted[0].className, 'mautic-patches-zoom-sticky');
+    assert.strictEqual(p.inserted[0].children[0].className, 'mautic-patches-zoom');
+    assert.strictEqual(p.inserted[0].children[0].children.length, 4);
+});
+
+test('Preview: CTRL + wheel over the Preview zooms the canvas', () => {
+    const p = installed(true);
+    let prevented = false;
+    p.listeners.wheel({ctrlKey: true, deltaY: -100, clientX: 0, clientY: 0, target: {}, preventDefault() { prevented = true; }});
+    assert.ok(prevented);
+    assert.strictEqual(p.canvas.style.transform, 'scale(1.1)');
+});
+
+test('Preview: the keys only act while the mouse is over the Preview (CTRL + "+" is also the browser zoom)', () => {
+    const p = installed(true);
+    let prevented = 0;
+    const key = () => p.listeners.keydown({key: '+', ctrlKey: true, target: {tagName: 'DIV'}, preventDefault() { prevented++; }});
+    key();
+    assert.strictEqual(prevented, 0);
+    assert.strictEqual(p.canvas.style.transform, undefined);
+    p.listeners.mouseover({target: {closest: (s) => (s === '#preview-container' ? {} : null)}});
+    key();
+    assert.strictEqual(prevented, 1);
+    assert.strictEqual(p.canvas.style.transform, 'scale(1.1)');
+    p.listeners.mouseover({target: {closest: () => null}});
+    key();
+    assert.strictEqual(prevented, 1);
+});
+
+test('Preview: the canvas of another campaign page starts at 100%', () => {
+    const p = installed(true);
+    p.listeners.wheel({ctrlKey: true, deltaY: -100, clientX: 0, clientY: 0, target: {}, preventDefault() {}});
+    p.calls.length = 0;
+    p.Mautic.prepareCampaignCanvas();
+    assert.strictEqual(p.canvas.style.transform, 'scale(1)');
+    assert.deepStrictEqual(p.calls, [['zoom', 1], ['repaint']]);
+});
+
+test('Preview: fit scrolls the box of the Preview', () => {
+    const p = installed(true);
+    p.nodes.push({offsetWidth: 200, offsetHeight: 100, offsetLeft: 300, offsetTop: 300});
+    p.inserted[0].children[0].children[3].click();
+    // (300 - 60) minus half of what is left of the 500 px view around the 320 x 220 box
+    assert.strictEqual(p.preview.scrollLeft, 150);
+    assert.strictEqual(p.preview.scrollTop, 100);
+});
+
+test('CTRL + wheel outside the canvas box is left alone', () => {
+    const p = installed();
+    p.view.contains = () => false;
+    let prevented = false;
+    p.listeners.wheel({ctrlKey: true, deltaY: -100, clientX: 0, clientY: 0, target: {}, preventDefault() { prevented = true; }});
+    assert.ok(!prevented);
+    assert.strictEqual(p.canvas.style.transform, undefined);
+});
+
+test('a builder that is closed (hidden, no boxes) does not take the keys', () => {
+    const p = installed();
+    p.view.getClientRects = () => [];
+    let prevented = false;
+    p.listeners.keydown({key: '+', ctrlKey: true, target: {tagName: 'DIV'}, preventDefault() { prevented = true; }});
+    assert.ok(!prevented);
+    assert.strictEqual(p.canvas.style.transform, undefined);
 });

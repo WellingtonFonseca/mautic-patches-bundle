@@ -11,7 +11,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * A usability change, not a bug: core's campaign builder has no zoom, so a large campaign cannot be seen as a whole.
- * Four buttons below Save and Close (out, % that resets, in, fit all nodes), CTRL + wheel and CTRL + / - / 0 scale the canvas. See Resources/js/campaign-canvas-zoom.js for how.
+ * Four buttons below Save and Close (out, % that resets, in, fit all nodes), CTRL + wheel and CTRL + / - / 0 scale the canvas, in the builder and on the Preview tab of the campaign page (top right corner there). See Resources/js/campaign-canvas-zoom.js for how.
  *
  * Injected the same way as the other page scripts (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left').
  */
