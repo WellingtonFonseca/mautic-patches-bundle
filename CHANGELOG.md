@@ -3,6 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-13
+- Na aba Histórico do contato, o erro de uma ação de campanha (como o passo Aguardar) aparece em um alerta vermelho, igual ao dos cartões de envio
 - Na janela de detalhes do contato (clique no nome na lista), a tabela não fica mais colada nas abas
 - Na aba Histórico do contato, o ícone vermelho de alerta de uma ação com erro virou um selo redondo: só o ícone, e ao passar o mouse abre a palavra Falhou
 - Na aba Etapas, as condições têm um ícone de interrogação no selo do tipo, no lugar do ícone de divisão
