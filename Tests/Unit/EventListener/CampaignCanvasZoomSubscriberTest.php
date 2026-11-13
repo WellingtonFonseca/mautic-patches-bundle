@@ -43,6 +43,19 @@ class CampaignCanvasZoomSubscriberTest extends TestCase
         $this->assertStringContainsString('"zoomReset":"T:mautic.patches.campaign.zoom_reset"', $content);
     }
 
+    public function testTheContentIsExactlyTheScriptThenItsInstallCall(): void
+    {
+        $js     = file_get_contents(__DIR__.'/../../../Resources/js/campaign-canvas-zoom.js');
+        $config = json_encode([
+            'zoomIn'    => 'T:mautic.patches.campaign.zoom_in',
+            'zoomOut'   => 'T:mautic.patches.campaign.zoom_out',
+            'zoomFit'   => 'T:mautic.patches.campaign.zoom_fit',
+            'zoomReset' => 'T:mautic.patches.campaign.zoom_reset',
+        ]);
+
+        $this->assertSame('<script>'.$js.';mauticPatchesCanvasZoomApi.install(Mautic,'.$config.');</script>', $this->content());
+    }
+
     public function testOnlyThePageHeaderGetsTheScript(): void
     {
         $this->assertSame('', $this->content('somewhere.else'));
