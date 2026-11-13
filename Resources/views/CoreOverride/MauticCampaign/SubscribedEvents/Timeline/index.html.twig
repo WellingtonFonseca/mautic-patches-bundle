@@ -1,0 +1,5 @@
+{# Core's campaign timeline row, with its error paragraph drawn as core's alert-danger (text only: the alert draws its own icon).
+   "@!" loads core's original; "@MauticCampaign" would load this file again. The replace matches core's exact tag: when a core
+   upgrade changes it, the old red text comes back and nothing breaks (the drift test in test-lint tells). #}
+{% set coreHtml %}{% include '@!MauticCampaign/SubscribedEvents/Timeline/index.html.twig' %}{% endset %}
+{{ coreHtml|replace({'<p class="text-danger mt-0 mb-10"><i class="ri-alert-line"></i> ': '<p class="alert alert-danger mt-0 mb-10">'})|raw }}

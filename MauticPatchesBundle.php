@@ -8,6 +8,7 @@ use Doctrine\DBAL\Schema\Schema;
 use Mautic\CoreBundle\Factory\MauticFactory;
 use Mautic\PluginBundle\Bundle\PluginBundleBase;
 use Mautic\PluginBundle\Entity\Plugin;
+use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\CoreTemplateOverridePass;
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\OverridingTranslationLoaderPass;
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\RelativeWaitPass;
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\SortableListThemePass;
@@ -29,6 +30,9 @@ class MauticPatchesBundle extends PluginBundleBase
 
         // the add button of core's lists of values (field options, form fields, ...) comes below the list
         $container->addCompilerPass(new SortableListThemePass());
+
+        // the error of a campaign row in the contact timeline is drawn as core's alert-danger
+        $container->addCompilerPass(new CoreTemplateOverridePass());
     }
 
     /**
