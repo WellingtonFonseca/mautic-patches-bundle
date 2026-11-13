@@ -44,7 +44,7 @@
                         <span class="patches-steps-badges" style="margin-right:8px">
                             {% set isCondition = step.eventType == 'condition' %}
                             {% set typeText = (isCondition ? 'mautic.patches.campaign.steps_tab.type_condition' : 'mautic.patches.campaign.steps_tab.type_action')|trans %}
-                            <span class="patches-steps-type-slot"><span class="patches-badge patches-badge--{{ isCondition ? 'condition' : 'action' }} patches-icon-badge patches-steps-type" data-type="{{ isCondition ? 'condition' : 'action' }}" title="{{ typeText }}" aria-label="{{ typeText }}"><i class="{{ isCondition ? 'ri-git-branch-fill' : 'ri-flashlight-fill' }}" aria-hidden="true"></i><span class="patches-icon-badge__text">{{ typeText }}</span></span></span>
+                            <span class="patches-steps-type-slot"><span class="patches-badge patches-badge--{{ isCondition ? 'condition' : 'action' }} patches-icon-badge patches-steps-type" data-type="{{ isCondition ? 'condition' : 'action' }}" title="{{ typeText }}" aria-label="{{ typeText }}"><i class="{{ isCondition ? 'ri-question-mark' : 'ri-flashlight-fill' }}" aria-hidden="true"></i><span class="patches-icon-badge__text">{{ typeText }}</span></span></span>
                             {% for badge in badges %}
                                 {% set text %}<i class="{{ badge.icon }}"></i> {{ attribute(shares[step.id], badge.key) }}%{% endset %}
                                 {% set title = ('mautic.patches.campaign.steps_tab.' ~ badge.key)|trans %}
