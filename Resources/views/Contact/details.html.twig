@@ -25,7 +25,8 @@
         {% endfor %}
     </ul>
 
-    <div class="tab-content">
+    {# Only the top padding of core's "pa-md": the side padding would indent the table away from the modal title. #}
+    <div class="tab-content pt-md">
         {% for group in groups %}
             {% if fields[group] is not empty %}
                 <div class="tab-pane fade {% if loop.first %}in active{% endif %} bdr-w-0" id="patches-contact-{{ group }}">
