@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Service;
 
 /**
- * The SQL conditions (on campaign_leads, alias `entity`) that pick the contacts of one action step by state: the rule of each
+ * The SQL conditions (on campaign_leads, alias `entity`) that pick the contacts of one step by state: the rule of each
  * number of the "Etapas" tab, in one place for its tables. A contact is listed ONCE however many
  * logs (rotations) it has, so a list can be shorter than the number, which counts logs.
  */

@@ -13,7 +13,7 @@ use MauticPlugin\MauticPatchesBundle\Service\CampaignFlowOrder;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * A second tab, "Etapas", on the campaign page, replacing core's read-only "Ações" and "Condições" ones (hidden by CSS): each action or condition step is a row, in the order of the flow, of badges (completed, failed, waiting); the failed and
+ * The "Etapas" tab of the campaign page, replacing core's read-only "Ações" and "Condições" ones (hidden by CSS): each action or condition step is a row, in the order of the flow, of badges (completed, failed, waiting); the failed and
  * waiting ones are buttons that load the contacts of that state in the table below; the waiting list of a Wait step also gets the
  * "Recalculate dates" box (CampaignWaitRecalculateScript) for who can edit the campaign (wiki/patches-campaign-steps-tab.md). Core's page has the hooks 'tabs' and
  * 'tabs.content', so its template is not touched.
@@ -59,7 +59,8 @@ class CampaignStepsTabSubscriber implements EventSubscriberInterface
         $failed = $this->failureCounter->countByEvent(array_map(static fn (array $step): int => (int) $step['id'], $steps));
         $shares = [];
         foreach ($steps as $step) {
-            $shares[$step['id']] = $this->sharesOf($step, $failed[(int) $step['id']] ?? 0);
+            $id          = (int) $step['id'];
+            $shares[$id] = $this->sharesOf($step, $failed[$id] ?? 0);
         }
 
         $customContentEvent->addTemplate('@MauticPatches/Campaign/steps_tab_pane.html.twig', [

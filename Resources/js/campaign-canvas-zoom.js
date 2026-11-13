@@ -92,6 +92,8 @@
                 Mautic.campaignBuilderInstance.setZoom(zoom);
                 Mautic.campaignBuilderInstance.repaintEverything();
             }
+            // an ajax visit to another campaign page replaces the group: drop the buttons that left the page, or the array only grows
+            labels = labels.filter(function (label) { return label.isConnected !== false; });
             labels.forEach(function (label) { label.textContent = Math.round(zoom * 100) + '%'; });
         }
 

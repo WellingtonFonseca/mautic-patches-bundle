@@ -284,3 +284,14 @@ test('a builder that is closed (hidden, no boxes) does not take the keys', () =>
     assert.ok(!prevented);
     assert.strictEqual(p.canvas.style.transform, undefined);
 });
+
+test('the percentage of a button that left the page (ajax visit) is no longer written', () => {
+    const p = installed();
+    const reset = p.group[0].children[1];
+    assert.strictEqual(reset.textContent, '100%');
+    p.listeners.wheel({ctrlKey: true, deltaY: -100, clientX: 0, clientY: 0, target: {}, preventDefault() {}});
+    assert.strictEqual(reset.textContent, '110%', 'a button in the page follows the zoom');
+    reset.isConnected = false;
+    p.listeners.wheel({ctrlKey: true, deltaY: -100, clientX: 0, clientY: 0, target: {}, preventDefault() {}});
+    assert.strictEqual(reset.textContent, '110%', 'a detached button is dropped');
+});

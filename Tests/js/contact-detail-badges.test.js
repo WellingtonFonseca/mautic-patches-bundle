@@ -51,18 +51,18 @@ test('isContactViewPath: the page of one contact, also under a subdirectory or i
     assert.strictEqual(api.isContactViewPath('/s/segments/view/5'), false);
 });
 
-test('blockedChannels: the channel is the last word of each label, in lower case, in any language', () => {
+test('pageBlockedChannels: the channel is the last word of each label, in lower case, in any language', () => {
     const {doc} = page(['\n  Não Contatar: EMAIL\n  ', 'Bounced: SMS']);
 
-    assert.deepStrictEqual(api.blockedChannels(doc), {email: true, sms: true});
+    assert.deepStrictEqual(api.pageBlockedChannels(doc), {email: true, sms: true});
 });
 
-test('blockedChannels: no label, nothing blocked', () => {
-    assert.deepStrictEqual(api.blockedChannels(page([]).doc), {});
+test('pageBlockedChannels: no label, nothing blocked', () => {
+    assert.deepStrictEqual(api.pageBlockedChannels(page([]).doc), {});
 });
 
-test('blockedChannels: an empty label adds no channel', () => {
-    assert.deepStrictEqual(api.blockedChannels(page(['  ']).doc), {});
+test('pageBlockedChannels: an empty label adds no channel', () => {
+    assert.deepStrictEqual(api.pageBlockedChannels(page(['  ']).doc), {});
 });
 
 test('addContactDetailBadges: three badges go before the Editar button: Email, SMS, HSM, all green when nothing is blocked', () => {

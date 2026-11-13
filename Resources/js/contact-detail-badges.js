@@ -21,7 +21,7 @@
      * The Do Not Contact channels of the contact: core prints one label per blocked channel, "Do Not Contact: EMAIL" (or "Bounced: SMS"),
      * so the channel is the last word of the label, in any language.
      */
-    function blockedChannels(doc) {
+    function pageBlockedChannels(doc) {
         var labels = doc.querySelectorAll('[id^="bounceLabel"] .label'), blocked = {};
         for (var k = 0; k < labels.length; k++) {
             var word = (labels[k].textContent || '').trim().split(/\s+/).pop().toLowerCase();
@@ -46,7 +46,7 @@
         var bar = doc.querySelector('#toolbar .std-toolbar');
         if (!bar || !isContactViewPath(doc.location.pathname)) { return false; }
 
-        var badges = list.contactBadges(blockedChannels(doc), cfg), sign = signature(badges), old = bar.querySelector('.' + BOX_CLASS);
+        var badges = list.contactBadges(pageBlockedChannels(doc), cfg), sign = signature(badges), old = bar.querySelector('.' + BOX_CLASS);
         if (old && old.getAttribute('data-state') === sign) { return false; }
         if (old) { old.parentNode.removeChild(old); }
 
@@ -83,7 +83,7 @@
     }
 
     list.installContactDetail = installContactDetail;
-    var api = {isContactViewPath: isContactViewPath, blockedChannels: blockedChannels, addContactDetailBadges: addContactDetailBadges, installContactDetail: installContactDetail};
+    var api = {isContactViewPath: isContactViewPath, pageBlockedChannels: pageBlockedChannels, addContactDetailBadges: addContactDetailBadges, installContactDetail: installContactDetail};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

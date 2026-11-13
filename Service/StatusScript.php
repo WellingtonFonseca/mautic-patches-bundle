@@ -22,6 +22,8 @@ final class StatusScript
      * @param string $style           the CSS the list needs, added to the page by the script
      * @param string $companionScript a file of the plugin that loads after the list script and adds its own install function to its api (the contact page badges)
      */
+    // Each call prints the list script again, and every run replaces mauticPatchesListStatusApi with a new object that has lost the install function a
+    // companion script added. So the install call must stay right after its own companion tag, in the same output.
     public static function html(TranslatorInterface $translator, string $style, string $installFunction, string $companionScript = ''): string
     {
         $config = [

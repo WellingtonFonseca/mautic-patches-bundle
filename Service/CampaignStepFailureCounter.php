@@ -7,7 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Service;
 use Doctrine\DBAL\Connection;
 
 /**
- * How many logs are failed or being retried on each action step of a campaign: a failed log with the 'failed' flag that
+ * How many logs are failed or being retried on each step of a campaign: a failed log with the 'failed' flag that
  * PendingEvent::fail() sets, or still scheduled (the retry core made). Core also writes a failed log for a contact removed from
  * the campaign: that one has neither, so it is not counted (CampaignStepContactSql::failedOrRetried, the rule of the list too).
  */

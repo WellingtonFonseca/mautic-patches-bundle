@@ -18,11 +18,11 @@ class CampaignFlowOrder
      */
     public function sort(array $events): array
     {
-        $ids      = array_column($events, 'id');
+        $known    = array_flip(array_map('intval', array_column($events, 'id')));
         $children = [];
         foreach ($events as $event) {
             // a node whose parent is not in the list (or has none) starts a flow
-            $parent              = in_array($event['parent_id'] ?? null, $ids, false) ? (int) $event['parent_id'] : 0;
+            $parent              = isset($known[(int) ($event['parent_id'] ?? 0)]) ? (int) $event['parent_id'] : 0;
             $children[$parent][] = $event;
         }
 

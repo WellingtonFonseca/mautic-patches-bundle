@@ -56,10 +56,19 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
             sprintf(
                 '<span class="patches-detail-status" hidden data-status="%s"%s></span>',
                 $entity->isPublished() ? 'published' : 'unpublished',
-                $entity instanceof Campaign ? ($entity->allowRestart() ? ' data-restart="1"' : '') : $this->segmentAttributes($entity)
+                $this->markerAttributes($entity)
             )
             .StatusScript::html($this->translator, self::style(), 'installSegmentCampaignDetail', self::SCRIPT)
         );
+    }
+
+    private function markerAttributes(Campaign|LeadList $entity): string
+    {
+        if ($entity instanceof LeadList) {
+            return $this->segmentAttributes($entity);
+        }
+
+        return $entity->allowRestart() ? ' data-restart="1"' : '';
     }
 
     /**
