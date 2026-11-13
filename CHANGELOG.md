@@ -2,7 +2,13 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-13
+- Na aba Etapas, as condições têm um ícone de interrogação no selo do tipo, no lugar do ícone de divisão
+
 ## 2026-11-12
+- O construtor da campanha e a aba Pré-visualizar têm zoom: quatro botões (menos, a porcentagem que volta a 100%, mais e ajustar tudo na tela), Ctrl + roda do mouse e os atalhos Ctrl + mais, menos e zero
+- A página do contato mostra os selos de Email, SMS e HSM à esquerda do botão Editar, os mesmos da coluna Status da lista, e abrem ao passar o mouse
+- As páginas do segmento e da campanha mostram os selos de status à esquerda do botão Editar: Ativo ou Inativo, e no segmento também global, filtros, não reconstruído e construção lenta; na campanha também reentrada
 - Exportar e importar papéis e usuários entre instâncias do Mautic: o pacote sai cifrado, com as senhas dos usuários, e uma chave de 100 caracteres mostrada uma vez. A importação confere tudo antes de salvar e devolve os itens que não puderam entrar, com o motivo (só para administradores)
 - Nas listas com barra de ferramentas, o campo de filtro fica quadrado também quando a lupa é o único botão, e o menu da engrenagem abre para a esquerda, sem sair da tela
 - Um botão de sol ou lua fica ao lado esquerdo do sino de notificações: um clique abre a tela Aparência em uma janela, com as cores de destaque e os temas, e a escolha vale na hora. O botão fica escondido na própria página da conta
