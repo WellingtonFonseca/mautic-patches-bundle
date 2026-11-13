@@ -47,16 +47,18 @@ class CampaignPrefixSaveSubscriberTest extends TestCase
         $store = $this->createMock(CampaignPrefixStore::class);
         $store->method('pending')->willReturn(null);
         $store->expects($this->never())->method('save');
+        $campaign = $this->campaign(7);
 
-        (new CampaignPrefixSaveSubscriber($store))->onPostSave(new CampaignEvent($this->campaign(7)));
+        (new CampaignPrefixSaveSubscriber($store))->onPostSave(new CampaignEvent($campaign));
     }
 
     public function testDeletingTheCampaignRemovesItsPrefix(): void
     {
         $store = $this->createMock(CampaignPrefixStore::class);
         $store->expects($this->once())->method('remove')->with(7);
+        $campaign = $this->campaign(7);
 
-        (new CampaignPrefixSaveSubscriber($store))->onPostDelete(new CampaignEvent($this->campaign(7)));
+        (new CampaignPrefixSaveSubscriber($store))->onPostDelete(new CampaignEvent($campaign));
     }
 
     public function testDeletedIdIsUsedWhenTheIdWasCleared(): void
