@@ -47,8 +47,8 @@ class CampaignPrefixSaveSubscriberTest extends TestCase
         $store = $this->createMock(CampaignPrefixStore::class);
         $store->method('pending')->willReturn(null);
         $store->expects($this->never())->method('save');
-
         $campaign = $this->campaign(7);
+
         (new CampaignPrefixSaveSubscriber($store))->onPostSave(new CampaignEvent($campaign));
     }
 
@@ -56,8 +56,8 @@ class CampaignPrefixSaveSubscriberTest extends TestCase
     {
         $store = $this->createMock(CampaignPrefixStore::class);
         $store->expects($this->once())->method('remove')->with(7);
-
         $campaign = $this->campaign(7);
+
         (new CampaignPrefixSaveSubscriber($store))->onPostDelete(new CampaignEvent($campaign));
     }
 
