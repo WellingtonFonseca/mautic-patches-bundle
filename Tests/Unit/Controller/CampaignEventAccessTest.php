@@ -7,14 +7,14 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Controller;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Entity\Event;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventAccessTrait;
-use MauticPlugin\MauticPatchesBundle\Controller\CampaignActionContactsController;
+use MauticPlugin\MauticPatchesBundle\Controller\CampaignStepContactsController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignWaitRecalculateController;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The controllers that take a campaign event in their URL (the table of the second "Ações" tab, the "Recalculate dates" routes) answer
+ * The controllers that take a campaign event in their URL (the table of the "Etapas" tab, the "Recalculate dates" routes) answer
  * to the same rule about the event: 404 when the event or its campaign is missing, 403 without the campaign's view permission. It
  * lives in one trait, so they cannot drift.
  */
@@ -31,7 +31,7 @@ class CampaignEventAccessTest extends TestCase
      */
     public static function controllers(): iterable
     {
-        yield 'the table of the actions tab' => [CampaignActionContactsController::class];
+        yield 'the table of the actions tab' => [CampaignStepContactsController::class];
         yield 'the recalculation of a Wait step' => [CampaignWaitRecalculateController::class];
     }
 

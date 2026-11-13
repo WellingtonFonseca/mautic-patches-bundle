@@ -20,8 +20,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
- * The two endpoints behind the "Recalculate dates" button of the Ações tab, for a Wait step: the simulation (reads, answers
- * what would change) and the application (writes). The simulation needs the campaign's view permission like the Ações tab;
+ * The two endpoints behind the "Recalculate dates" button of the Etapas tab, for a Wait step: the simulation (reads, answers
+ * what would change) and the application (writes). The simulation needs the campaign's view permission like the Etapas tab;
  * applying needs its edit permission, and only a Wait node can be recalculated.
  */
 #[AllowMockObjectsWithoutExpectations]

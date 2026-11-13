@@ -45,6 +45,29 @@ class StatusScriptTest extends TestCase
         $this->assertStringEndsWith(');</script>', $html, 'the call is closed, or the page script breaks');
     }
 
+    public function testACompanionScriptLoadsBetweenTheListScriptAndTheCall(): void
+    {
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')->willReturnArgument(0);
+
+        $html = StatusScript::html($translator, 'a{b:c}', 'installX', 'Resources/js/contact-detail-badges.js');
+
+        $list      = strpos($html, 'Resources/js/list-status-toggle.js');
+        $companion = strpos($html, 'Resources/js/contact-detail-badges.js?v=');
+        $this->assertNotFalse($companion);
+        $this->assertTrue($list < $companion && $companion < strpos($html, 'installX('), 'the companion adds installX to the api, so it loads before the call');
+    }
+
+    public function testTheCallIsSkippedWhenTheInstallFunctionIsNotThere(): void
+    {
+        $this->assertStringContainsString('mauticPatchesListStatusApi.installEmail&&mauticPatchesListStatusApi.installEmail(', $this->html('installEmail'));
+    }
+
+    public function testNoCompanionScriptByDefault(): void
+    {
+        $this->assertSame(1, substr_count($this->html(), '<script src='));
+    }
+
     public function testTheVersionOfTheFileIsItsModificationTime(): void
     {
         $file = dirname(__DIR__, 3).'/Resources/js/list-status-toggle.js';
