@@ -1,6 +1,6 @@
 {#
   The pane of the second "Ações" tab of the campaign page (CampaignActionsTabSubscriber): core's hook 'tabs.content'.
-  One row per action step with three badges (completed, failed, waiting: each in % of the contacts that reached the step,
+  One row per action step with a type badge (a purple bolt, "Ação", for every step that is not a condition) and three badges (completed, failed, waiting: each in % of the contacts that reached the step,
   the three add up to about 100%: each is rounded on its own), then ONE contacts table. The failed and waiting badges are buttons: a click loads the contacts of
   that state of that step into the table (CampaignActionContactsController). Core has ONE state for a contact that did not run yet (a scheduled log), shown as waiting. Above the table, the "Recalculate dates" box of a Wait step
   (CampaignWaitRecalculateScript): hidden until the waiting list of a step listed in `recalculate` is loaded. Variables: actions
@@ -15,6 +15,15 @@
 <style>
     /* core's own read-only Ações tab is hidden, not removed: its template is not touched (its pane stays, never shown) */
     .nav-tabs li:has(> a[href="#actions-container"]){display:none}
+    /* the type badge: a 22px circle that opens on hover to show the word, like the status badge of the lists. It sits over the next badge when it opens
+       (a fixed slot keeps the badges beside it still) */
+    #patches-actions-container .patches-actions-type-slot{position:relative;display:inline-block;width:22px;height:22px;margin-right:6px;vertical-align:middle}
+    #patches-actions-container .patches-actions-type{position:absolute;left:0;top:0;z-index:2;display:inline-flex;box-sizing:border-box;height:22px;max-width:22px;padding:0;gap:0;justify-content:flex-start;overflow:hidden;transition:max-width .2s ease,box-shadow .2s ease}
+    #patches-actions-container .patches-actions-type:hover{z-index:3;max-width:140px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0}
+    #patches-actions-container .patches-actions-type>i{flex:0 0 22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+    #patches-actions-container .patches-actions-type .patches-icon-badge__text{padding:0 10px 0 0;opacity:0;transition:opacity .15s ease .05s}
+    #patches-actions-container .patches-actions-type:hover .patches-icon-badge__text{opacity:1}
+    #patches-actions-container .patches-badge--action{background-color:#7e57c2}
     #patches-actions-container .patches-actions-badge{width:68px;height:22px;padding:0;border:0;vertical-align:middle}
     #patches-actions-container button.patches-actions-badge{cursor:pointer}
     #patches-actions-container button.patches-actions-badge.active{box-shadow:0 0 0 2px var(--text-primary,#222)}
@@ -32,6 +41,10 @@
                 <div class="panel-heading">
                     <h5 class="panel-title">
                         <span class="patches-actions-badges" style="margin-right:8px">
+                            {% if action.eventType != 'condition' %}
+                                {% set typeText = 'mautic.patches.campaign.actions_tab.type_action'|trans %}
+                                <span class="patches-actions-type-slot"><span class="patches-badge patches-badge--action patches-icon-badge patches-actions-type" data-type="action" title="{{ typeText }}" aria-label="{{ typeText }}"><i class="ri-flashlight-fill" aria-hidden="true"></i><span class="patches-icon-badge__text">{{ typeText }}</span></span></span>
+                            {% endif %}
                             {% for badge in badges %}
                                 {% set text %}<i class="{{ badge.icon }}"></i> {{ attribute(shares[action.id], badge.key) }}%{% endset %}
                                 {% set title = ('mautic.patches.campaign.actions_tab.' ~ badge.key)|trans %}
