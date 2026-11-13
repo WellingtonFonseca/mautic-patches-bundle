@@ -11,14 +11,14 @@ use Mautic\CampaignBundle\Entity\EventRepository;
 use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\CampaignBundle\Entity\LeadEventLogRepository;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
-use MauticPlugin\MauticPatchesBundle\Service\CampaignActionSteps;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignSteps;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Mautic 7: the steps and core's counts of the campaign page, as CampaignController::eventStatsAction computes them for its Ações tab.
  * The summary mode reads a final core repository (SummaryRepository): its call is not mocked, its conversion is (splitSummaryCounts).
  */
-class CampaignActionStepsTest extends TestCase
+class CampaignStepsTest extends TestCase
 {
     /** @var array<string, mixed> */
     private array $parameters = ['campaign_by_range' => 0, 'campaign_use_summary' => 0, 'campaign_event_cache_ttl' => 0];
@@ -31,7 +31,7 @@ class CampaignActionStepsTest extends TestCase
         return $campaign;
     }
 
-    private function steps(?EventRepository $events = null, ?LeadEventLogRepository $logs = null): CampaignActionSteps
+    private function steps(?EventRepository $events = null, ?LeadEventLogRepository $logs = null): CampaignSteps
     {
         $entityManager = $this->createStub(EntityManagerInterface::class);
         $entityManager->method('getRepository')->willReturnMap([
@@ -41,10 +41,10 @@ class CampaignActionStepsTest extends TestCase
         $parameters = $this->createStub(CoreParametersHelper::class);
         $parameters->method('get')->willReturnCallback(fn (string $name): mixed => $this->parameters[$name] ?? null);
 
-        return new CampaignActionSteps($entityManager, $parameters);
+        return new CampaignSteps($entityManager, $parameters);
     }
 
-    public function testTheActionStepsOfThePageCampaignInCoresOrder(): void
+    public function testEveryEventOfThePageCampaignInCoresOrder(): void
     {
         $events = $this->createMock(EventRepository::class);
         $events->expects($this->once())->method('getCampaignEvents')->with(9, false)->willReturn([
@@ -54,7 +54,11 @@ class CampaignActionStepsTest extends TestCase
             5 => ['id' => 5, 'eventType' => 'action'],
         ]);
 
-        $this->assertSame([['id' => 3, 'eventType' => 'action'], ['id' => 5, 'eventType' => 'action']], $this->steps($events)->actionSteps(['campaign' => $this->campaign()]));
+        $this->assertSame(
+            [['id' => 4, 'eventType' => 'decision'], ['id' => 3, 'eventType' => 'action'], ['id' => 7, 'eventType' => 'condition'], ['id' => 5, 'eventType' => 'action']],
+            $this->steps($events)->steps(['campaign' => $this->campaign()]),
+            'every event comes back, in core\'s order: the tab keeps the actions and the conditions and sorts the flow'
+        );
     }
 
     public function testNoCampaignNoSteps(): void
@@ -62,9 +66,9 @@ class CampaignActionStepsTest extends TestCase
         $events = $this->createMock(EventRepository::class);
         $events->expects($this->never())->method('getCampaignEvents');
 
-        $this->assertSame([], $this->steps($events)->actionSteps([]));
+        $this->assertSame([], $this->steps($events)->steps([]));
         $unsaved = $this->createStub(Campaign::class);
-        $this->assertSame([], $this->steps($events)->actionSteps(['campaign' => $unsaved]), 'a campaign not saved yet has no steps');
+        $this->assertSame([], $this->steps($events)->steps(['campaign' => $unsaved]), 'a campaign not saved yet has no steps');
     }
 
     public function testCountsAreCoresProcessedAndPendingOfEachStep(): void
@@ -143,7 +147,7 @@ class CampaignActionStepsTest extends TestCase
     {
         $this->assertSame(
             [[3 => [0 => 2, 1 => 6], 5 => [0 => 1, 1 => 0]], [3 => [5], 5 => [0]]],
-            CampaignActionSteps::splitSummaryCounts([3 => [0 => 2, 1 => 6, 2 => 5], 5 => [0 => 1, 1 => 0]])
+            CampaignSteps::splitSummaryCounts([3 => [0 => 2, 1 => 6, 2 => 5], 5 => [0 => 1, 1 => 0]])
         );
     }
 }

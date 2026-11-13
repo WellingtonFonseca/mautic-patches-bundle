@@ -12,26 +12,26 @@ use Mautic\CampaignBundle\Entity\Summary;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 
 /**
- * The action steps of the campaign page with core's counts, for the second "Ações" tab (CampaignActionsTabSubscriber). Mautic 7 only:
+ * The events of the campaign page with core's counts, for the "Etapas" tab (CampaignStepsTabSubscriber). Mautic 7 only:
  * the page of 7 no longer has `events` (its tabs come by ajax from CampaignController::eventStatsAction, whose count helpers are
- * private), so this repeats what that action does for an action step: logCountProcessed and logCountForPending, from the summary
+ * private), so this repeats what that action does for an action or a condition step: logCountProcessed and logCountForPending, from the summary
  * table when campaign_use_summary is on, and in the page's date range when campaign_by_range is on (wiki/mautic7-port-plugins-n8n-patches.md).
  */
-class CampaignActionSteps
+class CampaignSteps
 {
     public function __construct(private EntityManagerInterface $entityManager, private CoreParametersHelper $parameters)
     {
     }
 
     /**
-     * The action steps of the page's campaign, in core's order, deleted ones included as core's tab of 7 shows them, without counts
-     * (the tab link only needs to know there is one).
+     * Every event of the page's campaign (triggers, actions and conditions), in core's order, deleted ones included as core's tab of 7 shows
+     * them, without counts. The tab keeps the actions and the conditions and puts them in the order of the flow (CampaignFlowOrder).
      *
      * @param array<string, mixed> $pageVars the vars of core's details.html.twig
      *
      * @return list<array<string, mixed>>
      */
-    public function actionSteps(array $pageVars): array
+    public function steps(array $pageVars): array
     {
         $campaign = self::campaignOf($pageVars);
         if (null === $campaign) {
@@ -40,7 +40,7 @@ class CampaignActionSteps
 
         $events = $this->entityManager->getRepository(Event::class)->getCampaignEvents($campaign->getId(), false);
 
-        return array_values(array_filter($events, static fn (array $event): bool => 'action' === ($event['eventType'] ?? null)));
+        return array_values($events);
     }
 
     /**

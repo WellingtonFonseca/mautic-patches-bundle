@@ -33,7 +33,7 @@ class CampaignNodeStatStyleSubscriberTest extends TestCase
 
     public function testNoCountLooksClickable(): void
     {
-        // the counts open nothing: the contacts of a step are on the second "Ações" tab
+        // the counts open nothing: the contacts of a step are on the "Etapas" tab
         $this->assertStringNotContainsString('cursor', $this->content());
         $this->assertStringNotContainsString('<script', $this->content());
     }

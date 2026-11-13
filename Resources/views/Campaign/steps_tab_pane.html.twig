@@ -1,0 +1,139 @@
+{#
+  The pane of the "Etapas" tab of the campaign page (CampaignStepsTabSubscriber): core's hook 'tabs.content'.
+  One row per step (an action or a condition, in the order of the flow) with a type badge (a purple bolt, "Ação", or an orange fork, "Condição") and three badges (completed, failed, waiting: each in % of the contacts that reached the step,
+  the three add up to about 100%: each is rounded on its own), then ONE contacts table. The failed and waiting badges are buttons: a click loads the contacts of
+  that state of that step into the table (CampaignStepContactsController). Core has ONE state for a contact that did not run yet (a scheduled log), shown as waiting. Above the table, the "Recalculate dates" box of a Wait step
+  (CampaignWaitRecalculateScript): hidden until the waiting list of a step listed in `recalculate` is loaded. Variables: steps
+  (the actions and conditions of the page, in the order of the flow), shares (event id => completed, failed, waiting), recalculate (ids of the
+  Wait steps the user can edit).
+#}
+{% set badges = [
+    {key: 'completed', modifier: 'production', icon: 'ri-check-line', list: null},
+    {key: 'failed', modifier: 'failed', icon: 'ri-error-warning-line', list: 'failed'},
+    {key: 'waiting', modifier: 'info', icon: 'ri-hourglass-line', list: 'waiting'},
+] %}
+<style>
+    /* core's own read-only Ações and Condições tabs are hidden, not removed: its template is not touched (their panes stay, never shown) */
+    .nav-tabs li:has(> a[href="#actions-container"]),.nav-tabs li:has(> a[href="#conditions-container"]){display:none}
+    /* the type badge: a 22px circle that opens on hover to show the word, like the status badge of the lists. It sits over the next badge when it opens
+       (a fixed slot keeps the badges beside it still) */
+    #patches-steps-container .patches-steps-type-slot{position:relative;display:inline-block;width:22px;height:22px;margin-right:6px;vertical-align:middle}
+    #patches-steps-container .patches-steps-type{position:absolute;left:0;top:0;z-index:2;display:inline-flex;box-sizing:border-box;height:22px;max-width:22px;padding:0;gap:0;justify-content:flex-start;overflow:hidden;transition:max-width .2s ease,box-shadow .2s ease}
+    #patches-steps-container .patches-steps-type:hover{z-index:3;max-width:140px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0}
+    #patches-steps-container .patches-steps-type>i{flex:0 0 22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+    #patches-steps-container .patches-steps-type .patches-icon-badge__text{padding:0 10px 0 0;opacity:0;transition:opacity .15s ease .05s}
+    #patches-steps-container .patches-steps-type:hover .patches-icon-badge__text{opacity:1}
+    #patches-steps-container .patches-badge--action{background-color:#7e57c2}
+    #patches-steps-container .patches-badge--condition{background-color:#fb8c00}
+    #patches-steps-container .patches-steps-badge{width:68px;height:22px;padding:0;border:0;vertical-align:middle}
+    #patches-steps-container button.patches-steps-badge{cursor:pointer}
+    #patches-steps-container button.patches-steps-badge.active{box-shadow:0 0 0 2px var(--text-primary,#222)}
+    /* the row is only the heading (no body), whose bottom corners are square in core: the panel clips it to its own round corners */
+    #patches-steps-container .panel{overflow:hidden}
+    {{ constant('MauticPlugin\\MauticPatchesBundle\\Service\\UpdatingIndicator::STYLE')|raw }}
+    /* core's d-flex and btn set a display that beats the hidden attribute of the parts of the box */
+    #patches-wait-recalc [hidden]{display:none!important}
+</style>
+<div class="tab-pane fade in bdr-w-0" id="patches-steps-container">
+    <div class="patches-steps">
+        {% for step in steps %}
+            <div class="panel panel-default mb-xs" data-event-id="{{ step.id }}"
+                {%- if step.id in recalculate %} data-recalc-simulate-url="{{ path('mautic_patches_campaign_wait_recalculate_simulate', {'eventId': step.id}) }}" data-recalc-apply-url="{{ path('mautic_patches_campaign_wait_recalculate_apply', {'eventId': step.id}) }}"{% endif %}>
+                <div class="panel-heading">
+                    <h5 class="panel-title">
+                        <span class="patches-steps-badges" style="margin-right:8px">
+                            {% set isCondition = step.eventType == 'condition' %}
+                            {% set typeText = (isCondition ? 'mautic.patches.campaign.steps_tab.type_condition' : 'mautic.patches.campaign.steps_tab.type_action')|trans %}
+                            <span class="patches-steps-type-slot"><span class="patches-badge patches-badge--{{ isCondition ? 'condition' : 'action' }} patches-icon-badge patches-steps-type" data-type="{{ isCondition ? 'condition' : 'action' }}" title="{{ typeText }}" aria-label="{{ typeText }}"><i class="{{ isCondition ? 'ri-question-mark' : 'ri-flashlight-fill' }}" aria-hidden="true"></i><span class="patches-icon-badge__text">{{ typeText }}</span></span></span>
+                            {% for badge in badges %}
+                                {% set text %}<i class="{{ badge.icon }}"></i> {{ attribute(shares[step.id], badge.key) }}%{% endset %}
+                                {% set title = ('mautic.patches.campaign.steps_tab.' ~ badge.key)|trans %}
+                                {% if badge.list %}
+                                    <button type="button" class="patches-badge patches-badge--{{ badge.modifier }} patches-steps-badge" data-state="{{ badge.key }}" data-list="{{ badge.list }}" data-toggle="tooltip" data-trigger="hover" title="{{ title }}"
+                                            data-target-url="{{ path('mautic_patches_campaign_step_' ~ badge.list ~ '_contacts', {'objectId': step.id, 'page': 1}) }}">{{ text }}</button>
+                                {% else %}
+                                    <span class="patches-badge patches-badge--{{ badge.modifier }} patches-steps-badge" data-state="{{ badge.key }}" data-toggle="tooltip" title="{{ title }}">{{ text }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                        {{ step.name }}
+                    </h5>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {% if recalculate is not empty %}
+    {# The message on top; below it, ONE row of buttons: Recalculate alone, or (after a simulation that can be applied) Apply and Cancel.
+       While the simulation runs the message line is the segment's "<spinner> Updating...", here "<spinner> Recalculating...". #}
+    <div id="patches-wait-recalc" class="mt-md" hidden
+         data-text-intro="{{ 'mautic.patches.wait_relative.recalculate.intro'|trans }}"
+         data-text-changed="{{ 'mautic.patches.wait_relative.recalculate.changed'|trans }}"
+         data-text-leaving_now="{{ 'mautic.patches.wait_relative.recalculate.leaving_now'|trans }}"
+         data-text-unchanged="{{ 'mautic.patches.wait_relative.recalculate.unchanged'|trans }}"
+         data-text-nothing="{{ 'mautic.patches.wait_relative.recalculate.nothing'|trans }}"
+         data-text-applied="{{ 'mautic.patches.wait_relative.recalculate.applied'|trans }}">
+        <div class="patches-wait-recalc-running mb-md" hidden>
+            <small class="mautic-patches-updating">{{ constant('MauticPlugin\\MauticPatchesBundle\\Service\\UpdatingIndicator::SPINNER_SVG')|raw }}<span class="mautic-patches-updating-text">{{ 'mautic.patches.wait_relative.recalculate.running'|trans }}</span></small>
+        </div>
+        <div class="patches-wait-recalc-result mb-md" hidden></div>
+        {# Recalculate and Apply are both btn-primary and never shown together, but the theme draws a SECOND btn-primary of the same
+           parent as outlined (transparent): each one is in its own parent, so each is "the first". #}
+        <div class="d-flex fd-row fw-nowrap ai-center">
+            <div><button type="button" class="btn btn-primary" data-recalc="start">{{ 'mautic.patches.wait_relative.recalculate'|trans }}</button></div>
+            <div class="d-flex fd-row fw-nowrap ai-center gap-sm">
+                <button type="button" class="btn btn-primary" data-recalc="apply" hidden>{{ 'mautic.patches.wait_relative.recalculate.apply'|trans }}</button>
+                <button type="button" class="btn btn-tertiary btn-cancel" data-recalc="cancel" hidden>{{ 'mautic.core.form.cancel'|trans }}</button>
+            </div>
+        </div>
+    </div>
+    <script>{{ constant('MauticPlugin\\MauticPatchesBundle\\Service\\CampaignWaitRecalculateScript::SCRIPT')|raw }}</script>
+    {% endif %}
+    <div class="page-list mt-md" id="patches-steps-table"
+         data-target-url="{{ path('mautic_patches_campaign_step_none_contacts', {'objectId': (steps|first).id, 'page': 1}) }}">
+        <div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>
+    </div>
+</div>
+<script>
+    (function () {
+        if (window.mauticPatchesStepsTab) {
+            return;
+        }
+        window.mauticPatchesStepsTab = true;
+        // also the loader of the "Recalculate dates" box, which reloads the list after Apply
+        Mautic.patchesStepsLoad = load;
+        // two quick clicks: only the last list may fill the table, whichever answer arrives last
+        var latest = 0;
+        function load(url) {
+            var mine = ++latest;
+            mQuery('#patches-steps-table').html('<div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>');
+            mQuery.get(url, function (response) {
+                if (mine !== latest) {
+                    return;
+                }
+                response.target = '#patches-steps-table';
+                Mautic.processPageContent(response);
+            }).fail(function (request, status, error) {
+                // a 403 / 404 / expired session: core's own error handling, not a spinner that never goes away
+                Mautic.processAjaxError(request, status, error);
+            });
+        }
+        // data-loaded: a later show of the tab must not replace the list a click loaded
+        mQuery(document).on('shown.bs.tab', 'a[href="#patches-steps-container"]', function () {
+            var table = document.getElementById('patches-steps-table');
+            if (table && !table.hasAttribute('data-loaded')) {
+                table.setAttribute('data-loaded', '1');
+                load(table.getAttribute('data-target-url'));
+            }
+        });
+        document.addEventListener('click', function (event) {
+            var button = event.target && event.target.closest ? event.target.closest('#patches-steps-container button.patches-steps-badge') : null;
+            if (!button) {
+                return;
+            }
+            document.querySelectorAll('#patches-steps-container button.patches-steps-badge.active').forEach(function (other) { other.classList.remove('active'); });
+            button.classList.add('active');
+            document.getElementById('patches-steps-table').setAttribute('data-loaded', '1');
+            load(button.getAttribute('data-target-url'));
+        });
+    })();
+</script>

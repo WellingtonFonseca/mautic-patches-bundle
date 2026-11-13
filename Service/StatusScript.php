@@ -20,8 +20,11 @@ final class StatusScript
     /**
      * @param string $installFunction the function of mauticPatchesListStatusApi that installs the list (install, installCampaign, ...)
      * @param string $style           the CSS the list needs, added to the page by the script
+     * @param string $companionScript a file of the plugin that loads after the list script and adds its own install function to its api (the contact page badges)
      */
-    public static function html(TranslatorInterface $translator, string $style, string $installFunction): string
+    // Each call prints the list script again, and every run replaces mauticPatchesListStatusApi with a new object that has lost the install function a
+    // companion script added. So the install call must stay right after its own companion tag, in the same output.
+    public static function html(TranslatorInterface $translator, string $style, string $installFunction, string $companionScript = ''): string
     {
         $config = [
             'active'     => $translator->trans('mautic.core.form.active'),
@@ -44,9 +47,16 @@ final class StatusScript
             'emailDraft'       => $translator->trans('mautic.patches.email.draft'),
             'style'      => $style,
         ];
-        $mtime = @filemtime(dirname(__DIR__).'/'.self::PATH);
 
-        return '<script src="/plugins/MauticPatchesBundle/'.self::PATH.'?v='.(false !== $mtime ? $mtime : time()).'"></script>'
-            .'<script>window.mauticPatchesListStatusApi&&mauticPatchesListStatusApi.'.$installFunction.'(mQuery,Mautic,'.json_encode($config, JSON_UNESCAPED_UNICODE).');</script>';
+        return self::tag(self::PATH)
+            .('' !== $companionScript ? self::tag($companionScript) : '')
+            .'<script>window.mauticPatchesListStatusApi&&mauticPatchesListStatusApi.'.$installFunction.'&&mauticPatchesListStatusApi.'.$installFunction.'(mQuery,Mautic,'.json_encode($config, JSON_UNESCAPED_UNICODE).');</script>';
+    }
+
+    private static function tag(string $path): string
+    {
+        $mtime = @filemtime(dirname(__DIR__).'/'.$path);
+
+        return '<script src="/plugins/MauticPatchesBundle/'.$path.'?v='.(false !== $mtime ? $mtime : time()).'"></script>';
     }
 }

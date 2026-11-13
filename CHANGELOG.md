@@ -2,16 +2,22 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-13
+- Na aba Etapas, as condições têm um ícone de interrogação no selo do tipo, no lugar do ícone de divisão
+
 ## 2026-11-12
+- O construtor da campanha e a aba Pré-visualizar têm zoom: quatro botões (menos, a porcentagem que volta a 100%, mais e ajustar tudo na tela), Ctrl + roda do mouse e os atalhos Ctrl + mais, menos e zero
+- A página do contato mostra os selos de Email, SMS e HSM à esquerda do botão Editar, os mesmos da coluna Status da lista, e abrem ao passar o mouse
+- As páginas do segmento e da campanha mostram os selos de status à esquerda do botão Editar: Ativo ou Inativo, e no segmento também global, filtros, não reconstruído e construção lenta; na campanha também reentrada
 - Exportar e importar papéis e usuários entre instâncias do Mautic: o pacote sai cifrado, com as senhas dos usuários, e uma chave de 100 caracteres mostrada uma vez. A importação confere tudo antes de salvar e devolve os itens que não puderam entrar, com o motivo (só para administradores)
 - Nas listas com barra de ferramentas, o campo de filtro fica quadrado também quando a lupa é o único botão, e o menu da engrenagem abre para a esquerda, sem sair da tela
 - Um botão de sol ou lua fica ao lado esquerdo do sino de notificações: um clique abre a tela Aparência em uma janela, com as cores de destaque e os temas, e a escolha vale na hora. O botão fica escondido na própria página da conta
-- Na aba Ações, os selos têm o mesmo visual dos selos de status das listas; na lista de segmentos, a contagem de contatos usa o selo azul ou cinza translúcido
+- Na aba Etapas, os selos têm o mesmo visual dos selos de status das listas; na lista de segmentos, a contagem de contatos usa o selo azul ou cinza translúcido
 - A pré-visualização da campanha não reduz mais o texto a 80%: o texto do passo Esperar fica no tamanho normal
-- A página da campanha tem uma nova aba Ações, depois de Contatos, no lugar da aba Ações do Mautic: cada passo de ação mostra três selos, concluídos, com falha e aguardando, cada um em % dos contatos que chegaram ao passo
+- A página da campanha tem uma nova aba Etapas, depois de Contatos, no lugar das abas Ações e Condições do Mautic: cada passo, de ação ou de condição, na ordem do fluxo, mostra um selo do tipo (raio roxo para ação, divisão laranja para condição) e três selos, concluídos, com falha e aguardando, cada um em % dos contatos que chegaram ao passo
 - Um clique nos selos com falha ou aguardando lista os contatos daquele estado em uma tabela abaixo dos passos, com a barra de busca da lista de contatos
-- Recalcular datas de um passo Esperar agora fica na aba Ações, acima da tabela, quando ela mostra os contatos aguardando desse passo (só para quem pode editar a campanha)
-- As contagens dos passos na aba Pré-visualizar não abrem mais o modal de contatos: os contatos de cada passo estão na aba Ações
+- Recalcular datas de um passo Esperar agora fica na aba Etapas, acima da tabela, quando ela mostra os contatos aguardando desse passo (só para quem pode editar a campanha)
+- As contagens dos passos na aba Pré-visualizar não abrem mais o modal de contatos: os contatos de cada passo estão na aba Etapas
 - O menu lateral fica escondido atrás de uma faixa fina com uma seta; ao passar o mouse sobre a faixa, o menu abre por cima da página e fecha quando o mouse sai
 
 ## 2026-11-11

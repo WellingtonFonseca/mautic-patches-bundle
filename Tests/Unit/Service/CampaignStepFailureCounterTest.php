@@ -6,11 +6,11 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Result;
-use MauticPlugin\MauticPatchesBundle\Service\CampaignActionContactSql;
-use MauticPlugin\MauticPatchesBundle\Service\CampaignActionFailureCounter;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignStepContactSql;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignStepFailureCounter;
 use PHPUnit\Framework\TestCase;
 
-class CampaignActionFailureCounterTest extends TestCase
+class CampaignStepFailureCounterTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -25,7 +25,7 @@ class CampaignActionFailureCounterTest extends TestCase
         $connection = $this->createMock(Connection::class);
         $connection->expects($this->never())->method('executeQuery');
 
-        $this->assertSame([], (new CampaignActionFailureCounter($connection, new CampaignActionContactSql()))->countByEvent([]));
+        $this->assertSame([], (new CampaignStepFailureCounter($connection, new CampaignStepContactSql()))->countByEvent([]));
     }
 
     public function testCountsTheFailedOrRetriedLogsPerStepAsIntegers(): void
@@ -43,6 +43,6 @@ class CampaignActionFailureCounterTest extends TestCase
                 ['ids' => Connection::PARAM_INT_ARRAY]
             )->willReturn($result);
 
-        $this->assertSame([7 => 4, 9 => 1], (new CampaignActionFailureCounter($connection, new CampaignActionContactSql()))->countByEvent([7, 9, 11]));
+        $this->assertSame([7 => 4, 9 => 1], (new CampaignStepFailureCounter($connection, new CampaignStepContactSql()))->countByEvent([7, 9, 11]));
     }
 }

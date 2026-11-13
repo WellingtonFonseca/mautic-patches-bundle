@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Service;
 
 /**
- * The script of the "Recalculate dates" box of the second "Ações" tab of the campaign page (its markup is in actions_tab_pane.html.twig,
+ * The script of the "Recalculate dates" box of the "Etapas" tab of the campaign page (its markup is in steps_tab_pane.html.twig,
  * which inlines this constant only when a Wait step of the campaign can be recalculated). The box shows above the contacts table only while
  * the table holds the waiting list (data-list="waiting": the scheduled and the waiting badges) of a Wait step the user can edit: that row
- * carries the simulate and apply urls (CampaignActionsTabSubscriber). Any other badge hides it.
+ * carries the simulate and apply urls (CampaignStepsTabSubscriber). Any other badge hides it.
  *
  * Kept in this class, not inline in the pane, so that Tests/js/campaign-wait-recalculate.test.js runs the real script.
  */
@@ -22,7 +22,7 @@ class CampaignWaitRecalculateScript
         .'var run=0;'
         // Bubble phase, like the pane's own handler that loads the table: both act on the same click.
         .'document.addEventListener("click",function(event){'
-        .'var button=event.target&&event.target.closest?event.target.closest("#patches-actions-container button.patches-actions-badge"):null;'
+        .'var button=event.target&&event.target.closest?event.target.closest("#patches-steps-container button.patches-steps-badge"):null;'
         .'var box=button?document.getElementById("patches-wait-recalc"):null;'
         .'if(!box){return;}'
         .'run++;'
@@ -67,8 +67,8 @@ class CampaignWaitRecalculateScript
         // the dates were written even when another list is on screen now: a notification says so
         .'if(!current()){Mautic.setFlashes(Mautic.addFlashMessage(text("applied",data.applied)));return;}'
         .'idle();out.innerHTML="";out.hidden=false;line(text("applied",data.applied)).className="patches-wait-recalc-applied";'
-        // the list on screen shows the new dates (Mautic.patchesActionsLoad is the pane's loader of the table)
-        .'Mautic.patchesActionsLoad(button.getAttribute("data-target-url"));})'
+        // the list on screen shows the new dates (Mautic.patchesStepsLoad is the pane's loader of the table)
+        .'Mautic.patchesStepsLoad(button.getAttribute("data-target-url"));})'
         .'.fail(function(request,status,error){if(current()){apply.disabled=false;}Mautic.processAjaxError(request,status,error);});'
         .'};'
         .'}'
