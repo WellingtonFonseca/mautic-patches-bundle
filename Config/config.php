@@ -51,26 +51,26 @@ return [
                 'method'       => 'GET',
                 'requirements' => ['id' => '\\d+'],
             ],
-            // The one table under the second "Ações" tab of the campaign page: the failed / the waiting contacts of one action step.
-            'mautic_patches_campaign_action_failed_contacts' => [
-                'path'         => '/campaign-action/{objectId}/failed/{page}',
-                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignActionContactsController::failedAction',
+            // The one table under the "Etapas" tab of the campaign page: the failed / the waiting contacts of one action step.
+            'mautic_patches_campaign_step_failed_contacts' => [
+                'path'         => '/campaign-step/{objectId}/failed/{page}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignStepContactsController::failedAction',
                 'requirements' => ['objectId' => '\\d+', 'page' => '\\d+'],
                 'defaults'     => ['page' => 1],
             ],
-            'mautic_patches_campaign_action_none_contacts' => [
-                'path'         => '/campaign-action/{objectId}/none/{page}',
-                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignActionContactsController::noneAction',
+            'mautic_patches_campaign_step_none_contacts' => [
+                'path'         => '/campaign-step/{objectId}/none/{page}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignStepContactsController::noneAction',
                 'requirements' => ['objectId' => '\\d+', 'page' => '\\d+'],
                 'defaults'     => ['page' => 1],
             ],
-            'mautic_patches_campaign_action_waiting_contacts' => [
-                'path'         => '/campaign-action/{objectId}/waiting/{page}',
-                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignActionContactsController::waitingAction',
+            'mautic_patches_campaign_step_waiting_contacts' => [
+                'path'         => '/campaign-step/{objectId}/waiting/{page}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignStepContactsController::waitingAction',
                 'requirements' => ['objectId' => '\\d+', 'page' => '\\d+'],
                 'defaults'     => ['page' => 1],
             ],
-            // The "Recalculate dates" box of a Wait step on the second "Ações" tab: the simulation (reads) and the application (writes).
+            // The "Recalculate dates" box of a Wait step on the "Etapas" tab: the simulation (reads) and the application (writes).
             'mautic_patches_campaign_wait_recalculate_simulate' => [
                 'path'         => '/campaign-wait/{eventId}/recalculate/simulate',
                 'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignWaitRecalculateController::simulateAction',

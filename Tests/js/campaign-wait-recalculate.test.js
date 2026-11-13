@@ -59,7 +59,7 @@ function row(eventId) {
 // A badge button of a step row: `state` is its data-state (failed, waiting); its data-list is the list it loads, as the pane sets it.
 function badge(state, eventId = '41') {
     const list = state === 'failed' ? 'failed' : 'waiting';
-    const attrs = {'data-state': state, 'data-list': list, 'data-target-url': `/s/campaign-action/${eventId}/${list}/1`};
+    const attrs = {'data-state': state, 'data-list': list, 'data-target-url': `/s/campaign-step/${eventId}/${list}/1`};
 
     return {
         getAttribute: (name) => attrs[name],
@@ -80,7 +80,7 @@ function load({withBox = true} = {}) {
         getElementById: (id) => (id === 'patches-wait-recalc' ? calls.box : null),
     };
     const window  = {};
-    const Mautic  = {patchesActionsLoad: (url) => { calls.reloaded = url; }, processAjaxError: (...a) => { calls.error = a; },
+    const Mautic  = {patchesStepsLoad: (url) => { calls.reloaded = url; }, processAjaxError: (...a) => { calls.error = a; },
         addFlashMessage: (text) => `flash:${text}`, setFlashes: (flash) => { calls.flash = flash; }};
     const mQuery  = {
         getJSON: (url, cb) => { calls.json = url; calls.jsonCb = cb; return {fail: (fn) => { calls.jsonFail = fn; }}; },
@@ -91,7 +91,7 @@ function load({withBox = true} = {}) {
 
     function click(button) {
         clickHandler({target: {closest: (selector) => {
-            assert.strictEqual(selector, '#patches-actions-container button.patches-actions-badge');
+            assert.strictEqual(selector, '#patches-steps-container button.patches-steps-badge');
 
             return button;
         }}});
@@ -225,7 +225,7 @@ test('Apply posts to the apply route of the step, says how many were recalculate
     assert.deepStrictEqual(messages(t.calls.box.out), ['5 recalculadas']);
     assert.strictEqual(t.calls.box.out.children[0].className, 'patches-wait-recalc-applied');
     assert.deepStrictEqual(visible(t.calls.box), ['start']);
-    assert.strictEqual(t.calls.reloaded, '/s/campaign-action/41/waiting/1', 'the table shows the new state');
+    assert.strictEqual(t.calls.reloaded, '/s/campaign-step/41/waiting/1', 'the table shows the new state');
 });
 
 test('a failed simulation or application goes through core\'s error handling and the buttons can be used again', () => {

@@ -6,10 +6,10 @@ namespace MauticPlugin\MauticPatchesBundle\Service;
 
 /**
  * The SQL conditions (on campaign_leads, alias `entity`) that pick the contacts of one action step by state: the rule of each
- * number of the second "Ações" tab, in one place for its tables. A contact is listed ONCE however many
+ * number of the "Etapas" tab, in one place for its tables. A contact is listed ONCE however many
  * logs (rotations) it has, so a list can be shorter than the number, which counts logs.
  */
-class CampaignActionContactSql
+class CampaignStepContactSql
 {
     /** The metadata PendingEvent::fail() writes (serialized `failed => 1`). */
     public const FAILED_FLAG = '%s:6:"failed";i:1;%';
@@ -43,7 +43,7 @@ class CampaignActionContactSql
     }
 
     /**
-     * The rule on a log that already has a failed log: the badge count (CampaignActionFailureCounter) and the list use this one copy.
+     * The rule on a log that already has a failed log: the badge count (CampaignStepFailureCounter) and the list use this one copy.
      */
     public function failedOrRetried(string $logAlias): string
     {

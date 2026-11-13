@@ -8,7 +8,7 @@ use Mautic\CampaignBundle\Entity\Event;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The rule about the campaign event in a URL, in one place for the table of the second "Ações" tab (CampaignActionContactsController)
+ * The rule about the campaign event in a URL, in one place for the table of the "Etapas" tab (CampaignStepContactsController)
  * and the "Recalculate dates" routes (CampaignWaitRecalculateController): an unknown event, or one
  * without a campaign, is a 404; a user who cannot view the campaign (own / other) gets a 403. Needs a core controller
  * (getModel, security, notFound, accessDenied).
