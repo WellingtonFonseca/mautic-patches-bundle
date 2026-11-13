@@ -79,6 +79,14 @@ class ContactTimelineFailedBadgeSubscriberTest extends TestCase
         $this->assertStringContainsString(self::ICON.':hover::after{opacity:1}', $style);
     }
 
+    public function testTheBadgeHasTheShadowAndTheTransitionOfTheCampaignNodes(): void
+    {
+        $style = ContactTimelineFailedBadgeSubscriber::style();
+
+        $this->assertStringContainsString('box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;', $style);
+        $this->assertStringContainsString('transition:max-width .2s ease}', $style);
+    }
+
     public function testTheWordHasItsOwnFontBecauseTheIconFontIsForced(): void
     {
         $this->assertStringContainsString('font-family:"Source Sans Pro",Helvetica,Arial,sans-serif!important', ContactTimelineFailedBadgeSubscriber::style());
