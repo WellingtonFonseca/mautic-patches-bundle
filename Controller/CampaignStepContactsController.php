@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The one table of contacts under the "Etapas" tab of the campaign page (wiki/patches-campaign-steps-tab.md): the failed
- * (retries included) or the waiting contacts of ONE action step, as the contact list table (ContactsTableTrait). The buttons of the
+ * (retries included) or the waiting contacts of ONE step, as the contact list table (ContactsTableTrait). The buttons of the
  * step's badges load it; before a click it is loaded empty (noneAction). One route per state, because the table's sorting and paging post to the route of its first load.
  */
 class CampaignStepContactsController extends CampaignController
@@ -41,7 +41,7 @@ class CampaignStepContactsController extends CampaignController
     /**
      * The table with no contact: what the tab shows before a button is clicked (the columns and the search bar, no rows).
      *
-     * @param string|int $objectId the event's id (any action step of the campaign: the access rule needs one)
+     * @param string|int $objectId the event's id (any step of the campaign: the access rule needs one)
      * @param int        $page
      */
     public function noneAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, $objectId, $page = 1)

@@ -6,6 +6,7 @@ namespace MauticPlugin\MauticPatchesBundle\EventListener;
 
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
+use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -42,6 +43,11 @@ class ContactDetailStatusSubscriber implements EventSubscriberInterface
     public function injectViewCustomContent(CustomContentEvent $customContentEvent): void
     {
         if ('page.header.left' !== $customContentEvent->getContext()) {
+            return;
+        }
+
+        // core passes the contact as 'lead' on its page; the other pages that fire this hook (lists, segments) do not need the script
+        if (!(($customContentEvent->getVars()['lead'] ?? null) instanceof Lead)) {
             return;
         }
 

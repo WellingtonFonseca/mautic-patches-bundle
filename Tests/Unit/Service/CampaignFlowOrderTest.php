@@ -54,6 +54,25 @@ class CampaignFlowOrderTest extends TestCase
         $this->assertSame([4, 5], $this->idsOf([['id' => 5, 'parent_id' => 4], ['id' => 4, 'parent_id' => 99]]));
     }
 
+    public function testTheFlowOrderWinsOverTheIdOrder(): void
+    {
+        // the child has a lower id than its parent (a step added later in the middle of the flow)
+        $this->assertSame([5, 2, 3], $this->idsOf([
+            ['id' => 2, 'parent_id' => 5],
+            ['id' => 3, 'parent_id' => 2],
+            ['id' => 5, 'parent_id' => null],
+        ]));
+    }
+
+    public function testTheYesPathComesFirstEvenWhenTheNoPathHasTheLowerId(): void
+    {
+        $this->assertSame([10, 13, 12], $this->idsOf([
+            ['id' => 12, 'parent_id' => 10, 'decisionPath' => 'no'],
+            ['id' => 13, 'parent_id' => 10, 'decisionPath' => 'yes'],
+            ['id' => 10, 'parent_id' => null],
+        ]));
+    }
+
     public function testNoEventsGiveNoEvents(): void
     {
         $this->assertSame([], $this->idsOf([]));
