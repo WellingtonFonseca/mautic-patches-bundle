@@ -9,11 +9,11 @@ use Doctrine\DBAL\Connection;
 /**
  * How many logs are failed or being retried on each action step of a campaign: a failed log with the 'failed' flag that
  * PendingEvent::fail() sets, or still scheduled (the retry core made). Core also writes a failed log for a contact removed from
- * the campaign: that one has neither, so it is not counted (CampaignActionContactSql::failedOrRetried, the rule of the list too).
+ * the campaign: that one has neither, so it is not counted (CampaignStepContactSql::failedOrRetried, the rule of the list too).
  */
-class CampaignActionFailureCounter
+class CampaignStepFailureCounter
 {
-    public function __construct(private Connection $connection, private CampaignActionContactSql $sql)
+    public function __construct(private Connection $connection, private CampaignStepContactSql $sql)
     {
     }
 

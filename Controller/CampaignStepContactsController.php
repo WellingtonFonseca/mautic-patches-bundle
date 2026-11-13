@@ -6,16 +6,16 @@ namespace MauticPlugin\MauticPatchesBundle\Controller;
 
 use Mautic\CampaignBundle\Controller\CampaignController;
 use Mautic\CoreBundle\Factory\PageHelperFactoryInterface;
-use MauticPlugin\MauticPatchesBundle\Service\CampaignActionContactSql;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignStepContactSql;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The one table of contacts under the second "Ações" tab of the campaign page (wiki/patches-campaign-actions-tab.md): the failed
+ * The one table of contacts under the "Etapas" tab of the campaign page (wiki/patches-campaign-steps-tab.md): the failed
  * (retries included) or the waiting contacts of ONE action step, as the contact list table (ContactsTableTrait). The buttons of the
  * step's badges load it; before a click it is loaded empty (noneAction). One route per state, because the table's sorting and paging post to the route of its first load.
  */
-class CampaignActionContactsController extends CampaignController
+class CampaignStepContactsController extends CampaignController
 {
     use CampaignEventAccessTrait;
     use ContactsTableTrait;
@@ -24,7 +24,7 @@ class CampaignActionContactsController extends CampaignController
      * @param string|int $objectId the event's id
      * @param int        $page
      */
-    public function failedAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, CampaignActionContactSql $sql, $objectId, $page = 1)
+    public function failedAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, CampaignStepContactSql $sql, $objectId, $page = 1)
     {
         return $this->table($request, $pageHelperFactory, (int) $objectId, (int) $page, 'failed', $sql->failed((int) $objectId));
     }
@@ -33,7 +33,7 @@ class CampaignActionContactsController extends CampaignController
      * @param string|int $objectId the event's id
      * @param int        $page
      */
-    public function waitingAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, CampaignActionContactSql $sql, $objectId, $page = 1)
+    public function waitingAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, CampaignStepContactSql $sql, $objectId, $page = 1)
     {
         return $this->table($request, $pageHelperFactory, (int) $objectId, (int) $page, 'waiting', $sql->waiting((int) $objectId));
     }
@@ -61,9 +61,9 @@ class CampaignActionContactsController extends CampaignController
             'entityId'      => (int) $event->getCampaign()->getId(),
             'routeId'       => $eventId,
             'page'          => $page,
-            'sessionVar'    => 'campaignAction'.ucfirst($state),
-            'route'         => 'mautic_patches_campaign_action_'.$state.'_contacts',
-            'container'     => '#patches-actions-table',
+            'sessionVar'    => 'campaignStep'.ucfirst($state),
+            'route'         => 'mautic_patches_campaign_step_'.$state.'_contacts',
+            'container'     => '#patches-steps-table',
             // the campaign's own view permission, as the contacts tab of core checks
             'permission'    => 'campaign:campaigns:view',
             'joinTable'     => 'campaign_leads',

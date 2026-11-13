@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The two endpoints of the "Recalculate dates" box of a Wait step (second "Ações" tab of the campaign page):
+ * The two endpoints of the "Recalculate dates" box of a Wait step ("Etapas" tab of the campaign page):
  *  - GET  /s/campaign-wait/{eventId}/recalculate/simulate: what the current rule would do to the contacts that wait (reads only);
  *  - POST /s/campaign-wait/{eventId}/recalculate/apply:    writes those dates.
  * The simulation has the access rule of the campaign page (view the campaign); applying needs the campaign's edit permission. Only a Wait

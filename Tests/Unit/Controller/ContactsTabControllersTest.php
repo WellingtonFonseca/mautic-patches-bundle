@@ -7,7 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Controller;
 use Mautic\CampaignBundle\Controller\CampaignController;
 use Mautic\LeadBundle\Controller\ListController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignContactsController;
-use MauticPlugin\MauticPatchesBundle\Controller\CampaignActionContactsController;
+use MauticPlugin\MauticPatchesBundle\Controller\CampaignStepContactsController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventAccessTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\ContactsTableTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\SegmentContactsController;
@@ -35,7 +35,7 @@ class ContactsTabControllersTest extends TestCase
 
     public function testTheNodeCountsOfTheCampaignPreviewOpenNoList(): void
     {
-        // the contacts of a step are listed on the second "Ações" tab only: the counts of a node open nothing
+        // the contacts of a step are listed on the "Etapas" tab only: the counts of a node open nothing
         $routes = (require __DIR__.'/../../../Config/config.php')['routes']['main'];
         foreach (['mautic_patches_campaign_event_pending', 'mautic_patches_campaign_event_pending_contacts'] as $name) {
             $this->assertArrayNotHasKey($name, $routes);
@@ -44,14 +44,14 @@ class ContactsTabControllersTest extends TestCase
 
     public function testTheTableOfTheActionsTabUsesTheSameTraitWithOneRoutePerState(): void
     {
-        $this->assertTrue(is_subclass_of(CampaignActionContactsController::class, CampaignController::class));
-        $this->assertContains(ContactsTableTrait::class, class_uses(CampaignActionContactsController::class));
-        $this->assertContains(CampaignEventAccessTrait::class, class_uses(CampaignActionContactsController::class));
+        $this->assertTrue(is_subclass_of(CampaignStepContactsController::class, CampaignController::class));
+        $this->assertContains(ContactsTableTrait::class, class_uses(CampaignStepContactsController::class));
+        $this->assertContains(CampaignEventAccessTrait::class, class_uses(CampaignStepContactsController::class));
 
         $routes = (require __DIR__.'/../../../Config/config.php')['routes']['main'];
         foreach (['failed', 'waiting', 'none'] as $state) {
-            $route = $routes['mautic_patches_campaign_action_'.$state.'_contacts'];
-            $this->assertSame(CampaignActionContactsController::class.'::'.$state.'Action', $route['controller']);
+            $route = $routes['mautic_patches_campaign_step_'.$state.'_contacts'];
+            $this->assertSame(CampaignStepContactsController::class.'::'.$state.'Action', $route['controller']);
             $this->assertStringContainsString('{objectId}', $route['path'], 'the trait builds its urls with objectId');
             $this->assertStringContainsString('/'.$state.'/', $route['path']);
         }
