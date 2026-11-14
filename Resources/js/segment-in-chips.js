@@ -224,9 +224,11 @@
         $('form[name=campaignevent] ' + rows.row).each(function () {
             var $row   = $(this);
             var $input = $row.find('input' + rows.value);
-            if (!$input.length || $input.attr('data-in-chips')) { return; }
+            if ($input.attr('data-in-chips')) { return; }
+            // the old chips go even when there is no text input any more: a field with options gets a select, and chips left
+            // beside it would write into the input that left the page
             $row.find('.in-chips-part').remove();
-            if (!wants($row.find(rows.operator).val(), $input.attr('type'))) { return; }
+            if (!$input.length || !wants($row.find(rows.operator).val(), $input.attr('type'))) { return; }
             var ctx = context($row);
             ctx.inline = $input.parent().hasClass('input-group');
             enhance($, $input[0], cfg, ctx);
