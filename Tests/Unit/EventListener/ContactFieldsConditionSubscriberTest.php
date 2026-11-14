@@ -68,6 +68,29 @@ class ContactFieldsConditionSubscriberTest extends TestCase
         $this->assertTrue($event->getResult());
     }
 
+    public function testTheCriteriaReachTheMatcherAsAStrictListOfStrings(): void
+    {
+        $matcher = $this->createMock(ContactFieldsMatcher::class);
+        $matcher->expects($this->once())->method('matches')->with(7, $this->identicalTo([
+            ['field' => '12', 'operator' => '34', 'value' => 'x'],
+            ['field' => 'points', 'operator' => 'gte', 'value' => '1'],
+            ['field' => 'city', 'operator' => '=', 'value' => 'Y'],
+        ]))->willReturn(true);
+
+        // the first criterion may come as numbers; the keys of the collection are holes (3) or names (a removed or an added row of
+        // the form): the matcher always gets a list
+        $event = $this->executionEvent($this->lead(7), [
+            'field' => 12, 'operator' => 34, 'value' => 'x',
+            'additionalCriteria' => [
+                3 => ['field' => 'points', 'operator' => 'gte', 'value' => '1'],
+                'new2' => ['field' => 'city', 'operator' => '=', 'value' => 'Y'],
+            ],
+        ]);
+        (new ContactFieldsConditionSubscriber($matcher))->onTrigger($event);
+
+        $this->assertTrue($event->getResult());
+    }
+
     public function testAConditionThatDoesNotMatchIsFalse(): void
     {
         $matcher = $this->createMock(ContactFieldsMatcher::class);
