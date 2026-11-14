@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign risks=UI,DADOS
 // The formatter of the schedule lines (Resources/js/campaign-node-schedule.js): the hours and the days of an interval event as
 // [{icon, text}] for the strip of its node.
 //

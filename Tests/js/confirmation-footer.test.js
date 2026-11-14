@@ -1,3 +1,4 @@
+// Test-tags: areas=appearance risks=UI
 // The wrap of core's Mautic.showConfirmation (Resources/js/confirmation-footer.js) with a small fake of jQuery. How the buttons end up in
 // the footer is checked in the browser (scripts/5/e2e/tests/confirmation-footer.spec.js).
 //

@@ -6,8 +6,11 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignEndpointsOnTopSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:UI')]
 class CampaignEndpointsOnTopSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left'): string

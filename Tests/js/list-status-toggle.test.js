@@ -1,3 +1,4 @@
+// Test-tags: areas=appearance risks=UI,FLUXO
 // The logic of the segment status toggle (Resources/js/list-status-toggle.js): what the answer of the server says, and what the
 // label and the menu item show for it. The DOM part is checked in the browser.
 //

@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign risks=UI,FLUXO
 // The badges of the segment and campaign details pages (Resources/js/segment-campaign-detail-badges.js): which state the marker tells and what is
 // written in the toolbar. The look is checked in the browser (scripts/5/e2e/tests/segment-campaign-detail-status.spec.js).
 //

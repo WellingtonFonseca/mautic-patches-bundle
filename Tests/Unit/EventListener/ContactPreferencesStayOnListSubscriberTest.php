@@ -6,6 +6,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactPreferencesStayOnListSubscriber;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,6 +18,8 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\RouterInterface;
 
+#[Group('area:contacts')]
+#[Group('risk:FLUXO')]
 class ContactPreferencesStayOnListSubscriberTest extends TestCase
 {
     private const VIEW = ['closeModal' => 1, 'newContent' => 'CONTACT PAGE', 'route' => '/s/contacts/view/9'];

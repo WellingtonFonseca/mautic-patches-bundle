@@ -7,10 +7,14 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\LeadBundle\Segment\RelativeDate;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use MauticPlugin\MauticPatchesBundle\EventListener\TimeInputFormatSubscriber;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:appearance')]
+#[Group('risk:FLUXO')]
+#[Group('risk:UI')]
 class TimeInputFormatSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left', ?array $english = null, ?array $local = null): string

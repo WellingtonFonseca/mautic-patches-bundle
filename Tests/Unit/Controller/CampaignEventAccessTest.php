@@ -9,6 +9,7 @@ use Mautic\CampaignBundle\Entity\Event;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventAccessTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignStepContactsController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignWaitRecalculateController;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -17,6 +18,8 @@ use Symfony\Component\HttpFoundation\Response;
  * to the same rule about the event: 404 when the event or its campaign is missing, 403 without the campaign's view permission. It
  * lives in one trait, so they cannot drift.
  */
+#[Group('area:campaign')]
+#[Group('risk:FLUXO')]
 class CampaignEventAccessTest extends TestCase
 {
     /**

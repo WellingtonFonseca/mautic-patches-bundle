@@ -10,9 +10,13 @@ use Mautic\LeadBundle\Model\ListModel;
 use MauticPlugin\MauticPatchesBundle\DTO\SegmentRebuildResult;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuilder;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuildLauncher;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:CRITICO')]
+#[Group('risk:FLUXO')]
 class SegmentRebuilderTest extends TestCase
 {
     private ListModel&MockObject $listModel;

@@ -8,8 +8,11 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\DarkThemeBackgroundSubscriber;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:appearance')]
+#[Group('risk:UI')]
 class DarkThemeBackgroundSubscriberTest extends TestCase
 {
     private function css(): string

@@ -7,8 +7,12 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactViewDetailsOpenSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:contacts')]
+#[Group('risk:FLUXO')]
+#[Group('risk:UI')]
 class ContactViewDetailsOpenSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left'): string

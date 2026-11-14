@@ -12,10 +12,13 @@ use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\UserBundle\Entity\User;
 use MauticPlugin\MauticPatchesBundle\EventListener\UserStatusSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:users-roles')]
+#[Group('risk:FLUXO')]
 class UserStatusSubscriberTest extends TestCase
 {
     private function subscriber(bool $canEdit = true, int $loggedId = 1): UserStatusSubscriber

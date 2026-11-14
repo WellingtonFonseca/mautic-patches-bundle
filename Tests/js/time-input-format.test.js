@@ -1,3 +1,4 @@
+// Test-tags: areas=appearance risks=FLUXO,UI
 // The formatter of the date / time fields (Resources/js/time-input-format.js): what is typed becomes the picker's format,
 // slots held to their range, a partial time completed on blur. The listeners on the document are checked in the browser.
 //

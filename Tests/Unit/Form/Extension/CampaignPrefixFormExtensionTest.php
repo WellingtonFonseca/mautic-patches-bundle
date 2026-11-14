@@ -9,6 +9,7 @@ use Mautic\CampaignBundle\Form\Type\CampaignType;
 use MauticPlugin\MauticPatchesBundle\Form\Extension\CampaignPrefixFormExtension;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignPrefixes;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignPrefixStore;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -18,6 +19,9 @@ use Symfony\Component\Form\Forms;
 use Symfony\Component\Validator\Validation;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:campaign')]
+#[Group('risk:FLUXO')]
+#[Group('risk:DADOS')]
 class CampaignPrefixFormExtensionTest extends TestCase
 {
     /** @var array{0: Campaign, 1: string}|null what the store was asked to remember */

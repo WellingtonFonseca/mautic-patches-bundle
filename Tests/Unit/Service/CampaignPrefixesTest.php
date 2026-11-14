@@ -6,8 +6,11 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignPrefixes;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:DADOS')]
 class CampaignPrefixesTest extends TestCase
 {
     private function service(mixed $value): CampaignPrefixes

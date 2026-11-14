@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign risks=FLUXO,CRITICO
 // Campaign kind of the lock script (CampaignUpdateLockSubscriber): done = the status says running:false. Runs the REAL script that SegmentUpdateLockSubscriber::script builds (taken from the PHP class, not copied) against a
 // small fake browser: anchors and "x" lines, a fake mQuery, fake timers, and a recorder for the status requests.
 // It covers what the PHP tests cannot: the click, the lock, the polling, the unlock and the reload actually happening in

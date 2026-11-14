@@ -1,3 +1,4 @@
+// Test-tags: areas=plugin-settings risks=UI,FLUXO
 // What Resources/js/plugin-changelog-tab.js exposes: the install of the callback core calls with the block. The tab itself (moving the
 // block into a pane of the modal) is checked in the browser (scripts/5/e2e/tests/plugin-changelog.spec.js).
 //

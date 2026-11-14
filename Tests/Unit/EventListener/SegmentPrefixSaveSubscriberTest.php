@@ -9,8 +9,12 @@ use Mautic\LeadBundle\Event\LeadListEvent;
 use Mautic\LeadBundle\LeadEvents;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentPrefixSaveSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:DADOS')]
+#[Group('risk:FLUXO')]
 class SegmentPrefixSaveSubscriberTest extends TestCase
 {
     private function segment(?int $id): LeadList

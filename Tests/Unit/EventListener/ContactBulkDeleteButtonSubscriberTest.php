@@ -9,11 +9,15 @@ use Mautic\CoreBundle\Event\CustomButtonEvent;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactBulkDeleteButtonSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:contacts')]
+#[Group('risk:FLUXO')]
+#[Group('risk:CRITICO')]
 class ContactBulkDeleteButtonSubscriberTest extends TestCase
 {
     private function buttons(bool $granted, string $location, string $route): array

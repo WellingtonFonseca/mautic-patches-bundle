@@ -7,10 +7,13 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentInChipsSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\RouterInterface;
 
+#[Group('area:segment')]
+#[Group('risk:FLUXO')]
 class SegmentInChipsSubscriberTest extends TestCase
 {
     private function content(RouterInterface $router, string $context = 'page.header.left'): string

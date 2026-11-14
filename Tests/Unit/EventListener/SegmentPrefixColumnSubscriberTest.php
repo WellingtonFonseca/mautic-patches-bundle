@@ -10,6 +10,7 @@ use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentPrefixColumnSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -17,6 +18,9 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:segment')]
+#[Group('risk:UI')]
+#[Group('risk:FLUXO')]
 class SegmentPrefixColumnSubscriberTest extends TestCase
 {
     /**

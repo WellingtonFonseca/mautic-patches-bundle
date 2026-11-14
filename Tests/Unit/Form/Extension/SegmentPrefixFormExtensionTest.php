@@ -9,6 +9,7 @@ use Mautic\LeadBundle\Form\Type\ListType;
 use MauticPlugin\MauticPatchesBundle\Form\Extension\SegmentPrefixFormExtension;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixes;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -18,6 +19,9 @@ use Symfony\Component\Form\Forms;
 use Symfony\Component\Validator\Validation;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:segment')]
+#[Group('risk:FLUXO')]
+#[Group('risk:DADOS')]
 class SegmentPrefixFormExtensionTest extends TestCase
 {
     /** @var array{0: LeadList, 1: string}|null what the store was asked to remember */

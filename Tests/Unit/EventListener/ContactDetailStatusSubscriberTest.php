@@ -8,9 +8,12 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactDetailStatusSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:contacts')]
+#[Group('risk:UI')]
 class ContactDetailStatusSubscriberTest extends TestCase
 {
     /**

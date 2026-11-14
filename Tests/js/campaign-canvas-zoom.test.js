@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign risks=UI,FLUXO
 // The maths and the wiring of the zoom of the campaign builder canvas (Resources/js/campaign-canvas-zoom.js). The real
 // effect (lines, drags, scroll) is checked in the browser (scripts/5/e2e/tests/campaign-canvas-zoom.spec.js).
 //

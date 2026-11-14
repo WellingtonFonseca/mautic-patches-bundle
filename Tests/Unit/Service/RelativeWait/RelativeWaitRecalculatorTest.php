@@ -12,6 +12,7 @@ use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitDateResolver;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitItemSelector;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitRecalculator;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -20,6 +21,9 @@ use PHPUnit\Framework\TestCase;
  * gives its contact (the same resolver, selector and "past or missing is now" rule the scheduler uses). A plan only reads;
  * applying it is what writes the dates.
  */
+#[Group('area:campaign-wait')]
+#[Group('area:campaign')]
+#[Group('risk:CRITICO')]
 class RelativeWaitRecalculatorTest extends TestCase
 {
     private \DateTimeImmutable $now;

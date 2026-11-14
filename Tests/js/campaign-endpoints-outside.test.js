@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign risks=UI
 // How the circles of the nodes of the campaign builder are moved out (Resources/js/campaign-endpoints-outside.js). The real
 // position is checked in the browser (scripts/5/e2e/tests/campaign-endpoints.spec.js).
 //

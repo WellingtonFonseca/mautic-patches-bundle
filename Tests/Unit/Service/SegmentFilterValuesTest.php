@@ -7,9 +7,13 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 use Doctrine\DBAL\Connection;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentFilterValues;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:FLUXO')]
+#[Group('risk:DADOS')]
 class SegmentFilterValuesTest extends TestCase
 {
     private Connection&MockObject $connection;

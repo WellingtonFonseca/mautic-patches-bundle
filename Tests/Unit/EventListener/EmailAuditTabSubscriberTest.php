@@ -9,8 +9,12 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Model\AuditLogModel;
 use Mautic\EmailBundle\Entity\Email;
 use MauticPlugin\MauticPatchesBundle\EventListener\EmailAuditTabSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:email')]
+#[Group('risk:FLUXO')]
+#[Group('risk:DADOS')]
 class EmailAuditTabSubscriberTest extends TestCase
 {
     private function email(?int $id): Email

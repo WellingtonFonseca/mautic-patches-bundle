@@ -7,10 +7,14 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\AppearanceButtonSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:appearance')]
+#[Group('risk:UI')]
+#[Group('risk:FLUXO')]
 class AppearanceButtonSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left'): string

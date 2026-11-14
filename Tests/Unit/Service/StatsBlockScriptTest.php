@@ -7,8 +7,12 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignViewOrderSubscriber;
 use MauticPlugin\MauticPatchesBundle\EventListener\EmailViewOrderSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\StatsBlockScript;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:appearance')]
+#[Group('risk:UI')]
+#[Group('risk:INFRA')]
 class StatsBlockScriptTest extends TestCase
 {
     public function testTheScriptIsBuiltFromTheFlagTheAnchorAndTheVariableName(): void

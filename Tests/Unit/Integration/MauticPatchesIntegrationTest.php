@@ -6,8 +6,11 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Integration;
 
 use Mautic\PluginBundle\Entity\Integration;
 use MauticPlugin\MauticPatchesBundle\Integration\MauticPatchesIntegration;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:plugin-settings')]
+#[Group('risk:INFRA')]
 class MauticPatchesIntegrationTest extends TestCase
 {
     private function integration(): MauticPatchesIntegration

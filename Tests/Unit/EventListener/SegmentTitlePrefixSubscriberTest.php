@@ -9,8 +9,11 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentTitlePrefixSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:UI')]
 class SegmentTitlePrefixSubscriberTest extends TestCase
 {
     private function segment(string $name = 'Onboarding', int $id = 7): LeadList

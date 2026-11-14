@@ -11,9 +11,13 @@ use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactDetailStatusSubscriber;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentCampaignDetailStatusSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:campaign')]
+#[Group('risk:UI')]
+#[Group('risk:FLUXO')]
 class SegmentCampaignDetailStatusSubscriberTest extends TestCase
 {
     /** @param array<string, mixed> $vars */

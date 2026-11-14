@@ -1,3 +1,4 @@
+// Test-tags: areas=segment risks=FLUXO
 // The logic of the including / excluding chips of the segment form (Resources/js/segment-in-chips.js): splitting what is
 // typed or pasted, the value stored (A|B|C), the suggestions and the URL each filter asks them from. The DOM part is
 // checked in the browser.

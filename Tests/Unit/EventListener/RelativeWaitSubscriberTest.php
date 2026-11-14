@@ -9,9 +9,13 @@ use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
 use MauticPlugin\MauticPatchesBundle\Form\Type\RelativeWaitType;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:campaign-wait')]
+#[Group('area:campaign')]
+#[Group('risk:CRITICO')]
 class RelativeWaitSubscriberTest extends TestCase
 {
     private function executionEvent(string $type): CampaignExecutionEvent

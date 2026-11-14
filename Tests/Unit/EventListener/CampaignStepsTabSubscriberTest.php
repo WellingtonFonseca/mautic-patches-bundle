@@ -14,8 +14,12 @@ use MauticPlugin\MauticPatchesBundle\Service\CampaignStepFailureCounter;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignEditPermission;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignFlowOrder;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:FLUXO')]
+#[Group('risk:CRITICO')]
 class CampaignStepsTabSubscriberTest extends TestCase
 {
     private const VIEW = '@MauticCampaign/Campaign/details.html.twig';

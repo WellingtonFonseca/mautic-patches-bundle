@@ -8,8 +8,11 @@ use Mautic\ConfigBundle\ConfigEvents;
 use Mautic\ConfigBundle\Event\ConfigBuilderEvent;
 use Mautic\CoreBundle\Helper\BundleHelper;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignPrefixConfigSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:FLUXO')]
 class CampaignPrefixConfigSubscriberTest extends TestCase
 {
     public function testRunsAfterCoreListener(): void

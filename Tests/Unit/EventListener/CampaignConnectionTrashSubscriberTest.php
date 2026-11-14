@@ -6,9 +6,12 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignConnectionTrashSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:campaign')]
+#[Group('risk:UI')]
 class CampaignConnectionTrashSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left'): string

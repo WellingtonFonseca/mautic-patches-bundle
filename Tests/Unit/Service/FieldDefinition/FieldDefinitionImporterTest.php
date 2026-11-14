@@ -12,6 +12,7 @@ use Mautic\LeadBundle\Model\FieldModel;
 use MauticPlugin\MauticPatchesBundle\Exception\FieldDefinitionImportException;
 use MauticPlugin\MauticPatchesBundle\Service\FieldDefinition\FieldDefinitionImporter;
 use MauticPlugin\MauticPatchesBundle\Service\FieldDefinition\FieldDefinitionParser;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\ConstraintViolation;
@@ -19,6 +20,9 @@ use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:fields')]
+#[Group('risk:DADOS')]
+#[Group('risk:CRITICO')]
 class FieldDefinitionImporterTest extends TestCase
 {
     /** @var array<string, LeadField> the fields "of this instance", by alias */

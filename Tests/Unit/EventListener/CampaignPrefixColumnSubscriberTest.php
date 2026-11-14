@@ -10,6 +10,7 @@ use Mautic\CampaignBundle\Entity\Campaign;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignPrefixColumnSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignPrefixStore;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -17,6 +18,9 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:campaign')]
+#[Group('risk:UI')]
+#[Group('risk:FLUXO')]
 class CampaignPrefixColumnSubscriberTest extends TestCase
 {
     /**

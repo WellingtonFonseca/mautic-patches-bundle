@@ -11,10 +11,14 @@ use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\LeadBundle\Entity\LeadField;
 use MauticPlugin\MauticPatchesBundle\EventListener\AbstractListStatusSubscriber;
 use MauticPlugin\MauticPatchesBundle\EventListener\FieldStatusSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:fields')]
+#[Group('risk:DADOS')]
+#[Group('risk:FLUXO')]
 class FieldStatusSubscriberTest extends TestCase
 {
     private function subscriber(bool $granted = true): FieldStatusSubscriber

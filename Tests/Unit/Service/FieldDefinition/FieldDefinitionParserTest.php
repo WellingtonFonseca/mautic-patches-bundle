@@ -7,9 +7,12 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service\FieldDefinition;
 use MauticPlugin\MauticPatchesBundle\Exception\FieldDefinitionImportException;
 use MauticPlugin\MauticPatchesBundle\Service\FieldDefinition\FieldDefinitionParser;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:fields')]
+#[Group('risk:DADOS')]
 class FieldDefinitionParserTest extends TestCase
 {
     private function parser(): FieldDefinitionParser

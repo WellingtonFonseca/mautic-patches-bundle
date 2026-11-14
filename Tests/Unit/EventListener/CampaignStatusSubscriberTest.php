@@ -11,10 +11,14 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignStatusSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:campaign')]
+#[Group('risk:FLUXO')]
+#[Group('risk:UI')]
 class CampaignStatusSubscriberTest extends TestCase
 {
     private function subscriber(bool $canEdit = true): CampaignStatusSubscriber

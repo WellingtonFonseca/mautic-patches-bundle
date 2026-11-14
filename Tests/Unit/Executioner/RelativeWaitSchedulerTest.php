@@ -22,6 +22,7 @@ use MauticPlugin\MauticPatchesBundle\Executioner\RelativeWaitDueDate;
 use MauticPlugin\MauticPatchesBundle\Executioner\RelativeWaitScheduler;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitDateResolver;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitItemSelector;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -31,6 +32,9 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  * The scheduler of the campaign (core's mautic.campaign.scheduler, replaced by this subclass) gives each contact the
  * date its relative wait resolved to. Core's modes know one date for the whole batch; this wait has one per contact.
  */
+#[Group('area:campaign-wait')]
+#[Group('area:campaign')]
+#[Group('risk:CRITICO')]
 class RelativeWaitSchedulerTest extends TestCase
 {
     private \DateTimeImmutable $now;

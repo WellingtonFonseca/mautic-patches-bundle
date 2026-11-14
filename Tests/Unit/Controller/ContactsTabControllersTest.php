@@ -11,6 +11,7 @@ use MauticPlugin\MauticPatchesBundle\Controller\CampaignStepContactsController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventAccessTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\ContactsTableTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\SegmentContactsController;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Service\Attribute\Required;
 
@@ -19,6 +20,8 @@ use Symfony\Contracts\Service\Attribute\Required;
  * heavy (core controllers), so this pins the contract the tabs rely on; the rendered table is checked live by
  * scripts/test-contacts-tables.sh.
  */
+#[Group('area:contacts')]
+#[Group('risk:FLUXO')]
 class ContactsTabControllersTest extends TestCase
 {
     public function testTheSegmentTabExtendsCoresListController(): void

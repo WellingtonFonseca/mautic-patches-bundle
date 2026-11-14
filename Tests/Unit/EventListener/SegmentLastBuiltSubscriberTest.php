@@ -10,8 +10,12 @@ use Mautic\CoreBundle\Translation\Translator;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentLastBuiltSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\LocalizedDateFormatter;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:FLUXO')]
+#[Group('risk:UI')]
 class SegmentLastBuiltSubscriberTest extends TestCase
 {
     private function subscriber(string $locale = 'pt_BR'): SegmentLastBuiltSubscriber

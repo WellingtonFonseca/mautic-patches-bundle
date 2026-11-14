@@ -1,3 +1,4 @@
+// Test-tags: areas=segment risks=FLUXO
 // Runs the REAL script that SegmentListClickSubscriber puts on the page (taken from the PHP class, not copied) against a
 // small fake browser: the click handler on the document, links inside and outside the segment list, Mautic.ajaxifyModal as a
 // recorder, and the "shown.bs.tab" handler that loads the Contacts tab and the campaign shares.

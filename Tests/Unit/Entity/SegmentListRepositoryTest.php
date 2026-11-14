@@ -7,8 +7,12 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Entity;
 use Doctrine\ORM\QueryBuilder;
 use Mautic\LeadBundle\Entity\LeadListRepository;
 use MauticPlugin\MauticPatchesBundle\Entity\SegmentListRepository;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:FLUXO')]
+#[Group('risk:DADOS')]
 class SegmentListRepositoryTest extends TestCase
 {
     private function repository(): SegmentListRepository

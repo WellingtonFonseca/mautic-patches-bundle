@@ -6,9 +6,13 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service\FieldDefinition;
 
 use MauticPlugin\MauticPatchesBundle\DTO\FieldDefinitionImportResult;
 use MauticPlugin\MauticPatchesBundle\Service\FieldDefinition\FieldDefinitionImportAlerts;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:fields')]
+#[Group('risk:DADOS')]
+#[Group('risk:FLUXO')]
 class FieldDefinitionImportAlertsTest extends TestCase
 {
     private function alerts(): FieldDefinitionImportAlerts

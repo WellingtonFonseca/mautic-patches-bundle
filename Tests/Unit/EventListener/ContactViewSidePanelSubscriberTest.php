@@ -8,8 +8,12 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Translation\Translator;
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactViewSidePanelSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:contacts')]
+#[Group('risk:FLUXO')]
+#[Group('risk:UI')]
 class ContactViewSidePanelSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left'): string

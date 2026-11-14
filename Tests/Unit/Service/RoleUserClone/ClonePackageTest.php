@@ -6,8 +6,11 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service\RoleUserClone;
 
 use MauticPlugin\MauticPatchesBundle\Exception\ClonePackageException;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\ClonePackage;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:users-roles')]
+#[Group('risk:DADOS')]
 class ClonePackageTest extends TestCase
 {
     public function testTheKeyHasAboutOneHundredLetterAndDigitCharactersAndIsNeverRepeated(): void

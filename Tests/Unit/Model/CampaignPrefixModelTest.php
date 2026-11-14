@@ -7,8 +7,12 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Model;
 use Mautic\CampaignBundle\Model\CampaignModel;
 use MauticPlugin\MauticPatchesBundle\Model\CampaignPrefixModel;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:FLUXO')]
+#[Group('risk:DADOS')]
 class CampaignPrefixModelTest extends TestCase
 {
     public function testItIsCoresCampaignModel(): void

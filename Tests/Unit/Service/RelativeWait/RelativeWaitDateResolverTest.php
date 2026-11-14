@@ -6,8 +6,13 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service\RelativeWait;
 
 use Doctrine\DBAL\Connection;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitDateResolver;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign-wait')]
+#[Group('area:campaign')]
+#[Group('risk:CRITICO')]
+#[Group('risk:DADOS')]
 class RelativeWaitDateResolverTest extends TestCase
 {
     private const ZONE = 'America/Sao_Paulo';

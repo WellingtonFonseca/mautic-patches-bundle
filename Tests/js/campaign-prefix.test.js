@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign risks=UI,FLUXO
 // Runs the REAL scripts that CampaignPrefixFieldSubscriber (moves the Prefixo select before Nome on the campaign form) and
 // CampaignPrefixColumnSubscriber (adds the Prefixo column to the campaign list) put on the page, taken from the PHP classes,
 // against a small fake mQuery.

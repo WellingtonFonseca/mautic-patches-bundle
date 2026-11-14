@@ -9,11 +9,15 @@ use Mautic\CoreBundle\Event\CustomButtonEvent;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use MauticPlugin\MauticPatchesBundle\EventListener\FieldDefinitionButtonSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:fields')]
+#[Group('risk:FLUXO')]
+#[Group('risk:DADOS')]
 class FieldDefinitionButtonSubscriberTest extends TestCase
 {
     private function subscriber(bool $granted): FieldDefinitionButtonSubscriber

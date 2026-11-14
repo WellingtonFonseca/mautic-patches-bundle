@@ -12,8 +12,11 @@ use Doctrine\ORM\QueryBuilder;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\Entity\SegmentPrefixValue;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:DADOS')]
 class SegmentPrefixStoreTest extends TestCase
 {
     private function store(array $rows = [], ?Connection $connection = null): SegmentPrefixStore

@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Config;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:plugin-settings')]
+#[Group('risk:INFRA')]
+#[Group('risk:FLUXO')]
 class RoutesTest extends TestCase
 {
     /**

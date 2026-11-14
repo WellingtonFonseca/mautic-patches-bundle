@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Resources;
 
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\CoreTemplateOverridePass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
+#[Group('area:campaign')]
+#[Group('risk:UI')]
 class CampaignTimelineErrorAlertTest extends TestCase
 {
     private const CORE_TAG = '<p class="text-danger mt-0 mb-10"><i class="ri-alert-line"></i> ';

@@ -1,3 +1,4 @@
+// Test-tags: areas=plugin-settings risks=UI
 // The logic of the plugin tile status (Resources/js/plugin-tile-status.js): the wrap of core's Mautic.integrationConfigOnLoad and what an
 // answer paints, with a small fake of jQuery. The page is checked in the browser (scripts/5/e2e/tests/plugin-tile-status.spec.js).
 //

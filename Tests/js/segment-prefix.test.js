@@ -1,3 +1,4 @@
+// Test-tags: areas=segment risks=UI,FLUXO
 // Runs the REAL scripts that SegmentPrefixFieldSubscriber (moves the Prefixo select before Nome on the segment form) and
 // SegmentPrefixColumnSubscriber (adds the Prefixo column to the segment list) put on the page, taken from the PHP classes,
 // against a small fake mQuery.

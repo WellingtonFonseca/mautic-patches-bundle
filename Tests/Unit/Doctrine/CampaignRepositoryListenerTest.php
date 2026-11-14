@@ -10,8 +10,12 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Mautic\CampaignBundle\Entity\Campaign;
 use MauticPlugin\MauticPatchesBundle\Doctrine\CampaignRepositoryListener;
 use MauticPlugin\MauticPatchesBundle\Entity\CampaignPrefixRepository;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:FLUXO')]
+#[Group('risk:INFRA')]
 class CampaignRepositoryListenerTest extends TestCase
 {
     public function testTheCampaignGetsTheRepositoryThatSortsByPrefix(): void
