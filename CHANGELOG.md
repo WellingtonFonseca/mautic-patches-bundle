@@ -2,6 +2,9 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-14
+- Na condição de campanha de Custom Objects, ao trocar o campo por um que tem lista de opções, os chips de Incluindo / Excluindo somem e fica só a lista, sem uma caixa solta ao lado
+
 ## 2026-11-13
 - Na aba Histórico do contato, o erro de uma ação de campanha (como o passo Aguardar) aparece em um alerta vermelho, igual ao dos cartões de envio
 - Na janela de detalhes do contato (clique no nome na lista), a tabela não fica mais colada nas abas
