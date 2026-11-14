@@ -119,6 +119,20 @@ class ContactFieldsConditionSubscriberTest extends TestCase
         $matcher->expects($this->never())->method('matches');
 
         $event = $this->executionEvent($this->lead(0), ['field' => 'email', 'operator' => '=', 'value' => 'x']);
+        // the result of a new event is already false: it starts true, so only the guard can make it false
+        $event->setResult(true);
+        (new ContactFieldsConditionSubscriber($matcher))->onTrigger($event);
+
+        $this->assertFalse($event->getResult());
+    }
+
+    public function testNoContactIsFalse(): void
+    {
+        $matcher = $this->createMock(ContactFieldsMatcher::class);
+        $matcher->expects($this->never())->method('matches');
+
+        $event = $this->executionEvent(null, ['field' => 'email', 'operator' => '=', 'value' => 'x']);
+        $event->setResult(true);
         (new ContactFieldsConditionSubscriber($matcher))->onTrigger($event);
 
         $this->assertFalse($event->getResult());
