@@ -12,10 +12,14 @@ use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentStatusSubscriber;
 use MauticPlugin\MauticPatchesBundle\EventListener\AbstractListStatusSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:segment')]
+#[Group('risk:FLUXO')]
+#[Group('risk:UI')]
 class SegmentStatusSubscriberTest extends TestCase
 {
     private function subscriber(bool $canEdit = true): SegmentStatusSubscriber

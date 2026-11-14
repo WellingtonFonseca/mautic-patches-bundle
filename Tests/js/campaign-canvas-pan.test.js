@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign risks=UI,FLUXO
 // Runs the REAL script that CampaignCanvasPanSubscriber puts on every admin page (middle button drags the campaign canvas)
 // against a small fake document: a scroll container inside #campaign-builder and the listeners it registers.
 //

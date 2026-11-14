@@ -10,8 +10,12 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\Doctrine\SegmentRepositoryListener;
 use MauticPlugin\MauticPatchesBundle\Entity\SegmentListRepository;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:FLUXO')]
+#[Group('risk:INFRA')]
 class SegmentRepositoryListenerTest extends TestCase
 {
     public function testTheSegmentGetsTheRepositoryThatSortsByPrefix(): void

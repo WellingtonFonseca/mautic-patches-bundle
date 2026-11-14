@@ -1,3 +1,4 @@
+// Test-tags: areas=contacts risks=CRITICO,UI
 // The plain functions of the bulk delete page (Resources/js/contact-bulk-delete.js): the texts, the percent, the typed word and the loop of
 // batches. The glue with the page (the table, the alert, the button, the modal) is checked in the browser
 // (scripts/<version>/e2e/tests/contact-bulk-delete.spec.js).

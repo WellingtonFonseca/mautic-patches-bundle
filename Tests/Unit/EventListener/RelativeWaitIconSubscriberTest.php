@@ -8,8 +8,12 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitIconSubscriber;
 use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign-wait')]
+#[Group('area:campaign')]
+#[Group('risk:UI')]
 class RelativeWaitIconSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left'): string

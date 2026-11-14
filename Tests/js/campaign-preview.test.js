@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign risks=UI
 // Runs the REAL script that CampaignPreviewSourceSubscriber puts on the campaign page (the Preview tab names the
 // segments of the contact source; the script rewrites them as "PREFIX - Name"), against a small fake document.
 //

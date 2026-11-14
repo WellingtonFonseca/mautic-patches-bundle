@@ -1,3 +1,4 @@
+// Test-tags: areas=contacts risks=UI
 // The badges of the contact page (Resources/js/contact-detail-badges.js): which channels are blocked, and what is written in the toolbar.
 // The look is checked in the browser (scripts/5/e2e/tests/contact-detail-status.spec.js).
 //

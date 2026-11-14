@@ -12,9 +12,13 @@ use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\ClonePackage;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\RoleSerializer;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\RoleUserImporter;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\UserSerializer;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:users-roles')]
+#[Group('risk:DADOS')]
+#[Group('risk:FLUXO')]
 class RoleUserImporterTest extends TestCase
 {
     private const HASH = '$2y$13$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';

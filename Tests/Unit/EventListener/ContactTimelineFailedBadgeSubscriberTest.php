@@ -8,10 +8,13 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomAssetsEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactTimelineFailedBadgeSubscriber;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+#[Group('area:contacts')]
+#[Group('risk:UI')]
 class ContactTimelineFailedBadgeSubscriberTest extends TestCase
 {
     private const ICON = '#contact-timeline .timeline-name i.ri-alert-line.text-danger';

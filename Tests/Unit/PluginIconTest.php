@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -11,6 +12,8 @@ use PHPUnit\Framework\TestCase;
  * to its own generic one (a node graph that looks like another tool's logo)
  * when that file is missing.
  */
+#[Group('area:plugin-settings')]
+#[Group('risk:UI')]
 class PluginIconTest extends TestCase
 {
     private const ICON = __DIR__.'/../../Assets/img/icon.png';

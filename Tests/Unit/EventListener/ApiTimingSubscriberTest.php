@@ -8,6 +8,7 @@ use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use MauticPlugin\MauticPatchesBundle\EventListener\ApiTimingSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\Performance\PerformanceLog;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,6 +18,8 @@ use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 
+#[Group('area:performance')]
+#[Group('risk:INFRA')]
 class ApiTimingSubscriberTest extends TestCase
 {
     public function testNormalizesNumericIds(): void

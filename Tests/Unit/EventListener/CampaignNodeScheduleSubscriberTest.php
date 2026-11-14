@@ -11,9 +11,13 @@ use Mautic\CoreBundle\Helper\UserHelper;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignNodeScheduleSubscriber;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Mautic\UserBundle\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:campaign')]
+#[Group('risk:UI')]
+#[Group('risk:DADOS')]
 class CampaignNodeScheduleSubscriberTest extends TestCase
 {
     /**

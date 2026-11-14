@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign risks=UI
 // What is stripped from the node buttons of the campaign builder (Resources/js/campaign-node-button-tooltips.js). The real behaviour (the
 // mouse, Bootstrap, the clone, the edit modal) is checked in the browser (scripts/5/e2e/tests/campaign-node-tooltip.spec.js).
 //

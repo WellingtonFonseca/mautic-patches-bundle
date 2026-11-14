@@ -8,8 +8,11 @@ use Mautic\LeadBundle\Entity\LeadField;
 use Mautic\LeadBundle\Entity\LeadFieldRepository;
 use Mautic\LeadBundle\Model\FieldModel;
 use MauticPlugin\MauticPatchesBundle\Service\FieldDefinition\FieldDefinitionExporter;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:fields')]
+#[Group('risk:DADOS')]
 class FieldDefinitionExporterTest extends TestCase
 {
     private function exporter(LeadField ...$fields): FieldDefinitionExporter

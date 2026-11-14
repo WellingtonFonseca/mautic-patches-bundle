@@ -10,8 +10,11 @@ use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\ClonePackage;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\RoleSerializer;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\RoleUserExporter;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\UserSerializer;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:users-roles')]
+#[Group('risk:DADOS')]
 class RoleUserExporterTest extends TestCase
 {
     private function exporter(): RoleUserExporter

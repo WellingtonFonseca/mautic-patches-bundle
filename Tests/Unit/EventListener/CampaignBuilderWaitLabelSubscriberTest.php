@@ -7,9 +7,13 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignBuilderWaitLabelSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:campaign')]
+#[Group('risk:UI')]
+#[Group('risk:DADOS')]
 class CampaignBuilderWaitLabelSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left'): string

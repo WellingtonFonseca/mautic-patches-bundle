@@ -10,9 +10,13 @@ use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactFieldsConditionSubscriber;
 use MauticPlugin\MauticPatchesBundle\Form\Type\ContactFieldsConditionType;
 use MauticPlugin\MauticPatchesBundle\Service\ContactFields\ContactFieldsMatcher;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:campaign')]
+#[Group('area:contacts')]
+#[Group('risk:CRITICO')]
 class ContactFieldsConditionSubscriberTest extends TestCase
 {
     private function lead(int $id): Lead

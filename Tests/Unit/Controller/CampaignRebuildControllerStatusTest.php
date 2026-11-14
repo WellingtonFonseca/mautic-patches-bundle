@@ -6,6 +6,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Controller;
 
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignRebuildController;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignRebuilder;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -13,6 +14,8 @@ use PHPUnit\Framework\TestCase;
  * statusAction only uses what it is handed, so the controller (which extends
  * core's CommonController, heavy to build) is created without its constructor.
  */
+#[Group('area:campaign')]
+#[Group('risk:FLUXO')]
 class CampaignRebuildControllerStatusTest extends TestCase
 {
     private CampaignRebuilder&MockObject $rebuilder;

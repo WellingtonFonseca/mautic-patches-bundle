@@ -6,8 +6,11 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service\Performance;
 
 use Doctrine\DBAL\Logging\SQLLogger;
 use MauticPlugin\MauticPatchesBundle\Service\Performance\QueryTimer;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:performance')]
+#[Group('risk:INFRA')]
 class QueryTimerTest extends TestCase
 {
     public function testCountsQueriesKeepsTheSlowestAndNeverTheParameters(): void

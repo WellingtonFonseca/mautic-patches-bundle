@@ -1,3 +1,4 @@
+// Test-tags: areas=contacts risks=UI
 // Runs the REAL script that ContactLiveModeSubscriber puts on the page (taken from the PHP class, not copied) against a
 // small fake browser: the live mode button of the contact list gets a spinning icon while it is on (class "active",
 // which core's toggleLiveLeadListUpdate sets and removes) and the normal icon again when it is off.

@@ -7,8 +7,11 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignBuilderOverlaySubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:UI')]
 class CampaignBuilderOverlaySubscriberTest extends TestCase
 {
     public function testSubscribesToCustomContentEvent(): void

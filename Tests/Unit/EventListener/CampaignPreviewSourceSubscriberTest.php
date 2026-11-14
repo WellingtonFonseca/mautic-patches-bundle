@@ -10,8 +10,11 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignPreviewSourceSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:UI')]
 class CampaignPreviewSourceSubscriberTest extends TestCase
 {
     /**

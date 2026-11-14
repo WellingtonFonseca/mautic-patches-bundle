@@ -1,3 +1,4 @@
+// Test-tags: areas=appearance risks=UI,FLUXO
 // The choices of the Appearance button (Resources/js/appearance-button.js). The button, the modal and the radios are checked in the
 // browser (scripts/5/e2e/tests/appearance-modal.spec.js).
 //

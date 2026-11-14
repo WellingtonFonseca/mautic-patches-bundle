@@ -9,8 +9,11 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignTitlePrefixSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignPrefixStore;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:UI')]
 class CampaignTitlePrefixSubscriberTest extends TestCase
 {
     private function content(string $context, ?string $prefix, bool $withCampaign = true, string $name = 'Onboarding'): string

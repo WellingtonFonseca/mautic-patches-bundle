@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
 use MauticPlugin\MauticPatchesBundle\Service\CampaignStepContactSql;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:CRITICO')]
 class CampaignStepContactSqlTest extends TestCase
 {
     protected function setUp(): void

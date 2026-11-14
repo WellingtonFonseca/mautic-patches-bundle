@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Translations;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:translations')]
+#[Group('risk:UI')]
 class SegmentRebuildTranslationsTest extends TestCase
 {
     /**

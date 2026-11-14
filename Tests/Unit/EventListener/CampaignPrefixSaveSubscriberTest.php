@@ -9,8 +9,12 @@ use Mautic\CampaignBundle\Event\CampaignEvent;
 use Mautic\CampaignBundle\CampaignEvents;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignPrefixSaveSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignPrefixStore;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:DADOS')]
+#[Group('risk:FLUXO')]
 class CampaignPrefixSaveSubscriberTest extends TestCase
 {
     private function campaign(?int $id): Campaign

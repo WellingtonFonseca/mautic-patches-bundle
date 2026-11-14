@@ -12,6 +12,7 @@ use MauticPlugin\MauticPatchesBundle\Controller\CampaignWaitRecalculateControlle
 use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignEditPermission;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitRecalculator;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,6 +22,10 @@ use Symfony\Component\HttpFoundation\Response;
  * what would change) and the application (writes). The simulation needs the campaign's view permission like the Etapas tab;
  * applying needs its edit permission, and only a Wait node can be recalculated.
  */
+#[Group('area:campaign-wait')]
+#[Group('area:campaign')]
+#[Group('risk:CRITICO')]
+#[Group('risk:FLUXO')]
 class CampaignWaitRecalculateControllerTest extends TestCase
 {
     /** @var RelativeWaitRecalculator&MockObject */

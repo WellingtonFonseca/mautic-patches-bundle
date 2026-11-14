@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign risks=UI
 // Runs the REAL script that CampaignTitlePrefixSubscriber puts on the campaign page (the page title and the browser
 // tab title read "PREFIX - Name"), against a small fake document.
 //

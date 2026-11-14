@@ -6,9 +6,12 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service\RoleUserClone;
 
 use MauticPlugin\MauticPatchesBundle\DTO\CloneImportResult;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\RoleUserCloneAlerts;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:users-roles')]
+#[Group('risk:FLUXO')]
 class RoleUserCloneAlertsTest extends TestCase
 {
     private function alerts(): RoleUserCloneAlerts

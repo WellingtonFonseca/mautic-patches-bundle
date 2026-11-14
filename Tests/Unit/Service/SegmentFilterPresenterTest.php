@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
 use MauticPlugin\MauticPatchesBundle\Service\SegmentFilterPresenter;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:segment')]
+#[Group('risk:FLUXO')]
+#[Group('risk:UI')]
 class SegmentFilterPresenterTest extends TestCase
 {
     private const CHOICES = [

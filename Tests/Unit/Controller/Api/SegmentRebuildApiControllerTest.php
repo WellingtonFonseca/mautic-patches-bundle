@@ -9,9 +9,13 @@ use MauticPlugin\MauticPatchesBundle\Controller\Api\SegmentRebuildApiController;
 use MauticPlugin\MauticPatchesBundle\DTO\SegmentRebuildResult;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuilder;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:DADOS')]
+#[Group('risk:CRITICO')]
 class SegmentRebuildApiControllerTest extends TestCase
 {
     private SegmentRebuilder&MockObject $rebuilder;

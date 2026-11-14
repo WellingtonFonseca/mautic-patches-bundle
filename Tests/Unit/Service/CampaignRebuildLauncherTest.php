@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
 use MauticPlugin\MauticPatchesBundle\Service\CampaignRebuildLauncher;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:CRITICO')]
+#[Group('risk:INFRA')]
 class CampaignRebuildLauncherTest extends TestCase
 {
     private string $dir;

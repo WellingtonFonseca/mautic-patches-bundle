@@ -11,10 +11,14 @@ use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\EmailBundle\Entity\Email;
 use MauticPlugin\MauticPatchesBundle\EventListener\EmailStatusSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:email')]
+#[Group('risk:FLUXO')]
+#[Group('risk:UI')]
 class EmailStatusSubscriberTest extends TestCase
 {
     private function subscriber(bool $canEdit = true): EmailStatusSubscriber

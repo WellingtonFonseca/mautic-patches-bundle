@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service\Performance;
 
 use MauticPlugin\MauticPatchesBundle\Service\Performance\PerformanceLog;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:performance')]
+#[Group('risk:INFRA')]
 class PerformanceLogTest extends TestCase
 {
     private string $dir;

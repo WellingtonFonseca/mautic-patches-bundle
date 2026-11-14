@@ -7,8 +7,11 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\ModalFormButtonsSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:appearance')]
+#[Group('risk:UI')]
 class ModalFormButtonsSubscriberTest extends TestCase
 {
     private function css(string $context = 'page.header.left'): string

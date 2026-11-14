@@ -7,8 +7,12 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Entity;
 use Doctrine\ORM\QueryBuilder;
 use Mautic\CampaignBundle\Entity\CampaignRepository;
 use MauticPlugin\MauticPatchesBundle\Entity\CampaignPrefixRepository;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:FLUXO')]
+#[Group('risk:DADOS')]
 class CampaignPrefixRepositoryTest extends TestCase
 {
     private function repository(): CampaignPrefixRepository

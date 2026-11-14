@@ -8,8 +8,11 @@ use Mautic\UserBundle\Entity\Role;
 use Mautic\UserBundle\Entity\User;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\RoleSerializer;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\UserSerializer;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:users-roles')]
+#[Group('risk:DADOS')]
 class SerializersTest extends TestCase
 {
     public function testARoleKeepsNameDescriptionAdminFlagAndSortedPermissions(): void

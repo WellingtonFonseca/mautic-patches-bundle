@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\DependencyInjection\Compiler;
 
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\SortableListThemePass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
+#[Group('area:appearance')]
+#[Group('risk:INFRA')]
+#[Group('risk:UI')]
 class SortableListThemePassTest extends TestCase
 {
     public function testTheThemeIsAddedAfterCoresSoItsBlockWins(): void

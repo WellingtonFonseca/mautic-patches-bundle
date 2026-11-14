@@ -8,8 +8,11 @@ use Mautic\ConfigBundle\ConfigEvents;
 use Mautic\ConfigBundle\Event\ConfigBuilderEvent;
 use Mautic\CoreBundle\Helper\BundleHelper;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentPrefixConfigSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:FLUXO')]
 class SegmentPrefixConfigSubscriberTest extends TestCase
 {
     public function testRunsAfterCoreListener(): void

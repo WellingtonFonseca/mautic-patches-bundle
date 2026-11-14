@@ -12,8 +12,11 @@ use Doctrine\ORM\QueryBuilder;
 use Mautic\CampaignBundle\Entity\Campaign;
 use MauticPlugin\MauticPatchesBundle\Entity\CampaignPrefixValue;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignPrefixStore;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:DADOS')]
 class CampaignPrefixStoreTest extends TestCase
 {
     private function store(array $rows = [], ?Connection $connection = null): CampaignPrefixStore

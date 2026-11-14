@@ -11,6 +11,7 @@ use Mautic\PluginBundle\Entity\Plugin;
 use MauticPlugin\MauticPatchesBundle\Entity\CampaignPrefixValue;
 use MauticPlugin\MauticPatchesBundle\Entity\SegmentPrefixValue;
 use MauticPlugin\MauticPatchesBundle\MauticPatchesBundle;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -19,6 +20,9 @@ use PHPUnit\Framework\TestCase;
  * The table creation itself is core's installPluginSchema, which starts by asking the factory for the
  * database: a factory that throws there tells that the creation was attempted.
  */
+#[Group('area:plugin-settings')]
+#[Group('risk:INFRA')]
+#[Group('risk:DADOS')]
 class MauticPatchesBundleTest extends TestCase
 {
     private MauticFactory&MockObject $factory;

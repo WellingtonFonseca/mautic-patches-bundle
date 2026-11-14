@@ -6,9 +6,14 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service\RelativeWait;
 
 use Doctrine\DBAL\Connection;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitFieldCatalog;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:campaign-wait')]
+#[Group('area:campaign')]
+#[Group('risk:CRITICO')]
+#[Group('risk:FLUXO')]
 class RelativeWaitFieldCatalogTest extends TestCase
 {
     private function catalog(array $contactFields, array $objectFields): RelativeWaitFieldCatalog

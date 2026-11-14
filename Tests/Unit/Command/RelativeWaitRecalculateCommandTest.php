@@ -11,10 +11,14 @@ use Mautic\CampaignBundle\Entity\Event;
 use MauticPlugin\MauticPatchesBundle\Command\RelativeWaitRecalculateCommand;
 use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitRecalculator;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
+#[Group('area:campaign-wait')]
+#[Group('area:campaign')]
+#[Group('risk:CRITICO')]
 class RelativeWaitRecalculateCommandTest extends TestCase
 {
     /** @var RelativeWaitRecalculator&MockObject */

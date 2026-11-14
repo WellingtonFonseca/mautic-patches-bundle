@@ -11,11 +11,14 @@ use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\UserBundle\Entity\Role;
 use Mautic\UserBundle\Entity\User;
 use MauticPlugin\MauticPatchesBundle\EventListener\RoleUserCloneButtonSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:users-roles')]
+#[Group('risk:FLUXO')]
 class RoleUserCloneButtonSubscriberTest extends TestCase
 {
     private function subscriber(bool $admin): RoleUserCloneButtonSubscriber

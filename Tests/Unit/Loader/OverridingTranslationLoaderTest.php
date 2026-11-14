@@ -8,10 +8,14 @@ use Mautic\CoreBundle\Helper\BundleHelper;
 use Mautic\CoreBundle\Helper\PathsHelper;
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\OverridingTranslationLoaderPass;
 use MauticPlugin\MauticPatchesBundle\Loader\OverridingTranslationLoader;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 
+#[Group('area:translations')]
+#[Group('risk:UI')]
+#[Group('risk:INFRA')]
 class OverridingTranslationLoaderTest extends TestCase
 {
     public function testThePtBrTextOfTheBackButtonNamesTheCorePlaceholder(): void

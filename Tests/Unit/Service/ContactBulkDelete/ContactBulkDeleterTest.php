@@ -7,10 +7,14 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service\ContactBulkDelete;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Model\LeadModel;
 use MauticPlugin\MauticPatchesBundle\Service\ContactBulkDelete\ContactBulkDeleter;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:contacts')]
+#[Group('risk:CRITICO')]
+#[Group('risk:DADOS')]
 class ContactBulkDeleterTest extends TestCase
 {
     /** @var LeadModel&MockObject */

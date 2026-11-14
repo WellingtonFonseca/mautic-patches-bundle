@@ -7,8 +7,11 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignUpdateLockSubscriber;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentUpdateLockSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:FLUXO')]
 class CampaignUpdateLockSubscriberTest extends TestCase
 {
     public function testAddsTheCampaignScriptAndTheStyleToThePageHeaderOnly(): void

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Config;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:performance')]
+#[Group('risk:INFRA')]
 class PerformanceConfigTest extends TestCase
 {
     public function testTheScreenIsAnAdminMenuEntryWithItsRoutes(): void

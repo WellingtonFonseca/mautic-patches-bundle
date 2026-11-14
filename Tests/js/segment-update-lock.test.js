@@ -1,3 +1,4 @@
+// Test-tags: areas=segment risks=FLUXO,CRITICO
 // Runs the REAL script that SegmentUpdateLockSubscriber puts on the page (taken from the PHP class, not copied) against a
 // small fake browser: anchors and "Updated on" lines, a fake mQuery, fake timers, and a recorder for the status requests.
 // It covers what the PHP tests cannot: the click, the lock, the polling, the unlock and the reload actually happening in

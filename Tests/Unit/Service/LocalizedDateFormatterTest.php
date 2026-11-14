@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
 use MauticPlugin\MauticPatchesBundle\Service\LocalizedDateFormatter;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:UI')]
+#[Group('risk:DADOS')]
 class LocalizedDateFormatterTest extends TestCase
 {
     private function date(): \DateTimeImmutable

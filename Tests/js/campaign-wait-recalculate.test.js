@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign-wait,campaign risks=CRITICO,FLUXO
 // Runs the REAL script of the "Recalculate dates" box of the second "Ações" tab (taken from CampaignWaitRecalculateScript::SCRIPT, not
 // copied) against a small fake browser: the click handler on the document, the badge buttons of the step rows (a row of a Wait step the
 // user can edit carries the simulate and apply urls) and the box above the contacts table.

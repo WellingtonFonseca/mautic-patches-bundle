@@ -6,9 +6,13 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
 use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:appearance')]
+#[Group('risk:INFRA')]
+#[Group('risk:UI')]
 class StatusScriptTest extends TestCase
 {
     private function html(string $install = 'installUser'): string

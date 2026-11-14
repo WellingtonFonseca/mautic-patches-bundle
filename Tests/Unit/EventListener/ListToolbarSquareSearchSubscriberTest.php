@@ -8,10 +8,13 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomAssetsEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\ListToolbarSquareSearchSubscriber;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+#[Group('area:appearance')]
+#[Group('risk:UI')]
 class ListToolbarSquareSearchSubscriberTest extends TestCase
 {
     private function subscriberAt(?string $path): ListToolbarSquareSearchSubscriber

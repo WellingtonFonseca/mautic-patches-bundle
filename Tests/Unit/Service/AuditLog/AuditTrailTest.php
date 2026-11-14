@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service\AuditLog;
 
 use MauticPlugin\MauticPatchesBundle\Service\AuditLog\AuditTrail;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:email')]
+#[Group('risk:DADOS')]
 class AuditTrailTest extends TestCase
 {
     public function testAnUpdateListsEachFieldWithItsOldAndNewValue(): void

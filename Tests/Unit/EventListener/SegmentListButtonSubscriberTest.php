@@ -11,12 +11,15 @@ use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentListButtonSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuilder;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:segment')]
+#[Group('risk:FLUXO')]
 class SegmentListButtonSubscriberTest extends TestCase
 {
     private SegmentRebuilder&MockObject $rebuilder;

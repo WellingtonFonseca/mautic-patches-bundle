@@ -1,3 +1,4 @@
+// Test-tags: areas=appearance risks=UI,FLUXO
 // The logic of the notifications that stay longer (Resources/js/flashes-longer.js): how long each kind stays, and the wrap of core's
 // Mautic.setFlashes with a small fake of jQuery. The fading is checked in the browser.
 //

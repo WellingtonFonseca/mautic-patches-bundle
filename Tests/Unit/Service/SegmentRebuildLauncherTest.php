@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuildLauncher;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:CRITICO')]
+#[Group('risk:INFRA')]
 class SegmentRebuildLauncherTest extends TestCase
 {
     public function testShellCommandRunsTheSegmentsCommandForThatSegmentOnly(): void

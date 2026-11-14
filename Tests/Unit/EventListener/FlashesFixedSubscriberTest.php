@@ -7,8 +7,11 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\FlashesFixedSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:appearance')]
+#[Group('risk:UI')]
 class FlashesFixedSubscriberTest extends TestCase
 {
     private function content(string $context = 'page.header.left'): string

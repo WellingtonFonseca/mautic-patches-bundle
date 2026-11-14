@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign,contacts risks=FLUXO
 // The decisions of the rows of the campaign condition "Contact fields" (Resources/js/contact-fields-condition.js): which
 // value control a field and an operator get, which operator stays when the field changes, how A|B|C is read. The DOM part
 // is checked in the browser.

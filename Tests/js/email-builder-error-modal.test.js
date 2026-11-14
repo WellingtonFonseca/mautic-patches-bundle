@@ -1,3 +1,4 @@
+// Test-tags: areas=email risks=UI
 // Runs the REAL script that EmailBuilderErrorModalSubscriber puts on the page (taken from the PHP class, not copied): the
 // parser that turns core's one-sentence validation error of the email builder into intro, list items and outro, and the
 // swap of the modal's body and footer on a fake GrapesJS dialog.

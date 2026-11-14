@@ -10,9 +10,13 @@ use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use MauticPlugin\MauticPatchesBundle\DTO\CampaignRebuildResult;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignRebuilder;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignRebuildLauncher;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:CRITICO')]
+#[Group('risk:FLUXO')]
 class CampaignRebuilderTest extends TestCase
 {
     private CampaignModel&MockObject $campaignModel;

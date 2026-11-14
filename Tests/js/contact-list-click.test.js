@@ -1,3 +1,4 @@
+// Test-tags: areas=contacts risks=FLUXO
 // Runs the REAL script that ContactListClickSubscriber puts on the page (taken from the PHP class, not copied) against a
 // small fake browser: the click handler it registers on the document, links inside and outside the contact list table,
 // window.open and Mautic.ajaxifyModal as recorders.

@@ -8,8 +8,12 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Result;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignStepContactSql;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignStepFailureCounter;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:FLUXO')]
+#[Group('risk:DADOS')]
 class CampaignStepFailureCounterTest extends TestCase
 {
     protected function setUp(): void

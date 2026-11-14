@@ -6,8 +6,11 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixes;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:DADOS')]
 class SegmentPrefixesTest extends TestCase
 {
     private function service(mixed $value): SegmentPrefixes

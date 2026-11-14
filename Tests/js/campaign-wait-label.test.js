@@ -1,3 +1,4 @@
+// Test-tags: areas=campaign-wait,campaign risks=UI,DADOS
 // Runs the REAL script that CampaignBuilderWaitLabelSubscriber puts on every admin page (it replaces core's
 // Mautic.campaignBuilderUpdateLabel: the wait goes in a strip on the node) against a fake jsPlumb connection whose getOverlays() returns an object keyed by id,
 // like jsPlumb 2.15.6 does.

@@ -13,6 +13,7 @@ use MauticPlugin\CustomObjectsBundle\Exception\NotFoundException;
 use MauticPlugin\CustomObjectsBundle\Model\CustomObjectModel;
 use MauticPlugin\CustomObjectsBundle\Segment\SegmentItemResolver;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitItemSelector;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -20,6 +21,9 @@ use PHPUnit\Framework\TestCase;
  * The rules of the selection are the Custom Objects plugin's (SegmentItemResolver); this only finds the object of the field the
  * wait uses and asks it. Only a Custom Object field has items; a contact field never does.
  */
+#[Group('area:campaign-wait')]
+#[Group('area:campaign')]
+#[Group('risk:CRITICO')]
 class RelativeWaitItemSelectorTest extends TestCase
 {
     private function contact(): Lead

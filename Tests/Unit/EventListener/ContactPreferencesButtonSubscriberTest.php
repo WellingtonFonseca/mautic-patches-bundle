@@ -11,12 +11,15 @@ use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactPreferencesButtonSubscriber;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:contacts')]
+#[Group('risk:FLUXO')]
 class ContactPreferencesButtonSubscriberTest extends TestCase
 {
     private CorePermissions&MockObject $security;

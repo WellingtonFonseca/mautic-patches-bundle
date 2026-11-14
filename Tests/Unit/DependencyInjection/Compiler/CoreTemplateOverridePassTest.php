@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\DependencyInjection\Compiler;
 
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\CoreTemplateOverridePass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 
+#[Group('area:appearance')]
+#[Group('risk:INFRA')]
 class CoreTemplateOverridePassTest extends TestCase
 {
     public function testTheOverrideFolderGoesFirstInCoresNamespace(): void

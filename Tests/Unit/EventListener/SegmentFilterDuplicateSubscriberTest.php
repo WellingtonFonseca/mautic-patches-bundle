@@ -7,8 +7,12 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentFilterDuplicateSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:segment')]
+#[Group('risk:FLUXO')]
+#[Group('risk:CRITICO')]
 class SegmentFilterDuplicateSubscriberTest extends TestCase
 {
     private function content(string $context): string

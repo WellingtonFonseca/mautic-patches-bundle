@@ -10,11 +10,14 @@ use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentDetailsButtonSubscriber;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:segment')]
+#[Group('risk:FLUXO')]
 class SegmentDetailsButtonSubscriberTest extends TestCase
 {
     private SegmentDetailsButtonSubscriber $subscriber;

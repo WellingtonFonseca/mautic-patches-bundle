@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Resources;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -13,6 +14,8 @@ use PHPUnit\Framework\TestCase;
  * locked) and the text that replaces it. The script and the template meet only
  * through these names, so a rename on one side must fail here.
  */
+#[Group('area:segment')]
+#[Group('risk:UI')]
 class LastBuiltTemplateTest extends TestCase
 {
     private string $template;

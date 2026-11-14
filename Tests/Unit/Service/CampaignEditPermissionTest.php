@@ -7,8 +7,11 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignEditPermission;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('area:campaign')]
+#[Group('risk:FLUXO')]
 class CampaignEditPermissionTest extends TestCase
 {
     private function campaignOf(int $owner): Campaign

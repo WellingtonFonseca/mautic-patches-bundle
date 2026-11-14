@@ -10,9 +10,13 @@ use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Twig\Helper\DateHelper;
 use MauticPlugin\MauticPatchesBundle\EventListener\CampaignPreviewWaitSubscriber;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Group('area:campaign')]
+#[Group('risk:UI')]
+#[Group('risk:DADOS')]
 class CampaignPreviewWaitSubscriberTest extends TestCase
 {
     private function subscriber(): CampaignPreviewWaitSubscriber
