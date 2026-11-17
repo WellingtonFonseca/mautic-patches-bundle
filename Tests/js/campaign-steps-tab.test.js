@@ -170,6 +170,55 @@ test('two quick clicks: the late first answer fills nothing and does not undo th
     assert.ok(!t.table.classList.contains('patches-steps-table--loading'));
 });
 
+test('a failed list hides the title: it would name a step whose list is not on screen', () => {
+    const t = load();
+    t.click(button());
+    assert.strictEqual(t.heading.hidden, false);
+
+    t.calls.gets[0].failed({status: 500}, 'error', 'Server Error');
+    t.calls.gets[0].always();
+
+    assert.strictEqual(t.heading.hidden, true);
+});
+
+test('a failed first click does not hide the title of a newer click', () => {
+    const t = load();
+    t.click(button({name: 'A'}));
+    t.click(button({name: 'B', eventId: '42'}));
+
+    t.calls.gets[0].failed({status: 500}, 'error', 'Server Error');
+    t.calls.gets[0].always();
+
+    assert.strictEqual(t.heading.hidden, false);
+    assert.strictEqual(t.heading.children[1].textContent, 'B');
+});
+
+test('a reload after the table is gone (the user left the page) does nothing and does not throw', () => {
+    const Mautic = {};
+    vm.runInNewContext(SCRIPT, {window: {}, document: {addEventListener: () => {}, getElementById: () => null},
+        Mautic, mQuery: Object.assign(() => ({on: () => {}}), {ajax: () => assert.fail('no request without a table')})});
+
+    assert.doesNotThrow(() => Mautic.patchesStepsLoad('/s/campaign-step/41/waiting/1'));
+});
+
+test('a click and then a show of the tab: the empty list does not load over the clicked one', () => {
+    const t = load();
+    t.click(button());
+
+    t.shown();
+
+    assert.deepStrictEqual(t.calls.gets.map((g) => g.url), ['/s/campaign-step/41/failed/1']);
+});
+
+test('a reload of the Recalculate box marks the table as loaded too', () => {
+    const t = load();
+
+    t.Mautic.patchesStepsLoad('/s/campaign-step/41/waiting/1');
+    t.shown();
+
+    assert.deepStrictEqual(t.calls.gets.map((g) => g.url), ['/s/campaign-step/41/waiting/1']);
+});
+
 test('a failed request goes to core\'s error handling and undoes the dimming', () => {
     const t = load();
     t.click(button());
