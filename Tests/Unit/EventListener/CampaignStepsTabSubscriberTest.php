@@ -13,6 +13,7 @@ use MauticPlugin\MauticPatchesBundle\EventListener\RelativeWaitSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignStepFailureCounter;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignEditPermission;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignFlowOrder;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignStepDispatchStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -41,7 +42,7 @@ class CampaignStepsTabSubscriberTest extends TestCase
         $counter = $this->createMock(CampaignStepFailureCounter::class);
         $counter->method('countByEvent')->willReturn($failed);
 
-        return new CampaignStepsTabSubscriber($counter, new CampaignEditPermission($security ?? $this->createMock(CorePermissions::class)), new CampaignFlowOrder());
+        return new CampaignStepsTabSubscriber($counter, new CampaignEditPermission($security ?? $this->createMock(CorePermissions::class)), new CampaignFlowOrder(), new CampaignStepDispatchStatus());
     }
 
     public function testSubscribesToCustomContentEvent(): void
@@ -75,6 +76,19 @@ class CampaignStepsTabSubscriberTest extends TestCase
             [3 => ['completed' => 25.0, 'failed' => 50.0, 'waiting' => 25.0], 5 => ['completed' => 0.0, 'failed' => 0.0, 'waiting' => 0.0]],
             $templates[0]['vars']['shares']
         );
+    }
+
+    public function testThePaneGetsTheStatusOfTheDispatchStepsOnly(): void
+    {
+        $events = ['action' => [
+            ['id' => 3, 'eventType' => 'action', 'type' => 'n8ndispatch.hsm', 'properties' => ['status' => 'paused'], 'name' => 'a'],
+            ['id' => 5, 'eventType' => 'action', 'type' => 'email.send', 'properties' => ['status' => 'paused'], 'name' => 'b'],
+        ]];
+        $event = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]);
+
+        $this->subscriber([])->inject($event);
+
+        $this->assertSame([3 => 'paused'], $event->getTemplates()[0]['vars']['statuses']);
     }
 
     public function testTheConditionsShareTheListWithTheActionsInTheOrderOfTheFlow(): void
@@ -199,7 +213,7 @@ class CampaignStepsTabSubscriberTest extends TestCase
         // the ids of core's events can be strings
         $events = ['action' => [['id' => '3', 'eventType' => 'action', 'name' => 'a'], ['id' => '5', 'eventType' => 'action', 'name' => 'b']]];
 
-        (new CampaignStepsTabSubscriber($counter, new CampaignEditPermission($this->createMock(CorePermissions::class)), new CampaignFlowOrder()))->inject(new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]));
+        (new CampaignStepsTabSubscriber($counter, new CampaignEditPermission($this->createMock(CorePermissions::class)), new CampaignFlowOrder(), new CampaignStepDispatchStatus()))->inject(new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]));
     }
 
     /**

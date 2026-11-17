@@ -10,6 +10,7 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignStepFailureCounter;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignEditPermission;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignFlowOrder;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignStepDispatchStatus;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -25,7 +26,8 @@ class CampaignStepsTabSubscriber implements EventSubscriberInterface
     public function __construct(
         private CampaignStepFailureCounter $failureCounter,
         private CampaignEditPermission $editPermission,
-        private CampaignFlowOrder $flowOrder
+        private CampaignFlowOrder $flowOrder,
+        private CampaignStepDispatchStatus $dispatchStatus
     ) {
     }
 
@@ -66,6 +68,7 @@ class CampaignStepsTabSubscriber implements EventSubscriberInterface
         $customContentEvent->addTemplate('@MauticPatches/Campaign/steps_tab_pane.html.twig', [
             'steps'       => $steps,
             'shares'      => $shares,
+            'statuses'    => $this->dispatchStatus->statusesOf($steps),
             'recalculate' => $this->recalculableIds($steps, $customContentEvent->getVars()['campaign'] ?? null),
         ]);
     }
