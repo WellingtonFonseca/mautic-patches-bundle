@@ -22,7 +22,12 @@ class CampaignStepsTabScript
         .'var latest=0;'
         .'function table(){return document.getElementById("patches-steps-table");}'
         .'function load(url){'
-        .'var mine=++latest,box=table();'
+        .'var box=table();'
+        // the table is gone when the user left the page before an answer (the Recalculate box reloads after its own request)
+        .'if(!box){return;}'
+        .'var mine=++latest;'
+        // data-loaded: a later show of the tab must not replace the list a click or a reload loaded
+        .'box.setAttribute("data-loaded","1");'
         // the old list is dimmed, not emptied, so the page does not jump. showLoadingBar: core starts the bar under the header before the request and stops
         // it when it ends (its ajaxComplete), for every request, so a late first answer cannot hide the bar of the second one.
         .'box.classList.add("patches-steps-table--loading");'
@@ -31,8 +36,10 @@ class CampaignStepsTabScript
         .'response.target="#patches-steps-table";'
         .'Mautic.processPageContent(response);'
         .'}).fail(function(request,status,error){'
-        // a 403 / 404 / expired session: core's own error handling
+        // a 403 / 404 / expired session: core's own error handling. The title is hidden: it would name a step whose list is not the one on screen.
         .'Mautic.processAjaxError(request,status,error);'
+        .'var heading=document.getElementById("patches-steps-heading");'
+        .'if(mine===latest&&heading){heading.hidden=true;}'
         .'}).always(function(){'
         .'if(mine!==latest){return;}'
         .'box.classList.remove("patches-steps-table--loading");'
@@ -56,11 +63,9 @@ class CampaignStepsTabScript
         .'heading.appendChild(title);'
         .'heading.hidden=false;'
         .'}'
-        // data-loaded: a later show of the tab must not replace the list a click loaded
         .'mQuery(document).on("shown.bs.tab","a[href=\"#patches-steps-container\"]",function(){'
         .'var box=table();'
         .'if(box&&!box.hasAttribute("data-loaded")){'
-        .'box.setAttribute("data-loaded","1");'
         .'load(box.getAttribute("data-target-url"));'
         .'}'
         .'});'
@@ -70,7 +75,6 @@ class CampaignStepsTabScript
         .'document.querySelectorAll("#patches-steps-container button.patches-steps-badge.active").forEach(function(other){other.classList.remove("active");});'
         .'button.classList.add("active");'
         .'setHeading(button);'
-        .'table().setAttribute("data-loaded","1");'
         .'load(button.getAttribute("data-target-url"));'
         .'});'
         .'})();';
