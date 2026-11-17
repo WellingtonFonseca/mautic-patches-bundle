@@ -2,6 +2,12 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-17
+- Na aba Etapas, o selo do tipo da etapa não passa mais por cima dos outros ao abrir: ele empurra os vizinhos, como o selo da coluna Status das listas
+- Na aba Etapas, as etapas de envio do n8n têm um selo de status (teste, produção ou pausado) à esquerda do selo do tipo: só o ícone, e ao passar o mouse abre a palavra
+- Na aba Etapas, ao clicar em um selo de falha ou de espera, um título acima da tabela mostra o selo do estado (com a palavra Falhou ou Em espera) e o nome da etapa
+- Na aba Etapas, o carregamento da tabela usa a barra do Mautic no topo da tela e deixa a lista antiga mais clara, no lugar do ícone girando
+
 ## 2026-11-14
 - Na condição de campanha de Custom Objects, ao trocar o campo por um que tem lista de opções, os chips de Incluindo / Excluindo somem e fica só a lista, sem uma caixa solta ao lado
 
