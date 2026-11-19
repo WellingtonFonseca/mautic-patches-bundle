@@ -2,6 +2,9 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-18
+- Novo ícone do plugin: a cruz vermelha de hospital com traço preto sobre o disco azul do Mautic, com sombra longa, no tile de Configurações > Plugins e na lista de plugins. Desenho "Hospital" do SVG Repo (svgrepo.com). Obrigado a quem desenhou
+
 ## 2026-11-17
 - Na aba Etapas, o selo do tipo da etapa não passa mais por cima dos outros ao abrir: ele empurra os vizinhos, como o selo da coluna Status das listas
 - Na aba Etapas, as etapas de envio do n8n têm um selo de status (teste, produção ou pausado) à esquerda do selo do tipo: só o ícone, e ao passar o mouse abre a palavra
