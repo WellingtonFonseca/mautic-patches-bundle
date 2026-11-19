@@ -131,6 +131,25 @@ class CampaignStepsTabSubscriberTest extends TestCase
         $this->assertSame(['completed' => 33.3, 'failed' => 66.7, 'waiting' => 0.0], $event->getTemplates()[0]['vars']['shares'][3]);
     }
 
+    public function testTheVarsTellWhichStatesHaveNoContacts(): void
+    {
+        $events = ['action' => [
+            ['id' => 3, 'eventType' => 'action', 'name' => 'a', 'logCountProcessed' => 4, 'logCountForPending' => 2],
+            ['id' => 4, 'eventType' => 'action', 'name' => 'b', 'logCountProcessed' => 4999, 'logCountForPending' => 0],
+            ['id' => 5, 'eventType' => 'action', 'name' => 'c'],
+        ]];
+        $event = new CustomContentEvent(self::VIEW, 'tabs.content', ['events' => $events]);
+
+        $this->subscriber([4 => 1])->inject($event);
+
+        $vars = $event->getTemplates()[0]['vars'];
+        $this->assertSame(['failed' => true, 'waiting' => false], $vars['empty'][3]);
+        // 1 in 5000 rounds to 0.0%, but it is not empty
+        $this->assertSame(0.0, $vars['shares'][4]['failed']);
+        $this->assertSame(['failed' => false, 'waiting' => true], $vars['empty'][4]);
+        $this->assertSame(['failed' => true, 'waiting' => true], $vars['empty'][5]);
+    }
+
     /**
      * @param array<string, mixed> $vars
      *

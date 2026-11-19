@@ -60,14 +60,18 @@ class CampaignStepsTabSubscriber implements EventSubscriberInterface
 
         $failed = $this->failureCounter->countByEvent(array_map(static fn (array $step): int => (int) $step['id'], $steps));
         $shares = [];
+        $empty  = [];
         foreach ($steps as $step) {
             $id          = (int) $step['id'];
             $shares[$id] = $this->sharesOf($step, $failed[$id] ?? 0);
+            // by the count, not by the rounded share: 1 contact in 5000 shows 0.0% and is not empty
+            $empty[$id] = ['failed' => 0 === ($failed[$id] ?? 0), 'waiting' => 0 === (int) ($step['logCountForPending'] ?? 0)];
         }
 
         $customContentEvent->addTemplate('@MauticPatches/Campaign/steps_tab_pane.html.twig', [
             'steps'       => $steps,
             'shares'      => $shares,
+            'empty'       => $empty,
             'statuses'    => $this->dispatchStatus->statusesOf($steps),
             'recalculate' => $this->recalculableIds($steps, $customContentEvent->getVars()['campaign'] ?? null),
         ]);

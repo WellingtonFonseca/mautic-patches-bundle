@@ -4,7 +4,8 @@
   the three add up to about 100%: each is rounded on its own), then ONE contacts table. The failed and waiting badges are buttons: a click loads the contacts of
   that state of that step into the table (CampaignStepContactsController). Core has ONE state for a contact that did not run yet (a scheduled log), shown as waiting. Above the table, the "Recalculate dates" box of a Wait step
   (CampaignWaitRecalculateScript): hidden until the waiting list of a step listed in `recalculate` is loaded. Variables: steps
-  (the actions and conditions of the page, in the order of the flow), shares (event id => completed, failed, waiting), recalculate (ids of the
+  (the actions and conditions of the page, in the order of the flow), shares (event id => completed, failed, waiting), empty (event id => failed, waiting: true when the
+  count is 0, not the rounded %: the button turns grey but stays clickable), recalculate (ids of the
   Wait steps the user can edit).
 #}
 {% set badges = [
@@ -32,6 +33,7 @@
     #patches-steps-container .patches-badge--condition{background-color:#fb8c00}
     #patches-steps-container .patches-steps-badge{width:68px;height:22px;padding:0;border:0;vertical-align:middle}
     #patches-steps-container button.patches-steps-badge{cursor:pointer}
+    #patches-steps-container .patches-steps-badge.patches-steps-badge--empty{background-color:#bdbdbd;color:#fff}
     #patches-steps-container button.patches-steps-badge.active{box-shadow:0 0 0 2px var(--text-primary,#222)}
     /* the row is only the heading (no body), whose bottom corners are square in core: the panel clips it to its own round corners */
     #patches-steps-container .panel{overflow:hidden}
@@ -70,7 +72,7 @@
                                 {% set text %}<i class="{{ badge.icon }}"></i> {{ attribute(shares[step.id], badge.key) }}%{% endset %}
                                 {% set title = ('mautic.patches.campaign.steps_tab.' ~ badge.key)|trans %}
                                 {% if badge.list %}
-                                    <button type="button" class="patches-badge patches-badge--{{ badge.modifier }} patches-steps-badge" data-state="{{ badge.key }}" data-list="{{ badge.list }}" data-heading="{{ ('mautic.patches.campaign.steps_tab.heading_' ~ badge.key)|trans }}" data-toggle="tooltip" data-trigger="hover" title="{{ title }}"
+                                    <button type="button" class="patches-badge patches-badge--{{ badge.modifier }} patches-steps-badge{% if empty[step.id][badge.key] %} patches-steps-badge--empty{% endif %}" data-state="{{ badge.key }}" data-list="{{ badge.list }}" data-heading="{{ ('mautic.patches.campaign.steps_tab.heading_' ~ badge.key)|trans }}" data-toggle="tooltip" data-trigger="hover" title="{{ title }}"
                                             data-target-url="{{ path('mautic_patches_campaign_step_' ~ badge.list ~ '_contacts', {'objectId': step.id, 'page': 1}) }}">{{ text }}</button>
                                 {% else %}
                                     <span class="patches-badge patches-badge--{{ badge.modifier }} patches-steps-badge" data-state="{{ badge.key }}" data-toggle="tooltip" title="{{ title }}">{{ text }}</span>
