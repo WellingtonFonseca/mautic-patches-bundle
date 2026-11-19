@@ -52,7 +52,7 @@ class RelativeWaitRenameCommand extends Command
             }
 
             ++$changed;
-            $output->writeln(sprintf('  event %d: "%s" -> "%s"', $row['id'], $row['name'], $new));
+            $output->writeln(sprintf('  event %d: "%s" -> "%s"', $row['id'], str_replace("\n", ' / ', (string) $row['name']), str_replace("\n", ' / ', $new)));
             if (!$input->getOption('dry-run')) {
                 $this->connection->update($prefix.'campaign_events', ['name' => $new], ['id' => $row['id']]);
             }

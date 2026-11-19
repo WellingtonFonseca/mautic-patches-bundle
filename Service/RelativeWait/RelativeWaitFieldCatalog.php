@@ -53,6 +53,39 @@ class RelativeWaitFieldCatalog
     }
 
     /**
+     * The label of the field a Wait event counts from ("Data de nascimento"; "Consulta: Data" for a Custom Object field), or null when
+     * the value is not `contact:<alias>` / `custom_object:<id>` or the field is gone. Published or not: the name keeps the field it points to.
+     */
+    public function labelOf(string $dateField): ?string
+    {
+        $prefix = defined('MAUTIC_TABLE_PREFIX') ? (string) MAUTIC_TABLE_PREFIX : '';
+        [$kind, $key] = array_pad(explode(':', $dateField, 2), 2, '');
+        if ('' === $key) {
+            return null;
+        }
+
+        try {
+            if ('contact' === $kind) {
+                $label = $this->connection->fetchOne('SELECT label FROM '.$prefix."lead_fields WHERE object = 'lead' AND alias = ?", [$key]);
+
+                return is_string($label) && '' !== $label ? $label : null;
+            }
+            if ('custom_object' === $kind && ctype_digit($key)) {
+                $row = $this->connection->fetchAssociative(
+                    'SELECT o.name_singular AS object, f.label FROM '.$prefix.'custom_field f JOIN '.$prefix.'custom_object o ON o.id = f.custom_object_id WHERE f.id = ?',
+                    [(int) $key]
+                );
+
+                return is_array($row) ? $row['object'].': '.$row['label'] : null;
+            }
+        } catch (\Throwable) {
+            return null; // e.g. the Custom Objects plugin is not installed
+        }
+
+        return null;
+    }
+
+    /**
      * The choices are keyed by label: a second field with the same label in the same group gets its alias (or id) after it, so both can be chosen.
      *
      * @param array<string, string> $group

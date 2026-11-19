@@ -62,4 +62,84 @@ class RelativeWaitFieldCatalogTest extends TestCase
 
         $this->assertSame(['Contato' => ['Attribution date' => 'contact:attribution_date']], (new RelativeWaitFieldCatalog($connection, $translator))->choices());
     }
+
+    public function testLabelOfForContactFieldFound(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchOne')->willReturn('Attribution Date');
+
+        $translator = $this->createMock(TranslatorInterface::class);
+
+        $catalog = new RelativeWaitFieldCatalog($connection, $translator);
+        $label = $catalog->labelOf('contact:attribution_date');
+
+        $this->assertSame('Attribution Date', $label);
+    }
+
+    public function testLabelOfForContactFieldNotFound(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchOne')->willReturn(null);
+
+        $translator = $this->createMock(TranslatorInterface::class);
+
+        $catalog = new RelativeWaitFieldCatalog($connection, $translator);
+        $label = $catalog->labelOf('contact:nonexistent');
+
+        $this->assertNull($label);
+    }
+
+    public function testLabelOfForCustomObjectField(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchAssociative')->willReturn([
+            'object' => 'Disciplina',
+            'label' => 'Data de Início'
+        ]);
+
+        $translator = $this->createMock(TranslatorInterface::class);
+
+        $catalog = new RelativeWaitFieldCatalog($connection, $translator);
+        $label = $catalog->labelOf('custom_object:42');
+
+        $this->assertSame('Disciplina: Data de Início', $label);
+    }
+
+    public function testLabelOfForCustomObjectFieldNotFound(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchAssociative')->willReturn(false);
+
+        $translator = $this->createMock(TranslatorInterface::class);
+
+        $catalog = new RelativeWaitFieldCatalog($connection, $translator);
+        $label = $catalog->labelOf('custom_object:9999');
+
+        $this->assertNull($label);
+    }
+
+    public function testLabelOfForInvalidFormatReturnsNull(): void
+    {
+        $connection = $this->createMock(Connection::class);
+
+        $translator = $this->createMock(TranslatorInterface::class);
+
+        $catalog = new RelativeWaitFieldCatalog($connection, $translator);
+        $label = $catalog->labelOf('invalid:format');
+
+        $this->assertNull($label);
+    }
+
+    public function testLabelOfWhenConnectionThrowsReturnsNull(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchOne')->willThrowException(new \Exception('Connection error'));
+
+        $translator = $this->createMock(TranslatorInterface::class);
+
+        $catalog = new RelativeWaitFieldCatalog($connection, $translator);
+        $label = $catalog->labelOf('contact:any');
+
+        $this->assertNull($label);
+    }
 }

@@ -27,18 +27,33 @@ class RelativeWaitRenameCommandTest extends TestCase
             static function (string $key, array $params = []): string {
                 $count = $params['%count%'] ?? 0;
                 // Simple translation logic for testing
+                if ('mautic.patches.wait_relative.name.title' === $key) {
+                    return 'Esperar';
+                }
                 if ('mautic.patches.wait_relative.name.d' === $key) {
                     return 1 === $count ? 'Esperar 1 dia' : "Esperar {$count} dias";
                 }
                 if ('mautic.patches.wait_relative.name.w' === $key) {
                     return 1 === $count ? 'Esperar 1 semana' : "Esperar {$count} semanas";
                 }
+                if ('mautic.patches.wait_relative.name.direction.after' === $key) {
+                    return 'Depois da data';
+                }
+                if ('mautic.patches.wait_relative.name.direction.before' === $key) {
+                    return 'Antes da data';
+                }
+                if ('mautic.patches.wait_relative.name.field_missing' === $key) {
+                    return 'Campo não definido';
+                }
 
                 return "Esperar {$count}";
             }
         );
 
-        return new RelativeWaitNameFormatter($translator);
+        $catalog = $this->createMock(\MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitFieldCatalog::class);
+        $catalog->method('labelOf')->willReturn(null);
+
+        return new RelativeWaitNameFormatter($translator, $catalog);
     }
 
     private function tester(array $rows, bool $expectUpdate = false): CommandTester
@@ -65,8 +80,8 @@ class RelativeWaitRenameCommandTest extends TestCase
     public function testDryRunListsChangesAndDoesNotUpdateDatabase(): void
     {
         $rows = [
-            ['id' => 1, 'name' => 'Esperar', 'properties' => serialize(['amount' => 1, 'unit' => 'd'])],
-            ['id' => 2, 'name' => 'Old Wait', 'properties' => serialize(['amount' => 2, 'unit' => 'd'])],
+            ['id' => 1, 'name' => 'Esperar', 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])],
+            ['id' => 2, 'name' => 'Old Wait', 'properties' => serialize(['amount' => 2, 'unit' => 'd', 'direction' => 'after'])],
         ];
 
         $tester  = $this->tester($rows, expectUpdate: false);
@@ -76,13 +91,14 @@ class RelativeWaitRenameCommandTest extends TestCase
         $this->assertSame(0, $status);
         $this->assertStringContainsString('dry run', strtolower($display));
         $this->assertStringContainsString('Old Wait', $display);
-        $this->assertStringContainsString('Esperar 2 dias', $display);
+        // Should show newlines as " / " in output
+        $this->assertStringContainsString(' / ', $display);
     }
 
     public function testWithoutDryRunUpdatesDatabase(): void
     {
         $rows = [
-            ['id' => 1, 'name' => 'Old Wait', 'properties' => serialize(['amount' => 1, 'unit' => 'd'])],
+            ['id' => 1, 'name' => 'Old Wait', 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])],
         ];
 
         $formatter = $this->createFormatter();
@@ -90,9 +106,10 @@ class RelativeWaitRenameCommandTest extends TestCase
         // Create a mock connection that tracks update calls
         $connection = $this->createMock(Connection::class);
         $connection->method('fetchAllAssociative')->willReturn($rows);
+        // Update should save with newlines in the name
         $connection->expects($this->once())->method('update')->with(
             'campaign_events',
-            ['name' => 'Esperar 1 dia'],
+            $this->callback(fn($data) => str_contains($data['name'], "\n")),
             ['id' => 1]
         );
 
@@ -106,9 +123,9 @@ class RelativeWaitRenameCommandTest extends TestCase
     public function testSkipsEventsWithUnreadableProperties(): void
     {
         $rows = [
-            ['id' => 1, 'name' => 'Valid', 'properties' => serialize(['amount' => 1, 'unit' => 'd'])],
+            ['id' => 1, 'name' => 'Valid', 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])],
             ['id' => 2, 'name' => 'Invalid', 'properties' => 'corrupted_data'],
-            ['id' => 3, 'name' => 'Valid2', 'properties' => serialize(['amount' => 2, 'unit' => 'd'])],
+            ['id' => 3, 'name' => 'Valid2', 'properties' => serialize(['amount' => 2, 'unit' => 'd', 'direction' => 'after'])],
         ];
 
         $tester  = $this->tester($rows, expectUpdate: false);
@@ -122,9 +139,10 @@ class RelativeWaitRenameCommandTest extends TestCase
 
     public function testNoChangesNeeded(): void
     {
+        $newName = "Esperar\nEsperar 1 dia\nDepois da data\nCampo não definido";
         $rows = [
-            ['id' => 1, 'name' => 'Esperar 1 dia', 'properties' => serialize(['amount' => 1, 'unit' => 'd'])],
-            ['id' => 2, 'name' => 'Esperar 2 dias', 'properties' => serialize(['amount' => 2, 'unit' => 'd'])],
+            ['id' => 1, 'name' => $newName, 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])],
+            ['id' => 2, 'name' => "Esperar\nEsperar 2 dias\nDepois da data\nCampo não definido", 'properties' => serialize(['amount' => 2, 'unit' => 'd', 'direction' => 'after'])],
         ];
 
         $formatter = $this->createFormatter();
@@ -152,8 +170,9 @@ class RelativeWaitRenameCommandTest extends TestCase
 
     public function testSecondExecutionIsIdempotent(): void
     {
+        $newName = "Esperar\nEsperar 1 dia\nDepois da data\nCampo não definido";
         $firstRunRows = [
-            ['id' => 1, 'name' => 'Old Name', 'properties' => serialize(['amount' => 1, 'unit' => 'd'])],
+            ['id' => 1, 'name' => 'Old Name', 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])],
         ];
 
         $formatter = $this->createFormatter();
@@ -162,7 +181,7 @@ class RelativeWaitRenameCommandTest extends TestCase
         $connection = $this->createMock(Connection::class);
         $connection->method('fetchAllAssociative')->willReturnOnConsecutiveCalls(
             $firstRunRows,
-            [['id' => 1, 'name' => 'Esperar 1 dia', 'properties' => serialize(['amount' => 1, 'unit' => 'd'])]],
+            [['id' => 1, 'name' => $newName, 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])]],
         );
 
         $updateCallCount = 0;
@@ -178,7 +197,7 @@ class RelativeWaitRenameCommandTest extends TestCase
         // Second run should not update
         $connection2 = $this->createMock(Connection::class);
         $connection2->method('fetchAllAssociative')->willReturn(
-            [['id' => 1, 'name' => 'Esperar 1 dia', 'properties' => serialize(['amount' => 1, 'unit' => 'd'])]]
+            [['id' => 1, 'name' => $newName, 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])]]
         );
         $connection2->expects($this->never())->method('update');
 

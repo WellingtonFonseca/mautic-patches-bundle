@@ -34,8 +34,9 @@ class RelativeWaitNameSubscriberTest extends TestCase
         $formatter->method('fromProperties')->willReturnCallback(function (?array $properties): string {
             $amount = $properties['amount'] ?? 1;
             $unit   = $properties['unit'] ?? 'd';
+            $direction = $properties['direction'] ?? 'after';
 
-            return "Esperar {$amount} {$unit}";
+            return "Esperar\nEsperar {$amount} {$unit}\nDepois\nCampo";
         });
 
         $campaign = new Campaign();
@@ -43,7 +44,7 @@ class RelativeWaitNameSubscriberTest extends TestCase
         // Create a wait event
         $waitEvent = new Event();
         $waitEvent->setType(RelativeWaitSubscriber::TYPE);
-        $waitEvent->setProperties(['amount' => 2, 'unit' => 'd']);
+        $waitEvent->setProperties(['amount' => 2, 'unit' => 'd', 'direction' => 'after']);
         $campaign->addEvent(1, $waitEvent);
 
         // Create a non-wait event
@@ -57,8 +58,9 @@ class RelativeWaitNameSubscriberTest extends TestCase
         $subscriber = new RelativeWaitNameSubscriber($formatter);
         $subscriber->onPreSave($event);
 
-        // The wait event should have its name set
-        $this->assertSame('Esperar 2 d', $waitEvent->getName(), 'Wait event name should be set from properties');
+        // The wait event should have its name set (4 lines joined by newlines)
+        $lines = explode("\n", $waitEvent->getName());
+        $this->assertCount(4, $lines, 'Wait event name should have 4 lines');
 
         // The email event name should not be changed
         $this->assertSame('Send Email', $emailEvent->getName(), 'Non-wait event name should not be changed');
@@ -71,7 +73,7 @@ class RelativeWaitNameSubscriberTest extends TestCase
             $amount = $properties['amount'] ?? 1;
             $unit   = $properties['unit'] ?? 'd';
 
-            return "Esperar {$amount} {$unit}";
+            return "Esperar\nEsperar {$amount} {$unit}\nDepois\nCampo";
         });
 
         $campaign = new Campaign();
@@ -79,12 +81,12 @@ class RelativeWaitNameSubscriberTest extends TestCase
         // Create multiple wait events
         $waitEvent1 = new Event();
         $waitEvent1->setType(RelativeWaitSubscriber::TYPE);
-        $waitEvent1->setProperties(['amount' => 2, 'unit' => 'd']);
+        $waitEvent1->setProperties(['amount' => 2, 'unit' => 'd', 'direction' => 'after']);
         $campaign->addEvent(1, $waitEvent1);
 
         $waitEvent2 = new Event();
         $waitEvent2->setType(RelativeWaitSubscriber::TYPE);
-        $waitEvent2->setProperties(['amount' => 1, 'unit' => 'w']);
+        $waitEvent2->setProperties(['amount' => 1, 'unit' => 'w', 'direction' => 'after']);
         $campaign->addEvent(2, $waitEvent2);
 
         $event = new CampaignEvent($campaign);
@@ -92,9 +94,11 @@ class RelativeWaitNameSubscriberTest extends TestCase
         $subscriber = new RelativeWaitNameSubscriber($formatter);
         $subscriber->onPreSave($event);
 
-        // Both wait events should have their names set
-        $this->assertSame('Esperar 2 d', $waitEvent1->getName());
-        $this->assertSame('Esperar 1 w', $waitEvent2->getName());
+        // Both wait events should have their names set (4 lines)
+        $lines1 = explode("\n", $waitEvent1->getName());
+        $lines2 = explode("\n", $waitEvent2->getName());
+        $this->assertCount(4, $lines1);
+        $this->assertCount(4, $lines2);
     }
 
     public function testHandlesEmptyCampaignEvents(): void
