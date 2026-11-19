@@ -29,13 +29,27 @@ class MauticPatchesIntegrationTest extends TestCase
         $this->assertSame([], $integration->getRequiredKeyFields(), 'no keys: the modal only shows the change log');
     }
 
-    public function testTheChangeLogIsTheCustomNoteOfTheFirstTab(): void
+    public function testTheAboutBlockAndTheChangeLogAreTheCustomNoteOfTheFirstTab(): void
     {
         $note = $this->integration()->getFormNotes('custom');
 
-        $this->assertSame('@MauticPatches/Integration/_changelog.html.twig', $note['template']);
+        $this->assertSame('@MauticPatches/Integration/_settings_tabs.html.twig', $note['template']);
+        $this->assertSame(MauticPatchesIntegration::ICON, $note['parameters']['icon']);
         $this->assertTrue($note['custom'], 'core only draws the note when custom is set');
         $this->assertNotEmpty($note['parameters']['days']);
+    }
+
+    public function testTheTileIconIsTheFileCoreLooksForAndMatchesThePluginIcon(): void
+    {
+        $this->assertSame('plugins/MauticPatchesBundle/Assets/img/'.strtolower(MauticPatchesIntegration::NAME).'.png', MauticPatchesIntegration::ICON);
+        $this->assertFileEquals(__DIR__.'/../../../Assets/img/icon.png', __DIR__.'/../../../Assets/img/mauticpatches.png');
+    }
+
+    public function testTheTabsTemplateDrawsTheAboutBlockBeforeTheChangeLog(): void
+    {
+        $template = file_get_contents(__DIR__.'/../../../Resources/views/Integration/_settings_tabs.html.twig');
+
+        $this->assertLessThan(strpos($template, '_changelog.html.twig'), strpos($template, '_about.html.twig'));
     }
 
     public function testTheOtherSectionsKeepCoresNotes(): void
