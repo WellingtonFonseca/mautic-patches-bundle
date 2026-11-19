@@ -2,6 +2,9 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-19
+- O nó Esperar não tem mais o campo Nome: o nome é sempre "Esperar N unidade" (ex.: "Esperar 2 dias"), calculado ao salvar o nó e de novo ao salvar a campanha (API, MCP e importação também). Nós antigos: `mautic:patches:wait:rename [--dry-run]`
+
 ## 2026-11-18
 - A janela de configurações do plugin abre em uma aba Sobre, com o ícone, o nome e uma frase sobre o plugin. A janela fica mais larga (780 px)
 - Novo ícone do plugin: a cruz vermelha de hospital com traço preto sobre o disco azul do Mautic, com sombra longa, no tile de Configurações > Plugins e na lista de plugins. Desenho "Hospital" do SVG Repo (svgrepo.com). Obrigado a quem desenhou
