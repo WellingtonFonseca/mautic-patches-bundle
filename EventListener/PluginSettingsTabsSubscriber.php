@@ -45,7 +45,7 @@ class PluginSettingsTabsSubscriber implements EventSubscriberInterface
         }
 
         $customContentEvent->addContent(
-            // the plugin's settings modal is core's 600px: widened to the 780px of the resend modal of N8nDispatchBundle, and only the modal that holds the About block
+            // the plugin's settings modal is core's 600px: widened to 780px, and only the modal that holds the About block
             '<style>.modal-dialog:has(.patches-about-block){width:780px;max-width:95vw}'
             .'.patches-about{padding:24px 16px}.patches-about__icon{height:160px;margin:0 auto 16px}.patches-about__title{margin:0 0 8px}.patches-about__text{max-width:520px;margin:0 auto}'
             .'.patches-changelog{max-height:60vh;overflow-y:auto}.patches-changelog__day{margin-bottom:12px}'

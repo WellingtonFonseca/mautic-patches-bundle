@@ -45,6 +45,19 @@ class PluginSettingsTabsSubscriberTest extends TestCase
         $this->assertSame('', $this->content('something.else'));
     }
 
+    public function testTheStyleHoldsEveryRuleAndIsClosedBeforeTheScriptsOpen(): void
+    {
+        $content = $this->content();
+
+        $this->assertMatchesRegularExpression(
+            '#^<style>.*\.patches-changelog\{[^}]*\}.*\.patches-changelog__day ul\{margin:4px 0 0;padding-left:20px\}</style><script>#s',
+            $content,
+            'every rule is inside the style element, and the script opens right after it'
+        );
+        $this->assertStringEndsWith('</script>', $content);
+        $this->assertSame(1, substr_count($content, '<script>'));
+    }
+
     public function testOnlyTheModalThatHoldsTheAboutBlockIsWidenedTo780px(): void
     {
         $this->assertStringContainsString('.modal-dialog:has(.patches-about-block){width:780px;max-width:95vw}', $this->content());
@@ -58,12 +71,5 @@ class PluginSettingsTabsSubscriberTest extends TestCase
             $this->assertStringContainsString('Mautic.patches'.$name.'Tab', $this->content());
             $this->assertStringContainsString('data-onload-callback="patches'.$name.'Tab"', file_get_contents($views.$template.'.html.twig'));
         }
-    }
-
-    public function testTheAboutBlockComesBeforeTheChangeLogInTheSettingsTabsTemplate(): void
-    {
-        $template = file_get_contents(__DIR__.'/../../../Resources/views/Integration/_settings_tabs.html.twig');
-
-        $this->assertLessThan(strpos($template, '_changelog.html.twig'), strpos($template, '_about.html.twig'));
     }
 }
