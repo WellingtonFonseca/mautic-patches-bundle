@@ -9,14 +9,16 @@ use Mautic\PluginBundle\Integration\AbstractIntegration;
 use MauticPlugin\MauticPatchesBundle\Service\Changelog;
 
 /**
- * Gives the plugin its tile on Settings > Plugins and a settings modal with no keys and no features: the modal exists to show the change
- * log (CHANGELOG.md) in a tab of its own (EventListener/PluginChangelogTabSubscriber.php). The "Ativo" switch of the modal switches nothing:
+ * Gives the plugin its tile on Settings > Plugins and a settings modal with no keys and no features: the modal exists to show the "Sobre" tab
+ * and the change log (CHANGELOG.md) in tabs of their own (EventListener/PluginSettingsTabsSubscriber.php). The "Ativo" switch of the modal switches nothing:
  * the fixes of the plugin work whenever the plugin is installed, so a new integration is born on, and its tile is colored.
  * The tile's icon is Assets/img/mauticpatches.png (core looks for <integration name in lower case>.png, not for icon.png).
  */
 class MauticPatchesIntegration extends AbstractIntegration
 {
     public const NAME = 'MauticPatches';
+
+    public const ICON = 'plugins/MauticPatchesBundle/Assets/img/mauticpatches.png';
 
     public function getName(): string
     {
@@ -46,7 +48,7 @@ class MauticPatchesIntegration extends AbstractIntegration
     }
 
     /**
-     * The change log under the fields of the first tab (core draws the 'custom' note there).
+     * The About block and the change log under the fields of the first tab (core draws the 'custom' note there).
      * Core asks for the other sections too, and wants its own [text, type] pair for them.
      *
      * @return array<int|string, mixed>
@@ -59,8 +61,8 @@ class MauticPatchesIntegration extends AbstractIntegration
 
         return [
             'custom'     => true,
-            'template'   => '@MauticPatches/Integration/_changelog.html.twig',
-            'parameters' => ['days' => Changelog::days()],
+            'template'   => '@MauticPatches/Integration/_settings_tabs.html.twig',
+            'parameters' => ['days' => Changelog::days(), 'icon' => self::ICON],
         ];
     }
 }

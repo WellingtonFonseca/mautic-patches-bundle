@@ -131,7 +131,7 @@ The bundle also holds small additions to Mautic's own behaviour, such as API end
 
 ## Change log and settings tile
 
-`CHANGELOG.md` lists the changes by day (newest first, one `## YYYY-MM-DD` block per day, one `- ` line per change, no versions). For it the plugin has a tile on Settings > Plugins (`Integration/MauticPatchesIntegration.php`: no keys, no features; born published, its "Ativo" switch switches nothing) and the modal shows the file in a "Histórico de mudanças" tab (`Service/Changelog.php`, `Resources/js/plugin-changelog-tab.js`, `EventListener/PluginChangelogTabSubscriber.php`). After a deploy run `mautic:plugins:reload` and open Settings > Plugins once: the tile is created when the plugin version changes (0.6.0). Add a line to the block of the day to update the log; no code changes.
+`CHANGELOG.md` lists the changes by day (newest first, one `## YYYY-MM-DD` block per day, one `- ` line per change, no versions). For it the plugin has a tile on Settings > Plugins (`Integration/MauticPatchesIntegration.php`: no keys, no features; born published, its "Ativo" switch switches nothing) and the modal shows the file in a "Histórico de mudanças" tab (`Service/Changelog.php`, `Resources/js/plugin-changelog-tab.js`, `EventListener/PluginSettingsTabsSubscriber.php`). The same modal opens on a "Sobre" tab (the plugin icon and a short text; `Resources/js/plugin-about-tab.js`). After a deploy run `mautic:plugins:reload` and open Settings > Plugins once: the tile is created when the plugin version changes (0.6.0). Add a line to the block of the day to update the log; no code changes.
 
 ## Adding a new fix
 
