@@ -26,7 +26,7 @@ class MauticPatchesIntegrationTest extends TestCase
         $this->assertSame('MauticPatches', $integration->getName());
         $this->assertSame('Mautic Patches', $integration->getDisplayName());
         $this->assertSame('none', $integration->getAuthenticationType());
-        $this->assertSame([], $integration->getRequiredKeyFields(), 'no keys: the modal only shows the change log');
+        $this->assertSame([], $integration->getRequiredKeyFields(), 'no keys: the modal only shows the About tab and the change log');
     }
 
     public function testTheAboutBlockAndTheChangeLogAreTheCustomNoteOfTheFirstTab(): void
