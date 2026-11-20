@@ -14,7 +14,7 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 
 /**
- * The Wait node (patches.wait_relative) has no "Nome" field: its name is "Esperar / 2 dias / depois de / Data de nascimento", set here on submit so the canvas
+ * The Wait node (patches.wait_relative) has no "Nome" field: its name is "2 dias / depois de / Data de nascimento", set here on submit so the canvas
  * (which keeps a new event in the session until the campaign is saved) already shows it. Other node types are not touched.
  */
 class RelativeWaitNameExtension extends AbstractTypeExtension

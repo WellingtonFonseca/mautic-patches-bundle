@@ -36,7 +36,7 @@ class RelativeWaitNameSubscriberTest extends TestCase
             $unit   = $properties['unit'] ?? 'd';
             $direction = $properties['direction'] ?? 'after';
 
-            return "Esperar\n{$amount} {$unit}\nDepois\nCampo";
+            return "{$amount} {$unit}\nDepois\nCampo";
         });
 
         $campaign = new Campaign();
@@ -58,9 +58,9 @@ class RelativeWaitNameSubscriberTest extends TestCase
         $subscriber = new RelativeWaitNameSubscriber($formatter);
         $subscriber->onPreSave($event);
 
-        // The wait event should have its name set (4 lines joined by newlines)
+        // The wait event should have its name set (3 lines joined by newlines)
         $lines = explode("\n", $waitEvent->getName());
-        $this->assertCount(4, $lines, 'Wait event name should have 4 lines');
+        $this->assertCount(3, $lines, 'Wait event name should have 3 lines');
 
         // The email event name should not be changed
         $this->assertSame('Send Email', $emailEvent->getName(), 'Non-wait event name should not be changed');
@@ -73,7 +73,7 @@ class RelativeWaitNameSubscriberTest extends TestCase
             $amount = $properties['amount'] ?? 1;
             $unit   = $properties['unit'] ?? 'd';
 
-            return "Esperar\n{$amount} {$unit}\nDepois\nCampo";
+            return "{$amount} {$unit}\nDepois\nCampo";
         });
 
         $campaign = new Campaign();
@@ -94,11 +94,11 @@ class RelativeWaitNameSubscriberTest extends TestCase
         $subscriber = new RelativeWaitNameSubscriber($formatter);
         $subscriber->onPreSave($event);
 
-        // Both wait events should have their names set (4 lines)
+        // Both wait events should have their names set (3 lines)
         $lines1 = explode("\n", $waitEvent1->getName());
         $lines2 = explode("\n", $waitEvent2->getName());
-        $this->assertCount(4, $lines1);
-        $this->assertCount(4, $lines2);
+        $this->assertCount(3, $lines1);
+        $this->assertCount(3, $lines2);
     }
 
     public function testHandlesEmptyCampaignEvents(): void

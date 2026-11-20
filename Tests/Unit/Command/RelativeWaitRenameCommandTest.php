@@ -139,10 +139,10 @@ class RelativeWaitRenameCommandTest extends TestCase
 
     public function testNoChangesNeeded(): void
     {
-        $newName = "Esperar\n1 dia\nDepois da data\nCampo não definido";
+        $newName = "1 dia\nDepois da data\nCampo não definido";
         $rows = [
             ['id' => 1, 'name' => $newName, 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])],
-            ['id' => 2, 'name' => "Esperar\n2 dias\nDepois da data\nCampo não definido", 'properties' => serialize(['amount' => 2, 'unit' => 'd', 'direction' => 'after'])],
+            ['id' => 2, 'name' => "2 dias\nDepois da data\nCampo não definido", 'properties' => serialize(['amount' => 2, 'unit' => 'd', 'direction' => 'after'])],
         ];
 
         $formatter = $this->createFormatter();
@@ -170,7 +170,7 @@ class RelativeWaitRenameCommandTest extends TestCase
 
     public function testSecondExecutionIsIdempotent(): void
     {
-        $newName = "Esperar\n1 dia\nDepois da data\nCampo não definido";
+        $newName = "1 dia\nDepois da data\nCampo não definido";
         $firstRunRows = [
             ['id' => 1, 'name' => 'Old Name', 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])],
         ];

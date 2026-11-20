@@ -3,7 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-19
-- O nó Esperar não tem mais o campo Nome: o nome tem 4 linhas (ex.: "Esperar / 2 dias / depois de / Data de nascimento"), calculado ao salvar o nó e de novo ao salvar a campanha (API, MCP e importação também). Campo de data removido: "(campo de data não encontrado)". Renomear o campo depois não renomeia o nó até o próximo save. Nós antigos: faça backup de `campaign_events` (mysqldump), rode `mautic:patches:wait:rename --dry-run` e depois sem ele
+- O nó Esperar não tem mais o campo Nome: o nome tem 3 linhas, sem repetir o título "Esperar" que o canvas já mostra (ex.: "2 dias / depois de / Data de nascimento"), calculado ao salvar o nó e de novo ao salvar a campanha (API, MCP e importação também). Campo de data removido: "(campo de data não encontrado)". Renomear o campo depois não renomeia o nó até o próximo save. Nós antigos: faça backup de `campaign_events` (mysqldump), rode `mautic:patches:wait:rename --dry-run` e depois sem ele
 
 ## 2026-11-18
 - A janela de configurações do plugin abre em uma aba Sobre, com o ícone, o nome e uma frase sobre o plugin. A janela fica mais larga (780 px)

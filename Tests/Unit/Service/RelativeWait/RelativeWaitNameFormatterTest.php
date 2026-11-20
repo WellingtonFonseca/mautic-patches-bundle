@@ -47,55 +47,55 @@ class RelativeWaitNameFormatterTest extends TestCase
     {
         return [
             // Portuguese Brazil - days
-            [1, 'd', 'pt_BR', "Esperar\n1 dia\n(campo de data não encontrado)"],
-            [0, 'd', 'pt_BR', "Esperar\n0 dias\n(campo de data não encontrado)"],
-            [2, 'd', 'pt_BR', "Esperar\n2 dias\n(campo de data não encontrado)"],
-            [5, 'd', 'pt_BR', "Esperar\n5 dias\n(campo de data não encontrado)"],
+            [1, 'd', 'pt_BR', "1 dia\n(campo de data não encontrado)"],
+            [0, 'd', 'pt_BR', "0 dias\n(campo de data não encontrado)"],
+            [2, 'd', 'pt_BR', "2 dias\n(campo de data não encontrado)"],
+            [5, 'd', 'pt_BR', "5 dias\n(campo de data não encontrado)"],
 
             // Portuguese Brazil - weeks
-            [1, 'w', 'pt_BR', "Esperar\n1 semana\n(campo de data não encontrado)"],
-            [2, 'w', 'pt_BR', "Esperar\n2 semanas\n(campo de data não encontrado)"],
+            [1, 'w', 'pt_BR', "1 semana\n(campo de data não encontrado)"],
+            [2, 'w', 'pt_BR', "2 semanas\n(campo de data não encontrado)"],
 
             // Portuguese Brazil - months
-            [1, 'm', 'pt_BR', "Esperar\n1 mês\n(campo de data não encontrado)"],
-            [2, 'm', 'pt_BR', "Esperar\n2 meses\n(campo de data não encontrado)"],
+            [1, 'm', 'pt_BR', "1 mês\n(campo de data não encontrado)"],
+            [2, 'm', 'pt_BR', "2 meses\n(campo de data não encontrado)"],
 
             // Portuguese Brazil - years
-            [1, 'y', 'pt_BR', "Esperar\n1 ano\n(campo de data não encontrado)"],
-            [2, 'y', 'pt_BR', "Esperar\n2 anos\n(campo de data não encontrado)"],
+            [1, 'y', 'pt_BR', "1 ano\n(campo de data não encontrado)"],
+            [2, 'y', 'pt_BR', "2 anos\n(campo de data não encontrado)"],
 
             // Portuguese Brazil - hours
-            [1, 'h', 'pt_BR', "Esperar\n1 hora\n(campo de data não encontrado)"],
-            [2, 'h', 'pt_BR', "Esperar\n2 horas\n(campo de data não encontrado)"],
+            [1, 'h', 'pt_BR', "1 hora\n(campo de data não encontrado)"],
+            [2, 'h', 'pt_BR', "2 horas\n(campo de data não encontrado)"],
 
             // Portuguese Brazil - minutes
-            [1, 'i', 'pt_BR', "Esperar\n1 minuto\n(campo de data não encontrado)"],
-            [2, 'i', 'pt_BR', "Esperar\n2 minutos\n(campo de data não encontrado)"],
+            [1, 'i', 'pt_BR', "1 minuto\n(campo de data não encontrado)"],
+            [2, 'i', 'pt_BR', "2 minutos\n(campo de data não encontrado)"],
 
             // English - days
-            [1, 'd', 'en_US', "Wait\n1 day\n(date field not found)"],
-            [0, 'd', 'en_US', "Wait\n0 days\n(date field not found)"],
-            [2, 'd', 'en_US', "Wait\n2 days\n(date field not found)"],
+            [1, 'd', 'en_US', "1 day\n(date field not found)"],
+            [0, 'd', 'en_US', "0 days\n(date field not found)"],
+            [2, 'd', 'en_US', "2 days\n(date field not found)"],
 
             // English - weeks
-            [1, 'w', 'en_US', "Wait\n1 week\n(date field not found)"],
-            [2, 'w', 'en_US', "Wait\n2 weeks\n(date field not found)"],
+            [1, 'w', 'en_US', "1 week\n(date field not found)"],
+            [2, 'w', 'en_US', "2 weeks\n(date field not found)"],
 
             // English - months
-            [1, 'm', 'en_US', "Wait\n1 month\n(date field not found)"],
-            [2, 'm', 'en_US', "Wait\n2 months\n(date field not found)"],
+            [1, 'm', 'en_US', "1 month\n(date field not found)"],
+            [2, 'm', 'en_US', "2 months\n(date field not found)"],
 
             // English - years
-            [1, 'y', 'en_US', "Wait\n1 year\n(date field not found)"],
-            [2, 'y', 'en_US', "Wait\n2 years\n(date field not found)"],
+            [1, 'y', 'en_US', "1 year\n(date field not found)"],
+            [2, 'y', 'en_US', "2 years\n(date field not found)"],
 
             // English - hours
-            [1, 'h', 'en_US', "Wait\n1 hour\n(date field not found)"],
-            [2, 'h', 'en_US', "Wait\n2 hours\n(date field not found)"],
+            [1, 'h', 'en_US', "1 hour\n(date field not found)"],
+            [2, 'h', 'en_US', "2 hours\n(date field not found)"],
 
             // English - minutes
-            [1, 'i', 'en_US', "Wait\n1 minute\n(date field not found)"],
-            [2, 'i', 'en_US', "Wait\n2 minutes\n(date field not found)"],
+            [1, 'i', 'en_US', "1 minute\n(date field not found)"],
+            [2, 'i', 'en_US', "2 minutes\n(date field not found)"],
         ];
     }
 
@@ -104,7 +104,7 @@ class RelativeWaitNameFormatterTest extends TestCase
         $this->translator->setLocale('pt_BR');
         $result = $this->formatter->format(5, 'x', 'invalid', null);
 
-        $this->assertSame("Esperar\n5\n(campo de data não encontrado)", $result);
+        $this->assertSame("5\n(campo de data não encontrado)", $result);
     }
 
     public function testUnknownUnitEnglish(): void
@@ -112,7 +112,7 @@ class RelativeWaitNameFormatterTest extends TestCase
         $this->translator->setLocale('en_US');
         $result = $this->formatter->format(5, 'invalid', 'invalid', null);
 
-        $this->assertSame("Wait\n5\n(date field not found)", $result);
+        $this->assertSame("5\n(date field not found)", $result);
     }
 
     public function testNegativeAmountBecomesZero(): void
@@ -120,7 +120,7 @@ class RelativeWaitNameFormatterTest extends TestCase
         $this->translator->setLocale('pt_BR');
         $result = $this->formatter->format(-5, 'd', 'invalid', null);
 
-        $this->assertSame("Esperar\n0 dias\n(campo de data não encontrado)", $result);
+        $this->assertSame("0 dias\n(campo de data não encontrado)", $result);
     }
 
     public function testFromPropertiesWithDefaults(): void
@@ -128,7 +128,7 @@ class RelativeWaitNameFormatterTest extends TestCase
         $this->translator->setLocale('pt_BR');
         $result = $this->formatter->fromProperties(null);
 
-        $this->assertSame("Esperar\n1 dia\n(campo de data não encontrado)", $result);
+        $this->assertSame("1 dia\n(campo de data não encontrado)", $result);
     }
 
     public function testFromPropertiesWithEmptyArray(): void
@@ -136,7 +136,7 @@ class RelativeWaitNameFormatterTest extends TestCase
         $this->translator->setLocale('pt_BR');
         $result = $this->formatter->fromProperties([]);
 
-        $this->assertSame("Esperar\n1 dia\n(campo de data não encontrado)", $result);
+        $this->assertSame("1 dia\n(campo de data não encontrado)", $result);
     }
 
     public function testFromPropertiesWithCustomValues(): void
@@ -144,7 +144,7 @@ class RelativeWaitNameFormatterTest extends TestCase
         $this->translator->setLocale('pt_BR');
         $result = $this->formatter->fromProperties(['amount' => 7, 'unit' => 'w']);
 
-        $this->assertSame("Esperar\n7 semanas\n(campo de data não encontrado)", $result);
+        $this->assertSame("7 semanas\n(campo de data não encontrado)", $result);
     }
 
     public function testFromPropertiesWithStringAmount(): void
@@ -152,7 +152,7 @@ class RelativeWaitNameFormatterTest extends TestCase
         $this->translator->setLocale('pt_BR');
         $result = $this->formatter->fromProperties(['amount' => '3', 'unit' => 'h']);
 
-        $this->assertSame("Esperar\n3 horas\n(campo de data não encontrado)", $result);
+        $this->assertSame("3 horas\n(campo de data não encontrado)", $result);
     }
 
     public function testFormatWithDirectionAfterProducesFourLines(): void
@@ -165,11 +165,10 @@ class RelativeWaitNameFormatterTest extends TestCase
         $result = $formatter->format(2, 'd', 'after', 'Contato: Data de Atribuição');
 
         $lines = explode("\n", $result);
-        $this->assertCount(4, $lines, 'Format with direction should produce 4 lines');
-        $this->assertStringContainsString('Esperar', $lines[0]);
-        $this->assertStringContainsString('2 dias', $lines[1]);
-        $this->assertStringContainsString('depois de', $lines[2]);
-        $this->assertStringContainsString('Contato: Data de Atribuição', $lines[3]);
+        $this->assertCount(3, $lines, 'Format with direction should produce 3 lines');
+        $this->assertStringContainsString('2 dias', $lines[0]);
+        $this->assertStringContainsString('depois de', $lines[1]);
+        $this->assertStringContainsString('Contato: Data de Atribuição', $lines[2]);
     }
 
     public function testFormatWithDirectionBeforeProducesFourLines(): void
@@ -182,9 +181,9 @@ class RelativeWaitNameFormatterTest extends TestCase
         $result = $formatter->format(5, 'w', 'before', 'Contato: Data de Atribuição');
 
         $lines = explode("\n", $result);
-        $this->assertCount(4, $lines);
-        $this->assertStringContainsString('5 semanas', $lines[1]);
-        $this->assertStringContainsString('antes de', $lines[2]);
+        $this->assertCount(3, $lines);
+        $this->assertStringContainsString('5 semanas', $lines[0]);
+        $this->assertStringContainsString('antes de', $lines[1]);
     }
 
     public function testFormatWithInvalidDirectionProducesThreeLines(): void
@@ -197,7 +196,7 @@ class RelativeWaitNameFormatterTest extends TestCase
         $result = $formatter->format(1, 'd', 'invalid', 'Contato: Data');
 
         $lines = explode("\n", $result);
-        $this->assertCount(3, $lines, 'Format with invalid direction should produce 3 lines (direction line omitted)');
+        $this->assertCount(2, $lines);
     }
 
     public function testFormatWithNullLabelUsesMissingPlaceholder(): void
@@ -210,8 +209,8 @@ class RelativeWaitNameFormatterTest extends TestCase
         $result = $formatter->format(1, 'd', 'after', null);
 
         $lines = explode("\n", $result);
-        $this->assertCount(4, $lines);
-        $this->assertStringContainsString('campo', strtolower($lines[3]));
+        $this->assertCount(3, $lines);
+        $this->assertStringContainsString('campo', strtolower($lines[2]));
     }
 
     public function testFormatTruncatesAtOneHundredNinetyOneCharacters(): void
@@ -237,8 +236,8 @@ class RelativeWaitNameFormatterTest extends TestCase
         $result = $formatter->fromProperties(['amount' => 3, 'unit' => 'd', 'direction' => 'before', 'dateField' => 'contact:attribution_date']);
 
         $lines = explode("\n", $result);
-        $this->assertCount(4, $lines);
-        $this->assertStringContainsString('antes de', $lines[2]);
-        $this->assertStringContainsString('Attribution Date', $lines[3]);
+        $this->assertCount(3, $lines);
+        $this->assertStringContainsString('antes de', $lines[1]);
+        $this->assertStringContainsString('Attribution Date', $lines[2]);
     }
 }
