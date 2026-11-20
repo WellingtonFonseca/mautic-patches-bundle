@@ -14,10 +14,10 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Gives every existing Wait event the name its amount and unit give ("Esperar 2 dias"). `--dry-run` only lists "old -> new".
+ * Gives every existing Wait event the name its amount and unit give ("Esperar / 2 dias / depois de / campo"). `--dry-run` only lists "old -> new".
  * Writes campaign_events directly: back the table up first.
  */
-#[AsCommand(name: 'mautic:patches:wait:rename', description: 'Renames the Wait events to "Esperar N unidade".')]
+#[AsCommand(name: 'mautic:patches:wait:rename', description: 'Renames the Wait events from amount, unit, direction and date field.')]
 class RelativeWaitRenameCommand extends Command
 {
     public function __construct(private Connection $connection, private RelativeWaitNameFormatter $formatter)

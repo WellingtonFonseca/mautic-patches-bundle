@@ -36,7 +36,7 @@ class RelativeWaitNameSubscriberTest extends TestCase
             $unit   = $properties['unit'] ?? 'd';
             $direction = $properties['direction'] ?? 'after';
 
-            return "Esperar\nEsperar {$amount} {$unit}\nDepois\nCampo";
+            return "Esperar\n{$amount} {$unit}\nDepois\nCampo";
         });
 
         $campaign = new Campaign();
@@ -73,7 +73,7 @@ class RelativeWaitNameSubscriberTest extends TestCase
             $amount = $properties['amount'] ?? 1;
             $unit   = $properties['unit'] ?? 'd';
 
-            return "Esperar\nEsperar {$amount} {$unit}\nDepois\nCampo";
+            return "Esperar\n{$amount} {$unit}\nDepois\nCampo";
         });
 
         $campaign = new Campaign();

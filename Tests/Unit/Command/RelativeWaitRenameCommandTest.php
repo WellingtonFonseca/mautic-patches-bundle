@@ -31,10 +31,10 @@ class RelativeWaitRenameCommandTest extends TestCase
                     return 'Esperar';
                 }
                 if ('mautic.patches.wait_relative.name.d' === $key) {
-                    return 1 === $count ? 'Esperar 1 dia' : "Esperar {$count} dias";
+                    return 1 === $count ? '1 dia' : "{$count} dias";
                 }
                 if ('mautic.patches.wait_relative.name.w' === $key) {
-                    return 1 === $count ? 'Esperar 1 semana' : "Esperar {$count} semanas";
+                    return 1 === $count ? '1 semana' : "{$count} semanas";
                 }
                 if ('mautic.patches.wait_relative.name.direction.after' === $key) {
                     return 'Depois da data';
@@ -46,7 +46,7 @@ class RelativeWaitRenameCommandTest extends TestCase
                     return 'Campo não definido';
                 }
 
-                return "Esperar {$count}";
+                return "{$count}";
             }
         );
 
@@ -139,10 +139,10 @@ class RelativeWaitRenameCommandTest extends TestCase
 
     public function testNoChangesNeeded(): void
     {
-        $newName = "Esperar\nEsperar 1 dia\nDepois da data\nCampo não definido";
+        $newName = "Esperar\n1 dia\nDepois da data\nCampo não definido";
         $rows = [
             ['id' => 1, 'name' => $newName, 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])],
-            ['id' => 2, 'name' => "Esperar\nEsperar 2 dias\nDepois da data\nCampo não definido", 'properties' => serialize(['amount' => 2, 'unit' => 'd', 'direction' => 'after'])],
+            ['id' => 2, 'name' => "Esperar\n2 dias\nDepois da data\nCampo não definido", 'properties' => serialize(['amount' => 2, 'unit' => 'd', 'direction' => 'after'])],
         ];
 
         $formatter = $this->createFormatter();
@@ -170,7 +170,7 @@ class RelativeWaitRenameCommandTest extends TestCase
 
     public function testSecondExecutionIsIdempotent(): void
     {
-        $newName = "Esperar\nEsperar 1 dia\nDepois da data\nCampo não definido";
+        $newName = "Esperar\n1 dia\nDepois da data\nCampo não definido";
         $firstRunRows = [
             ['id' => 1, 'name' => 'Old Name', 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])],
         ];

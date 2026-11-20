@@ -27,7 +27,7 @@ class RelativeWaitNameExtensionTest extends TestCase
             $unit   = $properties['unit'] ?? 'd';
             $direction = $properties['direction'] ?? 'after';
 
-            return "Esperar\nEsperar {$amount} {$unit}\nDepois\nCampo";
+            return "Esperar\n{$amount} {$unit}\nDepois\nCampo";
         });
 
         $data = $data ?? ['type' => RelativeWaitSubscriber::TYPE];
