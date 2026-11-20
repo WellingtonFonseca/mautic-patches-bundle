@@ -7,7 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Service\RelativeWait;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * The name of a Wait node ("2 dias / depois de / Data de nascimento"), always built from its properties: the node has no name field of its own.
+ * The name of a Wait node ("2 dias depois de Data de nascimento"), always built from its properties: the node has no name field of its own.
  */
 class RelativeWaitNameFormatter
 {
@@ -18,7 +18,7 @@ class RelativeWaitNameFormatter
     }
 
     /**
-     * Three lines (the "Esperar" title is already the type heading of the node): "2 dias" / "depois de" / "Data de nascimento". A direction other than after/before drops the third line.
+     * One line (the "Esperar" title is already the type heading of the node): "2 dias depois de Data de nascimento". A direction other than after/before drops the third line.
      */
     public function format(int $amount, string $unit, string $direction, ?string $fieldLabel): string
     {
@@ -29,7 +29,7 @@ class RelativeWaitNameFormatter
         }
         $lines[] = null !== $fieldLabel && '' !== $fieldLabel ? $fieldLabel : $this->translator->trans('mautic.patches.wait_relative.name.field_missing');
 
-        return mb_substr(implode("\n", $lines), 0, 191);
+        return mb_substr(implode(" ", $lines), 0, 191);
     }
 
     /**

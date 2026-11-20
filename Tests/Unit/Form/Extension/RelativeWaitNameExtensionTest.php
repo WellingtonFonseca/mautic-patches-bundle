@@ -27,7 +27,7 @@ class RelativeWaitNameExtensionTest extends TestCase
             $unit   = $properties['unit'] ?? 'd';
             $direction = $properties['direction'] ?? 'after';
 
-            return "{$amount} {$unit}\nDepois\nCampo";
+            return "{$amount} {$unit} Depois Campo";
         });
 
         $data = $data ?? ['type' => RelativeWaitSubscriber::TYPE];
@@ -71,10 +71,10 @@ class RelativeWaitNameExtensionTest extends TestCase
 
         $form->submit($submittedData);
 
-        // After PRE_SUBMIT event, the name should be calculated from properties (3 lines)
+        // After PRE_SUBMIT event, the name should be calculated from properties (one line)
         $formData = $form->getData();
-        $lines = explode("\n", $formData['name']);
-        $this->assertCount(3, $lines, 'Name should have 3 lines');
+        $this->assertStringNotContainsString("\n", $formData['name']);
+        $this->assertSame('2 d Depois Campo', $formData['name']);
     }
 
     public function testNameFieldIsHiddenType(): void

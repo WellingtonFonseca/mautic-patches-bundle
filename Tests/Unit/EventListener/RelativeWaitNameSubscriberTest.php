@@ -36,7 +36,7 @@ class RelativeWaitNameSubscriberTest extends TestCase
             $unit   = $properties['unit'] ?? 'd';
             $direction = $properties['direction'] ?? 'after';
 
-            return "{$amount} {$unit}\nDepois\nCampo";
+            return "{$amount} {$unit} Depois Campo";
         });
 
         $campaign = new Campaign();
@@ -58,9 +58,7 @@ class RelativeWaitNameSubscriberTest extends TestCase
         $subscriber = new RelativeWaitNameSubscriber($formatter);
         $subscriber->onPreSave($event);
 
-        // The wait event should have its name set (3 lines joined by newlines)
-        $lines = explode("\n", $waitEvent->getName());
-        $this->assertCount(3, $lines, 'Wait event name should have 3 lines');
+        $this->assertSame('2 d Depois Campo', $waitEvent->getName());
 
         // The email event name should not be changed
         $this->assertSame('Send Email', $emailEvent->getName(), 'Non-wait event name should not be changed');
@@ -73,7 +71,7 @@ class RelativeWaitNameSubscriberTest extends TestCase
             $amount = $properties['amount'] ?? 1;
             $unit   = $properties['unit'] ?? 'd';
 
-            return "{$amount} {$unit}\nDepois\nCampo";
+            return "{$amount} {$unit} Depois Campo";
         });
 
         $campaign = new Campaign();
@@ -94,11 +92,8 @@ class RelativeWaitNameSubscriberTest extends TestCase
         $subscriber = new RelativeWaitNameSubscriber($formatter);
         $subscriber->onPreSave($event);
 
-        // Both wait events should have their names set (3 lines)
-        $lines1 = explode("\n", $waitEvent1->getName());
-        $lines2 = explode("\n", $waitEvent2->getName());
-        $this->assertCount(3, $lines1);
-        $this->assertCount(3, $lines2);
+        $this->assertStringNotContainsString("\n", $waitEvent1->getName());
+        $this->assertStringNotContainsString("\n", $waitEvent2->getName());
     }
 
     public function testHandlesEmptyCampaignEvents(): void

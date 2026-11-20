@@ -91,8 +91,7 @@ class RelativeWaitRenameCommandTest extends TestCase
         $this->assertSame(0, $status);
         $this->assertStringContainsString('dry run', strtolower($display));
         $this->assertStringContainsString('Old Wait', $display);
-        // Should show newlines as " / " in output
-        $this->assertStringContainsString(' / ', $display);
+        $this->assertStringContainsString('1 dia Depois da data Campo não definido', $display);
     }
 
     public function testWithoutDryRunUpdatesDatabase(): void
@@ -106,10 +105,10 @@ class RelativeWaitRenameCommandTest extends TestCase
         // Create a mock connection that tracks update calls
         $connection = $this->createMock(Connection::class);
         $connection->method('fetchAllAssociative')->willReturn($rows);
-        // Update should save with newlines in the name
+        // Update should save with a one-line name
         $connection->expects($this->once())->method('update')->with(
             'campaign_events',
-            $this->callback(fn($data) => str_contains($data['name'], "\n")),
+            $this->callback(fn($data) => !str_contains($data['name'], "\n")),
             ['id' => 1]
         );
 
@@ -139,10 +138,10 @@ class RelativeWaitRenameCommandTest extends TestCase
 
     public function testNoChangesNeeded(): void
     {
-        $newName = "1 dia\nDepois da data\nCampo não definido";
+        $newName = "1 dia Depois da data Campo não definido";
         $rows = [
             ['id' => 1, 'name' => $newName, 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])],
-            ['id' => 2, 'name' => "2 dias\nDepois da data\nCampo não definido", 'properties' => serialize(['amount' => 2, 'unit' => 'd', 'direction' => 'after'])],
+            ['id' => 2, 'name' => "2 dias Depois da data Campo não definido", 'properties' => serialize(['amount' => 2, 'unit' => 'd', 'direction' => 'after'])],
         ];
 
         $formatter = $this->createFormatter();
@@ -170,7 +169,7 @@ class RelativeWaitRenameCommandTest extends TestCase
 
     public function testSecondExecutionIsIdempotent(): void
     {
-        $newName = "1 dia\nDepois da data\nCampo não definido";
+        $newName = "1 dia Depois da data Campo não definido";
         $firstRunRows = [
             ['id' => 1, 'name' => 'Old Name', 'properties' => serialize(['amount' => 1, 'unit' => 'd', 'direction' => 'after'])],
         ];
