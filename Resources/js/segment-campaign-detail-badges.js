@@ -31,7 +31,16 @@
             restart: marker.getAttribute('data-restart') === '1',
             flags: flags ? flags.split(',') : [],
             rebuild: marker.getAttribute('data-rebuild-hours') || '',
-            slow: marker.getAttribute('data-build-seconds') || ''
+            slow: marker.getAttribute('data-build-seconds') || '',
+            // a segment only (the contacts badge and the "Updated on" line, see SegmentCampaignDetailStatusSubscriber): null for a campaign
+            segment: marker.getAttribute('data-segment-id') ? {
+                id: marker.getAttribute('data-segment-id'),
+                count: parseInt(marker.getAttribute('data-count'), 10) || 0,
+                countText: marker.getAttribute('data-count-text') || '',
+                countUrl: marker.getAttribute('data-count-url') || '',
+                builtText: marker.getAttribute('data-built-text') || '',
+                updatingText: marker.getAttribute('data-updating-text') || ''
+            } : null
         };
     }
 
@@ -49,8 +58,42 @@
         return badges;
     }
 
+    /**
+     * The contacts badge of the segment list (a.col-count: translucent blue with contacts, gray when empty), left of the status badges and as tall
+     * as they are. A link to the contacts of the segment, like in the list.
+     */
+    function countBadge(doc, seg) {
+        var a = doc.createElement('a');
+        a.className = 'patches-count-badge patches-badge ' + (seg.count > 0 ? 'patches-badge--info' : 'patches-badge--neutral');
+        a.setAttribute('data-segment-id', seg.id);
+        a.setAttribute('data-updating-text', seg.updatingText);
+        a.setAttribute('data-toggle', 'ajax');
+        a.setAttribute('href', seg.countUrl);
+        a.textContent = seg.countText;
+
+        return a;
+    }
+
+    /** The "Updated on ..." line of the segment list under the toolbar (14px, right-aligned); an older one is replaced. */
+    function placeUpdatedLine(doc, bar, seg) {
+        var old = doc.querySelector('.patches-segment-updated');
+        if (old && old.parentNode) { old.parentNode.removeChild(old); }
+        // last thing of the page header (a block under the row of title, badges and buttons): inside the toolbar it would be a flex item squeezing the buttons
+        var header = bar.closest ? bar.closest('.page-header') : null;
+        if (!seg || !(header || bar.parentNode)) { return; }
+
+        var line = doc.createElement('div');
+        line.className = 'patches-segment-updated text-muted';
+        line.setAttribute('data-segment-id', seg.id);
+        line.setAttribute('data-updating-text', seg.updatingText);
+        line.textContent = seg.builtText;
+        (header || bar.parentNode).appendChild(line);
+    }
+
     function signature(marker) {
-        return [marker.status, marker.restart ? '1' : '0', marker.flags.join('+'), marker.rebuild, marker.slow].join(':');
+        var seg = marker.segment;
+
+        return [marker.status, marker.restart ? '1' : '0', marker.flags.join('+'), marker.rebuild, marker.slow, seg ? [seg.id, seg.count, seg.builtText].join('|') : ''].join(':');
     }
 
     /**
@@ -74,7 +117,11 @@
         badgesOf(marker, cfg).forEach(function (b) {
             box.appendChild(b.channel === 'restart' ? list.restartBadge(doc, cfg.restart) : list.extraBadge(doc, b));
         });
+        if (marker.segment) { box.insertBefore(countBadge(doc, marker.segment), box.firstChild); }
         bar.insertBefore(box, bar.firstChild);
+        placeUpdatedLine(doc, bar, marker.segment);
+        // an Update that is running (SegmentUpdateLockSubscriber) owns the badge and the line until the page reloads
+        if (root.mauticPatchesSegmentDecorate) { root.mauticPatchesSegmentDecorate(); }
 
         return true;
     }
@@ -103,7 +150,7 @@
     }
 
     list.installSegmentCampaignDetail = installSegmentCampaignDetail;
-    var api = {isDetailsPath: isDetailsPath, readMarker: readMarker, badgesOf: badgesOf, addDetailBadges: addDetailBadges, installSegmentCampaignDetail: installSegmentCampaignDetail};
+    var api = {countBadge: countBadge, isDetailsPath: isDetailsPath, readMarker: readMarker, badgesOf: badgesOf, addDetailBadges: addDetailBadges, installSegmentCampaignDetail: installSegmentCampaignDetail};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

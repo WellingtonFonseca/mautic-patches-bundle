@@ -57,8 +57,8 @@ test('a details page is /s/segments/view/{id} or /s/campaigns/view/{id}, under a
 });
 
 test('the marker tells the status and the reentry', () => {
-    assert.deepStrictEqual(api.readMarker(page({'data-status': 'published', 'data-restart': '1'}).doc), {status: 'published', restart: true, flags: [], rebuild: '', slow: ''});
-    assert.deepStrictEqual(api.readMarker(page({'data-status': 'unpublished'}).doc), {status: 'unpublished', restart: false, flags: [], rebuild: '', slow: ''});
+    assert.deepStrictEqual(api.readMarker(page({'data-status': 'published', 'data-restart': '1'}).doc), {status: 'published', restart: true, flags: [], rebuild: '', slow: '', segment: null});
+    assert.deepStrictEqual(api.readMarker(page({'data-status': 'unpublished'}).doc), {status: 'unpublished', restart: false, flags: [], rebuild: '', slow: '', segment: null});
     assert.strictEqual(api.readMarker(page(null).doc), null);
 });
 

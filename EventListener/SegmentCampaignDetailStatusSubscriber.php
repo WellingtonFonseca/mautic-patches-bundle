@@ -8,10 +8,15 @@ use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use Mautic\CoreBundle\Helper\DateTimeHelper;
+use Mautic\CoreBundle\Translation\Translator;
 use Mautic\LeadBundle\Entity\LeadList;
+use Mautic\LeadBundle\Model\ListModel;
+use MauticPlugin\MauticPatchesBundle\Service\LocalizedDateFormatter;
 use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
+use MauticPlugin\MauticPatchesBundle\Service\UpdatingIndicator;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Routing\RouterInterface;
 
 /**
  * The Ativo / Inativo badge of the segment and campaign lists (and the reentry badge of the campaign), copied to the details page: circles left of the
@@ -24,13 +29,29 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
 {
     private const SCRIPT = 'Resources/js/segment-campaign-detail-badges.js';
 
-    public function __construct(private TranslatorInterface $translator, private CoreParametersHelper $coreParametersHelper)
-    {
+    // The contacts badge of the segment (the pill of the list's contacts column, as tall as the circles beside it) and the "Updated on ..." line
+    // under the toolbar (14px, right-aligned). Colors as .patches-badge--info / --neutral / --warning with --soft of AbstractListStatusSubscriber.
+    private const SEGMENT_STYLE = '.patches-details-badges .patches-count-badge{display:inline-flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box;height:40px;margin:0;padding:0 14px;'
+        .'border-radius:20px;gap:4px;font-size:14px;font-weight:600;line-height:normal;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;text-decoration:none}'
+        .'.patches-count-badge.patches-badge--info{background-color:rgba(30,136,229,.16);color:#1e88e5;box-shadow:inset 0 0 0 1px rgba(30,136,229,.45)}'
+        .'.patches-count-badge.patches-badge--neutral{background-color:rgba(120,120,120,.16);color:var(--text-secondary,#6f6f6f);box-shadow:inset 0 0 0 1px rgba(120,120,120,.4)}'
+        .'.patches-count-badge.patches-badge--warning{background-color:rgba(251,140,0,.16);color:#fb8c00;box-shadow:inset 0 0 0 1px rgba(251,140,0,.45)}'
+        .'.patches-count-badge>svg{display:block;flex:none;margin:0!important;vertical-align:baseline!important}'
+        .'.patches-count-badge>.mautic-patches-updating-text{display:inline;animation:none;line-height:inherit}'
+        .'.patches-segment-updated{display:block;margin:4px 0 0;font-size:14px;text-align:right}';
+
+    public function __construct(
+        private Translator $translator,
+        private CoreParametersHelper $coreParametersHelper,
+        private ListModel $listModel,
+        private LocalizedDateFormatter $dateFormatter,
+        private RouterInterface $router
+    ) {
     }
 
     public static function style(): string
     {
-        return str_replace('.patches-contact-badges', '.patches-details-badges', ContactDetailStatusSubscriber::STYLE);
+        return str_replace('.patches-contact-badges', '.patches-details-badges', ContactDetailStatusSubscriber::STYLE).self::SEGMENT_STYLE.UpdatingIndicator::STYLE;
     }
 
     public static function getSubscribedEvents(): array
@@ -85,8 +106,21 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
             $flags[] = 'filters';
         }
 
-        $attributes = '';
+        $count      = (int) $this->listModel->getRepository()->getLeadCount($list->getId());
         $builtAt    = $list->getLastBuiltDate();
+        $builtText  = null === $builtAt
+            ? $this->translator->trans('mautic.patches.segment.never_built')
+            : $this->translator->trans('mautic.patches.segment.last_built', ['%date%' => $this->dateFormatter->format((new DateTimeHelper($builtAt))->getLocalDateTime(), $this->translator->getLocale())]);
+        // The contacts badge and the "Updated on" line (SegmentLastBuiltSubscriber's text): written by the script of the page, which also swaps both while an Update runs.
+        $attributes = sprintf(
+            ' data-segment-id="%d" data-count="%d" data-count-text="%s" data-count-url="%s" data-built-text="%s" data-updating-text="%s"',
+            $list->getId(),
+            $count,
+            htmlspecialchars($this->translator->trans('mautic.lead.list.viewleads_count', ['%count%' => $count]), ENT_QUOTES),
+            htmlspecialchars($this->router->generate('mautic_contact_index', ['search' => $this->translator->trans('mautic.lead.lead.searchcommand.list').':'.$list->getAlias()]), ENT_QUOTES),
+            htmlspecialchars($builtText, ENT_QUOTES),
+            htmlspecialchars($this->translator->trans('mautic.patches.segment.updating'), ENT_QUOTES)
+        );
         $hours      = null !== $builtAt ? (time() - $builtAt->getTimestamp()) / 3600 : null;
         if (null !== $hours && $hours >= $this->coreParametersHelper->get('segment_rebuild_time_warning')) {
             $flags[]    = 'rebuild';
@@ -97,6 +131,6 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
             $attributes .= sprintf(' data-build-seconds="%d"', round($list->getLastBuiltTime()));
         }
 
-        return $flags ? sprintf(' data-flags="%s"', implode(',', $flags)).$attributes : '';
+        return ($flags ? sprintf(' data-flags="%s"', implode(',', $flags)) : '').$attributes;
     }
 }

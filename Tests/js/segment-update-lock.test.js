@@ -109,6 +109,10 @@ function boot({path: pathname = '/s/segments', search = ''} = {}) {
             return wrap(page.links.slice());
         }
 
+        if (arg === '.patches-count-badge' || arg === '.patches-segment-updated') { // the segment's own page, not built by this fake
+            return wrap([]);
+        }
+
         if (arg === '.segment-last-built') {
             return wrap(page.lines.slice());
         }

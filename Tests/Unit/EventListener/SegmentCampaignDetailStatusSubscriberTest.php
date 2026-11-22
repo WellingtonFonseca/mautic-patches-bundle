@@ -11,9 +11,13 @@ use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactDetailStatusSubscriber;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentCampaignDetailStatusSubscriber;
+use Mautic\CoreBundle\Translation\Translator;
+use Mautic\LeadBundle\Entity\LeadListRepository;
+use Mautic\LeadBundle\Model\ListModel;
+use MauticPlugin\MauticPatchesBundle\Service\LocalizedDateFormatter;
+use Symfony\Component\Routing\RouterInterface;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Group('area:campaign')]
 #[Group('risk:UI')]
@@ -23,14 +27,27 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
     /** @param array<string, mixed> $vars */
     private function html(array $vars, string $context = 'page.header.left'): string
     {
-        $translator = $this->createMock(TranslatorInterface::class);
+        $translator = $this->createMock(Translator::class);
         $translator->method('trans')->willReturnArgument(0);
+        $translator->method('getLocale')->willReturn('pt_BR');
+        $router = $this->createMock(RouterInterface::class);
+        $router->method('generate')->willReturn('/s/contacts?search=segment:x');
         $event = new CustomContentEvent('some_view', $context, $vars);
         $params = $this->createMock(CoreParametersHelper::class);
         $params->method('get')->willReturnMap([['segment_rebuild_time_warning', null, 30], ['segment_build_time_warning', null, 30]]);
-        (new SegmentCampaignDetailStatusSubscriber($translator, $params))->injectViewCustomContent($event);
+        (new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router))->injectViewCustomContent($event);
 
         return implode('', $event->getContent());
+    }
+
+    private function listModel(): ListModel
+    {
+        $repository = $this->createMock(LeadListRepository::class);
+        $repository->method('getLeadCount')->willReturn(6);
+        $model = $this->createMock(ListModel::class);
+        $model->method('getRepository')->willReturn($repository);
+
+        return $model;
     }
 
     private function campaign(bool $published, bool $restart): Campaign
@@ -49,6 +66,21 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $list->setIsGlobal(false); // a new LeadList is global
 
         return $list;
+    }
+
+    public function testASegmentCarriesItsCountAndLastBuiltTextForTheBadgeAndTheLine(): void
+    {
+        $html = $this->html(['list' => $this->segment(true)]);
+
+        $this->assertStringContainsString(' data-count="6"', $html);
+        $this->assertStringContainsString('data-count-text="mautic.lead.list.viewleads_count"', $html);
+        $this->assertStringContainsString('data-built-text="mautic.patches.segment.never_built"', $html);
+        $this->assertStringContainsString('data-updating-text="mautic.patches.segment.updating"', $html);
+    }
+
+    public function testACampaignHasNoSegmentMarks(): void
+    {
+        $this->assertStringNotContainsString('data-segment-id', $this->html(['campaign' => $this->campaign(true, false)]));
     }
 
     public function testSubscribesToTheContent(): void
@@ -74,8 +106,8 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
 
     public function testASegmentCarriesItsStatusAndNeverTheReentryMark(): void
     {
-        $this->assertStringContainsString('data-status="published"></span>', $this->html(['list' => $this->segment(true)]));
-        $this->assertStringContainsString('data-status="unpublished"></span>', $this->html(['list' => $this->segment(false)]));
+        $this->assertStringContainsString('data-status="published" data-segment-id=', $this->html(['list' => $this->segment(true)]));
+        $this->assertStringContainsString('data-status="unpublished" data-segment-id=', $this->html(['list' => $this->segment(false)]));
         $this->assertStringNotContainsString('data-restart', $this->html(['list' => $this->segment(true)]));
     }
 
@@ -113,7 +145,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $style = SegmentCampaignDetailStatusSubscriber::style();
 
         $this->assertStringNotContainsString('patches-contact-badges', $style);
-        $this->assertSame(
+        $this->assertStringStartsWith(
             str_replace('.patches-contact-badges', '.patches-details-badges', ContactDetailStatusSubscriber::STYLE),
             $style
         );
@@ -132,7 +164,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $list->setIsGlobal(true);
         $list->setFilters([['glue' => 'and', 'field' => 'email']]);
 
-        $this->assertStringContainsString('data-status="published" data-flags="global,filters"></span>', $this->html(['list' => $list]));
+        $this->assertStringContainsString('data-status="published" data-flags="global,filters" data-segment-id=', $this->html(['list' => $list]));
     }
 
     public function testTheWarningsCarryTheirNumbersWhenAtTheThreshold(): void
@@ -142,7 +174,8 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $list->setLastBuiltTime(41.4);
         $html = $this->html(['list' => $list]);
 
-        $this->assertStringContainsString(' data-flags="rebuild,slow" data-rebuild-hours="72" data-build-seconds="41"', $html);
+        $this->assertStringContainsString(' data-flags="rebuild,slow" data-segment-id=', $html);
+        $this->assertStringContainsString(' data-rebuild-hours="72" data-build-seconds="41"', $html);
 
         $list->setLastBuiltDate(new \DateTime('-30 hours'));
         $list->setLastBuiltTime(30.0);

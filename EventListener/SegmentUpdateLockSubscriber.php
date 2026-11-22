@@ -105,6 +105,18 @@ class SegmentUpdateLockSubscriber implements EventSubscriberInterface
                 .'$badge.removeClass("label label-gray label-blue patches-badge--info patches-badge--neutral").addClass("patches-badge patches-badge--soft patches-badge--warning patches-badge--updating").empty().append($spinner).append(mQuery("<span class=\\"mautic-patches-updating-text\\"></span>").text($line.data("updating-text")));'
                 .'$line.empty().append(mQuery("<small></small>").text("."));')
             .'});'
+            // The segment's own page (segment-campaign-detail-badges.js): its contacts badge and "Updated on" line get the same swap.
+            .($campaign ? '' : 'mQuery(".patches-count-badge").each(function(){'
+                .'var $b=mQuery(this),id=String($b.data("segment-id"));'
+                .'if(!locked[id]||$b.data("mauticPatchesUpdating")){return;}'
+                .'$b.data("mauticPatchesUpdating",true);'
+                .'$b.removeClass("patches-badge--info patches-badge--neutral").addClass("patches-badge--warning").empty().append(mQuery(\''.self::SPINNER_SVG.'\')).append(mQuery("<span class=\\"mautic-patches-updating-text\\"></span>").text($b.data("updating-text")));'
+                .'});'
+                .'mQuery(".patches-segment-updated").each(function(){'
+                .'var $l=mQuery(this),id=String($l.data("segment-id"));'
+                .'if(!locked[id]||$l.data("mauticPatchesUpdating")){return;}'
+                .'$l.data("mauticPatchesUpdating",true).text(".");'
+                .'});')
             .'}'
             // Capture phase: runs before core's ajax link handler, so a click on a locked link never reaches it.
             .'document.addEventListener("click",function(event){'
@@ -137,6 +149,7 @@ class SegmentUpdateLockSubscriber implements EventSubscriberInterface
             .'setTimeout(decorate,0);'
             .($campaign ? 'next();' : 'check();')
             .'},true);'
+            .($campaign ? '' : 'window.mauticPatchesSegmentDecorate=decorate;')
             .'var original=Mautic.onPageLoad;'
             .'Mautic.onPageLoad=function(){var result=original.apply(this,arguments);decorate();return result;};'
             .'})();';
