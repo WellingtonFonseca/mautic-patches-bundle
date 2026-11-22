@@ -282,3 +282,63 @@ test('a campaign page gets neither the contacts badge nor the line', () => {
     assert.strictEqual(p.bar.children[0].children.length, 1);
     assert.strictEqual(p.header.children.length, 1);
 });
+
+// WEL-91: the head of the details modal of the segment list: name as h1, then the badges, then the "Updated on" line
+function modalHead(marker) {
+    const markerNode = {getAttribute: (k) => marker[k]};
+    const host = node('div');
+    const find = (s) => {
+        const box = host.children.find((c) => c.className === 'patches-details-badges');
+
+        return s === '.patches-count-badge' && box ? box.children.find((c) => c.className.indexOf('patches-count-badge') > -1) || null : null;
+    };
+    host.querySelector = (s) => (s === '.patches-detail-status' ? markerNode : find(s));
+    const doc = {
+        querySelector: (s) => (s === '.patches-modal-head' ? host : null),
+        createElement: (tag) => {
+            const n = node(tag);
+            n.listeners = {};
+            n.addEventListener = (type, fn) => { n.listeners[type] = fn; };
+
+            return n;
+        }
+    };
+
+    return {doc, host};
+}
+
+test('the modal head is the segment name as the page title (h1), then the badges, then the "Updated on" line', () => {
+    const {doc, host} = modalHead(segMarker({'data-name': 'Clientes <VIP> & "co"'}));
+    assert.strictEqual(api.renderModalHead(doc, cfg), true);
+    const [h1, box, line] = host.children;
+    assert.strictEqual(host.children.length, 3);
+    assert.strictEqual(h1.name, 'h1');
+    assert.ok(h1.className.indexOf('page-header-title') > -1);
+    assert.strictEqual(h1.textContent, 'Clientes <VIP> & "co"');
+    assert.strictEqual(box.className, 'patches-details-badges');
+    assert.strictEqual(box.children[0].textContent, '6 contatos');
+    assert.strictEqual(box.children[1].attrs.title, 'Ativo');
+    assert.ok(line.className.indexOf('patches-segment-updated') > -1);
+    assert.strictEqual(line.textContent, 'Atualizado em 01/01/2026');
+    assert.strictEqual(line.attrs['data-segment-id'], '9');
+});
+
+test('a modal head without a name leaves an empty heading; a campaign marker or no host draws nothing', () => {
+    const {doc, host} = modalHead(segMarker());
+    assert.strictEqual(api.renderModalHead(doc, cfg), true);
+    assert.strictEqual(host.children[0].textContent, '');
+
+    const campaign = modalHead({'data-status': 'published'});
+    assert.strictEqual(api.renderModalHead(campaign.doc, cfg), false);
+    assert.strictEqual(campaign.host.children.length, 0);
+    assert.strictEqual(api.renderModalHead({querySelector: () => null}, cfg), false);
+});
+
+test('the contacts badge of the modal head links to the contacts and listens to the click (that closes the modal, it leaves the page)', () => {
+    const {doc, host} = modalHead(segMarker({'data-name': 'X'}));
+    api.renderModalHead(doc, cfg);
+    const badge = host.children[1].children[0];
+    assert.strictEqual(badge.attrs.href, '/s/contacts?search=segment:x');
+    assert.strictEqual(typeof badge.listeners.click, 'function');
+    assert.doesNotThrow(() => badge.listeners.click()); // no mQuery in node: must not throw
+});

@@ -64,6 +64,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $list = new LeadList();
         $list->setIsPublished($published);
         $list->setIsGlobal(false); // a new LeadList is global
+        $list->setName('Segment');
 
         return $list;
     }
@@ -214,5 +215,41 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $list->setLastBuiltDate(new \DateTime('-107990 seconds')); // 29.997 h
 
         $this->assertStringNotContainsString('data-flags', $this->html(['list' => $list]));
+    }
+
+    private function modalHead(LeadList $list): string
+    {
+        $translator = $this->createMock(Translator::class);
+        $translator->method('trans')->willReturnArgument(0);
+        $translator->method('getLocale')->willReturn('pt_BR');
+        $router = $this->createMock(RouterInterface::class);
+        $router->method('generate')->willReturn('/s/contacts?search=segment:x');
+        $params = $this->createMock(CoreParametersHelper::class);
+        $params->method('get')->willReturnMap([['segment_rebuild_time_warning', null, 30], ['segment_build_time_warning', null, 30]]);
+
+        return (new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router))->modalHeadHtml($list);
+    }
+
+    public function testTheModalHeadCarriesTheSegmentNameEscapedAndTheSameMarkAsThePage(): void
+    {
+        $list = $this->segment(true);
+        $list->setName('Clientes <b>"VIP"</b> & co');
+        $html = $this->modalHead($list);
+
+        $this->assertStringContainsString('class="patches-modal-head', $html);
+        $this->assertStringContainsString('data-name="Clientes &lt;b&gt;&quot;VIP&quot;&lt;/b&gt; &amp; co"', $html);
+        $this->assertStringNotContainsString('<b>', $html);
+        $this->assertStringContainsString('data-status="published"', $html);
+        $this->assertStringContainsString(' data-count="6"', $html);
+        $this->assertStringContainsString('data-built-text="mautic.patches.segment.never_built"', $html);
+    }
+
+    public function testTheModalHeadOfAnInactiveSegmentIsUnpublishedAndItsMarkerComesBeforeTheModalScript(): void
+    {
+        $html = $this->modalHead($this->segment(false));
+
+        $this->assertStringContainsString('data-status="unpublished"', $html);
+        $this->assertStringContainsString('installSegmentModalHead', $html);
+        $this->assertLessThan(strpos($html, 'installSegmentModalHead'), strpos($html, 'patches-detail-status'));
     }
 }
