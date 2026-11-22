@@ -38,7 +38,8 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         .'.patches-count-badge.patches-badge--warning{background-color:rgba(251,140,0,.16);color:#fb8c00;box-shadow:inset 0 0 0 1px rgba(251,140,0,.45)}'
         .'.patches-count-badge>svg{display:block;flex:none;margin:0!important;vertical-align:baseline!important}'
         .'.patches-count-badge>.mautic-patches-updating-text{display:inline;animation:none;line-height:inherit}'
-        .'.patches-segment-updated{display:block;margin:4px 0 0;font-size:14px;text-align:right}';
+        .'.patches-segment-updated{display:block;margin:4px 0 0;font-size:14px;text-align:right}'
+        .'.patches-modal-head .patches-segment-updated{text-align:left}';
 
     public function __construct(
         private Translator $translator,
