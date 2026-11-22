@@ -53,6 +53,14 @@ class SegmentFiltersTabSubscriberTest extends TestCase
         $this->assertStringContainsString('mQuery("<li>",{"class":"active"})', $js);
     }
 
+    public function testTheContactsTabAndItsFilterFormAreRemoved(): void
+    {
+        $js = $this->content();
+
+        $this->assertStringContainsString('$nav.children("li").has("a[href=\\"#contacts-container\\"]").remove();', $js);
+        $this->assertStringContainsString('mQuery("#segment-contact-filters").hide();', $js);
+    }
+
     public function testTheSegmentIdComesFromTheContactsPaneAndTheFiltersAreLoadedFromTheRoute(): void
     {
         $js = $this->content();

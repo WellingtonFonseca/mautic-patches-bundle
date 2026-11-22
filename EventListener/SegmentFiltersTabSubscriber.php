@@ -11,14 +11,13 @@ use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * A "Filtros" tab, first of the tabs of the segment page (before Contatos and Compartilhamento de campanhas), that
+ * A "Filtros" tab, first of the tabs of the segment page (Contatos is removed: the contacts badge replaces it), that
  * shows the filters the segment applies. Until now they could only be seen by opening the edit form.
  *
  * Core's template has no hook for a tab, and is not touched: a script adds the tab (<li>) and its pane to the page's
  * tabs, on the first load and after every Mautic ajax page load (it wraps Mautic.onPageLoad, like the other page
  * scripts), and fills the pane from GET /s/segment-filters/{id} (SegmentFiltersController). The segment's id is read
- * from the contacts pane's data-target-url. The tab is the active one, so the page opens on it (Contatos is one click away; its
- * pane still loads in the background). It acts only on a page that has `#contacts-container`, and once per page.
+ * from the contacts pane's data-target-url. The tab is the active one. The Contatos tab is removed (its <li>, and the contacts filter form); its empty pane stays hidden. It acts only on a page that has `#contacts-container`, and once per page.
  *
  * Injected the same way as the other page scripts (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left').
  */
@@ -66,6 +65,9 @@ class SegmentFiltersTabSubscriber implements EventSubscriberInterface
             .'$contacts.siblings(".tab-pane").addBack().removeClass("active");'
             .'var $pane=mQuery("<div>",{"class":"tab-pane bdr-w-0 active",id:"segment-filters-container"});'
             .'$contacts.parent().prepend($pane);'
+            // The Contatos tab is gone (the contacts badge opens the list): its <li> and the contacts filter form go; the empty pane stays, never shown, as the id source of the scripts above.
+            .'$nav.children("li").has("a[href=\\"#contacts-container\\"]").remove();'
+            .'mQuery("#segment-contact-filters").hide();'
             .'$nav.prepend(mQuery("<li>",{"class":"active"}).append(mQuery("<a>",{href:"#segment-filters-container",role:"tab","data-toggle":"tab"}).text('.json_encode($title, JSON_UNESCAPED_UNICODE).')));'
             .'mQuery.get('.json_encode($filtersBase, JSON_UNESCAPED_SLASHES).'+m[1]).done(function(html){$pane.html(html);});'
             .'}'
