@@ -83,6 +83,20 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         );
     }
 
+    /**
+     * The head of the segment list's details modal (details_modal.html.twig): the same marker as the segment page, with the segment's name, and the
+     * script that draws the title, the badges and the "Updated on" line from it. The marker lives in the host, which the script replaces.
+     */
+    public function modalHeadHtml(LeadList $list): string
+    {
+        return sprintf(
+            '<div class="patches-modal-head patches-details-badges-host"><span class="patches-detail-status" hidden data-status="%s" data-name="%s"%s></span></div>',
+            $list->isPublished() ? 'published' : 'unpublished',
+            htmlspecialchars($list->getName(), ENT_QUOTES),
+            $this->segmentAttributes($list)
+        ).StatusScript::html($this->translator, self::style(), 'installSegmentModalHead', self::SCRIPT);
+    }
+
     private function markerAttributes(Campaign|LeadList $entity): string
     {
         if ($entity instanceof LeadList) {

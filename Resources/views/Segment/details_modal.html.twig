@@ -6,6 +6,7 @@
 #}
 {{ include('@MauticPatches/Contact/contacts_modal_width.html.twig', {'modalClass': 'mautic-patches-segment-details'}) }}
 <div class="mautic-patches-segment-details" data-segment-id="{{ list.id }}">
+    {{ headHtml|raw }}
     <ul class="nav nav-tabs nav-tabs-contained" role="tablist">
         <li class="active"><a href="#patches-segment-details" role="tab" data-toggle="tab">{{ 'mautic.core.details'|trans }}</a></li>
         <li><a href="#patches-segment-filters" role="tab" data-toggle="tab">{{ 'mautic.core.filters'|trans }}</a></li>

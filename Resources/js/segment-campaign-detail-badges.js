@@ -90,6 +90,41 @@
         (header || bar.parentNode).appendChild(line);
     }
 
+    /** The box of circles of a marker: the contacts badge (a segment), then the status and the flags. */
+    function buildBox(doc, marker, cfg) {
+        var box = doc.createElement('div');
+        box.className = BOX_CLASS;
+        badgesOf(marker, cfg).forEach(function (b) {
+            box.appendChild(b.channel === 'restart' ? list.restartBadge(doc, cfg.restart) : list.extraBadge(doc, b));
+        });
+        if (marker.segment) { box.insertBefore(countBadge(doc, marker.segment), box.firstChild); }
+
+        return box;
+    }
+
+    /**
+     * The head of the details modal of the segment list (SegmentDetailsController): the title is the segment's name, then the same badges as the
+     * segment page (buildBox), then the "Updated on ..." line. The marker and the host (.patches-modal-head) are in the body of the modal.
+     */
+    function renderModalHead(doc, cfg) {
+        var host = doc.querySelector('.patches-modal-head'), marker = host ? readMarker(host) : null;
+        if (!marker || !marker.segment) { return false; }
+
+        var title = doc.querySelector('#MauticSharedModal .modal-title');
+        if (title) { title.textContent = host.querySelector('.patches-detail-status').getAttribute('data-name') || title.textContent; }
+        host.textContent = '';
+        host.appendChild(buildBox(doc, marker, cfg));
+        var line = doc.createElement('div');
+        line.className = 'patches-segment-updated text-muted';
+        line.setAttribute('data-segment-id', marker.segment.id);
+        line.setAttribute('data-updating-text', marker.segment.updatingText);
+        line.textContent = marker.segment.builtText;
+        host.appendChild(line);
+        if (root.mauticPatchesSegmentDecorate) { root.mauticPatchesSegmentDecorate(); }
+
+        return true;
+    }
+
     function signature(marker) {
         var seg = marker.segment;
 
@@ -111,13 +146,8 @@
         if (old && old.getAttribute('data-state') === sign) { return false; }
         if (old) { old.parentNode.removeChild(old); }
 
-        var box = doc.createElement('div');
-        box.className = BOX_CLASS;
+        var box = buildBox(doc, marker, cfg);
         box.setAttribute('data-state', sign);
-        badgesOf(marker, cfg).forEach(function (b) {
-            box.appendChild(b.channel === 'restart' ? list.restartBadge(doc, cfg.restart) : list.extraBadge(doc, b));
-        });
-        if (marker.segment) { box.insertBefore(countBadge(doc, marker.segment), box.firstChild); }
         bar.insertBefore(box, bar.firstChild);
         placeUpdatedLine(doc, bar, marker.segment);
         // an Update that is running (SegmentUpdateLockSubscriber) owns the badge and the line until the page reloads
@@ -150,7 +180,18 @@
     }
 
     list.installSegmentCampaignDetail = installSegmentCampaignDetail;
-    var api = {countBadge: countBadge, isDetailsPath: isDetailsPath, readMarker: readMarker, badgesOf: badgesOf, addDetailBadges: addDetailBadges, installSegmentCampaignDetail: installSegmentCampaignDetail};
+    list.installSegmentModalHead = function ($, Mautic, cfg) {
+        if (!root.document.querySelector('.patches-modal-head')) { return; }
+        root.mauticPatchesStyles = root.mauticPatchesStyles || {};
+        if (!root.mauticPatchesStyles[cfg.style]) {
+            root.mauticPatchesStyles[cfg.style] = true;
+            var style = root.document.createElement('style');
+            style.textContent = cfg.style;
+            root.document.head.appendChild(style);
+        }
+        renderModalHead(root.document, cfg);
+    };
+    var api = {countBadge: countBadge, isDetailsPath: isDetailsPath, readMarker: readMarker, buildBox: buildBox, renderModalHead: renderModalHead, badgesOf: badgesOf, addDetailBadges: addDetailBadges, installSegmentCampaignDetail: installSegmentCampaignDetail};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
