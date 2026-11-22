@@ -114,6 +114,9 @@
         if (title) { title.textContent = host.querySelector('.patches-detail-status').getAttribute('data-name') || title.textContent; }
         host.textContent = '';
         host.appendChild(buildBox(doc, marker, cfg));
+        // the contacts badge leaves the modal's page: close the modal, as the Edit and Details buttons do
+        var link = host.querySelector('.patches-count-badge');
+        if (link) { link.addEventListener('click', function () { if (root.mQuery) { root.mQuery('#MauticSharedModal').modal('hide'); } }); }
         var line = doc.createElement('div');
         line.className = 'patches-segment-updated text-muted';
         line.setAttribute('data-segment-id', marker.segment.id);
