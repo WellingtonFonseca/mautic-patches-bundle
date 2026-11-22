@@ -8,10 +8,10 @@ This folder is the wiki of the MauticPatchesBundle plugin (core UI fixes and sma
 
 - [ui-badge.md](../../wiki/ui-badge.md) (shared, root wiki) — the status badge look, the icon badge, the hover opening and the nowrap rule; twins of the n8n badge.
 - [ui-status-column.md](../../wiki/ui-status-column.md) (shared, root wiki) — the Status column of the lists and the Ativar / Desativar item of the row menu.
-- [ui-botao.md](ui-botao.md) — button hover, danger items of the row menu, the dark theme text of buttons.
+- [ui-button.md](ui-button.md) — button hover, danger items of the row menu, the dark theme text of buttons.
 - [ui-modal.md](ui-modal.md) — modal footers, form buttons, single primary button, widths, long text in modal tables.
-- [ui-notificacao.md](ui-notificacao.md) — position, times and dark look of the toast notification.
-- [ui-tema.md](ui-tema.md) — rules of every dark / light theme fix (variables, scope, contrast).
+- [ui-notification.md](ui-notification.md) — position, times and dark look of the toast notification.
+- [ui-theme.md](ui-theme.md) — rules of every dark / light theme fix (variables, scope, contrast).
 - [ui-tooltip.md](ui-tooltip.md) — tooltip trigger and tooltips of buttons that go away.
 
 ## Funcionalidades

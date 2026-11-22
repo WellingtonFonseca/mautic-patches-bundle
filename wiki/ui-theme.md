@@ -7,4 +7,4 @@ regras:
 - Always read the contrast in both a dark and a light theme: specs check dark, solarized-dark and light; a `color-mix()` value is read back as `color(srgb ...)` with channels 0 to 1.
 - A label chip must use `label-gray` (colors from the theme variables `--label-*-gray`): `label-default` has a fixed light gray, unreadable in the dark theme.
 - Any new element uses the theme variables (`var(--background)`, `var(--text-primary)`, `--border-subtle` ...), never fixed colors, so both themes follow.
-- Toast, notification and menu hover: [ui-notificacao.md](ui-notificacao.md), [ui-botao.md](ui-botao.md).
+- Toast, notification and menu hover: [ui-notification.md](ui-notification.md), [ui-button.md](ui-button.md).
