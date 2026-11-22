@@ -3,6 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-22
+- Na janela de detalhes do segmento (clique no nome na lista), o nome do segmento aparece como título, com o selo de contatos e os selos de status abaixo e a linha "Atualizado em ..." logo depois. O selo de contatos fecha a janela e leva à lista de contatos
 - A aba Contatos foi removida da página do segmento e da janela de detalhes do segmento: os contatos ficam no selo de contatos, que leva à lista
 - Na página do segmento, o selo de contatos da lista (azul com contatos, cinza vazio) aparece à esquerda dos selos de status, na mesma altura, e leva aos contatos do segmento
 - Na página do segmento, a linha "Atualizado em ..." da lista aparece abaixo dos botões, alinhada à direita. Ao clicar em Atualizar no menu, o selo de contatos vira "Atualizando" e a linha vira ".", como na lista, até a página recarregar
