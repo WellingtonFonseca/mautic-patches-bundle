@@ -103,16 +103,20 @@
     }
 
     /**
-     * The head of the details modal of the segment list (SegmentDetailsController): the title is the segment's name, then the same badges as the
+     * The head of the details modal of the segment list (SegmentDetailsController): the segment's name as a heading, then the same badges as the
      * segment page (buildBox), then the "Updated on ..." line. The marker and the host (.patches-modal-head) are in the body of the modal.
      */
     function renderModalHead(doc, cfg) {
         var host = doc.querySelector('.patches-modal-head'), marker = host ? readMarker(host) : null;
         if (!marker || !marker.segment) { return false; }
 
-        var title = doc.querySelector('#MauticSharedModal .modal-title');
-        if (title) { title.textContent = host.querySelector('.patches-detail-status').getAttribute('data-name') || title.textContent; }
+        var name = host.querySelector('.patches-detail-status').getAttribute('data-name') || '';
         host.textContent = '';
+        // the modal's own title stays "Details"; the segment's name is the heading of the page (an h3, as the segment page's title) above the badges
+        var heading = doc.createElement('h3');
+        heading.className = 'patches-modal-name mt-0';
+        heading.textContent = name;
+        host.appendChild(heading);
         host.appendChild(buildBox(doc, marker, cfg));
         // the contacts badge leaves the modal's page: close the modal, as the Edit and Details buttons do
         var link = host.querySelector('.patches-count-badge');
