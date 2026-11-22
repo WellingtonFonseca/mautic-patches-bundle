@@ -217,3 +217,68 @@ test('a change of the flags alone draws the box again', () => {
     assert.notStrictEqual(p.bar.children[0], first);
     assert.strictEqual(p.bar.children[0].children.length, 3);
 });
+
+// WEL-77: the contacts badge and the "Updated on" line of the segment page
+const segMarker = (extra = {}) => Object.assign({
+    'data-status': 'published', 'data-segment-id': '9', 'data-count': '6', 'data-count-text': '6 contatos', 'data-count-url': '/s/contacts?search=segment:x',
+    'data-built-text': 'Atualizado em 01/01/2026', 'data-updating-text': 'Atualizando'
+}, extra);
+
+/** A segment page whose toolbar sits in a .page-header, with a recorder of what the script puts in the header. */
+function segmentPage(marker) {
+    const p = page(marker, '/s/segments/view/9');
+    const header = node('div');
+    header.appendChild(p.bar);
+    p.bar.closest = (s) => (s === '.page-header' ? header : null);
+    const base = p.doc.querySelector;
+    p.doc.querySelector = (s) => (s === '.patches-segment-updated' ? header.children.find((c) => c.className.indexOf('patches-segment-updated') > -1) || null : base(s));
+
+    return Object.assign(p, {header});
+}
+
+test('the marker of a segment carries the count, the link and the two texts; a campaign has none', () => {
+    const seg = api.readMarker(segmentPage(segMarker()).doc).segment;
+    assert.deepStrictEqual(seg, {id: '9', count: 6, countText: '6 contatos', countUrl: '/s/contacts?search=segment:x', builtText: 'Atualizado em 01/01/2026', updatingText: 'Atualizando'});
+    assert.strictEqual(api.readMarker(page({'data-status': 'published'}).doc).segment, null);
+});
+
+test('the contacts badge is the first of the box, a link to the contacts of the segment; blue with contacts, gray when empty', () => {
+    const p = segmentPage(segMarker());
+    api.addDetailBadges(p.doc, cfg);
+    const box = p.bar.children[0], badge = box.children[0];
+    assert.strictEqual(badge.textContent, '6 contatos');
+    assert.strictEqual(badge.attrs.href, '/s/contacts?search=segment:x');
+    assert.ok(badge.className.indexOf('patches-count-badge') > -1 && badge.className.indexOf('patches-badge--info') > -1);
+    assert.strictEqual(badge.attrs['data-segment-id'], '9');
+    assert.strictEqual(box.children[1].attrs.title, 'Ativo');
+
+    const empty = segmentPage(segMarker({'data-count': '0', 'data-count-text': '0 contatos'}));
+    api.addDetailBadges(empty.doc, cfg);
+    assert.ok(empty.bar.children[0].children[0].className.indexOf('patches-badge--neutral') > -1);
+});
+
+test('the "Updated on" line is written once in the header, with the built text; a new count or date replaces it', () => {
+    const marker = segMarker();
+    const p = segmentPage(marker);
+    api.addDetailBadges(p.doc, cfg);
+    const lines = () => p.header.children.filter((c) => c.className.indexOf('patches-segment-updated') > -1);
+    assert.strictEqual(lines().length, 1);
+    assert.strictEqual(lines()[0].textContent, 'Atualizado em 01/01/2026');
+    assert.strictEqual(lines()[0].attrs['data-segment-id'], '9');
+
+    assert.strictEqual(api.addDetailBadges(p.doc, cfg), false);
+    assert.strictEqual(lines().length, 1);
+
+    marker['data-built-text'] = 'Atualizado em 02/01/2026';
+    marker['data-count'] = '7';
+    assert.ok(api.addDetailBadges(p.doc, cfg));
+    assert.strictEqual(lines().length, 1);
+    assert.strictEqual(lines()[0].textContent, 'Atualizado em 02/01/2026');
+});
+
+test('a campaign page gets neither the contacts badge nor the line', () => {
+    const p = segmentPage({'data-status': 'published'});
+    api.addDetailBadges(p.doc, cfg);
+    assert.strictEqual(p.bar.children[0].children.length, 1);
+    assert.strictEqual(p.header.children.length, 1);
+});
