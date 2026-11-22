@@ -198,6 +198,8 @@
     function colorCounts(doc) {
         var badges = doc.querySelectorAll('a.col-count');
         for (var k = 0; k < badges.length; k++) {
+            // rebuilding: SegmentUpdateLockSubscriber owns this badge (spinner + "Updating...") until the page reloads
+            if (badges[k].classList.contains('patches-badge--updating')) { continue; }
             var match = /\d+/.exec(badges[k].textContent);
             // core writes "Sem contatos" / "No contacts" for an empty segment: no number means empty
             var filled = !!match && parseInt(match[0], 10) > 0;

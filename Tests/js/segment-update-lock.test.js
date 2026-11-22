@@ -63,7 +63,7 @@ function wrap(nodes) {
     const w = {
         nodes,
         each(fn)     { nodes.forEach((n) => fn.call(n)); return w; },
-        addClass(c)  { nodes.forEach((n) => n.classes.add(c)); return w; },
+        addClass(c)  { nodes.forEach((n) => c.split(' ').forEach((k) => n.classes.add(k))); return w; },
         attr(k, v)   { if (v === undefined) { return nodes[0] ? nodes[0].attrs[k] : undefined; } nodes.forEach((n) => { n.attrs[k] = v; }); return w; },
         css(k, v)    { nodes.forEach((n) => { n.style[k] = v; }); return w; },
         data(k, v)   {
@@ -74,6 +74,9 @@ function wrap(nodes) {
         empty()      { nodes.forEach((n) => { n.children = []; }); return w; },
         append(x)    { nodes.forEach((n) => n.children.push(...x.nodes)); return w; },
         text(t)      { nodes.forEach((n) => { n.children = [String(t)]; }); return w; },
+        removeClass(c) { nodes.forEach((n) => c.split(' ').forEach((k) => n.classes.delete(k))); return w; },
+        closest()    { return wrap(nodes.map((n) => n.row).filter(Boolean)); },
+        find()       { return wrap(nodes.map((n) => n.badge).filter(Boolean)); },
     };
 
     return w;
@@ -143,7 +146,11 @@ function boot({path: pathname = '/s/segments', search = ''} = {}) {
         render({links = [], lines = []}) {
             page.links = links.map(({id, href}) => new Node('a', {href: href || `/s/segment-rebuild/${id}`, 'data-toggle': 'ajax'}));
             page.lines = lines.map(({id, text}) => new Node('div', {class: 'text-muted mt-4 segment-last-built', 'data-segment-id': String(id), 'data-updating-text': 'Atualizando...'}));
-            page.lines.forEach((line, i) => line.children.push(lines[i].text || 'Atualizado em ontem'));
+            page.lines.forEach((line, i) => {
+                line.children.push(lines[i].text || 'Atualizado em ontem');
+                line.badge = new Node('a', {class: 'label label-gray col-count'});
+                line.row   = {badge: line.badge};
+            });
 
             return Mautic.onPageLoad();
         },
@@ -293,10 +300,12 @@ test('the clicked segment\'s line becomes the spinner and "Atualizando..."; the 
     env.advance(0);
     const [line7, line8] = env.page.lines;
 
-    const small = line7.children[0];
-    assert.strictEqual(small.tag, 'small');
-    assert.ok(small.classes.has('mautic-patches-updating'));
-    assert.strictEqual(small.children[0].tag, 'svg', 'the spinner is an inline SVG');
+    const small = line7.badge;
+    assert.ok(small.classes.has('patches-badge--warning') && small.classes.has('patches-badge--soft') && !small.classes.has('label'));
+    assert.deepStrictEqual(line7.children[0].children, ['.'], 'the old spot only holds a dot');
+    assert.strictEqual(line8.badge.classes.has('patches-badge--warning'), false);
+    assert.strictEqual(small.children[0].tag, 'svg');
+    // the spinner is an inline SVG
     assert.ok(small.children[0].html.includes('animation:ri-spin'));
     assert.strictEqual(small.children[1].tag, 'span');
     assert.ok(small.children[1].classes.has('mautic-patches-updating-text'));
@@ -309,11 +318,11 @@ test('the line is rewritten once, not on every page load', () => {
     env.render({links: [{id: 7}], lines: [{id: 7}]});
     env.click(env.page.links[0]);
     env.advance(0);
-    const small = env.page.lines[0].children[0];
+    const small = env.page.lines[0].badge.children[0];
 
     env.Mautic.onPageLoad();
 
-    assert.strictEqual(env.page.lines[0].children[0], small);
+    assert.strictEqual(env.page.lines[0].badge.children[0], small);
 });
 
 // ---- the page is replaced under the lock ------------------------------------------------------------------------------

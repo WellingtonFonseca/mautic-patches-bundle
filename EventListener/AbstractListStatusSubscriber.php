@@ -34,7 +34,9 @@ abstract class AbstractListStatusSubscriber implements EventSubscriberInterface
         .'.patches-badge--neutral{background-color:#787878}'
         // --soft: the translucent extra (like a Tailwind opacity) for the colors that have one: the contact count of the segment list
         .'.patches-badge--info.patches-badge--soft{background-color:rgba(30,136,229,.16);color:#1e88e5;box-shadow:inset 0 0 0 1px rgba(30,136,229,.45)}'
-        .'.patches-badge--neutral.patches-badge--soft{background-color:rgba(120,120,120,.16);color:var(--text-secondary,#6f6f6f);box-shadow:inset 0 0 0 1px rgba(120,120,120,.4)}';
+        .'.patches-badge--neutral.patches-badge--soft{background-color:rgba(120,120,120,.16);color:var(--text-secondary,#6f6f6f);box-shadow:inset 0 0 0 1px rgba(120,120,120,.4)}'
+        // --warning: the count badge while its segment is rebuilding ("<spinner> Updating...")
+        .'.patches-badge--warning.patches-badge--soft{background-color:rgba(251,140,0,.16);color:#fb8c00;box-shadow:inset 0 0 0 1px rgba(251,140,0,.45)}';
 
     /**
      * The badges of the Status column of the lists (segment, campaign, user, email: Resources/js/list-status-toggle.js, addStatusColumn): the status and,

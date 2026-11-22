@@ -98,7 +98,12 @@ class SegmentUpdateLockSubscriber implements EventSubscriberInterface
             .'if(!locked[id]||$line.data("mauticPatchesUpdating")){return;}'
             .'$line.data("mauticPatchesUpdating",true);'
             .'var $spinner=mQuery(\''.self::SPINNER_SVG.'\');'
-            .'$line.empty().append(mQuery("<small class=\\"mautic-patches-updating\\"></small>").append($spinner).append(mQuery("<span class=\\"mautic-patches-updating-text\\"></span>").text($line.data("updating-text"))));'
+            .($campaign
+                ? '$line.empty().append(mQuery("<small class=\\"mautic-patches-updating\\"></small>").append($spinner).append(mQuery("<span class=\\"mautic-patches-updating-text\\"></span>").text($line.data("updating-text"))));'
+                // Segment: the spinner and "Updating..." go inside the row's contact count badge (soft orange, "warn"); the old spot only holds a ".".
+                : 'var $badge=$line.closest("tr").find("a.col-count");'
+                .'$badge.removeClass("label label-gray label-blue patches-badge--info patches-badge--neutral").addClass("patches-badge patches-badge--soft patches-badge--warning patches-badge--updating").empty().append($spinner).append(mQuery("<span class=\\"mautic-patches-updating-text\\"></span>").text($line.data("updating-text")));'
+                .'$line.empty().append(mQuery("<small></small>").text("."));')
             .'});'
             .'}'
             // Capture phase: runs before core's ajax link handler, so a click on a locked link never reaches it.
