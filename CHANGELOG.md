@@ -2,6 +2,10 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-22
+- Na página do segmento, o selo de contatos da lista (azul com contatos, cinza vazio) aparece à esquerda dos selos de status, na mesma altura, e leva aos contatos do segmento
+- Na página do segmento, a linha "Atualizado em ..." da lista aparece abaixo dos botões, alinhada à direita. Ao clicar em Atualizar no menu, o selo de contatos vira "Atualizando" e a linha vira ".", como na lista, até a página recarregar
+
 ## 2026-11-19
 - O nó Esperar não tem mais o campo Nome: o nome fica em uma linha só, sem repetir o título "Esperar" que o canvas já mostra (ex.: "2 dias depois de Data de nascimento"), calculado ao salvar o nó e de novo ao salvar a campanha (API, MCP e importação também). Campo de data removido: "(campo de data não encontrado)". Renomear o campo depois não renomeia o nó até o próximo save. Nós antigos: faça backup de `campaign_events` (mysqldump), rode `mautic:patches:wait:rename --dry-run` e depois sem ele
 
