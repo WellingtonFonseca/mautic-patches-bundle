@@ -135,6 +135,16 @@ test('colorCounts: every count gets the --soft extra, also one that already has 
     assert.ok(solid.classes.has('patches-badge--soft'), 'a solid blue count with the right color still becomes translucent');
 });
 
+test('colorCounts: a count badge that is rebuilding (spinner + "Updating") keeps its warning look and is not recolored', () => {
+    const classes = new Set(['col-count', 'patches-badge', 'patches-badge--soft', 'patches-badge--warning', 'patches-badge--updating']);
+    const updating = {textContent: 'Atualizando', removeAttribute: () => {}, classList: {contains: (n) => classes.has(n), add: (...n) => n.forEach((x) => classes.add(x)), remove: (...n) => n.forEach((x) => classes.delete(x)), toggle: (name, on) => { if (on) { classes.add(name); } else { classes.delete(name); } }}};
+
+    api.colorCounts({querySelectorAll: () => [updating]});
+
+    assert.ok(classes.has('patches-badge--warning') && classes.has('patches-badge--updating'));
+    assert.ok(!classes.has('patches-badge--neutral') && !classes.has('patches-badge--info'), 'no number in the text must not turn it into the gray "no contacts" badge');
+});
+
 test('toggleUpdate: the Update item of the row is shown while the campaign is active and hidden otherwise, only the one of that campaign', () => {
     const link = () => ({attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, removeAttribute(k) { delete this.attrs[k]; }});
     const mine = link(), other = link();

@@ -77,8 +77,14 @@ class SegmentUpdateLockSubscriberTest extends TestCase
         (new SegmentUpdateLockSubscriber())->injectViewCustomContent($event);
         $all = implode('', $event->getContent());
 
-        $this->assertStringContainsString('<small class=\\"mautic-patches-updating\\">', $all);
+        // segment: the spinner and the text go inside the row's contact count badge (soft warning); the old spot only holds a "."
+        $this->assertStringContainsString('$line.closest("tr").find("a.col-count")', $all);
+        $this->assertStringContainsString('.addClass("patches-badge patches-badge--soft patches-badge--warning patches-badge--updating").empty().append($spinner)', $all);
+        $this->assertStringContainsString('removeClass("label label-gray label-blue patches-badge--info patches-badge--neutral")', $all);
+        $this->assertStringContainsString('$line.empty().append(mQuery("<small></small>").text("."));', $all);
+        $this->assertStringNotContainsString('<small class=\\"mautic-patches-updating\\">', $all, 'the segment line no longer carries the spinner');
         $this->assertStringContainsString('<span class=\\"mautic-patches-updating-text\\">', $all);
+        $this->assertStringContainsString('.patches-badge--updating>.mautic-patches-updating-text{display:inline;animation:none;line-height:inherit}', $all);
         $this->assertStringContainsString('.mautic-patches-updating{color:var(--link-primary);font-weight:600}', $all);
         $this->assertStringContainsString('@keyframes mauticPatchesPulse', $all);
         $this->assertStringContainsString('.mautic-patches-updating-text{display:inline-block;animation:mauticPatchesPulse 1.2s ease-in-out infinite}', $all);
