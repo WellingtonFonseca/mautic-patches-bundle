@@ -112,9 +112,9 @@
 
         var name = host.querySelector('.patches-detail-status').getAttribute('data-name') || '';
         host.textContent = '';
-        // the modal's own title stays "Details"; the segment's name is the heading of the page (an h3, as the segment page's title) above the badges
-        var heading = doc.createElement('h3');
-        heading.className = 'patches-modal-name mt-0';
+        // the modal's own title stays "Details"; the segment's name is the heading of the page (the same h1.page-header-title as the segment page, core's pageheader.html.twig) above the badges
+        var heading = doc.createElement('h1');
+        heading.className = 'page-header-title patches-modal-name';
         heading.textContent = name;
         host.appendChild(heading);
         host.appendChild(buildBox(doc, marker, cfg));

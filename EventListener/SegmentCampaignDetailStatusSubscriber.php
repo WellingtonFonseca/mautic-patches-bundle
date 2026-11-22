@@ -40,7 +40,7 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         .'.patches-count-badge>.mautic-patches-updating-text{display:inline;animation:none;line-height:inherit}'
         .'.patches-segment-updated{display:block;margin:4px 0 0;font-size:14px;text-align:right}'
         .'.patches-modal-head .patches-segment-updated{text-align:left;margin:16px 0}'
-        .'.patches-modal-head .patches-modal-name{margin:0 0 12px;word-break:break-word}';
+        .'.patches-modal-head .patches-modal-name{margin:0 0 12px;word-break:break-word;float:none}';
 
     public function __construct(
         private Translator $translator,
