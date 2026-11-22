@@ -13,9 +13,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * GET /s/segment-details/{id}: the body of the details modal of the segment list (opened from the segment's name): the
- * tabs of the segment page (Details, Filters, Contacts, Campaign share) and, in the footer, Close, Details (the page)
+ * tabs of the segment page (Details, Filters, Campaign share) and, in the footer, Close, Details (the page)
  * and Edit. Same access rule as core's segment page (own / other, or a global segment); Edit only for who may edit.
- * The Contacts tab and the campaign shares are loaded when their tab is first shown (SegmentListClickSubscriber's script).
+ * The campaign shares are loaded when their tab is first shown (SegmentListClickSubscriber's script).
  */
 class SegmentDetailsController extends CommonController
 {

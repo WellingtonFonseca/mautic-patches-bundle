@@ -1,7 +1,6 @@
 {#
   Body of the details modal of the segment list: the tabs of the segment page. Core's shared modal is narrow by default, so
-  only a modal holding this body is widened (contacts_modal_width.html.twig). The Contacts pane has the id and data-target-url of the page's one
-  (core's own loader and the table's pagination use that id); it and the campaign shares are filled when their tab is first
+  only a modal holding this body is widened (contacts_modal_width.html.twig). The campaign shares are filled when their tab is first
   shown (SegmentListClickSubscriber). The buttons are a `.bottom-form-buttons` block, which core copies into the modal's
   footer (1a.content.js): Edit (btn-primary, only for who may edit), Details (the segment's page, btn-secondary) and Close (btn-tertiary btn-cancel, the transparent one). Only one .btn-primary: core's CSS draws a second one, and a btn-secondary after two, as outlined by position, so keep a single primary.
 #}
@@ -10,7 +9,6 @@
     <ul class="nav nav-tabs nav-tabs-contained" role="tablist">
         <li class="active"><a href="#patches-segment-details" role="tab" data-toggle="tab">{{ 'mautic.core.details'|trans }}</a></li>
         <li><a href="#patches-segment-filters" role="tab" data-toggle="tab">{{ 'mautic.core.filters'|trans }}</a></li>
-        <li><a href="#contacts-container" role="tab" data-toggle="tab" data-patches-load="contacts">{{ 'mautic.lead.leads'|trans }}</a></li>
         <li><a href="#patches-segment-campaigns" role="tab" data-toggle="tab" data-patches-load="shares">{{ 'mautic.lead.campaign.share'|trans }}</a></li>
     </ul>
 
@@ -40,11 +38,6 @@
 
         <div class="tab-pane fade bdr-w-0" id="patches-segment-filters">
             {{ include('@MauticPatches/Segment/filters.html.twig', {'rows': rows}) }}
-        </div>
-
-        <div class="tab-pane fade bdr-w-0 page-list" id="contacts-container"
-             data-target-url="{{ path('mautic_segment_contacts', {'objectId': list.id, 'page': 1}) }}">
-            <div class="spinner"><i class="ri-loader-3-line ri-spin"></i></div>
         </div>
 
         <div class="tab-pane fade bdr-w-0" id="patches-segment-campaigns">

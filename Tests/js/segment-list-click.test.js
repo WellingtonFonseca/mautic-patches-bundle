@@ -1,7 +1,7 @@
 // Test-tags: areas=segment risks=FLUXO
 // Runs the REAL script that SegmentListClickSubscriber puts on the page (taken from the PHP class, not copied) against a
 // small fake browser: the click handler on the document, links inside and outside the segment list, Mautic.ajaxifyModal as a
-// recorder, and the "shown.bs.tab" handler that loads the Contacts tab and the campaign shares.
+// recorder, and the "shown.bs.tab" handler that loads the campaign shares.
 //
 // Run inside the Mautic container, no extra dependencies (Node's built-in runner):
 //   docker exec mautic-mautic_web-1 sh -c "cd /var/www/html/docroot/plugins/MauticPatchesBundle && node --test 'Tests/js/*.test.js'"
@@ -139,18 +139,6 @@ test('other links and other places are not touched', () => {
     assert.strictEqual(t.click(link('/s/segments/view/92', {inList: false})).prevented, false);
     assert.strictEqual(load('/s/campaigns').click(link('/s/segments/view/92')).prevented, false, 'a segment link on another page');
     assert.deepStrictEqual(t.calls.modal, []);
-});
-
-test('the Contacts tab loads once through core\'s own loader of #contacts-container', () => {
-    const t = load();
-    const tab = t.tabLink('contacts');
-
-    t.showTab(tab);
-    t.showTab(tab);
-
-    assert.strictEqual(JSON.stringify(t.calls.get), JSON.stringify(['/s/segments/contacts/9/1']));
-    t.calls.getCb({html: 'x'});
-    assert.strictEqual(t.calls.processed.target, '#contacts-container');
 });
 
 test('the campaign share tab asks only for the shares that are empty, once, and fills them', () => {

@@ -12,7 +12,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * A click on a segment's NAME in the segment list opens, in core's shared modal (#MauticSharedModal, Mautic.ajaxifyModal),
- * the tabs of the segment page (Details, Filters, Contacts, Campaign share; the body is rendered by
+ * the tabs of the segment page (Details, Filters, Campaign share; the body is rendered by
  * SegmentDetailsController) instead of leaving the list. The segment's page stays one click away: the "Details" option of
  * the row's three-dots menu (SegmentDetailsButtonSubscriber) and the Details button of the modal. A modified click
  * (ctrl/cmd/shift), the middle button and the menu's own links are left to the browser and to core.
@@ -20,9 +20,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * Same technique as ContactListClickSubscriber: a click handler in the capture phase (before core's ajax link handler, which
  * it then stops), only for links to /s/segments/view/{id} inside the segment list (#page-list-wrapper on /s/segments).
  *
- * The Contacts tab and the campaign shares are not in the modal body: when their tab is first shown, the script loads
- * them the way core's segment page does (the contacts through core's own loader of #contacts-container, the shares
- * through the lead:getCampaignShareStats action), so the modal opens at once.
+ * The campaign shares are not in the modal body: when their tab is first shown, the script loads them the way core's
+ * segment page does (through the lead:getCampaignShareStats action), so the modal opens at once. There is no Contacts tab.
  */
 class SegmentListClickSubscriber implements EventSubscriberInterface
 {
@@ -76,10 +75,6 @@ class SegmentListClickSubscriber implements EventSubscriberInterface
             .'mQuery(document).on("shown.bs.tab",".mautic-patches-segment-details a[data-patches-load]",function(){'
             .'var $a=mQuery(this);if($a.data("patchesLoaded")){return;}$a.data("patchesLoaded",true);'
             .'var id=$a.closest(".mautic-patches-segment-details").data("segment-id");'
-            .'if($a.data("patches-load")==="contacts"){'
-            .'var $c=mQuery("#contacts-container"),url=$c.data("target-url");'
-            .'if(url){mQuery.get(url,function(response){response.target="#contacts-container";Mautic.processPageContent(response);});}'
-            .'return;}'
             .'var ids=[];mQuery(".patches-campaign-share-stat").each(function(){if(!mQuery(this).text()){ids.push(mQuery(this).attr("data-value"));}});'
             .'while(ids.length>0){'
             .'Mautic.ajaxActionRequest("lead:getCampaignShareStats",{ids:ids.splice(0,10),entityId:id},function(response){'
