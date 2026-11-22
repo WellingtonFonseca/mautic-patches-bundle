@@ -29,9 +29,9 @@ An "Etapas" (Steps) tab on the campaign page that replaces core's read-only "Aç
 
 ## Traps
 
-- An opening badge that can wrap flickers (the badge slides from under the pointer): keep `white-space:nowrap` on `.patches-steps-badges`.
+- Padrão: [ui-badge.md](../../wiki/ui-badge.md) (nowrap of an opening badge box; here `.patches-steps-badges`).
 - The test status color (#7e57c2) is the same as the Ação type badge; only the icon tells them apart.
-- The badge tooltips use data-trigger="hover": with core's default (hover focus) the tooltip of a clicked button stays while it has focus and covers the row above.
+- Padrão: [ui-tooltip.md](ui-tooltip.md) (data-trigger="hover" on the badge tooltips).
 
 ## What core's Ações tab shows (the source of the idea)
 

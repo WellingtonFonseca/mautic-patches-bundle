@@ -19,7 +19,7 @@ The small layout rules of a campaign node: the counts (done / waiting) of the Pr
 ```json
 {
   "rule": "the Clonar / Editar / Remover buttons of a node have NO tooltip. Core puts `data-toggle=\"tooltip\"` on the icon inside each button (the `<a>` keeps core's aria-label, which stays).",
-  "bug": "Bootstrap hides a tooltip on the mouseleave of its button. A button that goes away under the mouse (the node was removed; the buttons hidden with the `hide` class when the edit modal opens) never gets it: the tooltip, drawn in the body, stays on the canvas over the buttons of the nodes around until the page reloads. Seen in production after clone, edit, cancel.",
+  "bug": "Padrão: [ui-tooltip.md](ui-tooltip.md). A button that goes away under the mouse (the node was removed; the buttons hidden with the `hide` class when the edit modal opens) never gets it: the tooltip, drawn in the body, stays on the canvas over the buttons of the nodes around until the page reloads. Seen in production after clone, edit, cancel.",
   "fix": "EventListener/CampaignNodeButtonTooltipSubscriber + Resources/js/campaign-node-button-tooltips.js (page.header.left, installed once): `.campaign-event-buttons [data-toggle=\"tooltip\"]` is destroyed through Bootstrap and loses data-toggle, title, data-original-title, data-placement (and a tooltip that is up is removed). A MutationObserver strips buttons that come into the page later (a clone, a new node).",
   "not touched": "every other tooltip, such as the counts of the Preview tab.",
   "rejected": "a sweeper that removes the tooltips left behind (button gone or hidden): it worked, but any new way to lose the mouseleave brought the bug back. Removing the tooltip cannot fail.",
@@ -30,5 +30,5 @@ The small layout rules of a campaign node: the counts (done / waiting) of the Pr
 ## Traps
 
 - The clone button of a node of a campaign made through the API answers 200 and adds no node on the page in Playwright: a spec cannot count nodes after a clone. To test late buttons, append the markup to `#CampaignCanvas` by `page.evaluate`.
-- Reproduce a tooltip bug by hovering a button, then removing or hiding it with the mouse still: scenarios that move the mouse away never show it.
+- Padrão: [ui-tooltip.md](ui-tooltip.md) (how to reproduce a tooltip bug).
 - A change of the injected style or script needs `cache:clear` and `apachectl graceful` (../wiki/docker-mautic5.md), or the page still carries the old one.

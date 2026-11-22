@@ -44,7 +44,7 @@ The "Excluir em lote" page of the contact list: the contact list table with its 
 ## Traps
 
 - Core's `.alert` sets its own `display`, which wins over the `hidden` attribute. A hidden alert stays on screen. The page has `#contact-bulk-delete-banner[hidden]{display:none!important}`.
-- Core COPIES the `.bottom-form-buttons` block of a modal into its footer and hides the original: that is why the page does not use a modal and why a button in the table is found by id at use time.
+- Padrão: [ui-modal.md](ui-modal.md) (core copies `.bottom-form-buttons` into the footer and hides the original): that is why the page does not use a modal and why a button in the table is found by id at use time.
 - The delete follows the total that came with the table for the text in the bar; any change of the text turns the delete off until the next table answer. Never read the delete's search from the live text.
 - An empty search matches every contact. The batch endpoint (400), the service (exception) and the button (off without a counted search) refuse it. Because the service refuses it too, breaking the controller's guard by hand and running the live script is safe: the batch then fails with a 500 instead of deleting.
 - The total of the progress is read once (when the table answered). Contacts that match later are deleted too, so `deleted` can pass the total.

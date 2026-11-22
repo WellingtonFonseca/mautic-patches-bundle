@@ -1,0 +1,7 @@
+categoria: ui
+regras:
+- Dark theme: core hard-codes `color: var(--text-on-color)` (white) on hover / active of buttons it styles as tertiary by POSITION (second .btn-primary of a row, .btn-secondary after two .btn-primary), over the dark theme's light hover background (contrast 1.1:1 and 1.7:1). Use `var(--text-inverse)` on :hover / :active / :focus (and the icons) for the dark theme only, never on a disabled button (core disables them while a form is sent). Global CSS, so it also fixes other plugins that use the same buttons.
+- Danger items of the row menu: core paints text and icon of `.dropdown-menu > li a.danger:hover/:focus` white on the red (2.3:1 on the light red of the dark themes): in dark and solarized-dark they are black; the light themes keep core's white. An item that wants this uses the class `danger` and an icon `ri-delete-bin-line` (a `text-danger` icon would stay red on the red hover). Custom Objects lists are covered by the same rule.
+- Destructive buttons are red only on hover, like core's delete items.
+- The three dots of a list header (bulk actions, `th.col-actions .dropdown-toggle.btn-icon`) take `var(--text-primary)` in the two dark themes (core's #3c4650 is about the header's gray).
+- Footer / position rules of button groups in a modal: [ui-modal.md](ui-modal.md). Status menu item Ativar / Desativar: [../../wiki/ui-status-column.md](../../wiki/ui-status-column.md).
