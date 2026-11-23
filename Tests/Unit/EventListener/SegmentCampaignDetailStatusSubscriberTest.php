@@ -14,6 +14,7 @@ use MauticPlugin\MauticPatchesBundle\EventListener\SegmentCampaignDetailStatusSu
 use Mautic\CoreBundle\Translation\Translator;
 use Mautic\LeadBundle\Entity\LeadListRepository;
 use Mautic\LeadBundle\Model\ListModel;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignPrefixStore;
 use MauticPlugin\MauticPatchesBundle\Service\LocalizedDateFormatter;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
 use Symfony\Component\Routing\RouterInterface;
@@ -38,7 +39,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $event = new CustomContentEvent('some_view', $context, $vars);
         $params = $this->createMock(CoreParametersHelper::class);
         $params->method('get')->willReturnMap([['segment_rebuild_time_warning', null, 30], ['segment_build_time_warning', null, 30]]);
-        (new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router, $this->twig(), $this->prefixes()))->injectViewCustomContent($event);
+        (new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router, $this->twig(), $this->prefixes(), $this->createMock(CampaignPrefixStore::class)))->injectViewCustomContent($event);
 
         return implode('', $event->getContent());
     }
@@ -114,6 +115,15 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
 
         $this->assertStringContainsString('<span class="patches-detail-status" hidden data-status="published" data-restart="1"></span>', $html);
         $this->assertStringContainsString('mauticPatchesListStatusApi.installSegmentCampaignDetail(mQuery,Mautic,', $html);
+    }
+
+    public function testTheCampaignPageGetsTheHeaderComponentWithTheUpdatedLine(): void
+    {
+        $html = $this->html(['campaign' => $this->campaign(true, false)]);
+
+        $this->assertStringContainsString('patches-segment-header patches-campaign-header', $html);
+        $this->assertStringContainsString('<h1 class="page-header-title patches-modal-name">', $html);
+        $this->assertStringContainsString('mautic.patches.campaign.never_updated', $html);
     }
 
     public function testAnInactiveCampaignWithoutReentryHasNoReentryMark(): void
@@ -246,7 +256,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $params = $this->createMock(CoreParametersHelper::class);
         $params->method('get')->willReturnMap([['segment_rebuild_time_warning', null, 30], ['segment_build_time_warning', null, 30]]);
 
-        return (new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router, $this->twig(), $this->prefixes()))->modalHeadHtml($list);
+        return (new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router, $this->twig(), $this->prefixes(), $this->createMock(CampaignPrefixStore::class)))->modalHeadHtml($list);
     }
 
     public function testTheModalHeadCarriesTheSegmentNameEscapedAndTheSameMarkAsThePage(): void
@@ -281,7 +291,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $router->method('generate')->willReturn('/s/contacts');
         $params = $this->createMock(CoreParametersHelper::class);
         $params->method('get')->willReturnMap([['segment_rebuild_time_warning', null, 30], ['segment_build_time_warning', null, 30]]);
-        $sub    = new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router, $this->twig(), $this->prefixes('ABC'));
+        $sub    = new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router, $this->twig(), $this->prefixes('ABC'), $this->createMock(CampaignPrefixStore::class));
         $event  = new CustomContentEvent('some_view', 'page.header.left', ['list' => $this->segment(true)]);
         $sub->injectViewCustomContent($event);
         $page = implode('', $event->getContent());

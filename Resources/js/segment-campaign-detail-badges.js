@@ -95,11 +95,11 @@
     /**
      * Draws the badges of a segment header component (Segment/header.html.twig: title, hidden marker, "Updated on" line), shared by the details
      * modal and the segment page: the box goes right after the title. A box that is already right is not touched. Returns whether the host
-     * holds a segment marker. The title and the line are printed by the twig; only the badges need the script.
+     * holds a marker (segment or campaign). The title and the line are printed by the twig; only the badges need the script.
      */
     function renderHeader(doc, host, cfg) {
         var marker = readMarker(host);
-        if (!marker || !marker.segment) { return false; }
+        if (!marker) { return false; }
 
         var sign = signature(marker), old = host.querySelector('.' + BOX_CLASS);
         if (old && old.getAttribute('data-state') === sign) { return false; }
@@ -153,7 +153,7 @@
     function addDetailBadges(doc, cfg) {
         // not while the page is still being parsed: the toolbar may be half there (the setup runs again at DOMContentLoaded)
         if (doc.readyState === 'loading') { return false; }
-        // a segment: the header component (placePageHeader); the toolbar box below is the campaign's
+        // a segment or campaign: the header component (placePageHeader)
         if (isDetailsPath(doc.location.pathname) && doc.querySelector('.patches-segment-header')) { return placePageHeader(doc, cfg); }
         var bar = doc.querySelector('#toolbar .std-toolbar');
         var marker = bar && isDetailsPath(doc.location.pathname) ? readMarker(doc) : null;

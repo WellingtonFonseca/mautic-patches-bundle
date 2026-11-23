@@ -1,0 +1,11 @@
+{#
+  The header of a campaign, ONE component for the campaign page and the campaign details modal (a later task): the title ("PREFIX - Name"), the
+  badges (status, reentry) and the "Updated on ..." line. Same idea and same script/CSS as Segment/header.html.twig (segment-campaign-detail-badges.js
+  draws the badges from the hidden marker). On the campaign page a script puts it in place of core's heading.
+  Variables: title (already with the prefix), updatedText, markerAttributes (escaped attributes of the marker, raw).
+#}
+<div class="patches-segment-header patches-campaign-header patches-modal-head patches-details-badges-host">
+    <h1 class="page-header-title patches-modal-name">{{ title }}</h1>
+    <span class="patches-detail-status" hidden {{ markerAttributes|raw }}></span>
+    <div class="patches-segment-updated text-muted">{{ updatedText }}</div>
+</div>

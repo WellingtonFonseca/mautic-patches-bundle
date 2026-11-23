@@ -331,7 +331,7 @@ test('the modal header keeps the title and the line of the twig and puts the bad
     assert.strictEqual(box.children[1].attrs.title, 'Ativo');
 });
 
-test('the modal header is drawn once; a campaign marker or no host draws nothing', () => {
+test('the header is drawn once; a campaign marker gets its badges too; no host draws nothing', () => {
     const {doc, host} = modalHead(segMarker());
     api.renderModalHead(doc, cfg);
     api.renderModalHead(doc, cfg);
@@ -339,7 +339,8 @@ test('the modal header is drawn once; a campaign marker or no host draws nothing
 
     const campaign = modalHead({'data-status': 'published'});
     api.renderModalHead(campaign.doc, cfg);
-    assert.strictEqual(campaign.host.children.length, 2);
+    assert.strictEqual(campaign.host.children.length, 3);
+    assert.strictEqual(campaign.host.children[1].children[0].attrs.title, 'Ativo');
     assert.strictEqual(api.renderModalHead({querySelector: () => null}, cfg), false);
 });
 

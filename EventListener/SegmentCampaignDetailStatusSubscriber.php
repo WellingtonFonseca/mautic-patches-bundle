@@ -12,6 +12,7 @@ use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Mautic\CoreBundle\Translation\Translator;
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Model\ListModel;
+use MauticPlugin\MauticPatchesBundle\Service\CampaignPrefixStore;
 use MauticPlugin\MauticPatchesBundle\Service\LocalizedDateFormatter;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
 use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
@@ -51,7 +52,8 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         private LocalizedDateFormatter $dateFormatter,
         private RouterInterface $router,
         private Environment $twig,
-        private SegmentPrefixStore $prefixes
+        private SegmentPrefixStore $prefixes,
+        private CampaignPrefixStore $campaignPrefixes
     ) {
     }
 
@@ -86,14 +88,27 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $customContentEvent->addContent(
-            sprintf(
-                '<span class="patches-detail-status" hidden data-status="%s"%s></span>',
-                $entity->isPublished() ? 'published' : 'unpublished',
-                $this->markerAttributes($entity)
-            )
-            .StatusScript::html($this->translator, self::style(), 'installSegmentCampaignDetail', self::SCRIPT)
-        );
+        // the campaign page: the same component (Campaign/header.html.twig), which the script puts in place of core's heading
+        $customContentEvent->addContent($this->campaignHeadHtml($entity).StatusScript::html($this->translator, self::style(), 'installSegmentCampaignDetail', self::SCRIPT));
+    }
+
+    /**
+     * The header component of a campaign (Campaign/header.html.twig): the title "PREFIX - Name", the hidden marker (status, reentry) the script
+     * draws the badges from, and the "Updated on" line. Reusable by a campaign modal: render it and add the script.
+     */
+    public function campaignHeadHtml(Campaign $campaign): string
+    {
+        $name     = (string) $campaign->getName();
+        $prefix   = $this->campaignPrefixes->get($campaign->getId());
+        $modified = $campaign->getDateModified();
+
+        return $this->twig->render('@MauticPatches/Campaign/header.html.twig', [
+            'title'            => null !== $prefix && '' !== $prefix ? $prefix.' - '.$name : $name,
+            'updatedText'      => null === $modified
+                ? $this->translator->trans('mautic.patches.campaign.never_updated')
+                : $this->translator->trans('mautic.patches.campaign.last_updated', ['%date%' => $this->dateFormatter->format((new DateTimeHelper($modified))->getLocalDateTime(), $this->translator->getLocale())]),
+            'markerAttributes' => sprintf('data-status="%s"', $campaign->isPublished() ? 'published' : 'unpublished').($campaign->allowRestart() ? ' data-restart="1"' : ''),
+        ]);
     }
 
     /**
@@ -127,15 +142,6 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         return null === $builtAt
             ? $this->translator->trans('mautic.patches.segment.never_built')
             : $this->translator->trans('mautic.patches.segment.last_built', ['%date%' => $this->dateFormatter->format((new DateTimeHelper($builtAt))->getLocalDateTime(), $this->translator->getLocale())]);
-    }
-
-    private function markerAttributes(Campaign|LeadList $entity): string
-    {
-        if ($entity instanceof LeadList) {
-            return $this->segmentAttributes($entity);
-        }
-
-        return $entity->allowRestart() ? ' data-restart="1"' : '';
     }
 
     /**
