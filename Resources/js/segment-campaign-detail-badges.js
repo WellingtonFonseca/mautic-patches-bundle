@@ -151,8 +151,8 @@
         var title = host.querySelector('.patches-modal-name').textContent, old = core.textContent.trim();
         host.setAttribute('data-placed', '1');
         // the email page: core's tags (type, A/B test, translation) sit beside its status label, and the badges replace them
-        Array.prototype.forEach.call(doc.querySelectorAll('.page-header-title ~ .tag, .patches-email-header ~ .tag'), function (t) { t.parentNode.removeChild(t); });
         core.parentNode.replaceChild(host, core);
+        Array.prototype.forEach.call(doc.querySelectorAll('.patches-email-header ~ .tag'), function (t) { t.parentNode.removeChild(t); });
         // segment and campaign pages: core's own Ativo label (div.mt-md.d-flex.gap-xs with the publishstatus_pulse dot) repeats the badge of the component
         Array.prototype.forEach.call(doc.querySelectorAll('.publishstatus_pulse'), function (dot) {
             var block = dot.closest('div.mt-md.d-flex.gap-xs');
