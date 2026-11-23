@@ -74,22 +74,6 @@
         return a;
     }
 
-    /** The "Updated on ..." line of the segment list under the toolbar (14px, right-aligned); an older one is replaced. */
-    function placeUpdatedLine(doc, bar, seg) {
-        var old = doc.querySelector('.patches-segment-updated');
-        if (old && old.parentNode) { old.parentNode.removeChild(old); }
-        // last thing of the page header (a block under the row of title, badges and buttons): inside the toolbar it would be a flex item squeezing the buttons
-        var header = bar.closest ? bar.closest('.page-header') : null;
-        if (!seg || !(header || bar.parentNode)) { return; }
-
-        var line = doc.createElement('div');
-        line.className = 'patches-segment-updated text-muted';
-        line.setAttribute('data-segment-id', seg.id);
-        line.setAttribute('data-updating-text', seg.updatingText);
-        line.textContent = seg.builtText;
-        (header || bar.parentNode).appendChild(line);
-    }
-
     /** The box of circles of a marker: the contacts badge (a segment), then the status and the flags. */
     function buildBox(doc, marker, cfg) {
         var box = doc.createElement('div');
@@ -102,40 +86,64 @@
         return box;
     }
 
+    function signature(marker) {
+        var seg = marker.segment;
+
+        return [marker.status, marker.restart ? '1' : '0', marker.flags.join('+'), marker.rebuild, marker.slow, seg ? [seg.id, seg.count, seg.builtText].join('|') : ''].join(':');
+    }
+
     /**
-     * The head of the details modal of the segment list (SegmentDetailsController): the segment's name as a heading, then the same badges as the
-     * segment page (buildBox), then the "Updated on ..." line. The marker and the host (.patches-modal-head) are in the body of the modal.
+     * Draws the badges of a segment header component (Segment/header.html.twig: title, hidden marker, "Updated on" line), shared by the details
+     * modal and the segment page: the box goes right after the title. A box that is already right is not touched. Returns whether the host
+     * holds a segment marker. The title and the line are printed by the twig; only the badges need the script.
      */
-    function renderModalHead(doc, cfg) {
-        var host = doc.querySelector('.patches-modal-head'), marker = host ? readMarker(host) : null;
+    function renderHeader(doc, host, cfg) {
+        var marker = readMarker(host);
         if (!marker || !marker.segment) { return false; }
 
-        var name = host.querySelector('.patches-detail-status').getAttribute('data-name') || '';
-        host.textContent = '';
-        // the modal's own title stays "Details"; the segment's name is the heading of the page (the same h1.page-header-title as the segment page, core's pageheader.html.twig) above the badges
-        var heading = doc.createElement('h1');
-        heading.className = 'page-header-title patches-modal-name';
-        heading.textContent = name;
-        host.appendChild(heading);
-        host.appendChild(buildBox(doc, marker, cfg));
-        // the contacts badge leaves the modal's page: close the modal, as the Edit and Details buttons do
-        var link = host.querySelector('.patches-count-badge');
-        if (link) { link.addEventListener('click', function () { if (root.mQuery) { root.mQuery('#MauticSharedModal').modal('hide'); } }); }
-        var line = doc.createElement('div');
-        line.className = 'patches-segment-updated text-muted';
-        line.setAttribute('data-segment-id', marker.segment.id);
-        line.setAttribute('data-updating-text', marker.segment.updatingText);
-        line.textContent = marker.segment.builtText;
-        host.appendChild(line);
+        var sign = signature(marker), old = host.querySelector('.' + BOX_CLASS);
+        if (old && old.getAttribute('data-state') === sign) { return false; }
+        if (old) { old.parentNode.removeChild(old); }
+        var box = buildBox(doc, marker, cfg);
+        box.setAttribute('data-state', sign);
+        var title = host.querySelector('.patches-modal-name');
+        host.insertBefore(box, title ? title.nextSibling : host.firstChild);
         if (root.mauticPatchesSegmentDecorate) { root.mauticPatchesSegmentDecorate(); }
 
         return true;
     }
 
-    function signature(marker) {
-        var seg = marker.segment;
+    /** The details modal: the component is in the body, nothing to move. */
+    function renderModalHead(doc, cfg) {
+        var host = doc.querySelector('.patches-segment-header');
+        if (!host) { return false; }
+        renderHeader(doc, host, cfg);
+        // the contacts badge leaves the modal's page: close the modal, as the Edit and Details buttons do
+        var link = host.querySelector('.patches-count-badge');
+        if (link && !link.__closes) {
+            link.__closes = true;
+            link.addEventListener('click', function () { if (root.mQuery) { root.mQuery('#MauticSharedModal').modal('hide'); } });
+        }
 
-        return [marker.status, marker.restart ? '1' : '0', marker.flags.join('+'), marker.rebuild, marker.slow, seg ? [seg.id, seg.count, seg.builtText].join('|') : ''].join(':');
+        return true;
+    }
+
+    /**
+     * The segment page: the component takes the place of core's heading (h1.page-header-title) and the document title follows it, as the title
+     * script of SegmentTitlePrefixSubscriber would. Returns whether it placed a component.
+     */
+    function placePageHeader(doc, cfg) {
+        var host = doc.querySelector('.patches-segment-header:not([data-placed]):not(.mautic-patches-segment-details *)');
+        var core = host ? Array.prototype.filter.call(doc.querySelectorAll('h1.page-header-title'), function (h) { return !host.contains(h); })[0] : null;
+        if (!core || !core.parentNode) { return false; }
+
+        var title = host.querySelector('.patches-modal-name').textContent, old = core.textContent.trim();
+        host.setAttribute('data-placed', '1');
+        core.parentNode.replaceChild(host, core);
+        if (old && doc.title.indexOf(title) === -1) { doc.title = doc.title.replace(old, title); }
+        renderHeader(doc, host, cfg);
+
+        return true;
     }
 
     /**
@@ -145,6 +153,8 @@
     function addDetailBadges(doc, cfg) {
         // not while the page is still being parsed: the toolbar may be half there (the setup runs again at DOMContentLoaded)
         if (doc.readyState === 'loading') { return false; }
+        // a segment: the header component (placePageHeader); the toolbar box below is the campaign's
+        if (isDetailsPath(doc.location.pathname) && doc.querySelector('.patches-segment-header')) { return placePageHeader(doc, cfg); }
         var bar = doc.querySelector('#toolbar .std-toolbar');
         var marker = bar && isDetailsPath(doc.location.pathname) ? readMarker(doc) : null;
         if (!marker) { return false; }
@@ -156,7 +166,6 @@
         var box = buildBox(doc, marker, cfg);
         box.setAttribute('data-state', sign);
         bar.insertBefore(box, bar.firstChild);
-        placeUpdatedLine(doc, bar, marker.segment);
         // an Update that is running (SegmentUpdateLockSubscriber) owns the badge and the line until the page reloads
         if (root.mauticPatchesSegmentDecorate) { root.mauticPatchesSegmentDecorate(); }
 
@@ -188,7 +197,7 @@
 
     list.installSegmentCampaignDetail = installSegmentCampaignDetail;
     list.installSegmentModalHead = function ($, Mautic, cfg) {
-        if (!root.document.querySelector('.patches-modal-head')) { return; }
+        if (!root.document.querySelector('.patches-segment-header')) { return; }
         root.mauticPatchesStyles = root.mauticPatchesStyles || {};
         if (!root.mauticPatchesStyles[cfg.style]) {
             root.mauticPatchesStyles[cfg.style] = true;
@@ -198,7 +207,7 @@
         }
         renderModalHead(root.document, cfg);
     };
-    var api = {countBadge: countBadge, isDetailsPath: isDetailsPath, readMarker: readMarker, buildBox: buildBox, renderModalHead: renderModalHead, badgesOf: badgesOf, addDetailBadges: addDetailBadges, installSegmentCampaignDetail: installSegmentCampaignDetail};
+    var api = {countBadge: countBadge, isDetailsPath: isDetailsPath, readMarker: readMarker, buildBox: buildBox, renderModalHead: renderModalHead, renderHeader: renderHeader, placePageHeader: placePageHeader, badgesOf: badgesOf, addDetailBadges: addDetailBadges, installSegmentCampaignDetail: installSegmentCampaignDetail};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

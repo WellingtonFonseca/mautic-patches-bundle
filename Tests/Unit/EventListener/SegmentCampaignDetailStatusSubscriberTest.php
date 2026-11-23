@@ -15,7 +15,10 @@ use Mautic\CoreBundle\Translation\Translator;
 use Mautic\LeadBundle\Entity\LeadListRepository;
 use Mautic\LeadBundle\Model\ListModel;
 use MauticPlugin\MauticPatchesBundle\Service\LocalizedDateFormatter;
+use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
 use Symfony\Component\Routing\RouterInterface;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -35,9 +38,25 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $event = new CustomContentEvent('some_view', $context, $vars);
         $params = $this->createMock(CoreParametersHelper::class);
         $params->method('get')->willReturnMap([['segment_rebuild_time_warning', null, 30], ['segment_build_time_warning', null, 30]]);
-        (new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router))->injectViewCustomContent($event);
+        (new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router, $this->twig(), $this->prefixes()))->injectViewCustomContent($event);
 
         return implode('', $event->getContent());
+    }
+
+    private function twig(): Environment
+    {
+        $loader = new FilesystemLoader();
+        $loader->addPath(dirname(__DIR__, 3).'/Resources/views', 'MauticPatches');
+
+        return new Environment($loader);
+    }
+
+    private function prefixes(?string $prefix = null): SegmentPrefixStore
+    {
+        $store = $this->createMock(SegmentPrefixStore::class);
+        $store->method('get')->willReturn($prefix);
+
+        return $store;
     }
 
     private function listModel(): ListModel
@@ -227,7 +246,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $params = $this->createMock(CoreParametersHelper::class);
         $params->method('get')->willReturnMap([['segment_rebuild_time_warning', null, 30], ['segment_build_time_warning', null, 30]]);
 
-        return (new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router))->modalHeadHtml($list);
+        return (new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router, $this->twig(), $this->prefixes()))->modalHeadHtml($list);
     }
 
     public function testTheModalHeadCarriesTheSegmentNameEscapedAndTheSameMarkAsThePage(): void
@@ -236,8 +255,8 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $list->setName('Clientes <b>"VIP"</b> & co');
         $html = $this->modalHead($list);
 
-        $this->assertStringContainsString('class="patches-modal-head', $html);
-        $this->assertStringContainsString('data-name="Clientes &lt;b&gt;&quot;VIP&quot;&lt;/b&gt; &amp; co"', $html);
+        $this->assertStringContainsString('class="patches-segment-header', $html);
+        $this->assertStringContainsString('>Clientes &lt;b&gt;&quot;VIP&quot;&lt;/b&gt; &amp; co</h1>', $html);
         $this->assertStringNotContainsString('<b>', $html);
         $this->assertStringContainsString('data-status="published"', $html);
         $this->assertStringContainsString(' data-count="6"', $html);
@@ -251,5 +270,24 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $this->assertStringContainsString('data-status="unpublished"', $html);
         $this->assertStringContainsString('installSegmentModalHead', $html);
         $this->assertLessThan(strpos($html, 'installSegmentModalHead'), strpos($html, 'patches-detail-status'));
+    }
+
+    public function testTheHeaderTitleIsThePrefixAndTheNameAndTheSamePartIsOnThePage(): void
+    {
+        $translator = $this->createMock(Translator::class);
+        $translator->method('trans')->willReturnArgument(0);
+        $translator->method('getLocale')->willReturn('pt_BR');
+        $router = $this->createMock(RouterInterface::class);
+        $router->method('generate')->willReturn('/s/contacts');
+        $params = $this->createMock(CoreParametersHelper::class);
+        $params->method('get')->willReturnMap([['segment_rebuild_time_warning', null, 30], ['segment_build_time_warning', null, 30]]);
+        $sub    = new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $router, $this->twig(), $this->prefixes('ABC'));
+        $event  = new CustomContentEvent('some_view', 'page.header.left', ['list' => $this->segment(true)]);
+        $sub->injectViewCustomContent($event);
+        $page = implode('', $event->getContent());
+
+        $this->assertStringContainsString('>ABC - Segment</h1>', $page);
+        $this->assertStringContainsString('class="patches-segment-updated', $page);
+        $this->assertStringContainsString('>ABC - Segment</h1>', $sub->modalHeadHtml($this->segment(true)));
     }
 }

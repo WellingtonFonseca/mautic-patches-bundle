@@ -13,10 +13,12 @@ use Mautic\CoreBundle\Translation\Translator;
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Model\ListModel;
 use MauticPlugin\MauticPatchesBundle\Service\LocalizedDateFormatter;
+use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
 use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
 use MauticPlugin\MauticPatchesBundle\Service\UpdatingIndicator;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Routing\RouterInterface;
+use Twig\Environment;
 
 /**
  * The Ativo / Inativo badge of the segment and campaign lists (and the reentry badge of the campaign), copied to the details page: circles left of the
@@ -39,15 +41,17 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         .'.patches-count-badge>svg{display:block;flex:none;margin:0!important;vertical-align:baseline!important}'
         .'.patches-count-badge>.mautic-patches-updating-text{display:inline;animation:none;line-height:inherit}'
         .'.patches-segment-updated{display:block;margin:4px 0 0;font-size:14px;text-align:right}'
-        .'.patches-modal-head .patches-segment-updated{text-align:left;margin:16px 0}'
-        .'.patches-modal-head .patches-modal-name{margin:0 0 12px;word-break:break-word;float:none}';
+        .'.patches-segment-header .patches-segment-updated{text-align:left;margin:16px 0}'
+        .'.patches-segment-header .patches-modal-name{margin:0 0 12px;word-break:break-word;float:none}';
 
     public function __construct(
         private Translator $translator,
         private CoreParametersHelper $coreParametersHelper,
         private ListModel $listModel,
         private LocalizedDateFormatter $dateFormatter,
-        private RouterInterface $router
+        private RouterInterface $router,
+        private Environment $twig,
+        private SegmentPrefixStore $prefixes
     ) {
     }
 
@@ -75,6 +79,13 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
             return;
         }
 
+        if ($entity instanceof LeadList) {
+            // the segment page: the header component (title, badges, Updated line), which the script puts in place of core's heading
+            $customContentEvent->addContent($this->headHtml($entity).StatusScript::html($this->translator, self::style(), 'installSegmentCampaignDetail', self::SCRIPT));
+
+            return;
+        }
+
         $customContentEvent->addContent(
             sprintf(
                 '<span class="patches-detail-status" hidden data-status="%s"%s></span>',
@@ -86,17 +97,36 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * The head of the segment list's details modal (details_modal.html.twig): the same marker as the segment page, with the segment's name, and the
-     * script that draws the title, the badges and the "Updated on" line from it. The marker lives in the host, which the script replaces.
+     * The header component of a segment (Segment/header.html.twig), shared by the details modal of the list and the segment page: the title
+     * "PREFIX - Name", the hidden marker the script draws the badges from, and the "Updated on" line. Twig is the only place of its markup.
      */
+    public function headHtml(LeadList $list): string
+    {
+        $name   = (string) $list->getName();
+        $prefix = $this->prefixes->get($list->getId());
+
+        return $this->twig->render('@MauticPatches/Segment/header.html.twig', [
+            'title'            => null !== $prefix && '' !== $prefix ? $prefix.' - '.$name : $name,
+            'segmentId'        => $list->getId(),
+            'builtText'        => $this->builtText($list),
+            'updatingText'     => $this->translator->trans('mautic.patches.segment.updating'),
+            'markerAttributes' => sprintf('data-status="%s"', $list->isPublished() ? 'published' : 'unpublished').$this->segmentAttributes($list),
+        ]);
+    }
+
+    /** The head of the details modal of the segment list: the header component and the script that draws its badges. */
     public function modalHeadHtml(LeadList $list): string
     {
-        return sprintf(
-            '<div class="patches-modal-head patches-details-badges-host"><span class="patches-detail-status" hidden data-status="%s" data-name="%s"%s></span></div>',
-            $list->isPublished() ? 'published' : 'unpublished',
-            htmlspecialchars($list->getName(), ENT_QUOTES),
-            $this->segmentAttributes($list)
-        ).StatusScript::html($this->translator, self::style(), 'installSegmentModalHead', self::SCRIPT);
+        return $this->headHtml($list).StatusScript::html($this->translator, self::style(), 'installSegmentModalHead', self::SCRIPT);
+    }
+
+    private function builtText(LeadList $list): string
+    {
+        $builtAt = $list->getLastBuiltDate();
+
+        return null === $builtAt
+            ? $this->translator->trans('mautic.patches.segment.never_built')
+            : $this->translator->trans('mautic.patches.segment.last_built', ['%date%' => $this->dateFormatter->format((new DateTimeHelper($builtAt))->getLocalDateTime(), $this->translator->getLocale())]);
     }
 
     private function markerAttributes(Campaign|LeadList $entity): string
@@ -124,9 +154,7 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
 
         $count      = (int) $this->listModel->getRepository()->getLeadCount($list->getId());
         $builtAt    = $list->getLastBuiltDate();
-        $builtText  = null === $builtAt
-            ? $this->translator->trans('mautic.patches.segment.never_built')
-            : $this->translator->trans('mautic.patches.segment.last_built', ['%date%' => $this->dateFormatter->format((new DateTimeHelper($builtAt))->getLocalDateTime(), $this->translator->getLocale())]);
+        $builtText  = $this->builtText($list);
         // The contacts badge and the "Updated on" line (SegmentLastBuiltSubscriber's text): written by the script of the page, which also swaps both while an Update runs.
         $attributes = sprintf(
             ' data-segment-id="%d" data-count="%d" data-count-text="%s" data-count-url="%s" data-built-text="%s" data-updating-text="%s"',

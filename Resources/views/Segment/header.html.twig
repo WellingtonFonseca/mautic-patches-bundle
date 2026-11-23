@@ -1,0 +1,11 @@
+{#
+  The header of a segment, ONE component for the details modal of the segment list and the segment page: the title ("PREFIX - Name"), the badges
+  (contacts, status, flags) and the "Updated on ..." line. Improve it here (and in segment-campaign-detail-badges.js, which draws the badges
+  from the hidden marker) and both screens change. On the segment page a script puts it in place of core's heading.
+  Variables: title (already with the prefix), segmentId, builtText, updatingText, markerAttributes (escaped attributes of the marker, raw).
+#}
+<div class="patches-segment-header patches-modal-head patches-details-badges-host">
+    <h1 class="page-header-title patches-modal-name">{{ title }}</h1>
+    <span class="patches-detail-status" hidden {{ markerAttributes|raw }}></span>
+    <div class="patches-segment-updated text-muted" data-segment-id="{{ segmentId }}" data-updating-text="{{ updatingText }}">{{ builtText }}</div>
+</div>

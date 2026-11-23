@@ -211,7 +211,7 @@ test('a change of the flags alone draws the box again', () => {
     const p = page({'data-status': 'published', 'data-flags': 'global'}, '/s/segments/view/3');
     api.addDetailBadges(p.doc, cfg);
     const first = p.bar.children[0];
-    p.doc.querySelector = (s) => (s === '#toolbar .std-toolbar' ? p.bar : {getAttribute: (k) => ({'data-status': 'published', 'data-flags': 'global,filters'})[k]});
+    p.doc.querySelector = (s) => (s === '.patches-segment-header' ? null : s === '#toolbar .std-toolbar' ? p.bar : {getAttribute: (k) => ({'data-status': 'published', 'data-flags': 'global,filters'})[k]});
 
     assert.ok(api.addDetailBadges(p.doc, cfg));
     assert.notStrictEqual(p.bar.children[0], first);
@@ -257,25 +257,6 @@ test('the contacts badge is the first of the box, a link to the contacts of the 
     assert.ok(empty.bar.children[0].children[0].className.indexOf('patches-badge--neutral') > -1);
 });
 
-test('the "Updated on" line is written once in the header, with the built text; a new count or date replaces it', () => {
-    const marker = segMarker();
-    const p = segmentPage(marker);
-    api.addDetailBadges(p.doc, cfg);
-    const lines = () => p.header.children.filter((c) => c.className.indexOf('patches-segment-updated') > -1);
-    assert.strictEqual(lines().length, 1);
-    assert.strictEqual(lines()[0].textContent, 'Atualizado em 01/01/2026');
-    assert.strictEqual(lines()[0].attrs['data-segment-id'], '9');
-
-    assert.strictEqual(api.addDetailBadges(p.doc, cfg), false);
-    assert.strictEqual(lines().length, 1);
-
-    marker['data-built-text'] = 'Atualizado em 02/01/2026';
-    marker['data-count'] = '7';
-    assert.ok(api.addDetailBadges(p.doc, cfg));
-    assert.strictEqual(lines().length, 1);
-    assert.strictEqual(lines()[0].textContent, 'Atualizado em 02/01/2026');
-});
-
 test('a campaign page gets neither the contacts badge nor the line', () => {
     const p = segmentPage({'data-status': 'published'});
     api.addDetailBadges(p.doc, cfg);
@@ -283,18 +264,49 @@ test('a campaign page gets neither the contacts badge nor the line', () => {
     assert.strictEqual(p.header.children.length, 1);
 });
 
-// WEL-91: the head of the details modal of the segment list: name as h1, then the badges, then the "Updated on" line
+test('a segment page: the header component takes the place of core heading and the document title follows', () => {
+    const {doc, host, h1} = modalHead(segMarker());
+    h1.textContent = 'ABC - Segment';
+    const parent = node('div'), core = node('h1');
+    core.textContent = 'Segment';
+    parent.appendChild(core);
+    host.contains = (n) => n === h1;
+    host.setAttribute('data-placed-check', '');
+    const all = [core, h1];
+    doc.location = {pathname: '/s/segments/view/9'};
+    doc.readyState = 'complete';
+    doc.title = 'Segment | Mautic';
+    const base = doc.querySelector;
+    doc.querySelector = (s) => (s === '.patches-segment-header:not([data-placed]):not(.mautic-patches-segment-details *)' || s === '.patches-segment-header' ? host : base(s));
+    doc.querySelectorAll = () => all;
+    parent.replaceChild = function (a, b) { this.children[this.children.indexOf(b)] = a; };
+    assert.strictEqual(api.addDetailBadges(doc, cfg), true);
+    assert.strictEqual(parent.children[0], host);
+    assert.strictEqual(host.attrs['data-placed'], '1');
+    assert.strictEqual(doc.title, 'ABC - Segment | Mautic');
+    assert.strictEqual(host.children[1].className, 'patches-details-badges');
+});
+
+// WEL-101: the header component (Segment/header.html.twig) of the details modal: the twig prints the title and the "Updated on" line, the script puts the badges after the title
 function modalHead(marker) {
     const markerNode = {getAttribute: (k) => marker[k]};
     const host = node('div');
+    const h1 = node('h1');
+    h1.className = 'page-header-title patches-modal-name';
+    const line = node('div');
+    line.className = 'patches-segment-updated text-muted';
+    host.appendChild(h1);
+    host.appendChild(line);
+    h1.nextSibling = line;
     const find = (s) => {
         const box = host.children.find((c) => c.className === 'patches-details-badges');
+        if (s === '.patches-details-badges') { return box || null; }
 
         return s === '.patches-count-badge' && box ? box.children.find((c) => c.className.indexOf('patches-count-badge') > -1) || null : null;
     };
-    host.querySelector = (s) => (s === '.patches-detail-status' ? markerNode : find(s));
+    host.querySelector = (s) => (s === '.patches-detail-status' ? markerNode : s === '.patches-modal-name' ? h1 : find(s));
     const doc = {
-        querySelector: (s) => (s === '.patches-modal-head' ? host : null),
+        querySelector: (s) => (s === '.patches-segment-header' ? host : null),
         createElement: (tag) => {
             const n = node(tag);
             n.listeners = {};
@@ -304,38 +316,35 @@ function modalHead(marker) {
         }
     };
 
-    return {doc, host};
+    return {doc, host, h1, line};
 }
 
-test('the modal head is the segment name as the page title (h1), then the badges, then the "Updated on" line', () => {
-    const {doc, host} = modalHead(segMarker({'data-name': 'Clientes <VIP> & "co"'}));
+test('the modal header keeps the title and the line of the twig and puts the badges between them', () => {
+    const {doc, host, h1, line} = modalHead(segMarker());
     assert.strictEqual(api.renderModalHead(doc, cfg), true);
-    const [h1, box, line] = host.children;
     assert.strictEqual(host.children.length, 3);
-    assert.strictEqual(h1.name, 'h1');
-    assert.ok(h1.className.indexOf('page-header-title') > -1);
-    assert.strictEqual(h1.textContent, 'Clientes <VIP> & "co"');
+    assert.strictEqual(host.children[0], h1);
+    assert.strictEqual(host.children[2], line);
+    const box = host.children[1];
     assert.strictEqual(box.className, 'patches-details-badges');
     assert.strictEqual(box.children[0].textContent, '6 contatos');
     assert.strictEqual(box.children[1].attrs.title, 'Ativo');
-    assert.ok(line.className.indexOf('patches-segment-updated') > -1);
-    assert.strictEqual(line.textContent, 'Atualizado em 01/01/2026');
-    assert.strictEqual(line.attrs['data-segment-id'], '9');
 });
 
-test('a modal head without a name leaves an empty heading; a campaign marker or no host draws nothing', () => {
+test('the modal header is drawn once; a campaign marker or no host draws nothing', () => {
     const {doc, host} = modalHead(segMarker());
-    assert.strictEqual(api.renderModalHead(doc, cfg), true);
-    assert.strictEqual(host.children[0].textContent, '');
+    api.renderModalHead(doc, cfg);
+    api.renderModalHead(doc, cfg);
+    assert.strictEqual(host.children.length, 3);
 
     const campaign = modalHead({'data-status': 'published'});
-    assert.strictEqual(api.renderModalHead(campaign.doc, cfg), false);
-    assert.strictEqual(campaign.host.children.length, 0);
+    api.renderModalHead(campaign.doc, cfg);
+    assert.strictEqual(campaign.host.children.length, 2);
     assert.strictEqual(api.renderModalHead({querySelector: () => null}, cfg), false);
 });
 
-test('the contacts badge of the modal head links to the contacts and listens to the click (that closes the modal, it leaves the page)', () => {
-    const {doc, host} = modalHead(segMarker({'data-name': 'X'}));
+test('the contacts badge of the modal header links to the contacts and listens to the click (that closes the modal, it leaves the page)', () => {
+    const {doc, host} = modalHead(segMarker());
     api.renderModalHead(doc, cfg);
     const badge = host.children[1].children[0];
     assert.strictEqual(badge.attrs.href, '/s/contacts?search=segment:x');
