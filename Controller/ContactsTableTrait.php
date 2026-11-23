@@ -11,9 +11,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Service\Attribute\Required;
 
 /**
- * The contacts tab of a segment / campaign page as the contact list TABLE (same columns, in the order set in
+ * The contacts tab of a segment page as the contact list TABLE (same columns, in the order set in
  * Configuration > Contact Settings) instead of core's cards, and the contacts lists of the "Etapas" tab of a campaign. Used by
- * SegmentContactsController, CampaignContactsController and CampaignStepContactsController: the one place of this table.
+ * SegmentContactsController and CampaignStepContactsController: the one place of this table.
  *
  * The first load of the tab (a GET without `tmpl`) comes with the search bar of the contact list over the table
  * (contacts_table.html.twig), the table in an element of its own; every later request (the live search: a GET with `tmpl`;

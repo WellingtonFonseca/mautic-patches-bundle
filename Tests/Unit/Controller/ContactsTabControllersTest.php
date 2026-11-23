@@ -6,7 +6,6 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Controller;
 
 use Mautic\CampaignBundle\Controller\CampaignController;
 use Mautic\LeadBundle\Controller\ListController;
-use MauticPlugin\MauticPatchesBundle\Controller\CampaignContactsController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignStepContactsController;
 use MauticPlugin\MauticPatchesBundle\Controller\CampaignEventAccessTrait;
 use MauticPlugin\MauticPatchesBundle\Controller\ContactsTableTrait;
@@ -16,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Service\Attribute\Required;
 
 /**
- * The two controllers take over the contacts tab routes of core's segment and campaign pages. Building them is
+ * The controller takes over the contacts tab route of core's segment page (the campaign page has no contacts tab). Building them is
  * heavy (core controllers), so this pins the contract the tabs rely on; the rendered table is checked live by
  * scripts/test-contacts-tables.sh.
  */
@@ -30,10 +29,10 @@ class ContactsTabControllersTest extends TestCase
         $this->assertContains(ContactsTableTrait::class, class_uses(SegmentContactsController::class));
     }
 
-    public function testTheCampaignTabExtendsCoresCampaignController(): void
+    public function testTheCampaignPageHasNoContactsTabRoute(): void
     {
-        $this->assertTrue(is_subclass_of(CampaignContactsController::class, CampaignController::class));
-        $this->assertContains(ContactsTableTrait::class, class_uses(CampaignContactsController::class));
+        $routes = (require __DIR__.'/../../../Config/config.php')['routes']['main'];
+        $this->assertArrayNotHasKey('mautic_campaign_contacts', $routes);
     }
 
     public function testTheNodeCountsOfTheCampaignPreviewOpenNoList(): void
@@ -90,14 +89,12 @@ class ContactsTabControllersTest extends TestCase
     public static function controllers(): iterable
     {
         yield 'segment' => [SegmentContactsController::class, ListController::class];
-        yield 'campaign' => [CampaignContactsController::class, CampaignController::class];
     }
 
-    public function testBothRoutesPointAtThePluginControllers(): void
+    public function testTheSegmentRoutePointsAtThePluginController(): void
     {
         $routes = (require __DIR__.'/../../../Config/config.php')['routes']['main'];
 
         $this->assertSame(SegmentContactsController::class.'::contactsAction', $routes['mautic_segment_contacts']['controller']);
-        $this->assertSame(CampaignContactsController::class.'::contactsAction', $routes['mautic_campaign_contacts']['controller']);
     }
 }

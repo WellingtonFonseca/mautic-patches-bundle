@@ -95,11 +95,6 @@ return [
                 'path'       => '/segment/view/{objectId}/contact/{page}',
                 'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\SegmentContactsController::contactsAction',
             ],
-            // The contacts tab of a campaign as a table, same idea.
-            'mautic_campaign_contacts' => [
-                'path'       => '/campaigns/view/{objectId}/contact/{page}',
-                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignContactsController::contactsAction',
-            ],
             // The "Filtros" tab of the segment page: the filters the segment applies, read-only.
             'mautic_patches_segment_filters' => [
                 'path'         => '/segment-filters/{id}',
