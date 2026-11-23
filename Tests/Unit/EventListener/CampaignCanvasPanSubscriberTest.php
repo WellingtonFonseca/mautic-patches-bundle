@@ -39,7 +39,7 @@ class CampaignCanvasPanSubscriberTest extends TestCase
     {
         $js = $this->content();
 
-        $this->assertStringContainsString('if(!onCanvas(e)||(e.button!==1&&!(e.button===0&&!e.target.closest(NOT)))){return;}', $js);
+        $this->assertStringContainsString('(e.button!==1&&!(e.button===0&&!e.target.closest(NOT)))){return;}', $js);
         // what the left button leaves alone: nodes, circles, lines, panels, links, buttons, fields
         foreach (['.draggable', '.jtk-endpoint', '.jtk-connector', '#CampaignEventPanel', 'a', 'button', 'input'] as $selector) {
             $this->assertContains($selector, explode(',', CampaignCanvasPanSubscriber::NOT_BACKGROUND));
@@ -66,5 +66,15 @@ class CampaignCanvasPanSubscriberTest extends TestCase
     public function testRunsOnce(): void
     {
         $this->assertStringContainsString('if(window.mauticPatchesCanvasPan){return;}', $this->content());
+    }
+
+    public function testModalGuardIgnoresDialogsOfTheBuilderButNotTheBuilderInsideAModal(): void
+    {
+        $js = $this->content();
+
+        // a dialog that hangs from the builder is not the background; the builder inside the details modal is
+        $this->assertStringContainsString('var m=e.target.closest&&e.target.closest(".modal");', $js);
+        $this->assertStringContainsString('(m&&m.closest("#campaign-builder"))', $js);
+        $this->assertNotContains('.modal', explode(',', CampaignCanvasPanSubscriber::NOT_BACKGROUND));
     }
 }

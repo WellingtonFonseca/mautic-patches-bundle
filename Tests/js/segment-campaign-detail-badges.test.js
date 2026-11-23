@@ -277,7 +277,7 @@ test('a segment page: the header component takes the place of core heading and t
     doc.readyState = 'complete';
     doc.title = 'Segment | Mautic';
     const base = doc.querySelector;
-    doc.querySelector = (s) => (s === '.patches-segment-header:not([data-placed]):not(.mautic-patches-segment-details *)' || s === '.patches-segment-header' ? host : base(s));
+    doc.querySelector = (s) => (s === '.patches-segment-header:not([data-placed]):not(#MauticSharedModal *)' || s === '.patches-segment-header' ? host : base(s));
     doc.querySelectorAll = () => all;
     parent.replaceChild = function (a, b) { this.children[this.children.indexOf(b)] = a; };
     assert.strictEqual(api.addDetailBadges(doc, cfg), true);
@@ -300,7 +300,7 @@ test('a campaign page: the header takes the place of core heading, badges right 
     doc.readyState = 'complete';
     doc.title = 'Campanha | Mautic';
     const base = doc.querySelector;
-    doc.querySelector = (s) => (s === '.patches-segment-header:not([data-placed]):not(.mautic-patches-segment-details *)' || s === '.patches-segment-header' ? host : base(s));
+    doc.querySelector = (s) => (s === '.patches-segment-header:not([data-placed]):not(#MauticSharedModal *)' || s === '.patches-segment-header' ? host : base(s));
     doc.querySelectorAll = () => [core, h1];
     parent.replaceChild = function (a, b) { this.children[this.children.indexOf(b)] = a; };
     assert.strictEqual(api.addDetailBadges(doc, cfg), true);
@@ -367,6 +367,18 @@ test('the header is drawn once; a campaign marker gets its badges too; no host d
     assert.strictEqual(campaign.host.children.length, 3);
     assert.strictEqual(campaign.host.children[1].children[0].attrs.title, 'Ativo');
     assert.strictEqual(api.renderModalHead({querySelector: () => null}, cfg), false);
+});
+
+test('with a campaign page under the modal, the modal header is the one drawn (the page one is left for the page)', () => {
+    const modal = modalHead({'data-status': 'published'});
+    const page = modalHead({'data-status': 'published'});
+    const doc = {
+        querySelector: (s) => (s === '#MauticSharedModal .patches-segment-header' ? modal.host : s === '.patches-segment-header' ? page.host : null),
+        createElement: modal.doc.createElement,
+    };
+    assert.strictEqual(api.renderModalHead(doc, cfg), true);
+    assert.strictEqual(modal.host.children.length, 3, 'the modal got its badges');
+    assert.strictEqual(page.host.children.length, 2, 'the page header is untouched');
 });
 
 test('the contacts badge of the modal header links to the contacts and listens to the click (that closes the modal, it leaves the page)', () => {
