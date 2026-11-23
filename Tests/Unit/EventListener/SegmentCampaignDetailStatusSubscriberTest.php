@@ -357,6 +357,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         return $email;
     }
 
+    #[Group('area:email')]
     public function testTheEmailHeaderCarriesTheNameTheStatusAndTheTypeBroadcastForASegmentEmail(): void
     {
         $html = $this->emailSubscriber()->emailHeadHtml($this->email(true, 'list'));
@@ -369,6 +370,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $this->assertStringNotContainsString('patches-segment-updated', $html, 'an email has no "Updated on" line');
     }
 
+    #[Group('area:email')]
     public function testAnUnpublishedTemplateEmailIsInactiveAndOfTheCampaignType(): void
     {
         $html = $this->emailSubscriber()->emailHeadHtml($this->email(false, 'template'));
@@ -377,6 +379,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $this->assertStringContainsString('data-email-type="campaign"', $html);
     }
 
+    #[Group('area:email')]
     public function testTheEmailNameIsEscaped(): void
     {
         $html = $this->emailSubscriber()->emailHeadHtml($this->email(true, 'list', '<b onload="x">&'));
@@ -385,6 +388,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $this->assertStringContainsString('&lt;b onload=&quot;x&quot;&gt;&amp;', $html);
     }
 
+    #[Group('area:email')]
     public function testTheEmailFlagsAreAbtestTranslationAndDraftInThatOrder(): void
     {
         $parent = $this->email();
@@ -396,6 +400,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $this->assertStringContainsString('data-email-flags="abtest,translation,draft"', $this->emailSubscriber(true)->emailHeadHtml($email));
     }
 
+    #[Group('area:email')]
     public function testTheDraftFlagIsOffWhenTheDraftFeatureIsDisabled(): void
     {
         $email = $this->email();
@@ -405,11 +410,13 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $this->assertStringContainsString('data-email-flags=""', $this->emailSubscriber(false)->emailHeadHtml($email));
     }
 
+    #[Group('area:email')]
     public function testAnEmailWithoutVariantOrTranslationHasNoFlags(): void
     {
         $this->assertStringContainsString('data-email-flags=""', $this->emailSubscriber()->emailHeadHtml($this->email()));
     }
 
+    #[Group('area:email')]
     public function testTheEmailPageGetsTheHeaderThenTheScriptOnlyInPageHeaderLeft(): void
     {
         $sub   = $this->emailSubscriber();
@@ -426,6 +433,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $this->assertSame([], $other->getContent());
     }
 
+    #[Group('area:email')]
     public function testAnEmailPageIsNotTakenAsASegmentOrCampaignAndNeedsNoSegmentMarks(): void
     {
         $event = new CustomContentEvent('some_view', 'page.header.left', ['email' => $this->email()]);

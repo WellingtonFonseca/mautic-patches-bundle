@@ -1,4 +1,4 @@
-// Test-tags: areas=campaign risks=UI,FLUXO
+// Test-tags: areas=campaign,email risks=UI,FLUXO
 // The badges of the segment and campaign details pages (Resources/js/segment-campaign-detail-badges.js): which state the marker tells and what is
 // written in the toolbar. The look is checked in the browser (scripts/5/e2e/tests/segment-campaign-detail-status.spec.js).
 //
@@ -442,27 +442,62 @@ test('a change of the type or flags of an email alone draws the box again (the p
     assert.strictEqual(host.children[1].children[1].attrs.title, 'Campanha');
 });
 
-test('the email page: core tags beside the heading are removed, the heading is replaced and the title follows', () => {
-    const {doc, host, h1} = modalHead(emailMarker());
+/**
+ * querySelectorAll of the fake page: only the selectors the script asks for are answered, and a `A ~ .tag` part matches a tag that has a
+ * preceding sibling with class A (so a selector that is not scoped to the email header matches the same tags the browser would).
+ */
+function pageQueries(parent, heading, tags, asked) {
+    return (s) => {
+        asked.push(s);
+        if (s === 'h1.page-header-title') { return [heading]; }
+        const parts = s.split(',').map((x) => x.trim());
+        if (!parts.every((x) => /^\.[\w-]+ ~ \.tag$/.test(x))) { return []; }
+        const classes = parts.map((x) => x.slice(1, x.indexOf(' ')));
+
+        return tags.filter((t) => { const before = parent.children.slice(0, parent.children.indexOf(t)); return before.some((b) => classes.some((c) => (' ' + b.className + ' ').indexOf(' ' + c + ' ') > -1)); });
+    };
+}
+
+/** A details page whose header component is placed over core's heading; `pathname` and `marker` tell which page it is. */
+function placedPage(pathname, marker, hostClass) {
+    const {doc, host, h1} = modalHead(marker);
     host.children.pop();
     h1.nextSibling = null;
     h1.textContent = 'Boas-vindas';
+    host.className = hostClass;
     const parent = node('div'), core = node('h1'), tag = node('span');
+    core.className = 'page-header-title';
     core.textContent = 'Template';
+    tag.className = 'tag';
     parent.appendChild(core);
     parent.appendChild(tag);
     host.contains = (n) => n === h1;
-    doc.location = {pathname: '/s/emails/view/9'};
+    doc.location = {pathname};
     doc.readyState = 'complete';
     doc.title = 'Template | Mautic';
     const base = doc.querySelector;
     doc.querySelector = (s) => (s === '.patches-segment-header:not([data-placed]):not(#MauticSharedModal *)' || s === '.patches-segment-header' ? host : base(s));
     const asked = [];
-    doc.querySelectorAll = (s) => { asked.push(s); return s === 'h1.page-header-title' ? [core, h1] : /\.tag/.test(s) ? [tag] : []; };
+    doc.querySelectorAll = pageQueries(parent, core, [tag], asked);
     parent.replaceChild = function (a, b) { this.children[this.children.indexOf(b)] = a; };
+
+    return {doc, host, parent, core, tag, asked};
+}
+
+test('the email page: core tags beside the heading are removed, the heading is replaced and the title follows', () => {
+    const {doc, host, parent, asked} = placedPage('/s/emails/view/9', emailMarker(), 'patches-segment-header patches-email-header');
     assert.strictEqual(api.addDetailBadges(doc, cfg), true);
     assert.deepStrictEqual(parent.children, [host], 'core heading replaced and the core tag removed');
     assert.ok(asked.some((s) => /\.tag/.test(s)), 'the tags are looked up');
     assert.strictEqual(doc.title, 'Boas-vindas | Mautic');
     assert.deepStrictEqual(host.children[1].children.map((b) => b.attrs.title), ['Ativo', 'Broadcast']);
 });
+
+for (const [name, path] of [['segment', '/s/segments/view/5'], ['campaign', '/s/campaigns/view/7']]) {
+    test('the ' + name + ' page: a core tag beside the heading stays where it is (only the email page drops them)', () => {
+        const {doc, host, parent, tag} = placedPage(path, segMarker(), 'patches-segment-header');
+        assert.strictEqual(api.addDetailBadges(doc, cfg), true);
+        assert.deepStrictEqual(parent.children, [host, tag], 'heading replaced, the tag is still beside it');
+        assert.strictEqual(tag.parentNode, parent);
+    });
+}
