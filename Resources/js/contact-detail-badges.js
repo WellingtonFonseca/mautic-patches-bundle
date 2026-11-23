@@ -1,16 +1,14 @@
 /**
- * The Email / SMS / HSM badges of the contact list's Status column, copied to the contact page: three circles left of the Editar button, the
- * same height as the round buttons beside it. The state is read from the Do Not Contact labels that core prints on the page (the right column,
- * Lead/_dnc_large.html.twig), so no query is added. The look and the colors are the list's (list-status-toggle.js, contactBadges); this file only
- * places them. It is loaded after list-status-toggle.js and adds `installContactDetail` to its api.
+ * The Email / SMS / HSM badges of the contact list's Status column, on the contact page: the header component (Contact/header.html.twig) takes the place of
+ * core's heading and holds the three circles after the title. The state is read from the Do Not Contact labels that core prints on the page (the right
+ * column, Lead/_dnc_large.html.twig), so no query is added. The look and the colors are the list's (list-status-toggle.js, contactBadges). It is loaded
+ * after list-status-toggle.js and adds `installContactDetail` and `installContactModalHead` to its api.
  */
 (function (root) {
     'use strict';
 
     var list = typeof module !== 'undefined' && module.exports ? require('./list-status-toggle.js') : root.mauticPatchesListStatusApi;
     if (!list) { return; }
-
-    var BOX_CLASS = 'patches-contact-badges';
 
     /** Whether a path is the page of one contact (Mautic may be served under a subdirectory or index.php). */
     function isContactViewPath(path) {
@@ -37,32 +35,25 @@
     }
 
     /**
-     * Puts the three badges as the first thing of the toolbar of the contact page, and redraws them when a Do Not Contact label is added or
-     * removed (core removes it by ajax). Returns whether it wrote the box; a box that is already right is not touched, so the observer that calls this does not loop.
+     * Draws the three badges into the header component, right after the title; a box that is already right is not touched, so the observer that
+     * calls this does not loop.
      */
-    function addContactDetailBadges(doc, cfg) {
-        // not while the page is still being parsed: the toolbar may be half there (the setup runs again at DOMContentLoaded)
-        if (doc.readyState === 'loading') { return false; }
-        var bar = doc.querySelector('#toolbar .std-toolbar');
-        if (!bar || !isContactViewPath(doc.location.pathname)) { return false; }
-
-        var badges = list.contactBadges(pageBlockedChannels(doc), cfg), sign = signature(badges), old = bar.querySelector('.' + BOX_CLASS);
+    function drawBadges(doc, host, blocked, cfg) {
+        var badges = list.contactBadges(blocked, cfg), sign = signature(badges), old = host.querySelector('.patches-details-badges');
         if (old && old.getAttribute('data-state') === sign) { return false; }
         if (old) { old.parentNode.removeChild(old); }
 
         var box = doc.createElement('div');
-        box.className = BOX_CLASS;
+        box.className = 'patches-details-badges';
         box.setAttribute('data-state', sign);
         for (var k = 0; k < badges.length; k++) { box.appendChild(list.extraBadge(doc, badges[k])); }
-        bar.insertBefore(box, bar.firstChild);
+        var title = host.querySelector('.patches-modal-name');
+        host.insertBefore(box, title ? title.nextSibling : host.firstChild);
 
         return true;
     }
 
-    function installContactDetail($, Mautic, cfg) {
-        if (root.mauticPatchesContactDetail) { return; }
-        root.mauticPatchesContactDetail = true;
-
+    function addStyle(cfg) {
         root.mauticPatchesStyles = root.mauticPatchesStyles || {};
         if (!root.mauticPatchesStyles[cfg.style]) {
             root.mauticPatchesStyles[cfg.style] = true;
@@ -70,6 +61,37 @@
             style.textContent = cfg.style;
             root.document.head.appendChild(style);
         }
+    }
+
+    /**
+     * The contact page: the header component takes the place of core's heading (h1.page-header-title) and the document title follows it, as on the
+     * segment and campaign pages. The badges follow the Do Not Contact labels core prints (core removes one by ajax). Returns whether it changed the page.
+     */
+    function addContactDetailBadges(doc, cfg) {
+        // not while the page is still being parsed: the heading may be half there (the setup runs again at DOMContentLoaded)
+        if (doc.readyState === 'loading') { return false; }
+        if (!isContactViewPath(doc.location.pathname)) { return false; }
+
+        var changed = false, host = doc.querySelector('.patches-contact-header:not([data-placed]):not(#MauticSharedModal *)');
+        if (host) {
+            var core = Array.prototype.filter.call(doc.querySelectorAll('h1.page-header-title'), function (h) { return !host.contains(h); })[0];
+            if (!core || !core.parentNode) { return false; }
+            var title = host.querySelector('.patches-modal-name').textContent, old = core.textContent.trim();
+            host.setAttribute('data-placed', '1');
+            core.parentNode.replaceChild(host, core);
+            if (old && doc.title.indexOf(title) === -1) { doc.title = doc.title.replace(old, title); }
+            changed = true;
+        }
+
+        var placed = doc.querySelector('.patches-contact-header[data-placed]');
+
+        return placed ? drawBadges(doc, placed, pageBlockedChannels(doc), cfg) || changed : changed;
+    }
+
+    function installContactDetail($, Mautic, cfg) {
+        if (root.mauticPatchesContactDetail) { return; }
+        root.mauticPatchesContactDetail = true;
+        addStyle(cfg);
 
         var draw = function () { addContactDetailBadges(root.document, cfg); }, pending = false;
         draw();
@@ -93,29 +115,13 @@
 
         var blocked = {};
         (marker.getAttribute('data-blocked') || '').split(',').forEach(function (c) { if (c) { blocked[c] = true; } });
-        var badges = list.contactBadges(blocked, cfg), sign = signature(badges), old = host.querySelector('.patches-details-badges');
-        if (old && old.getAttribute('data-state') === sign) { return false; }
-        if (old) { old.parentNode.removeChild(old); }
 
-        var box = doc.createElement('div');
-        box.className = 'patches-details-badges';
-        box.setAttribute('data-state', sign);
-        for (var k = 0; k < badges.length; k++) { box.appendChild(list.extraBadge(doc, badges[k])); }
-        var title = host.querySelector('.patches-modal-name');
-        host.insertBefore(box, title ? title.nextSibling : host.firstChild);
-
-        return true;
+        return drawBadges(doc, host, blocked, cfg);
     }
 
     function installContactModalHead($, Mautic, cfg) {
         if (!root.document.querySelector('.patches-contact-header')) { return; }
-        root.mauticPatchesStyles = root.mauticPatchesStyles || {};
-        if (!root.mauticPatchesStyles[cfg.style]) {
-            root.mauticPatchesStyles[cfg.style] = true;
-            var style = root.document.createElement('style');
-            style.textContent = cfg.style;
-            root.document.head.appendChild(style);
-        }
+        addStyle(cfg);
         renderContactModalHead(root.document, cfg);
     }
 

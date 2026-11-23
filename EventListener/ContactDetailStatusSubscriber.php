@@ -10,10 +10,10 @@ use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
 
 /**
- * The Email / SMS / HSM badges of the contact list's Status column (ContactStatusSubscriber), copied to the contact page: three circles left of
- * the Editar button. The circles are the list's badges grown to the height of the round button beside them (40px, the list has 22px); the icon and
+ * The Email / SMS / HSM badges of the contact list's Status column (ContactStatusSubscriber), on the contact page inside the header component, after the title. The circles are the list's badges grown to the height of the round button beside them (40px, the list has 22px); the icon and
  * the word are 14px, the size of the text of core's buttons (the full 1.82 factor gave 23.6px, which looked too big). The script is Resources/js/contact-detail-badges.js.
  */
 class ContactDetailStatusSubscriber implements EventSubscriberInterface
@@ -29,8 +29,36 @@ class ContactDetailStatusSubscriber implements EventSubscriberInterface
         .'.patches-contact-badges .patches-icon-badge__text{padding:0 14px 0 0;opacity:0;transition:opacity .15s ease .05s}'
         .'.patches-contact-badges .patches-extra-badge:hover .patches-icon-badge__text{opacity:1}';
 
-    public function __construct(private TranslatorInterface $translator)
+    // the title of the component, scoped to it (the modal adds its own margin in the controller)
+    public const TITLE_STYLE = '.patches-contact-header .patches-modal-name{margin:0 0 12px;word-break:break-word;float:none}';
+
+    public function __construct(private TranslatorInterface $translator, private Environment $twig)
     {
+    }
+
+    /** The CSS of the header component: the badges (the box of the modal, .patches-details-badges) and the title. */
+    public static function headerStyle(): string
+    {
+        return str_replace('.patches-contact-badges', '.patches-details-badges', self::STYLE).self::TITLE_STYLE;
+    }
+
+    /**
+     * The header component of a contact (Contact/header.html.twig), shared by the details modal of the list and the contact page: the title
+     * "academic record - first last name" and the hidden marker with the Do Not Contact channels the script draws the badges from.
+     */
+    public static function headHtml(Environment $twig, Lead $contact): string
+    {
+        $record  = trim((string) $contact->getFieldValue('enro_academic_record'));
+        $name    = trim($contact->getFirstname().' '.$contact->getLastname());
+        $blocked = [];
+        foreach ($contact->getDoNotContact() as $dnc) {
+            $blocked[$dnc->getChannel()] = true;
+        }
+
+        return $twig->render('@MauticPatches/Contact/header.html.twig', [
+            'title'   => '' !== $record && '' !== $name ? $record.' - '.$name : ('' !== $record ? $record : $name),
+            'blocked' => implode(',', array_keys($blocked)),
+        ]);
     }
 
     public static function getSubscribedEvents(): array
@@ -47,10 +75,12 @@ class ContactDetailStatusSubscriber implements EventSubscriberInterface
         }
 
         // core passes the contact as 'lead' on its page; the other pages that fire this hook (lists, segments) do not need the script
-        if (!(($customContentEvent->getVars()['lead'] ?? null) instanceof Lead)) {
+        $contact = $customContentEvent->getVars()['lead'] ?? null;
+        if (!$contact instanceof Lead) {
             return;
         }
 
-        $customContentEvent->addContent(StatusScript::html($this->translator, self::STYLE, 'installContactDetail', self::SCRIPT));
+        // the header component, which the script puts in place of core's heading (as on the segment and campaign pages), and the script that draws its badges
+        $customContentEvent->addContent(self::headHtml($this->twig, $contact).StatusScript::html($this->translator, self::headerStyle(), 'installContactDetail', self::SCRIPT));
     }
 }

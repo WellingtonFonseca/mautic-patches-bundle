@@ -19,10 +19,6 @@ use Twig\Environment;
  */
 class ContactDetailsController extends CommonController
 {
-    // the badges of the contact page (the list's circles at the height of the buttons), scoped to the modal's header, and its title
-    private const STYLE = '.patches-details-badges{display:inline-flex;align-items:center;gap:8px;height:40px;margin-bottom:16px}'
-        .'.patches-contact-header .patches-modal-name{margin:0 0 12px;word-break:break-word;float:none}';
-
     public function detailsAction(LeadModel $leadModel, Environment $twig, TranslatorInterface $translator, int $id): Response
     {
         $contact = $leadModel->getEntity($id);
@@ -35,18 +31,9 @@ class ContactDetailsController extends CommonController
             return $this->accessDenied();
         }
 
-        $record  = trim((string) $contact->getFieldValue('enro_academic_record'));
-        $name    = trim($contact->getFirstname().' '.$contact->getLastname());
-        $blocked = [];
-        foreach ($contact->getDoNotContact() as $dnc) {
-            $blocked[$dnc->getChannel()] = true;
-        }
-
         // the header component (title + hidden marker) and the script that draws its badges, as the segment and campaign modals do
-        $headHtml = $twig->render('@MauticPatches/Contact/header.html.twig', [
-            'title'   => '' !== $record && '' !== $name ? $record.' - '.$name : ('' !== $record ? $record : $name),
-            'blocked' => implode(',', array_keys($blocked)),
-        ]).StatusScript::html($translator, str_replace('.patches-contact-badges', '.patches-details-badges', ContactDetailStatusSubscriber::STYLE).self::STYLE, 'installContactModalHead', 'Resources/js/contact-detail-badges.js');
+        $headHtml = ContactDetailStatusSubscriber::headHtml($twig, $contact)
+            .StatusScript::html($translator, ContactDetailStatusSubscriber::headerStyle(), 'installContactModalHead', 'Resources/js/contact-detail-badges.js');
 
         return $this->delegateView([
             'viewParameters'  => [
