@@ -1,0 +1,10 @@
+{#
+  The header of an email, the component of the email page: the title (the template name) and the badges of the email list Status column (status,
+  type, A/B test, translation, draft). Same idea and same script/CSS as Campaign/header.html.twig (segment-campaign-detail-badges.js draws the badges
+  from the hidden marker). A script puts it in place of core's heading and tags.
+  Variables: title, markerAttributes (escaped attributes of the marker, raw).
+#}
+<div class="patches-segment-header patches-email-header patches-modal-head patches-details-badges-host">
+    <h1 class="page-header-title patches-modal-name">{{ title }}</h1>
+    <span class="patches-detail-status" hidden {{ markerAttributes|raw }}></span>
+</div>

@@ -10,6 +10,7 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Mautic\CoreBundle\Translation\Translator;
+use Mautic\EmailBundle\Entity\Email;
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Model\ListModel;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignPrefixStore;
@@ -43,7 +44,9 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         .'.patches-count-badge>.mautic-patches-updating-text{display:inline;animation:none;line-height:inherit}'
         .'.patches-segment-updated{display:block;margin:4px 0 0;font-size:14px;text-align:right}'
         .'.patches-segment-header .patches-segment-updated{text-align:left;margin:16px 0}'
-        .'.patches-campaign-header .patches-details-badges{margin-bottom:16px}'
+        .'.patches-campaign-header .patches-details-badges,.patches-email-header .patches-details-badges{margin-bottom:16px}'
+        // an email header outside the email page (another page of the hook that has an 'email' variable) is never placed: it stays hidden
+        .'.patches-email-header:not([data-placed]):not(#MauticSharedModal *){display:none}'
         .'.patches-segment-header .patches-modal-name{margin:0 0 12px;word-break:break-word;float:none}';
 
     public function __construct(
@@ -77,8 +80,15 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         }
 
         $vars   = $customContentEvent->getVars();
-        $entity = $vars['campaign'] ?? $vars['list'] ?? null;
-        if (!$entity instanceof Campaign && !$entity instanceof LeadList) {
+        $entity = $vars['campaign'] ?? $vars['list'] ?? $vars['email'] ?? null;
+        if (!$entity instanceof Campaign && !$entity instanceof LeadList && !$entity instanceof Email) {
+            return;
+        }
+
+        if ($entity instanceof Email) {
+            // the email page: the same component (Email/header.html.twig), with the badges of the email list
+            $customContentEvent->addContent($this->emailHeadHtml($entity).StatusScript::html($this->translator, self::style(), 'installSegmentCampaignDetail', self::SCRIPT));
+
             return;
         }
 
@@ -91,6 +101,34 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
 
         // the campaign page: the same component (Campaign/header.html.twig), which the script puts in place of core's heading
         $customContentEvent->addContent($this->campaignHeadHtml($entity).StatusScript::html($this->translator, self::style(), 'installSegmentCampaignDetail', self::SCRIPT));
+    }
+
+    /**
+     * The header component of an email (Email/header.html.twig): the template name and the hidden marker the script draws the Status badges of the
+     * email list from: status, type (broadcast = a segment email), and the flags A/B test, translation, draft (same conditions as core's list row).
+     */
+    public function emailHeadHtml(Email $email): string
+    {
+        $flags = [];
+        if ($email->isVariant()) {
+            $flags[] = 'abtest';
+        }
+        if ($email->isTranslation()) {
+            $flags[] = 'translation';
+        }
+        if ($this->coreParametersHelper->get('email_draft_enabled', false) && $email->hasDraft()) {
+            $flags[] = 'draft';
+        }
+
+        return $this->twig->render('@MauticPatches/Email/header.html.twig', [
+            'title'            => (string) $email->getName(),
+            'markerAttributes' => sprintf(
+                'data-status="%s" data-email-type="%s" data-email-flags="%s"',
+                $email->isPublished() ? 'published' : 'unpublished',
+                'list' === $email->getEmailType() ? 'broadcast' : 'campaign',
+                implode(',', $flags)
+            ),
+        ]);
     }
 
     /**

@@ -14,9 +14,9 @@
 
     var BOX_CLASS = 'patches-details-badges';
 
-    /** Whether a path is the details page of one segment or campaign (Mautic may be served under a subdirectory or index.php). */
+    /** Whether a path is the details page of one segment, campaign or email (Mautic may be served under a subdirectory or index.php). */
     function isDetailsPath(path) {
-        return /\/s\/(?:segments|campaigns)\/view\/\d+$/.test(path);
+        return /\/s\/(?:segments|campaigns|emails)\/view\/\d+$/.test(path);
     }
 
     /** What the marker of the page says: {status: 'published' | 'unpublished', restart: bool}, or null when the page has no marker. */
@@ -24,12 +24,15 @@
         var marker = doc.querySelector('.patches-detail-status');
         if (!marker) { return null; }
 
-        var flags = marker.getAttribute('data-flags');
+        var flags = marker.getAttribute('data-flags'), emailFlags = marker.getAttribute('data-email-flags');
 
         return {
             status: marker.getAttribute('data-status') === 'published' ? 'published' : 'unpublished',
             restart: marker.getAttribute('data-restart') === '1',
             flags: flags ? flags.split(',') : [],
+            // an email only (the type and the flags of its list row, see EmailStatusSubscriber): emailType is '' for a segment or campaign
+            emailType: marker.getAttribute('data-email-type') || '',
+            emailFlags: emailFlags ? emailFlags.split(',') : [],
             rebuild: marker.getAttribute('data-rebuild-hours') || '',
             slow: marker.getAttribute('data-build-seconds') || '',
             // a segment only (the contacts badge and the "Updated on" line, see SegmentCampaignDetailStatusSubscriber): null for a campaign
@@ -49,6 +52,14 @@
         var v = list.view(marker.status, cfg);
         var badges = [{channel: 'status', icon: v.labelIcon, text: v.labelText, modifier: marker.status === 'published' ? 'production' : 'failed'}];
         if (marker.restart) { badges.push({channel: 'restart'}); }
+        if (marker.emailType) {
+            // the same badges and order as the email list: type, then A/B test, translation, draft
+            var type = list.EMAIL_TYPES[marker.emailType];
+            badges.push({icon: type.icon, text: cfg[type.word], modifier: 'emailtype'});
+            list.EMAIL_FLAGS.forEach(function (f) {
+                if (marker.emailFlags.indexOf(f.key) !== -1) { badges.push({icon: f.icon, text: cfg[f.word], modifier: f.modifier}); }
+            });
+        }
         list.SEGMENT_FLAGS.forEach(function (f) {
             if (marker.flags.indexOf(f.key) === -1) { return; }
             var count = f.key === 'rebuild' ? marker.rebuild : marker.slow;
@@ -89,7 +100,7 @@
     function signature(marker) {
         var seg = marker.segment;
 
-        return [marker.status, marker.restart ? '1' : '0', marker.flags.join('+'), marker.rebuild, marker.slow, seg ? [seg.id, seg.count, seg.builtText].join('|') : ''].join(':');
+        return [marker.status, marker.restart ? '1' : '0', marker.flags.join('+'), marker.emailType + marker.emailFlags.join('+'), marker.rebuild, marker.slow, seg ? [seg.id, seg.count, seg.builtText].join('|') : ''].join(':');
     }
 
     /**
@@ -139,6 +150,8 @@
 
         var title = host.querySelector('.patches-modal-name').textContent, old = core.textContent.trim();
         host.setAttribute('data-placed', '1');
+        // the email page: core's tags (type, A/B test, translation) sit beside its status label, and the badges replace them
+        Array.prototype.forEach.call(doc.querySelectorAll('.page-header-title ~ .tag, .patches-email-header ~ .tag'), function (t) { t.parentNode.removeChild(t); });
         core.parentNode.replaceChild(host, core);
         // segment and campaign pages: core's own Ativo label (div.mt-md.d-flex.gap-xs with the publishstatus_pulse dot) repeats the badge of the component
         Array.prototype.forEach.call(doc.querySelectorAll('.publishstatus_pulse'), function (dot) {
