@@ -115,7 +115,7 @@
 
     /** The details modal: the component is in the body, nothing to move. */
     function renderModalHead(doc, cfg) {
-        var host = doc.querySelector('.patches-segment-header');
+        var host = doc.querySelector('#MauticSharedModal .patches-segment-header') || doc.querySelector('.patches-segment-header');
         if (!host) { return false; }
         renderHeader(doc, host, cfg);
         // the contacts badge leaves the modal's page: close the modal, as the Edit and Details buttons do
@@ -133,7 +133,7 @@
      * script of SegmentTitlePrefixSubscriber would. Returns whether it placed a component.
      */
     function placePageHeader(doc, cfg) {
-        var host = doc.querySelector('.patches-segment-header:not([data-placed]):not(.mautic-patches-segment-details *)');
+        var host = doc.querySelector('.patches-segment-header:not([data-placed]):not(#MauticSharedModal *)');
         var core = host ? Array.prototype.filter.call(doc.querySelectorAll('h1.page-header-title'), function (h) { return !host.contains(h); })[0] : null;
         if (!core || !core.parentNode) { return false; }
 
