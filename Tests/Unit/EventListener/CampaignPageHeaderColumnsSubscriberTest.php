@@ -33,9 +33,17 @@ class CampaignPageHeaderColumnsSubscriberTest extends TestCase
         $this->assertStringContainsString('col-xs-12 col-sm-4 col-md-4 va-m', $content);
     }
 
+    public function testSegmentRouteGetsTheNewColumns(): void
+    {
+        $content = $this->content('mautic_segment_index');
+
+        $this->assertStringContainsString('col-xs-12 col-sm-8 col-md-8 va-m', $content);
+        $this->assertStringContainsString('col-xs-12 col-sm-4 col-md-4 va-m', $content);
+    }
+
     public function testOtherRoutesAndContextsAreUntouched(): void
     {
-        $this->assertSame('', $this->content('mautic_segment_action'));
+        $this->assertSame('', $this->content('mautic_contact_action'));
         $this->assertSame('', $this->content('mautic_campaign_action', 'somewhere.else'));
     }
 }
