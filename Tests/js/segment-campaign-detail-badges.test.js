@@ -278,7 +278,7 @@ test('a segment page: the header component takes the place of core heading and t
     doc.title = 'Segment | Mautic';
     const base = doc.querySelector;
     doc.querySelector = (s) => (s === '.patches-segment-header:not([data-placed]):not(#MauticSharedModal *)' || s === '.patches-segment-header' ? host : base(s));
-    doc.querySelectorAll = () => all;
+    doc.querySelectorAll = (s) => (s === 'h1.page-header-title' ? all : []);
     parent.replaceChild = function (a, b) { this.children[this.children.indexOf(b)] = a; };
     assert.strictEqual(api.addDetailBadges(doc, cfg), true);
     assert.strictEqual(parent.children[0], host);
@@ -301,7 +301,7 @@ test('a campaign page: the header takes the place of core heading, badges right 
     doc.title = 'Campanha | Mautic';
     const base = doc.querySelector;
     doc.querySelector = (s) => (s === '.patches-segment-header:not([data-placed]):not(#MauticSharedModal *)' || s === '.patches-segment-header' ? host : base(s));
-    doc.querySelectorAll = () => [core, h1];
+    doc.querySelectorAll = (s) => (s === 'h1.page-header-title' ? [core, h1] : []);
     parent.replaceChild = function (a, b) { this.children[this.children.indexOf(b)] = a; };
     assert.strictEqual(api.addDetailBadges(doc, cfg), true);
     assert.strictEqual(parent.children[0], host);
