@@ -128,3 +128,82 @@ test('addContactDetailBadges: nothing while the page is still being parsed, and 
     none.doc.querySelector = () => null;
     assert.strictEqual(api.addContactDetailBadges(none.doc, cfg), false);
 });
+
+/** The header component of the "Ver" modal: a host with the title, the hidden marker and, later, the box of badges. */
+function modalHead(blocked, {title = true} = {}) {
+    const host = node('div'), name = node('h1'), marker = node('span');
+    name.className = 'patches-modal-name';
+    Object.defineProperty(name, 'nextSibling', {get: () => host.children[host.children.indexOf(name) + 1] || null});
+    marker.attrs['data-blocked'] = blocked;
+    if (title) { host.appendChild(name); }
+    host.appendChild(marker);
+    host.querySelector = (s) => {
+        if (s === '.patches-detail-status') { return marker; }
+        if (s === '.patches-modal-name') { return title ? name : null; }
+        if (s === '.patches-details-badges') { return host.children.find((c) => c.className === 'patches-details-badges') || null; }
+
+        return null;
+    };
+    const doc = {querySelector: (s) => (s === '.patches-contact-header' ? host : null), createElement: (tag) => node(tag)};
+
+    return {doc, host, name, marker};
+}
+
+const colors = (box) => box.children.map((b) => (b.className.includes('patches-badge--failed') ? 'red' : 'green'));
+
+test('renderContactModalHead: the badges go right after the title, before the hidden marker, all green when nothing is blocked', () => {
+    const {doc, host, name, marker} = modalHead('');
+
+    assert.strictEqual(api.renderContactModalHead(doc, cfg), true);
+
+    assert.strictEqual(host.children[0], name);
+    assert.strictEqual(host.children[1].className, 'patches-details-badges');
+    assert.strictEqual(host.children[2], marker);
+    assert.deepStrictEqual(host.children[1].children.map((b) => b.attrs.title), ['Email', 'SMS', 'HSM']);
+    assert.deepStrictEqual(colors(host.children[1]), ['green', 'green', 'green']);
+});
+
+test('renderContactModalHead: a blocked email turns only Email red; a blocked sms turns SMS and HSM red', () => {
+    const mail = modalHead('email');
+    api.renderContactModalHead(mail.doc, cfg);
+    assert.deepStrictEqual(colors(mail.host.children[1]), ['red', 'green', 'green']);
+
+    const sms = modalHead('sms');
+    api.renderContactModalHead(sms.doc, cfg);
+    assert.deepStrictEqual(colors(sms.host.children[1]), ['green', 'red', 'red']);
+
+    const both = modalHead('email,sms');
+    api.renderContactModalHead(both.doc, cfg);
+    assert.deepStrictEqual(colors(both.host.children[1]), ['red', 'red', 'red']);
+});
+
+test('renderContactModalHead: idempotent: a box already right is not rewritten (data-state), a changed state replaces it, never two boxes', () => {
+    const {doc, host, marker} = modalHead('email');
+
+    assert.strictEqual(api.renderContactModalHead(doc, cfg), true);
+    const first = host.children[1];
+    assert.strictEqual(api.renderContactModalHead(doc, cfg), false);
+    assert.strictEqual(host.children[1], first, 'the same box stays');
+
+    marker.attrs['data-blocked'] = 'sms';
+    assert.strictEqual(api.renderContactModalHead(doc, cfg), true);
+    assert.strictEqual(host.children.filter((c) => c.className === 'patches-details-badges').length, 1);
+    assert.deepStrictEqual(colors(host.children[1]), ['green', 'red', 'red']);
+});
+
+test('renderContactModalHead: without a title the box goes first in the host', () => {
+    const {doc, host} = modalHead('', {title: false});
+
+    assert.strictEqual(api.renderContactModalHead(doc, cfg), true);
+    assert.strictEqual(host.children[0].className, 'patches-details-badges');
+});
+
+test('renderContactModalHead: no-op without the contact header, or without its marker', () => {
+    const none = {querySelector: () => null, createElement: () => { throw new Error('nothing may be created'); }};
+    assert.strictEqual(api.renderContactModalHead(none, cfg), false);
+
+    const {doc, host} = modalHead('email');
+    host.querySelector = () => null;
+    assert.strictEqual(api.renderContactModalHead(doc, cfg), false);
+    assert.strictEqual(host.children.length, 2, 'nothing added');
+});
