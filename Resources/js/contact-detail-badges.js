@@ -82,8 +82,46 @@
         }).observe(root.document.body || root.document.documentElement, {childList: true, subtree: true});
     }
 
+    /**
+     * The header component of the contact "Ver" modal (Contact/header.html.twig): the box with the three badges goes right after the title, drawn
+     * from the Do Not Contact channels the hidden marker holds. A box that is already right is not touched.
+     */
+    function renderContactModalHead(doc, cfg) {
+        var host = doc.querySelector('#MauticSharedModal .patches-contact-header') || doc.querySelector('.patches-contact-header');
+        var marker = host && host.querySelector('.patches-detail-status');
+        if (!marker) { return false; }
+
+        var blocked = {};
+        (marker.getAttribute('data-blocked') || '').split(',').forEach(function (c) { if (c) { blocked[c] = true; } });
+        var badges = list.contactBadges(blocked, cfg), sign = signature(badges), old = host.querySelector('.patches-details-badges');
+        if (old && old.getAttribute('data-state') === sign) { return false; }
+        if (old) { old.parentNode.removeChild(old); }
+
+        var box = doc.createElement('div');
+        box.className = 'patches-details-badges';
+        box.setAttribute('data-state', sign);
+        for (var k = 0; k < badges.length; k++) { box.appendChild(list.extraBadge(doc, badges[k])); }
+        var title = host.querySelector('.patches-modal-name');
+        host.insertBefore(box, title ? title.nextSibling : host.firstChild);
+
+        return true;
+    }
+
+    function installContactModalHead($, Mautic, cfg) {
+        if (!root.document.querySelector('.patches-contact-header')) { return; }
+        root.mauticPatchesStyles = root.mauticPatchesStyles || {};
+        if (!root.mauticPatchesStyles[cfg.style]) {
+            root.mauticPatchesStyles[cfg.style] = true;
+            var style = root.document.createElement('style');
+            style.textContent = cfg.style;
+            root.document.head.appendChild(style);
+        }
+        renderContactModalHead(root.document, cfg);
+    }
+
     list.installContactDetail = installContactDetail;
-    var api = {isContactViewPath: isContactViewPath, pageBlockedChannels: pageBlockedChannels, addContactDetailBadges: addContactDetailBadges, installContactDetail: installContactDetail};
+    list.installContactModalHead = installContactModalHead;
+    var api = {isContactViewPath: isContactViewPath, pageBlockedChannels: pageBlockedChannels, addContactDetailBadges: addContactDetailBadges, renderContactModalHead: renderContactModalHead, installContactModalHead: installContactModalHead, installContactDetail: installContactDetail};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

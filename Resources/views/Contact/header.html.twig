@@ -1,0 +1,10 @@
+{#
+  The header of a contact, the component of the "Ver" modal of the contact list (twin of Segment/header.html.twig and Campaign/header.html.twig): the title
+  ("academic record - first last name") and the Email / SMS / HSM badges of the list's Status column, which contact-detail-badges.js
+  (installContactModalHead) draws from the hidden marker.
+  Variables: title, blocked (the Do Not Contact channels, comma separated).
+#}
+<div class="patches-contact-header patches-modal-head patches-details-badges-host">
+    <h1 class="page-header-title patches-modal-name">{{ title }}</h1>
+    <span class="patches-detail-status" hidden data-blocked="{{ blocked }}"></span>
+</div>
