@@ -43,6 +43,7 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         .'.patches-count-badge>.mautic-patches-updating-text{display:inline;animation:none;line-height:inherit}'
         .'.patches-segment-updated{display:block;margin:4px 0 0;font-size:14px;text-align:right}'
         .'.patches-segment-header .patches-segment-updated{text-align:left;margin:16px 0}'
+        .'.patches-campaign-header .patches-details-badges{margin-bottom:16px}'
         .'.patches-segment-header .patches-modal-name{margin:0 0 12px;word-break:break-word;float:none}';
 
     public function __construct(
@@ -94,19 +95,15 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
 
     /**
      * The header component of a campaign (Campaign/header.html.twig): the title "PREFIX - Name", the hidden marker (status, reentry) the script
-     * draws the badges from, and the "Updated on" line. Reusable by a campaign modal: render it and add the script.
+     * draws the badges from. No "Updated on" line: a campaign has no build date. Reusable by a campaign modal: render it and add the script.
      */
     public function campaignHeadHtml(Campaign $campaign): string
     {
-        $name     = (string) $campaign->getName();
-        $prefix   = $this->campaignPrefixes->get($campaign->getId());
-        $modified = $campaign->getDateModified();
+        $name   = (string) $campaign->getName();
+        $prefix = $this->campaignPrefixes->get($campaign->getId());
 
         return $this->twig->render('@MauticPatches/Campaign/header.html.twig', [
             'title'            => null !== $prefix && '' !== $prefix ? $prefix.' - '.$name : $name,
-            'updatedText'      => null === $modified
-                ? $this->translator->trans('mautic.patches.campaign.never_updated')
-                : $this->translator->trans('mautic.patches.campaign.last_updated', ['%date%' => $this->dateFormatter->format((new DateTimeHelper($modified))->getLocalDateTime(), $this->translator->getLocale())]),
             'markerAttributes' => sprintf('data-status="%s"', $campaign->isPublished() ? 'published' : 'unpublished').($campaign->allowRestart() ? ' data-restart="1"' : ''),
         ]);
     }

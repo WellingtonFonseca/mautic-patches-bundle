@@ -117,13 +117,13 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $this->assertStringContainsString('mauticPatchesListStatusApi.installSegmentCampaignDetail(mQuery,Mautic,', $html);
     }
 
-    public function testTheCampaignPageGetsTheHeaderComponentWithTheUpdatedLine(): void
+    public function testTheCampaignPageGetsTheHeaderComponentWithoutAnUpdatedLine(): void
     {
         $html = $this->html(['campaign' => $this->campaign(true, false)]);
 
         $this->assertStringContainsString('patches-segment-header patches-campaign-header', $html);
         $this->assertStringContainsString('<h1 class="page-header-title patches-modal-name">', $html);
-        $this->assertStringContainsString('mautic.patches.campaign.never_updated', $html);
+        $this->assertStringNotContainsString('patches-segment-updated', $html);
     }
 
     public function testAnInactiveCampaignWithoutReentryHasNoReentryMark(): void
