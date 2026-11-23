@@ -287,6 +287,31 @@ test('a segment page: the header component takes the place of core heading and t
     assert.strictEqual(host.children[1].className, 'patches-details-badges');
 });
 
+test('a campaign page: the header takes the place of core heading, badges right after the title (no line), the document title follows', () => {
+    const {doc, host, h1} = modalHead({'data-status': 'published', 'data-restart': '1'});
+    host.children.pop(); // the campaign component has no "Updated on" line
+    h1.nextSibling = null;
+    h1.textContent = 'ABC - Campanha';
+    const parent = node('div'), core = node('h1');
+    core.textContent = 'Campanha';
+    parent.appendChild(core);
+    host.contains = (n) => n === h1;
+    doc.location = {pathname: '/s/campaigns/view/9'};
+    doc.readyState = 'complete';
+    doc.title = 'Campanha | Mautic';
+    const base = doc.querySelector;
+    doc.querySelector = (s) => (s === '.patches-segment-header:not([data-placed]):not(.mautic-patches-segment-details *)' || s === '.patches-segment-header' ? host : base(s));
+    doc.querySelectorAll = () => [core, h1];
+    parent.replaceChild = function (a, b) { this.children[this.children.indexOf(b)] = a; };
+    assert.strictEqual(api.addDetailBadges(doc, cfg), true);
+    assert.strictEqual(parent.children[0], host);
+    assert.strictEqual(doc.title, 'ABC - Campanha | Mautic');
+    assert.strictEqual(host.children[0], h1);
+    const box = host.children[1];
+    assert.strictEqual(box.className, 'patches-details-badges');
+    assert.deepStrictEqual(box.children.map((b) => b.attrs.title), ['Ativo', 'Reentrada']);
+});
+
 // WEL-101: the header component (Segment/header.html.twig) of the details modal: the twig prints the title and the "Updated on" line, the script puts the badges after the title
 function modalHead(marker) {
     const markerNode = {getAttribute: (k) => marker[k]};

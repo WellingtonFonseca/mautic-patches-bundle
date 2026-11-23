@@ -300,4 +300,36 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $this->assertStringContainsString('class="patches-segment-updated', $page);
         $this->assertStringContainsString('>ABC - Segment</h1>', $sub->modalHeadHtml($this->segment(true)));
     }
+
+    public function testTheCampaignHeaderTitleIsThePrefixAndTheNameEscapedWithTheMarkerAndNoUpdatedLine(): void
+    {
+        $translator = $this->createMock(Translator::class);
+        $translator->method('trans')->willReturnArgument(0);
+        $translator->method('getLocale')->willReturn('pt_BR');
+        $params   = $this->createMock(CoreParametersHelper::class);
+        $prefixes = $this->createMock(CampaignPrefixStore::class);
+        $prefixes->method('get')->willReturn('ABC');
+        $sub      = new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $this->createMock(RouterInterface::class), $this->twig(), $this->prefixes(), $prefixes);
+        $campaign = $this->campaign(true, true);
+        $campaign->setName('Boas <b>"vindas"</b> & co');
+
+        $html = $sub->campaignHeadHtml($campaign);
+
+        $this->assertStringContainsString('>ABC - Boas &lt;b&gt;&quot;vindas&quot;&lt;/b&gt; &amp; co</h1>', $html);
+        $this->assertStringNotContainsString('<b>', $html);
+        $this->assertStringContainsString('data-status="published" data-restart="1"', $html);
+        $this->assertStringNotContainsString('patches-segment-updated', $html);
+
+        $event = new CustomContentEvent('some_view', 'page.header.left', ['campaign' => $campaign]);
+        $sub->injectViewCustomContent($event);
+        $this->assertStringContainsString('>ABC - Boas &lt;b&gt;', implode('', $event->getContent()));
+    }
+
+    public function testTheCampaignHeaderTitleIsJustTheNameWithoutAPrefix(): void
+    {
+        $campaign = $this->campaign(false, false);
+        $campaign->setName('Sem prefixo');
+
+        $this->assertStringContainsString('>Sem prefixo</h1>', $this->html(['campaign' => $campaign]));
+    }
 }
