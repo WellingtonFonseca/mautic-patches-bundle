@@ -3,6 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-23
+- Na importação de papéis, as permissões de Custom Objects agora são casadas pelo nome do objeto, não pelo id: a exportação leva os nomes e a importação procura o id na instância de destino. Se o objeto não existir lá, o papel falha (também na conferência) e a mensagem diz qual objeto criar. Pacotes antigos, sem os nomes, continuam usando os ids
 - Na janela de detalhes do contato (Ver), o título agora é o cabeçalho: "{enro_academic_record} - {nome e sobrenome}" (só o registro ou só o nome quando faltar um) com os selos Email, SMS e HSM logo abaixo, os mesmos da coluna Status da lista de contatos (vermelho quando o canal está em Não Contatar)
 - Nas páginas de segmentos, o cabeçalho também ficou com o título mais largo (col-sm-8/md-8) e a área do botão Editar mais estreita (col-sm-4/md-4)
 - Na página do segmento, o selo "Ativo" padrão do Mautic foi removido, pois o status já aparece no cabeçalho do título
