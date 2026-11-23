@@ -3,6 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-23
+- Na lista de campanhas, clicar no nome da campanha agora abre a janela "Detalhes da campanha" (mesmo padrão e tamanho da janela do segmento): cabeçalho com nome e selos de status, abas Preview e Etapas, e botões Editar (só com permissão), Detalhes (abre a página) e Fechar. O menu da linha ganhou a ação Detalhes
 - Na página da campanha, a aba Contatos foi removida (a aba Etapas continua mostrando os contatos de cada etapa)
 - Na página da campanha, o título agora é o cabeçalho (mesmo padrão do segmento): "{prefixo} - {nome}" com os selos de status e de reentrada logo abaixo. Não há linha "Atualizado em ...", pois a campanha não tem data de montagem
 - O cabeçalho do segmento (título, selos de contatos e status, linha "Atualizado em ...") agora é um único componente, igual na janela de detalhes da lista e na página do segmento: o que melhorar em um muda no outro
