@@ -28,6 +28,15 @@
         {{ customContent('tabs.content', _context, pageView) }}
     </div>
 
+    {# core draws the preview lines when the body arrives, while the modal is still hidden (every node at 0,0): draw them again once it is laid out and shown #}
+    <script>
+        (function () {
+            var repaint = function () { if (Mautic.campaignBuilderInstance) { Mautic.campaignBuilderInstance.repaintEverything(); } };
+            mQuery('#MauticSharedModal').one('shown.bs.modal', function () { repaint(); setTimeout(repaint, 300); });
+            if (mQuery('#MauticSharedModal').hasClass('in')) { repaint(); setTimeout(repaint, 300); }
+        })();
+    </script>
+
     <div class="bottom-form-buttons">
         {% if canEdit %}
         <button type="button" id="patches-campaign-details-edit" class="btn btn-primary" onclick="mQuery('#MauticSharedModal').modal('hide'); Mautic.loadContent('{{ path('mautic_campaign_action', {'objectAction': 'edit', 'objectId': campaign.id})|e('js') }}');">{{ 'mautic.core.form.edit'|trans }}<i class="ri-edit-line"></i></button>
