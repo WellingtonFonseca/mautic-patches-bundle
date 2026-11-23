@@ -9,7 +9,7 @@
  * beforeDetach check and fires connectionDetached, so the colors of the points and the labels follow as they do after a drag.
  * The button sits above the circle (core gives the svg of the lines z-index 1000, CampaignEndpointsOnTopSubscriber puts the
  * circles at 1011). It stays while the mouse is over the circle or over the button itself, and goes away a moment after the
- * mouse leaves both. The circle outlives its line: a line that is gone shows nothing, and a line made later into the same
+ * mouse leaves both. The Preview locks its lines and shows its circles (lockPreview). The circle outlives its line: a line that is gone shows nothing, and a line made later into the same
  * circle gets its own button.
  */
 (function (root) {
@@ -102,8 +102,25 @@
         return !!(container && container.closest && container.closest('#preview-container'));
     }
 
+    // The Preview only shows the campaign: its lines cannot be dragged off a circle, nor made. Core hides the circles there
+    // (`.preview .jtk-endpoint svg{display:none}`), which also hid the way to grab a line; the circles are shown again (style
+    // below) and every line and circle is locked. A line made later is locked by the 'connection' event.
+    function lockPreview(instance) {
+        function lock(connection) {
+            if (connection.setDetachable) { connection.setDetachable(false); }
+            (connection.endpoints || []).forEach(function (endpoint) { if (endpoint && endpoint.setEnabled) { endpoint.setEnabled(false); } });
+        }
+        if (!instance.mauticPatchesPreviewLocked) {
+            instance.mauticPatchesPreviewLocked = true;
+            instance.bind('beforeDetach', function () { return false; });
+            instance.bind('beforeDrop', function () { return false; });
+            instance.bind('connection', function (info) { lock(info.connection); });
+        }
+        instance.getAllConnections().forEach(lock);
+    }
+
     function instrument(instance, title) {
-        if (isPreview(instance)) { return; }
+        if (isPreview(instance)) { lockPreview(instance); return; }
         if (!instance.mauticPatchesTrashBound) {
             instance.mauticPatchesTrashBound = true;
             instance.bind('connection', function (info) { decorate(instance, info.connection, title); });
@@ -120,7 +137,7 @@
         root.mauticPatchesConnectionTrash = true;
 
         var style = root.document.createElement('style');
-        style.textContent = '.mautic-patches-trash i{pointer-events:none;color:#fff}';
+        style.textContent = '.mautic-patches-trash i{pointer-events:none;color:#fff}#preview-container .jtk-endpoint svg{display:block!important}';
         root.document.head.appendChild(style);
 
         // campaign.js may load after this script, and the canvas is made when the builder opens: the function that makes it
