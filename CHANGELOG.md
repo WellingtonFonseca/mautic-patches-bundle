@@ -2,6 +2,11 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-23
+- O cabeçalho do segmento (título, selos de contatos e status, linha "Atualizado em ...") agora é um único componente, igual na janela de detalhes da lista e na página do segmento: o que melhorar em um muda no outro
+- Na página do segmento, o título é o próprio cabeçalho, com os selos e a linha "Atualizado em ..." logo abaixo do nome
+- Corrigido: o título do segmento é "{prefixo} - {nome}" (sem prefixo repetido) na página e na janela de detalhes
+
 ## 2026-11-22
 - Na janela de detalhes do segmento (clique no nome na lista), o nome do segmento aparece como título, com o selo de contatos e os selos de status abaixo e a linha "Atualizado em ..." logo depois. O selo de contatos fecha a janela e leva à lista de contatos
 - A aba Contatos foi removida da página do segmento e da janela de detalhes do segmento: os contatos ficam no selo de contatos, que leva à lista
