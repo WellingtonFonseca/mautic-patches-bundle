@@ -8,6 +8,7 @@ use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use Mautic\EmailBundle\Entity\Email;
 use Mautic\LeadBundle\Entity\LeadList;
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactDetailStatusSubscriber;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentCampaignDetailStatusSubscriber;
@@ -331,5 +332,107 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $campaign->setName('Sem prefixo');
 
         $this->assertStringContainsString('>Sem prefixo</h1>', $this->html(['campaign' => $campaign]));
+    }
+
+    // WEL-237: the email page header (Email/header.html.twig)
+
+    private function emailSubscriber(bool $draftEnabled = true): SegmentCampaignDetailStatusSubscriber
+    {
+        $translator = $this->createMock(Translator::class);
+        $translator->method('trans')->willReturnArgument(0);
+        $translator->method('getLocale')->willReturn('pt_BR');
+        $params = $this->createMock(CoreParametersHelper::class);
+        $params->method('get')->willReturnCallback(static fn (string $k, $d = null) => 'email_draft_enabled' === $k ? $draftEnabled : $d);
+
+        return new SegmentCampaignDetailStatusSubscriber($translator, $params, $this->listModel(), new LocalizedDateFormatter(), $this->createMock(RouterInterface::class), $this->twig(), $this->prefixes(), $this->createMock(CampaignPrefixStore::class));
+    }
+
+    private function email(bool $published = true, string $type = 'template', string $name = 'Welcome'): Email
+    {
+        $email = new Email();
+        $email->setName($name);
+        $email->setIsPublished($published);
+        $email->setEmailType($type);
+
+        return $email;
+    }
+
+    public function testTheEmailHeaderCarriesTheNameTheStatusAndTheTypeBroadcastForASegmentEmail(): void
+    {
+        $html = $this->emailSubscriber()->emailHeadHtml($this->email(true, 'list'));
+
+        $this->assertStringContainsString('patches-email-header', $html);
+        $this->assertStringContainsString('<h1 class="page-header-title patches-modal-name">Welcome</h1>', $html);
+        $this->assertStringContainsString('data-status="published"', $html);
+        $this->assertStringContainsString('data-email-type="broadcast"', $html);
+        $this->assertStringContainsString('data-email-flags=""', $html);
+        $this->assertStringNotContainsString('patches-segment-updated', $html, 'an email has no "Updated on" line');
+    }
+
+    public function testAnUnpublishedTemplateEmailIsInactiveAndOfTheCampaignType(): void
+    {
+        $html = $this->emailSubscriber()->emailHeadHtml($this->email(false, 'template'));
+
+        $this->assertStringContainsString('data-status="unpublished"', $html);
+        $this->assertStringContainsString('data-email-type="campaign"', $html);
+    }
+
+    public function testTheEmailNameIsEscaped(): void
+    {
+        $html = $this->emailSubscriber()->emailHeadHtml($this->email(true, 'list', '<b onload="x">&'));
+
+        $this->assertStringNotContainsString('<b onload', $html);
+        $this->assertStringContainsString('&lt;b onload=&quot;x&quot;&gt;&amp;', $html);
+    }
+
+    public function testTheEmailFlagsAreAbtestTranslationAndDraftInThatOrder(): void
+    {
+        $parent = $this->email();
+        $email  = $this->email();
+        $email->setVariantParent($parent);          // a variant: A/B test
+        $email->setTranslationParent($parent);      // a translation
+        $email->setDraft($this->createMock(\Mautic\EmailBundle\Entity\EmailDraft::class)); // has a draft
+
+        $this->assertStringContainsString('data-email-flags="abtest,translation,draft"', $this->emailSubscriber(true)->emailHeadHtml($email));
+    }
+
+    public function testTheDraftFlagIsOffWhenTheDraftFeatureIsDisabled(): void
+    {
+        $email = $this->email();
+        $email->setDraft($this->createMock(\Mautic\EmailBundle\Entity\EmailDraft::class));
+
+        $this->assertStringContainsString('data-email-flags="draft"', $this->emailSubscriber(true)->emailHeadHtml($email));
+        $this->assertStringContainsString('data-email-flags=""', $this->emailSubscriber(false)->emailHeadHtml($email));
+    }
+
+    public function testAnEmailWithoutVariantOrTranslationHasNoFlags(): void
+    {
+        $this->assertStringContainsString('data-email-flags=""', $this->emailSubscriber()->emailHeadHtml($this->email()));
+    }
+
+    public function testTheEmailPageGetsTheHeaderThenTheScriptOnlyInPageHeaderLeft(): void
+    {
+        $sub   = $this->emailSubscriber();
+        $event = new CustomContentEvent('some_view', 'page.header.left', ['email' => $this->email(true, 'list')]);
+        $sub->injectViewCustomContent($event);
+        $html = implode('', $event->getContent());
+
+        $this->assertStringContainsString('patches-email-header', $html);
+        $this->assertLessThan(strpos($html, '<script'), strpos($html, 'patches-detail-status'), 'the marker comes before the script');
+        $this->assertStringContainsString('.patches-email-header:not([data-placed])', $html, 'an unplaced email header is hidden by the CSS');
+
+        $other = new CustomContentEvent('some_view', 'page.header.right', ['email' => $this->email()]);
+        $sub->injectViewCustomContent($other);
+        $this->assertSame([], $other->getContent());
+    }
+
+    public function testAnEmailPageIsNotTakenAsASegmentOrCampaignAndNeedsNoSegmentMarks(): void
+    {
+        $event = new CustomContentEvent('some_view', 'page.header.left', ['email' => $this->email()]);
+        $this->emailSubscriber()->injectViewCustomContent($event);
+        $html = implode('', $event->getContent());
+
+        $this->assertStringNotContainsString('data-count', $html);
+        $this->assertStringNotContainsString('data-restart', $html);
     }
 }

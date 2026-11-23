@@ -9,7 +9,7 @@ const test   = require('node:test');
 const assert = require('node:assert');
 const api    = require('../../Resources/js/segment-campaign-detail-badges.js');
 
-const cfg = {active: 'Ativo', inactive: 'Inativo', restart: 'Reentrada', global: 'Global', filters: 'Filtros', rebuild: 'Sem atualizar há %count% h', slow: 'Montagem lenta: %count% s'};
+const cfg = {emailBroadcast: 'Broadcast', emailCampaign: 'Campanha', emailAbtest: 'Teste A/B', emailTranslation: 'Tradução', emailDraft: 'Rascunho', active: 'Ativo', inactive: 'Inativo', restart: 'Reentrada', global: 'Global', filters: 'Filtros', rebuild: 'Sem atualizar há %count% h', slow: 'Montagem lenta: %count% s'};
 
 /** A fake DOM node with just what the script uses. */
 function node(name) {
@@ -57,8 +57,8 @@ test('a details page is /s/segments/view/{id} or /s/campaigns/view/{id}, under a
 });
 
 test('the marker tells the status and the reentry', () => {
-    assert.deepStrictEqual(api.readMarker(page({'data-status': 'published', 'data-restart': '1'}).doc), {status: 'published', restart: true, flags: [], rebuild: '', slow: '', segment: null});
-    assert.deepStrictEqual(api.readMarker(page({'data-status': 'unpublished'}).doc), {status: 'unpublished', restart: false, flags: [], rebuild: '', slow: '', segment: null});
+    assert.deepStrictEqual(api.readMarker(page({'data-status': 'published', 'data-restart': '1'}).doc), {status: 'published', restart: true, flags: [], emailType: '', emailFlags: [], rebuild: '', slow: '', segment: null});
+    assert.deepStrictEqual(api.readMarker(page({'data-status': 'unpublished'}).doc), {status: 'unpublished', restart: false, flags: [], emailType: '', emailFlags: [], rebuild: '', slow: '', segment: null});
     assert.strictEqual(api.readMarker(page(null).doc), null);
 });
 
@@ -388,4 +388,81 @@ test('the contacts badge of the modal header links to the contacts and listens t
     assert.strictEqual(badge.attrs.href, '/s/contacts?search=segment:x');
     assert.strictEqual(typeof badge.listeners.click, 'function');
     assert.doesNotThrow(() => badge.listeners.click()); // no mQuery in node: must not throw
+});
+
+// WEL-237: the email page (Email/header.html.twig): the marker carries the type and the flags of the email list row
+const emailMarker = (over = {}) => Object.assign({'data-status': 'published', 'data-email-type': 'broadcast', 'data-email-flags': ''}, over);
+
+test('an email details page is /s/emails/view/{id}', () => {
+    assert.ok(api.isDetailsPath('/s/emails/view/5'));
+    assert.ok(api.isDetailsPath('/index.php/s/emails/view/12'));
+    assert.ok(!api.isDetailsPath('/s/emails/edit/5'));
+    assert.ok(!api.isDetailsPath('/s/emails/view/5/extra'));
+});
+
+test('the marker of an email tells its type and flags; a segment or campaign marker has no type', () => {
+    const m = api.readMarker(page(emailMarker({'data-email-flags': 'abtest,draft'}), '/s/emails/view/3').doc);
+    assert.strictEqual(m.emailType, 'broadcast');
+    assert.deepStrictEqual(m.emailFlags, ['abtest', 'draft']);
+    const c = api.readMarker(page({'data-status': 'published'}).doc);
+    assert.strictEqual(c.emailType, '');
+    assert.deepStrictEqual(c.emailFlags, []);
+});
+
+test('an email has the status, then the type, then A/B test, translation, draft, in the order of the list', () => {
+    const marker = (type, flags) => ({status: 'published', restart: false, flags: [], emailType: type, emailFlags: flags});
+    assert.deepStrictEqual(api.badgesOf(marker('broadcast', []), cfg).map((b) => b.text), ['Ativo', 'Broadcast']);
+    assert.deepStrictEqual(api.badgesOf(marker('campaign', []), cfg).map((b) => b.text), ['Ativo', 'Campanha']);
+    // the order comes from the list, not from the marker
+    assert.deepStrictEqual(api.badgesOf(marker('campaign', ['draft', 'translation', 'abtest']), cfg).map((b) => b.text), ['Ativo', 'Campanha', 'Teste A/B', 'Tradução', 'Rascunho']);
+    assert.deepStrictEqual(api.badgesOf(marker('broadcast', ['translation']), cfg).map((b) => b.modifier), ['production', 'emailtype', 'translation']);
+});
+
+test('an inactive email keeps the red status first, a campaign/segment marker adds no email badge', () => {
+    const e = api.badgesOf({status: 'unpublished', restart: false, flags: [], emailType: 'campaign', emailFlags: []}, cfg);
+    assert.deepStrictEqual(e.map((b) => b.modifier), ['failed', 'emailtype']);
+    assert.strictEqual(api.badgesOf({status: 'published', restart: true, flags: [], emailType: '', emailFlags: []}, cfg).length, 2);
+});
+
+test('a change of the type or flags of an email alone draws the box again (the page is redrawn after an ajax load)', () => {
+    const {doc, host} = modalHead(emailMarker());
+    assert.strictEqual(api.renderModalHead(doc, cfg), true);
+    const first = host.children[1];
+    api.renderModalHead(doc, cfg);
+    assert.strictEqual(host.children[1], first, 'same marker: not touched');
+    const m = host.querySelector('.patches-detail-status');
+    const set = {'data-email-flags': 'draft'};
+    const old = m.getAttribute;
+    m.getAttribute = (k) => (k in set ? set[k] : old(k));
+    api.renderModalHead(doc, cfg);
+    assert.notStrictEqual(host.children[1], first);
+    assert.deepStrictEqual(host.children[1].children.map((b) => b.attrs.title), ['Ativo', 'Broadcast', 'Rascunho']);
+    set['data-email-type'] = 'campaign';
+    api.renderModalHead(doc, cfg);
+    assert.strictEqual(host.children[1].children[1].attrs.title, 'Campanha');
+});
+
+test('the email page: core tags beside the heading are removed, the heading is replaced and the title follows', () => {
+    const {doc, host, h1} = modalHead(emailMarker());
+    host.children.pop();
+    h1.nextSibling = null;
+    h1.textContent = 'Boas-vindas';
+    const parent = node('div'), core = node('h1'), tag = node('span');
+    core.textContent = 'Template';
+    parent.appendChild(core);
+    parent.appendChild(tag);
+    host.contains = (n) => n === h1;
+    doc.location = {pathname: '/s/emails/view/9'};
+    doc.readyState = 'complete';
+    doc.title = 'Template | Mautic';
+    const base = doc.querySelector;
+    doc.querySelector = (s) => (s === '.patches-segment-header:not([data-placed]):not(#MauticSharedModal *)' || s === '.patches-segment-header' ? host : base(s));
+    const asked = [];
+    doc.querySelectorAll = (s) => { asked.push(s); return s === 'h1.page-header-title' ? [core, h1] : /\.tag/.test(s) ? [tag] : []; };
+    parent.replaceChild = function (a, b) { this.children[this.children.indexOf(b)] = a; };
+    assert.strictEqual(api.addDetailBadges(doc, cfg), true);
+    assert.deepStrictEqual(parent.children, [host], 'core heading replaced and the core tag removed');
+    assert.ok(asked.some((s) => /\.tag/.test(s)), 'the tags are looked up');
+    assert.strictEqual(doc.title, 'Boas-vindas | Mautic');
+    assert.deepStrictEqual(host.children[1].children.map((b) => b.attrs.title), ['Ativo', 'Broadcast']);
 });
