@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Service\RoleUserClone;
 use Mautic\UserBundle\Entity\Role;
 use Mautic\UserBundle\Entity\User;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\ClonePackage;
+use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\CustomObjectCatalog;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\RoleSerializer;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\RoleUserExporter;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\UserSerializer;
@@ -38,6 +39,19 @@ class RoleUserExporterTest extends TestCase
         $user->setRole($role);
 
         return $user;
+    }
+
+    public function testARoleCarriesTheNameOfTheCustomObjectsItsKeysUse(): void
+    {
+        $catalog = $this->createMock(CustomObjectCatalog::class);
+        $catalog->method('names')->willReturn([3 => 'Pedidos', 4 => 'Outro']);
+        $role = $this->role('A');
+        $role->setRawPermissions(['custom_objects:3' => ['view'], 'lead:leads' => ['view']]);
+
+        $export = (new RoleUserExporter(new ClonePackage(), new RoleSerializer(), new UserSerializer(), $catalog))->exportRoles([$role]);
+        $data   = (new ClonePackage())->decrypt($export->getPackage(), $export->getKey());
+
+        $this->assertSame([3 => 'Pedidos'], $data['roles'][0]['customObjects']);
     }
 
     public function testTheRolesPackageOpensWithItsKeyAndHoldsOnlyRoles(): void

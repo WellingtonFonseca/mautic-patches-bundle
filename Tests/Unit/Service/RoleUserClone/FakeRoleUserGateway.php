@@ -36,6 +36,14 @@ class FakeRoleUserGateway implements RoleUserGateway
         return $this->roles[$name] ?? null;
     }
 
+    /** @var array<string, int> custom object name => id on this instance */
+    public array $customObjects = [];
+
+    public function findCustomObjectIdByName(string $name): ?int
+    {
+        return $this->customObjects[$name] ?? null;
+    }
+
     public function findUserByEmail(string $email): ?User
     {
         foreach ($this->users as $user) {

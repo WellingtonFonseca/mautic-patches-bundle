@@ -128,6 +128,42 @@ class RoleUserImporterTest extends TestCase
         $this->assertSame(['lead:leads' => ['view']], $role->getRawPermissions());
     }
 
+    public function testACustomObjectPermissionIsRewrittenToTheLocalIdByName(): void
+    {
+        $this->gateway->knownPermissionKeys[] = 'custom_objects:9';
+        $this->gateway->customObjects['Pedidos'] = 9;
+        $result = $this->importPackage([$this->roleEntry('Gestão', [
+            'permissions'   => ['lead:leads' => ['view'], 'custom_objects:3' => ['viewown'], 'custom_objects:custom_fields' => ['view']],
+            'customObjects' => [3 => 'Pedidos'],
+        ])]);
+
+        $this->assertSame(['Gestão'], $result->get('rolesCreated'));
+        $permissions = $this->gateway->roles['Gestão']->getRawPermissions();
+        $this->assertSame(['viewown'], $permissions['custom_objects:9']);
+        $this->assertArrayNotHasKey('custom_objects:3', $permissions);
+        $this->assertArrayHasKey('custom_objects:custom_fields', $permissions);
+    }
+
+    public function testACustomObjectMissingHereFailsTheRoleNamingTheObject(): void
+    {
+        $result = $this->importPackage([$this->roleEntry('Gestão', [
+            'permissions'   => ['custom_objects:3' => ['view']],
+            'customObjects' => [3 => 'Pedidos'],
+        ])]);
+
+        $this->assertSame([], $this->gateway->savedRoles);
+        $this->assertCount(1, $result->getFailures());
+        $this->assertStringContainsString('Pedidos', $result->getFailures()[0]['motivo']);
+    }
+
+    public function testAPackageWithoutTheCustomObjectNamesKeepsTheIdsAsTheyAre(): void
+    {
+        $this->gateway->knownPermissionKeys[] = 'custom_objects:3';
+        $this->importPackage([$this->roleEntry('Gestão', ['permissions' => ['custom_objects:3' => ['view']]])]);
+
+        $this->assertArrayHasKey('custom_objects:3', $this->gateway->roles['Gestão']->getRawPermissions());
+    }
+
     public function testACheckSavesNothing(): void
     {
         $role   = $this->existingRole('Velha', 'antiga');

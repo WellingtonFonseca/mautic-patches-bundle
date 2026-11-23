@@ -23,13 +23,19 @@ class MauticRoleUserGateway implements RoleUserGateway
         private RoleModel $roleModel,
         private UserModel $userModel,
         private CorePermissions $security,
-        private ValidatorInterface $validator
+        private ValidatorInterface $validator,
+        private CustomObjectCatalog $customObjects
     ) {
     }
 
     public function findRoleByName(string $name): ?Role
     {
         return $this->em->getRepository(Role::class)->findOneBy(['name' => $name]);
+    }
+
+    public function findCustomObjectIdByName(string $name): ?int
+    {
+        return $this->customObjects->idByName($name);
     }
 
     public function findUserByEmail(string $email): ?User

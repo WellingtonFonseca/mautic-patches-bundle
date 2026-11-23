@@ -15,6 +15,11 @@ interface RoleUserGateway
 {
     public function findRoleByName(string $name): ?Role;
 
+    /**
+     * @return int|null the id, on this instance, of the custom object with this name
+     */
+    public function findCustomObjectIdByName(string $name): ?int;
+
     public function findUserByEmail(string $email): ?User;
 
     public function findUserByUsername(string $username): ?User;

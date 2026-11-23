@@ -95,6 +95,14 @@ class RoleUserImporter
         }
         $this->seen[$name] = true;
 
+        $missing = [];
+        $entry   = $this->withLocalCustomObjectIds($entry, $missing);
+        if ([] !== $missing) {
+            $this->failRole($id, $name, 'custom_object_missing', ['%items%' => implode(', ', $missing)]);
+
+            return;
+        }
+
         $unknown = $this->gateway->unknownPermissions($entry['permissions']);
         if ([] !== $unknown) {
             $this->failRole($id, $name, 'unknown_permission', ['%items%' => implode(', ', $unknown)]);
@@ -127,6 +135,46 @@ class RoleUserImporter
         if ($apply) {
             $this->gateway->saveRole($role, $this->permissionsOf($entry));
         }
+    }
+
+    /**
+     * The key "custom_objects:<id>" has the id of the source instance. A package that names the custom objects gets each key rewritten
+     * to the id here; a name this instance does not have is listed in $missing. A package without the names is left as it is.
+     *
+     * @param array<string, mixed> $entry
+     * @param string[]             $missing
+     *
+     * @return array<string, mixed>
+     */
+    private function withLocalCustomObjectIds(array $entry, array &$missing): array
+    {
+        $names = $entry['customObjects'] ?? null;
+        if (!is_array($names) || [] === $names) {
+            return $entry;
+        }
+
+        $permissions = [];
+        foreach ($entry['permissions'] as $key => $levels) {
+            $sourceId = self::customObjectIdOf($key);
+            $name     = null === $sourceId ? null : ($names[$sourceId] ?? null);
+            if (null !== $name) {
+                $localId = is_string($name) ? $this->gateway->findCustomObjectIdByName($name) : null;
+                if (null === $localId) {
+                    $missing[] = is_string($name) ? $name : (string) $sourceId;
+                    continue;
+                }
+                $key = 'custom_objects:'.$localId;
+            }
+            $permissions[$key] = array_values(array_unique(array_merge($permissions[$key] ?? [], $levels)));
+        }
+        $entry['permissions'] = $permissions;
+
+        return $entry;
+    }
+
+    public static function customObjectIdOf(string $key): ?int
+    {
+        return 1 === preg_match('/^custom_objects:(\d+)$/', $key, $m) ? (int) $m[1] : null;
     }
 
     private function importUser(mixed $entry, bool $apply): void

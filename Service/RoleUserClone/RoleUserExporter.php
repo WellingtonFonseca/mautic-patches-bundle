@@ -20,7 +20,8 @@ class RoleUserExporter
     public function __construct(
         private ClonePackage $package,
         private RoleSerializer $roles,
-        private UserSerializer $users
+        private UserSerializer $users,
+        private ?CustomObjectCatalog $customObjects = null
     ) {
     }
 
@@ -72,10 +73,36 @@ class RoleUserExporter
      */
     private function serializeRoles(array $roles): array
     {
-        $serialized = array_map(fn (Role $role): array => $this->roles->toArray($role), $roles);
+        $serialized = array_map(fn (Role $role): array => $this->withCustomObjectNames($this->roles->toArray($role)), $roles);
         usort($serialized, static fn (array $a, array $b): int => strcmp($a['name'], $b['name']));
 
         return $serialized;
+    }
+
+    /**
+     * The permission key "custom_objects:<id>" holds the id of this instance; the name of each custom object it names goes along, so
+     * the other instance finds its own id. Only the ids the role uses are listed.
+     *
+     * @param array<string, mixed> $entry
+     *
+     * @return array<string, mixed>
+     */
+    private function withCustomObjectNames(array $entry): array
+    {
+        $names = $this->customObjects?->names() ?? [];
+        $map   = [];
+        foreach (array_keys($entry['permissions']) as $key) {
+            $id = RoleUserImporter::customObjectIdOf((string) $key);
+            if (null !== $id && isset($names[$id])) {
+                $map[$id] = $names[$id];
+            }
+        }
+        if ([] !== $map) {
+            ksort($map);
+            $entry['customObjects'] = $map;
+        }
+
+        return $entry;
     }
 
     /**
