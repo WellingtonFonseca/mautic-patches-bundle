@@ -51,6 +51,13 @@ return [
                 'method'       => 'GET',
                 'requirements' => ['id' => '\\d+'],
             ],
+            // The details modal of the campaign list: header component, Preview and Etapas tabs.
+            'mautic_patches_campaign_details' => [
+                'path'         => '/campaign-details/{id}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\CampaignDetailsController::detailsAction',
+                'method'       => 'GET',
+                'requirements' => ['id' => '\\d+'],
+            ],
             // The one table under the "Etapas" tab of the campaign page: the failed / the waiting contacts of one step.
             'mautic_patches_campaign_step_failed_contacts' => [
                 'path'         => '/campaign-step/{objectId}/failed/{page}',

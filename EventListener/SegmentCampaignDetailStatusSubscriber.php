@@ -132,6 +132,12 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         return $this->headHtml($list).StatusScript::html($this->translator, self::style(), 'installSegmentModalHead', self::SCRIPT);
     }
 
+    /** The head of the details modal of the campaign list: the campaign header component and the script that draws its badges. */
+    public function campaignModalHeadHtml(Campaign $campaign): string
+    {
+        return $this->campaignHeadHtml($campaign).StatusScript::html($this->translator, self::style(), 'installSegmentModalHead', self::SCRIPT);
+    }
+
     private function builtText(LeadList $list): string
     {
         $builtAt = $list->getLastBuiltDate();

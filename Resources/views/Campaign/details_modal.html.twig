@@ -1,0 +1,38 @@
+{#
+  Body of the details modal of the campaign list: the header component (title with the prefix, status badges) and the tabs of the campaign page, Preview
+  and Etapas (the Etapas tab comes from CampaignStepsTabSubscriber through core's 'tabs' / 'tabs.content' hooks, asked here with the view name of core's page,
+  so the tab is the page's own). Core's own read-only Ações / Condições / Contatos tabs are not here. Same width and footer as the segment modal
+  (contacts_modal_width.html.twig; `.bottom-form-buttons`: Edit btn-primary only for who may edit, Details btn-secondary, Close btn-tertiary btn-cancel).
+  Variables: those of core's campaign page (campaign, events, campaignEvents, campaignSources, eventSettings), headHtml, canEdit.
+#}
+{% set pageView = '@MauticCampaign/Campaign/details.html.twig' %}
+{{ include('@MauticPatches/Contact/contacts_modal_width.html.twig', {'modalClass': 'mautic-patches-campaign-details'}) }}
+<div class="mautic-patches-campaign-details" data-campaign-id="{{ campaign.id }}">
+    {{ headHtml|raw }}
+    <ul class="nav nav-tabs nav-tabs-contained" role="tablist">
+        <li class="active"><a href="#preview-container" role="tab" data-toggle="tab">{{ 'mautic.campaign.preview.header'|trans }}</a></li>
+        {{ customContent('tabs', _context, pageView) }}
+    </ul>
+
+    <div class="tab-content pt-md">
+        <div class="active tab-pane fade in bdr-w-0" id="preview-container">
+            {{- include('@MauticCampaign/Campaign/_preview.html.twig', {
+                'campaignId': campaign.id,
+                'campaign': campaign,
+                'campaignEvents': campaignEvents,
+                'campaignSources': campaignSources,
+                'eventSettings': eventSettings,
+                'canvasSettings': campaign.canvasSettings,
+            }) -}}
+        </div>
+        {{ customContent('tabs.content', _context, pageView) }}
+    </div>
+
+    <div class="bottom-form-buttons">
+        {% if canEdit %}
+        <button type="button" id="patches-campaign-details-edit" class="btn btn-primary" onclick="mQuery('#MauticSharedModal').modal('hide'); Mautic.loadContent('{{ path('mautic_campaign_action', {'objectAction': 'edit', 'objectId': campaign.id})|e('js') }}');">{{ 'mautic.core.form.edit'|trans }}<i class="ri-edit-line"></i></button>
+        {% endif %}
+        <button type="button" id="patches-campaign-details-page" class="btn btn-secondary" onclick="mQuery('#MauticSharedModal').modal('hide'); Mautic.loadContent('{{ path('mautic_campaign_action', {'objectAction': 'view', 'objectId': campaign.id})|e('js') }}');">{{ 'mautic.core.details'|trans }}<i class="ri-information-line"></i></button>
+        <button type="button" id="patches-campaign-details-close" class="btn btn-tertiary btn-cancel" data-dismiss="modal">{{ 'mautic.core.close'|trans }}<i class="ri-close-line"></i></button>
+    </div>
+</div>
