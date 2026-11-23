@@ -130,7 +130,7 @@ class RoleUserImporterTest extends TestCase
 
     public function testACustomObjectPermissionIsRewrittenToTheLocalIdByName(): void
     {
-        $this->gateway->knownPermissionKeys[] = 'custom_objects:9';
+        $this->gateway->knownPermissionKeys = array_merge($this->gateway->knownPermissionKeys, ['custom_objects:9', 'custom_objects:custom_fields']);
         $this->gateway->customObjects['Pedidos'] = 9;
         $result = $this->importPackage([$this->roleEntry('Gestão', [
             'permissions'   => ['lead:leads' => ['view'], 'custom_objects:3' => ['viewown'], 'custom_objects:custom_fields' => ['view']],
@@ -162,6 +162,29 @@ class RoleUserImporterTest extends TestCase
         $this->importPackage([$this->roleEntry('Gestão', ['permissions' => ['custom_objects:3' => ['view']]])]);
 
         $this->assertArrayHasKey('custom_objects:3', $this->gateway->roles['Gestão']->getRawPermissions());
+    }
+
+    public function testTwoSourceObjectsThatMapToTheSameLocalIdMergeTheirLevels(): void
+    {
+        $this->gateway->knownPermissionKeys[] = 'custom_objects:9';
+        $this->gateway->customObjects['Pedidos'] = 9;
+        $this->importPackage([$this->roleEntry('Gestão', [
+            'permissions'   => ['custom_objects:3' => ['view'], 'custom_objects:4' => ['edit', 'view']],
+            'customObjects' => [3 => 'Pedidos', 4 => 'Pedidos'],
+        ])]);
+
+        $this->assertEqualsCanonicalizing(['view', 'edit'], $this->gateway->roles['Gestão']->getRawPermissions()['custom_objects:9']);
+    }
+
+    public function testACheckAlsoFailsARoleWhoseCustomObjectIsMissingHere(): void
+    {
+        $result = $this->importPackage([$this->roleEntry('Gestão', [
+            'permissions'   => ['custom_objects:3' => ['view']],
+            'customObjects' => [3 => 'Pedidos'],
+        ])], [], false);
+
+        $this->assertCount(1, $result->getFailures());
+        $this->assertSame([], $this->gateway->savedRoles);
     }
 
     public function testACheckSavesNothing(): void
