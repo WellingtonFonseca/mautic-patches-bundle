@@ -24,7 +24,7 @@ use Twig\Environment;
 /**
  * The Ativo / Inativo badge of the segment and campaign lists (and the reentry badge of the campaign), copied to the details page: circles left of the
  * Editar button, in the look of the contact page (ContactDetailStatusSubscriber::STYLE with its class renamed, so the size is written once). Core keeps its own
- * status label under the title. The state travels in a hidden marker printed here, in the 'page.header.left' hook, whose variables hold the
+ * status label under the title on the segment page; on the campaign page the script removes it (placePageHeader). The state travels in a hidden marker printed here, in the 'page.header.left' hook, whose variables hold the
  * entity of the page ('campaign' on the campaign page, 'list' on the segment page); the other pages that use that hook have neither, and print nothing.
  * The script is Resources/js/segment-campaign-detail-badges.js.
  */
