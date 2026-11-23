@@ -51,4 +51,17 @@ class CampaignConnectionTrashSubscriberTest extends TestCase
         preg_match('/z-index:(\d+)/', $script, $m);
         $this->assertGreaterThan(1011, (int) $m[1]);
     }
+
+    public function testThePreviewIsLockedAndItsCirclesAreShownAgain(): void
+    {
+        $script = file_get_contents(__DIR__.'/../../../Resources/js/campaign-connection-trash.js');
+
+        // no unlink on the Preview: lines not detachable, circles disabled, detach and drop refused
+        $this->assertStringContainsString('lockPreview', $script);
+        $this->assertStringContainsString('setDetachable(false)', $script);
+        $this->assertStringContainsString("bind('beforeDetach'", $script);
+        $this->assertStringContainsString("bind('beforeDrop'", $script);
+        // the connector circles core hides there are back, and only there
+        $this->assertStringContainsString('#preview-container .jtk-endpoint svg{display:block!important}', $script);
+    }
 }
