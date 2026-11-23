@@ -1,0 +1,4 @@
+{# Hides core's Contacts tab of the campaign page (CampaignStepsTabSubscriber): core's hook 'tabs'. The tab and its pane stay in core's template (not touched), never shown. #}
+<style>
+    .nav-tabs li:has(> a[href="#leads-container"]),#leads-container{display:none}
+</style>

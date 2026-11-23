@@ -57,8 +57,18 @@ class CampaignStepsTabSubscriberTest extends TestCase
         $this->subscriber()->inject($event);
 
         $templates = $event->getTemplates();
-        $this->assertCount(1, $templates, 'the link only, never the pane in the list of tabs');
-        $this->assertSame('@MauticPatches/Campaign/steps_tab_link.html.twig', $templates[0]['template']);
+        $this->assertCount(2, $templates, 'the Contacts tab hide style and the link, never the pane in the list of tabs');
+        $this->assertSame('@MauticPatches/Campaign/contacts_tab_hide.html.twig', $templates[0]['template']);
+        $this->assertSame('@MauticPatches/Campaign/steps_tab_link.html.twig', $templates[1]['template']);
+    }
+
+    public function testTheContactsTabIsHiddenEvenWithNoSteps(): void
+    {
+        $event = new CustomContentEvent(self::VIEW, 'tabs', ['events' => []]);
+
+        $this->subscriber()->inject($event);
+
+        $this->assertSame(['@MauticPatches/Campaign/contacts_tab_hide.html.twig'], array_column($event->getTemplates(), 'template'));
     }
 
     public function testThePaneListsOnlyTheActionsAndConditionsInTheirOrder(): void
@@ -118,7 +128,7 @@ class CampaignStepsTabSubscriberTest extends TestCase
 
         $this->subscriber()->inject($event);
 
-        $this->assertCount(1, $event->getTemplates());
+        $this->assertCount(2, $event->getTemplates());
     }
 
     public function testSharesAreRoundedToOneDecimal(): void
@@ -243,7 +253,7 @@ class CampaignStepsTabSubscriberTest extends TestCase
         return [
             'another view'         => ['@MauticEmail/Email/details.html.twig', 'tabs', ['events' => ['action' => [['id' => 1, 'eventType' => 'action']]]]],
             'another context'      => [self::VIEW, 'details.stats.graph.below', ['events' => ['action' => [['id' => 1, 'eventType' => 'action']]]]],
-            'a campaign with no action or condition' => [self::VIEW, 'tabs', ['events' => ['action' => [], 'decision' => [['id' => 1, 'eventType' => 'decision']]]]],
+            'a campaign with no action or condition (pane)' => [self::VIEW, 'tabs.content', ['events' => ['action' => [], 'decision' => [['id' => 1, 'eventType' => 'decision']]]]],
             'no events at all'     => [self::VIEW, 'tabs.content', []],
         ];
     }

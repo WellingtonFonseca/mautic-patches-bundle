@@ -45,6 +45,11 @@ class CampaignStepsTabSubscriber implements EventSubscriberInterface
             return;
         }
 
+        // The Contacts tab is hidden on every campaign, with or without steps.
+        if ($isLink) {
+            $customContentEvent->addTemplate('@MauticPatches/Campaign/contacts_tab_hide.html.twig');
+        }
+
         $steps = $this->stepsOf($customContentEvent->getVars()['events'] ?? []);
 
         // The tab lists the actions and the conditions: a campaign with neither has nothing to show.
