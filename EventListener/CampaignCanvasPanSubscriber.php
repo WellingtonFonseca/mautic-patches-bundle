@@ -30,7 +30,7 @@ class CampaignCanvasPanSubscriber implements EventSubscriberInterface
         .'body.mautic-patches-panning,body.mautic-patches-panning #campaign-builder *{cursor:grabbing!important;user-select:none!important}';
 
     // What the left button must leave alone: the nodes and their circles, the lines, the panels, the links, buttons and fields.
-    public const NOT_BACKGROUND = '.draggable,.list-campaign-event,.jtk-endpoint,.jtk-connector,.jtk-overlay,.mautic-patches-trash,#CampaignEventPanel,#EventJumpOverlay,a,button,input,textarea,select,label,.chosen-container,.modal';
+    public const NOT_BACKGROUND = '.draggable,.list-campaign-event,.jtk-endpoint,.jtk-connector,.jtk-overlay,.mautic-patches-trash,#CampaignEventPanel,#EventJumpOverlay,a,button,input,textarea,select,label,.chosen-container';
 
     public static function getSubscribedEvents(): array
     {
@@ -68,7 +68,9 @@ class CampaignCanvasPanSubscriber implements EventSubscriberInterface
             .'function stop(){pan=null;document.body.classList.remove("mautic-patches-panning");}'
             // the middle button drags from anywhere (a node too); the left one only from an empty spot
             .'document.addEventListener("mousedown",function(e){'
-            .'if(!onCanvas(e)||(e.button!==1&&!(e.button===0&&!e.target.closest(NOT)))){return;}'
+            // a modal that hangs from the builder (its own dialogs) is not the background; the builder inside a modal (campaign details) is
+            .'var m=e.target.closest&&e.target.closest(".modal");'
+            .'if(!onCanvas(e)||(m&&m.closest("#campaign-builder"))||(e.button!==1&&!(e.button===0&&!e.target.closest(NOT)))){return;}'
             .'var el=scroller(e.target);'
             .'if(!el){return;}'
             .'e.preventDefault();'
