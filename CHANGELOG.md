@@ -3,6 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-23
+- Na página do segmento, o selo "Ativo" padrão do Mautic foi removido, pois o status já aparece no cabeçalho do título
 - Nas páginas de campanhas, o cabeçalho ficou com o título mais largo (col-sm-8/md-8) e a área do botão Editar mais estreita (col-sm-4/md-4)
 - Na página da campanha, o selo "Ativo" padrão do Mautic foi removido, pois o status já aparece no cabeçalho do título
 - No Preview da campanha, as linhas não podem mais ser desconectadas nem arrastadas, e as bolinhas conectoras dos nós voltaram a aparecer (sem botão de desconectar). O editor da campanha continua igual
