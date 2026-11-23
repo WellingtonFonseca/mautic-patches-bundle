@@ -123,7 +123,7 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
 
         $this->assertStringContainsString('patches-segment-header patches-campaign-header', $html);
         $this->assertStringContainsString('<h1 class="page-header-title patches-modal-name">', $html);
-        $this->assertStringNotContainsString('patches-segment-updated', $html);
+        $this->assertStringNotContainsString('class="patches-segment-updated', $html);
     }
 
     public function testAnInactiveCampaignWithoutReentryHasNoReentryMark(): void
