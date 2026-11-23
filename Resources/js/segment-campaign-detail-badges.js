@@ -140,6 +140,13 @@
         var title = host.querySelector('.patches-modal-name').textContent, old = core.textContent.trim();
         host.setAttribute('data-placed', '1');
         core.parentNode.replaceChild(host, core);
+        // the campaign page: core's own Ativo label (div.mt-md.d-flex.gap-xs with the publishstatus_pulse dot) repeats the badge of the component
+        if (host.classList.contains('patches-campaign-header')) {
+            Array.prototype.forEach.call(doc.querySelectorAll('.publishstatus_pulse'), function (dot) {
+                var block = dot.closest('div.mt-md.d-flex.gap-xs');
+                if (block && !host.contains(block) && block.parentNode) { block.parentNode.removeChild(block); }
+            });
+        }
         if (old && doc.title.indexOf(title) === -1) { doc.title = doc.title.replace(old, title); }
         renderHeader(doc, host, cfg);
 
