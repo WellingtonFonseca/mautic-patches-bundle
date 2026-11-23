@@ -3,6 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-23
+- Na janela de detalhes do contato (lista de contatos), o título com os selos não fica mais colado nas abas: há 15 px de espaço entre eles
 - Na página de detalhes do email, o título agora é o cabeçalho (mesmo padrão do segmento e da campanha): o nome do template de email com os selos de status, tipo (Broadcast ou Campanha) e marcas (Teste A/B, Tradução, Rascunho) logo depois, os mesmos da coluna Status da lista de emails. As etiquetas padrão do Mautic ao lado do status foram removidas, pois os selos já mostram essa informação
 - Na página de detalhes do contato, o título agora é o cabeçalho (mesmo padrão do segmento e da campanha): "{enro_academic_record} - {nome e sobrenome}" (só o registro ou só o nome quando faltar um) com os selos Email, SMS e HSM logo depois do título, em vermelho quando o canal está em Não Contatar. Os selos saíram da barra de botões, e o título da aba do navegador acompanha o cabeçalho. A janela de detalhes da lista não mudou
 - Na importação de papéis, as permissões de Custom Objects agora são casadas pelo nome do objeto, não pelo id: a exportação leva os nomes e a importação procura o id na instância de destino. Se o objeto não existir lá, o papel falha (também na conferência) e a mensagem diz qual objeto criar. Pacotes antigos, sem os nomes, continuam usando os ids
