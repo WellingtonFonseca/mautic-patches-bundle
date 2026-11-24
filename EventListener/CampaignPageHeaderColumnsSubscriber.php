@@ -16,6 +16,9 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * campaign or segment route a small script swaps the column classes of the `.page-header` (the header is
  * rendered on every ajax page load too, so the script runs each time). Other pages and bundles keep core's columns.
  *
+ * The detail (view) pages of the campaign, segment, contact, email, custom object and custom item use 7/5 instead
+ * (title col-sm-7 col-md-7, toolbar col-sm-5 col-md-5); the campaign and segment list pages keep 8/4.
+ *
  * Injected the same way as CampaignViewOrderSubscriber (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left').
  */
 class CampaignPageHeaderColumnsSubscriber implements EventSubscriberInterface
@@ -38,6 +41,12 @@ class CampaignPageHeaderColumnsSubscriber implements EventSubscriberInterface
         }
 
         $route = (string) $this->requestStack->getCurrentRequest()?->attributes->get('_route');
+        if (self::isDetailPage($route, (string) $this->requestStack->getCurrentRequest()?->attributes->get('objectAction'))) {
+            $customContentEvent->addContent('<script>'.self::script(7, 5).'</script>');
+
+            return;
+        }
+
         if (!str_starts_with($route, 'mautic_campaign_') && !str_starts_with($route, 'mautic_segment_')) {
             return;
         }
@@ -45,7 +54,21 @@ class CampaignPageHeaderColumnsSubscriber implements EventSubscriberInterface
         $customContentEvent->addContent('<script>'.self::script().'</script>');
     }
 
-    public static function script(): string
+    public static function isDetailPage(string $route, string $objectAction): bool
+    {
+        if (in_array($route, ['mautic_custom_object_view', 'mautic_custom_item_view'], true)) {
+            return true;
+        }
+
+        return 'view' === $objectAction && in_array($route, [
+            'mautic_campaign_action',
+            'mautic_segment_action',
+            'mautic_contact_action',
+            'mautic_email_action',
+        ], true);
+    }
+
+    public static function script(int $titleCols = 8, int $toolbarCols = 4): string
     {
         return '(function(){'
             .'function swap(){'
@@ -53,8 +76,8 @@ class CampaignPageHeaderColumnsSubscriber implements EventSubscriberInterface
             .'var title=header.querySelector(".col-md-5.va-m");'
             .'var toolbar=header.querySelector(".col-md-7.va-m");'
             .'if(title&&toolbar){'
-            .'title.className="col-xs-12 col-sm-8 col-md-8 va-m";'
-            .'toolbar.className="col-xs-12 col-sm-4 col-md-4 va-m";'
+            .'title.className="col-xs-12 col-sm-'.$titleCols.' col-md-'.$titleCols.' va-m";'
+            .'toolbar.className="col-xs-12 col-sm-'.$toolbarCols.' col-md-'.$toolbarCols.' va-m";'
             .'}'
             .'});'
             .'}'
