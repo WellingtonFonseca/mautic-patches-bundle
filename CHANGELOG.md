@@ -2,6 +2,9 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-24
+- Nas páginas de detalhes (campanha, segmento, contato, email, custom object e item de custom object), o cabeçalho agora tem o título com col-sm-7/md-7 e a área do botão Editar com col-sm-5/md-5. As listas de campanhas e segmentos continuam com 8/4
+
 ## 2026-11-23
 - Na janela de detalhes do contato (lista de contatos), o título com os selos não fica mais colado nas abas: há 15 px de espaço entre eles
 - Na página de detalhes do email, o título agora é o cabeçalho (mesmo padrão do segmento e da campanha): o nome do template de email com os selos de status, tipo (Broadcast ou Campanha) e marcas (Teste A/B, Tradução, Rascunho) logo depois, os mesmos da coluna Status da lista de emails. As etiquetas padrão do Mautic ao lado do status foram removidas, pois os selos já mostram essa informação
