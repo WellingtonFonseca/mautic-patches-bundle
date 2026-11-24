@@ -10,6 +10,8 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Mautic\CoreBundle\Translation\Translator;
+use MauticPlugin\CustomObjectsBundle\Entity\CustomItem;
+use MauticPlugin\CustomObjectsBundle\Entity\CustomObject;
 use Mautic\EmailBundle\Entity\Email;
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Model\ListModel;
@@ -31,6 +33,9 @@ use Twig\Environment;
  */
 class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
 {
+    /** The hook the Custom Objects modal twigs call (customContent) to print the header of their details modal. */
+    public const CO_MODAL_CONTEXT = 'patches.details.modal.head';
+
     private const SCRIPT = 'Resources/js/segment-campaign-detail-badges.js';
 
     // The contacts badge of the segment (the pill of the list's contacts column, as tall as the circles beside it) and the "Updated on ..." line
@@ -75,13 +80,32 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
 
     public function injectViewCustomContent(CustomContentEvent $customContentEvent): void
     {
-        if ('page.header.left' !== $customContentEvent->getContext()) {
+        $context = $customContentEvent->getContext();
+        if (self::CO_MODAL_CONTEXT === $context) {
+            // the details modal of a Custom Object or item (printed by their modal twig): the same component and the modal script
+            $vars   = $customContentEvent->getVars();
+            $entity = $vars['customObject'] ?? $vars['item'] ?? null;
+            if ($entity instanceof CustomObject || $entity instanceof CustomItem) {
+                $customContentEvent->addContent($this->customHeadHtml($entity).StatusScript::html($this->translator, self::style(), 'installSegmentModalHead', self::SCRIPT));
+            }
+
+            return;
+        }
+
+        if ('page.header.left' !== $context) {
             return;
         }
 
         $vars   = $customContentEvent->getVars();
-        $entity = $vars['campaign'] ?? $vars['list'] ?? $vars['email'] ?? null;
-        if (!$entity instanceof Campaign && !$entity instanceof LeadList && !$entity instanceof Email) {
+        $entity = $vars['campaign'] ?? $vars['list'] ?? $vars['email'] ?? $vars['customObject'] ?? $vars['item'] ?? null;
+        if (!$entity instanceof Campaign && !$entity instanceof LeadList && !$entity instanceof Email && !$entity instanceof CustomObject && !$entity instanceof CustomItem) {
+            return;
+        }
+
+        if ($entity instanceof CustomObject || $entity instanceof CustomItem) {
+            // the Custom Object and item pages: the same component as the email page (title + status badge)
+            $customContentEvent->addContent($this->customHeadHtml($entity).StatusScript::html($this->translator, self::style(), 'installSegmentCampaignDetail', self::SCRIPT));
+
             return;
         }
 
@@ -101,6 +125,18 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
 
         // the campaign page: the same component (Campaign/header.html.twig), which the script puts in place of core's heading
         $customContentEvent->addContent($this->campaignHeadHtml($entity).StatusScript::html($this->translator, self::style(), 'installSegmentCampaignDetail', self::SCRIPT));
+    }
+
+    /**
+     * The header component of a Custom Object or item (Email/header.html.twig, the title + status badge component): the name and the hidden
+     * marker (status). Plain instanceof: the Custom Objects plugin may be absent, and then no entity of these classes ever arrives.
+     */
+    public function customHeadHtml(CustomObject|CustomItem $entity): string
+    {
+        return $this->twig->render('@MauticPatches/Email/header.html.twig', [
+            'title'            => (string) ($entity instanceof CustomObject ? $entity->getNameSingular() : $entity->getName()),
+            'markerAttributes' => sprintf('data-status="%s"', $entity->isPublished() ? 'published' : 'unpublished'),
+        ]);
     }
 
     /**

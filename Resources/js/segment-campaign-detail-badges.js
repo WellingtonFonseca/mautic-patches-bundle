@@ -14,9 +14,9 @@
 
     var BOX_CLASS = 'patches-details-badges';
 
-    /** Whether a path is the details page of one segment, campaign or email (Mautic may be served under a subdirectory or index.php). */
+    /** Whether a path is the details page of one segment, campaign, email, Custom Object or Custom Item (Mautic may be served under a subdirectory or index.php). */
     function isDetailsPath(path) {
-        return /\/s\/(?:segments|campaigns|emails)\/view\/\d+$/.test(path);
+        return /\/s\/(?:segments|campaigns|emails)\/view\/\d+$|\/s\/custom\/object\/(?:view\/\d+|\d+\/item\/view\/\d+)$/.test(path);
     }
 
     /** What the marker of the page says: {status: 'published' | 'unpublished', restart: bool}, or null when the page has no marker. */
