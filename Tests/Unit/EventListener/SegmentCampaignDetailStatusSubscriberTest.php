@@ -10,6 +10,8 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\EmailBundle\Entity\Email;
 use Mautic\LeadBundle\Entity\LeadList;
+use MauticPlugin\CustomObjectsBundle\Entity\CustomItem;
+use MauticPlugin\CustomObjectsBundle\Entity\CustomObject;
 use MauticPlugin\MauticPatchesBundle\EventListener\ContactDetailStatusSubscriber;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentCampaignDetailStatusSubscriber;
 use Mautic\CoreBundle\Translation\Translator;
@@ -88,6 +90,80 @@ class SegmentCampaignDetailStatusSubscriberTest extends TestCase
         $list->setName('Segment');
 
         return $list;
+    }
+
+    private function customObject(bool $published): CustomObject
+    {
+        $object = new CustomObject();
+        $object->setNameSingular('Pet');
+        $object->setNamePlural('Pets');
+        $object->setIsPublished($published);
+
+        return $object;
+    }
+
+    private function customItem(bool $published): CustomItem
+    {
+        $item = new CustomItem($this->customObject(true));
+        $item->setName('Rex');
+        $item->setIsPublished($published);
+
+        return $item;
+    }
+
+    public function testTheCustomObjectModalHeadGetsTheTitleAndTheStatusMarkAndTheModalScript(): void
+    {
+        $html = $this->html(['customObject' => $this->customObject(true)], SegmentCampaignDetailStatusSubscriber::CO_MODAL_CONTEXT);
+
+        $this->assertStringContainsString('Pet', $html);
+        $this->assertStringContainsString('data-status="published"', $html);
+        $this->assertStringContainsString('mauticPatchesListStatusApi.installSegmentModalHead(mQuery,Mautic,', $html);
+    }
+
+    public function testTheCustomItemModalHeadGetsTheItemNameAndItsInactiveStatus(): void
+    {
+        $html = $this->html(['item' => $this->customItem(false)], SegmentCampaignDetailStatusSubscriber::CO_MODAL_CONTEXT);
+
+        $this->assertStringContainsString('Rex', $html);
+        $this->assertStringContainsString('data-status="unpublished"', $html);
+        $this->assertStringContainsString('installSegmentModalHead', $html);
+    }
+
+    public function testTheModalHeadContextIgnoresOtherEntitiesAndNeverDrawsThePageHeader(): void
+    {
+        $this->assertSame('', $this->html(['campaign' => $this->campaign(true, false)], SegmentCampaignDetailStatusSubscriber::CO_MODAL_CONTEXT));
+        $this->assertSame('', $this->html([], SegmentCampaignDetailStatusSubscriber::CO_MODAL_CONTEXT));
+    }
+
+    public function testTheCustomObjectPageHeaderHasTheTitleAndTheStatusMarkWithThePageScript(): void
+    {
+        $html = $this->html(['customObject' => $this->customObject(false)]);
+
+        $this->assertStringContainsString('Pet', $html);
+        $this->assertStringContainsString('data-status="unpublished"', $html);
+        $this->assertStringContainsString('installSegmentCampaignDetail', $html);
+        $this->assertStringNotContainsString('installSegmentModalHead', $html);
+        $this->assertStringNotContainsString('data-restart', $html);
+    }
+
+    public function testTheCustomItemPageHeaderHasTheItemNameAndTheStatusMark(): void
+    {
+        $html = $this->html(['item' => $this->customItem(true)]);
+
+        $this->assertStringContainsString('Rex', $html);
+        $this->assertStringContainsString('data-status="published"', $html);
+        $this->assertStringContainsString('installSegmentCampaignDetail', $html);
+    }
+
+    public function testTheCustomItemNameIsEscapedInTheHeader(): void
+    {
+        $item = $this->customItem(true);
+        $item->setName('<b>x</b>');
+
+        $html = $this->html(['item' => $item]);
+
+        $this->assertStringNotContainsString('<b>x</b>', $html);
+        $this->assertStringContainsString('&lt;b&gt;x&lt;/b&gt;', $html);
     }
 
     public function testASegmentCarriesItsCountAndLastBuiltTextForTheBadgeAndTheLine(): void

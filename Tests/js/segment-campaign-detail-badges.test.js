@@ -53,6 +53,13 @@ test('a details page is /s/segments/view/{id} or /s/campaigns/view/{id}, under a
     assert.ok(!api.isDetailsPath('/s/campaigns/edit/5'));
     assert.ok(!api.isDetailsPath('/s/campaigns/view/5/extra'));
     assert.ok(!api.isDetailsPath('/s/contacts/view/7'));
+    assert.ok(api.isDetailsPath('/s/custom/object/view/4'));
+    assert.ok(api.isDetailsPath('/index.php/s/custom/object/4/item/view/9'));
+    assert.ok(api.isDetailsPath('/mautic/s/custom/object/12/item/view/30'));
+    assert.ok(!api.isDetailsPath('/s/custom/object/view/4/extra'));
+    assert.ok(!api.isDetailsPath('/s/custom/object/4/item/edit/9'));
+    assert.ok(!api.isDetailsPath('/s/custom/object/4/item/view'));
+    assert.ok(!api.isDetailsPath('/s/custom/object'));
     assert.ok(!api.isDetailsPath('/s/campaigns'));
 });
 
