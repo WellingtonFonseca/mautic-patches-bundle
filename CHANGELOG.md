@@ -3,6 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-24
+- Nas páginas de detalhes de Custom Object e de item de Custom Object, e nas janelas de detalhes deles, o título agora é o cabeçalho (mesmo padrão do segmento, campanha e email): o nome com o selo de status (Publicado ou Não publicado) logo depois
 - Nas páginas de detalhes (campanha, segmento, contato, email, custom object e item de custom object), o cabeçalho agora tem o título com col-sm-7/md-7 e a área do botão Editar com col-sm-5/md-5. As listas de campanhas e segmentos continuam com 8/4
 
 ## 2026-11-23
