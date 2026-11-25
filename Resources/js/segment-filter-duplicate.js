@@ -68,16 +68,22 @@
     var OWNERS = {lead: 'Contato', company: 'Empresa'};
 
     /**
-     * The field name as a read only input: "Contato: <field>", "Empresa: <field>"; a Custom Objects field already comes as
-     * "<object> : <field>" from its filter label, so it stays as it is.
+     * The field name as a read only input, with its group in bold in front, like the select of the bar: "Contato" | <field>,
+     * "Empresa" | <field>; a Custom Objects field already comes as "<object> : <field>" from its filter label, which is split there.
      */
     function nameInput($, $filter) {
         var $name = $filter.find('.panel-body .field-name').first();
         if (!$name.length || $name.find('.patches-field-input').length) { return; }
         var label = $.trim($name.text());
         var object = $filter.find('input[name$="[object]"]').first().val();
-        var text = OWNERS[object] ? OWNERS[object] + ': ' + label : label;
-        $name.empty().append($('<input type="text" class="form-control patches-field-input" readonly="readonly">').val(text).attr('title', text));
+        var group = OWNERS[object] || '';
+        var field = label;
+        var cut = label.indexOf(' : ');
+        if (!group && cut > 0) { group = label.slice(0, cut); field = label.slice(cut + 3); }
+        var $input = $('<input type="text" class="form-control patches-field-input" readonly="readonly">').val(field).attr('title', (group ? group + ': ' : '') + field);
+        var $box = $('<div class="input-group patches-field-group"></div>');
+        if (group) { $box.append($('<span class="input-group-addon"></span>').append($('<b></b>').text(group))); }
+        $name.empty().append($box.append($input));
     }
 
     /** The alerts of the value widget of a filter of the list go to the bottom of its panel-body (below the fields, from the field name to the end); the ones below the value are hidden by CSS. */
