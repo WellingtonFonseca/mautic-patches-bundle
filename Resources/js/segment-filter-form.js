@@ -23,7 +23,10 @@
     // value-form reloads in flight, by filter number; `settled` listeners run when one is answered
     var inflight = {};
     var settled = [];
+    var REPLY_TIMEOUT = 15000;
     var queue = null;
+    // >0 while core runs a multi-step operation (copy of a group): the redraw waits for its end
+    var quiet = 0;
 
     /** The editable segment form (not a Dynamic Content / DWC filter, which shares lead.js and must not be touched). */
     function active($) {
@@ -164,7 +167,8 @@
     function copyGroup($panel) {
         return enqueue(function () {
             dockAll();
-            $panel.find('.segment-button .copy-filter-group').first().trigger('click');
+            quiet++;
+            try { $panel.find('.segment-button .copy-filter-group').first().trigger('click'); } finally { quiet--; }
             ctx.changed();
         });
     }
@@ -173,7 +177,11 @@
         // out of the list at once: core removes the panel after its fade, and that is when it renumbers
         $panel.attr('data-patches-removing', '1');
         ctx.changed();
-        $panel.find('.segment-button .remove-selected').first().trigger('click');
+
+        // the click waits for the replies in flight: they must not land on a renumbered panel
+        return enqueue(function () {
+            $panel.find('.segment-button .remove-selected').first().trigger('click');
+        });
     }
 
     /** Puts the panels in the order given (elements) and lets core renumber. */
@@ -202,7 +210,7 @@
             Mautic.reorderSegmentFilters = function () {
                 if (!active($)) { return reorder.apply(this, arguments); }
                 dockAll();
-                try { return reorder.apply(this, arguments); } finally { ctx.changed(); }
+                try { return reorder.apply(this, arguments); } finally { if (!quiet) { ctx.changed(); } }
             };
             Mautic.reorderSegmentFilters.patchesDocked = true;
         }
@@ -213,8 +221,19 @@
             var args = Array.prototype.slice.call(arguments);
             if (typeof resultHtml === 'function') {
                 inflight[filterNum] = (inflight[filterNum] || 0) + 1;
-                args[4] = function () {
+                var counted = true;
+                var release = function () {
+                    if (!counted) { return false; }
+                    counted = false;
                     inflight[filterNum] = Math.max(0, (inflight[filterNum] || 1) - 1);
+
+                    return true;
+                };
+                // a reply core cannot handle (no viewParameters) never reaches resultHtml: ajaxComplete / this timer settle it
+                var timer = setTimeout(function () { if (release()) { notifySettled(); } }, REPLY_TIMEOUT);
+                args[4] = function () {
+                    clearTimeout(timer);
+                    release();
                     var out;
                     try { out = resultHtml.apply(this, arguments); } finally { notifySettled(); }
 
@@ -225,6 +244,12 @@
             return loadFilterForm.apply(this, args);
         };
         $(document).ajaxError(function () { inflight = {}; notifySettled(); });
+        // no request left in the page, yet a count is open: its reply was dropped by core, so the queue must not wait for it
+        $(document).ajaxComplete(function () {
+            setTimeout(function () {
+                if (!$.active && Object.keys(inflight).some(function (k) { return inflight[k] > 0; })) { inflight = {}; notifySettled(); }
+            }, 0);
+        });
     }
 
     /** True while a value form of a draft (the add bar) is being loaded. */
