@@ -70,6 +70,15 @@
 
     var OWNERS = {lead: 'Contato', company: 'Empresa'};
 
+    function blockTyping(e) {
+        if (e.type === 'keydown') {
+            if (!(!(e.ctrlKey || e.metaKey) && e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Enter')) { return; }
+        }
+        e.preventDefault();
+    }
+
+    function bindNameBlockers($, $input) { $input.on('keydown paste cut drop beforeinput', blockTyping); }
+
     /**
      * The field name as an input that cannot be typed in, with its group in bold in front, like the select of the bar: "Contato" | <field>,
      * "Empresa" | <field>; a Custom Objects field already comes as "<object> : <field>" from its filter label, which is split there.
@@ -85,8 +94,8 @@
         if (!group && cut > 0) { group = label.slice(0, cut); field = label.slice(cut + 3); }
         var $input = $('<input type="text" class="form-control patches-field-input" autocomplete="off">').val(field).attr('title', (group ? group + ': ' : '') + field);
         // not readonly (the theme dims a readonly input until it can hardly be read): the typing, the paste, the cut and the drop are blocked instead
-        $input.on('keydown', function (e) { if (!(e.ctrlKey || e.metaKey) && e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Enter') { e.preventDefault(); } })
-            .on('paste cut drop beforeinput', function (e) { e.preventDefault(); });
+        // the typing blockers are delegated on document (install), so a copy of the filter made by core keeps them
+        bindNameBlockers($, $input);
         var $box = $('<div class="input-group patches-field-group"></div>');
         if (group) { $box.append($('<span class="input-group-addon"></span>').append($('<b></b>').text(group))); }
         $name.attr('data-patches-label', label).empty().append($box.append($input));
@@ -201,10 +210,25 @@
         s.condition.children().not('.patches-dock-placeholder').remove();
         s.value.children('.col-sm-6').not('.patches-dock-placeholder').remove();
         s.draft.empty();
+        s.value.children('.patches-filter-dock__add').prop('disabled', false).removeClass('disabled');
         s.condition.children('.patches-dock-placeholder').show();
         s.value.children('.patches-dock-placeholder').show();
         var $select = s.dock.find('#available_segment_filters');
         $select.val('').trigger('chosen:updated');
+    }
+
+    /** "Adicionar" waits for the value form core loads by ajax: committing before it arrives would renumber the draft and the late answer would miss it. */
+    function valueReady($) {
+        var s = slots($);
+        var $properties = s.value.children('.col-sm-6').not('.patches-dock-placeholder').first();
+        return !!s.draft.children('.segment-filter').length && $properties.find('input, select, textarea').length > 0;
+    }
+
+    function syncAdd($) {
+        var s = slots($);
+        var $add = s.value.children('.patches-filter-dock__add');
+        var pending = !!s.draft.children('.segment-filter').length && !valueReady($);
+        $add.prop('disabled', pending).toggleClass('disabled', pending);
     }
 
     function startDraft($, optionSelector) {
@@ -225,6 +249,7 @@
         s.value.children('.patches-dock-placeholder').hide();
         s.value.children('.patches-filter-dock__add').before($properties);
         s.draft.append($panel);
+        syncAdd($);
         // core clears the select right after this call: show the chosen field again
         setTimeout(function () {
             $(optionSelector).prop('selected', true);
@@ -235,7 +260,7 @@
     function commitDraft($, Mautic) {
         var s = slots($);
         var $panel = s.draft.children('.segment-filter').first();
-        if (!$panel.length) { return; }
+        if (!$panel.length || !valueReady($)) { return; }
         var $body = $panel.children('.panel-body');
         var $glue = s.glue.children('.panel-glue').first();
         var $operator = s.condition.children('.col-sm-3.padding-none').not('.patches-dock-placeholder').first();
@@ -288,6 +313,7 @@
     function scan($) {
         dock($);
         syncAlerts($);
+        syncAdd($);
         showOnlyOnFiltersTab($);
         reserveSpace($);
         $(FILTERS + ' .segment-filter').each(function () { addButton($, $(this)); });
@@ -313,6 +339,9 @@
             var core = $(this).attr('data-action') === 'copy' ? '.copy-filter-group' : '.remove-selected';
             $(this).closest('.segment-filter').find('.segment-button ' + core).first().trigger('click');
         });
+
+        // Clone copies (core) keep .patches-field-input but not its handlers
+        $(document).on('keydown paste cut drop beforeinput', '.patches-field-input', blockTyping);
 
         var segmentFilter = Mautic.segmentFilter;
         Mautic.segmentFilter = function () {
