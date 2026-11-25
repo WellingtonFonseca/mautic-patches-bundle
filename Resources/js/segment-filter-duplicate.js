@@ -106,6 +106,14 @@
 
     var DOCK = 'patches-filter-dock';
 
+    /** The select that adds a filter (core's .available-filters, with its chosen) lives in the field slot of the bar: core finds it by id and class, wherever it is. */
+    function adoptSelector($, $dock) {
+        var $slot = $dock.find('.' + DOCK + '__field');
+        var $fresh = $('.available-filters').filter(function () { return !$(this).closest('.' + DOCK).length; }).first();
+        if (!$fresh.length) { return; }
+        $slot.empty().append($fresh);
+    }
+
     /** A floating bar at the bottom centre of the segment form with the first row of a filter (E/OU, field, condition, value, badges). Only the layout: no field is filled, nothing is searched, no action is bound. */
     function dock($) {
         var $dock = $('.' + DOCK);
@@ -115,12 +123,13 @@
         var $row  = $('<div class="panel ' + DOCK + '" aria-hidden="true"></div>');
         var $body = $('<div class="panel-body"></div>').appendTo($row);
         $body.append('<div class="' + DOCK + '__glue"></div>');
-        $body.append('<div class="' + DOCK + '__field"><input type="text" class="form-control" readonly="readonly" placeholder="Contato: campo"></div>');
+        $body.append('<div class="' + DOCK + '__field"></div>');
         $body.append('<div class="' + DOCK + '__condition"><select class="form-control" disabled="disabled"><option>condição</option></select></div>');
         var $value = $('<div class="' + DOCK + '__value"></div>').appendTo($body);
         $value.append('<input type="text" class="form-control" readonly="readonly" placeholder="valor">');
         $value.append('<button type="button" class="btn btn-primary patches-filter-dock__add" tabindex="-1"><i class="ri-add-line" aria-hidden="true"></i> Adicionar</button>');
         $('body').append($row);
+        adoptSelector($, $row);
     }
 
     function scan($) {

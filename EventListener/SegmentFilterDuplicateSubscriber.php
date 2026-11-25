@@ -31,7 +31,7 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'#leadlist_filters .segment-filter>.panel-body>.col-sm-3.padding-none{flex:0 0 calc(16.6667% - 8px)}'
         .'#leadlist_filters .segment-filter>.panel-body>.col-sm-6{flex:0 0 calc(41.6667% - 8px)}'
         // the floating bar at the bottom centre: the same 12 slots (1 + 4 + 2 + 5) as a filter row; only layout
-        .'.patches-filter-dock{position:fixed;left:50%;bottom:36px;transform:translateX(-50%);z-index:1000;box-sizing:border-box;width:min(1430px,92vw);margin:0;border:1px solid var(--border-subtle,#e0e0e0);border-radius:12px;overflow:hidden;box-shadow:none!important}'
+        .'.patches-filter-dock{position:fixed;left:50%;bottom:36px;transform:translateX(-50%);z-index:1000;box-sizing:border-box;width:min(1430px,92vw);margin:0;border:1px solid var(--border-subtle,#e0e0e0);border-radius:12px;box-shadow:none!important}'
         .'.patches-filter-dock:hover{box-shadow:none!important;transform:translateX(-50%)}'
         .'.patches-filter-dock,.patches-filter-dock:hover{background:var(--background-brand,#4e5e9e)!important}'
         .'.patches-filter-dock>.panel-body,.patches-filter-dock:hover>.panel-body{background:transparent!important;border-radius:inherit}'
@@ -40,6 +40,10 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock__glue{flex:0 0 calc(8.3333% - 8px)}.patches-filter-dock__field{flex:0 0 calc(33.3333% - 8px)}'
         .'.patches-filter-dock__condition{flex:0 0 calc(16.6667% - 8px)}.patches-filter-dock__value{flex:0 0 calc(41.6667% - 8px);display:flex;align-items:center;gap:8px}'
         .'.patches-filter-dock__value>input{flex:1 1 auto;min-width:0}'
+        // core's select that adds a filter, moved here: it fills the slot and its list opens upwards (the bar sits at the bottom)
+        .'.patches-filter-dock__field .available-filters{float:none;width:100%;margin:0;padding:0}'
+        .'.patches-filter-dock__field .chosen-container{width:100%!important}'
+        .'.patches-filter-dock__field .chosen-container .chosen-drop{top:auto;bottom:100%}'
         .'.patches-filter-dock__add{flex:none;white-space:nowrap}'
         .'#leadlist_filters .patches-field-input{text-overflow:ellipsis;cursor:default}'
         .'#leadlist_filters .patches-filter-row{display:flex;align-items:flex-start;gap:6px}'
