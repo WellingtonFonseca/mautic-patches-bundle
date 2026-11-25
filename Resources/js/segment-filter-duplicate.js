@@ -219,8 +219,14 @@
         }
     }
 
+    /** The bar is only for the Filters tab: hidden while another tab of the form is active. */
+    function showOnlyOnFiltersTab($) {
+        $('.' + DOCK).toggleClass('patches-dock-off', !$('#filters').hasClass('active'));
+    }
+
     function scan($) {
         dock($);
+        showOnlyOnFiltersTab($);
         reserveSpace($);
         $(FILTERS + ' .segment-filter').each(function () { addButton($, $(this)); });
     }
@@ -261,6 +267,8 @@
             event.preventDefault();
             commitDraft($, Mautic);
         });
+
+        $(document).on('shown.bs.tab click', 'a[data-toggle="tab"]', function () { setTimeout(function () { showOnlyOnFiltersTab($); }, 0); });
 
         var run = function () { scan($); };
         var original = Mautic.onPageLoad;

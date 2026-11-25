@@ -32,6 +32,7 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'#leadlist_filters .segment-filter>.panel-body>.col-sm-6{flex:0 0 calc(41.6667% - 8px)}'
         // the floating bar at the bottom centre: the same 12 slots (1 + 4 + 2 + 5) as a filter row; only layout
         .'.patches-filter-dock{position:fixed;left:50%;bottom:56px;transform:translateX(-50%);z-index:1000;box-sizing:border-box;width:min(1430px,92vw);margin:0;border:1px solid var(--border-subtle,#e0e0e0);border-radius:12px;box-shadow:none!important}'
+        .'.patches-filter-dock.patches-dock-off{display:none!important}'
         .'.patches-filter-dock:hover{box-shadow:none!important;transform:translateX(-50%)}'
         .'.patches-filter-dock,.patches-filter-dock:hover{background:#2C355A!important}'
         .'.patches-filter-dock>.panel-body,.patches-filter-dock:hover>.panel-body{background:transparent!important;border-radius:inherit}'
