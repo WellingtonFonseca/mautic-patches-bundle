@@ -6,6 +6,8 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
+use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use MauticPlugin\MauticPatchesBundle\EventListener\SegmentFilterUiSubscriber;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentFilterSelectorSubscriber;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -16,10 +18,18 @@ class SegmentFilterSelectorSubscriberTest extends TestCase
 {
     private const PANE = ':root #filters:has(> .form-group > .available-filters)';
 
-    private function css(string $context = 'page.header.left'): string
+    private function switch(bool $uiOn): CoreParametersHelper
+    {
+        $helper = $this->createMock(CoreParametersHelper::class);
+        $helper->method('get')->with(SegmentFilterUiSubscriber::PARAMETER)->willReturn($uiOn);
+
+        return $helper;
+    }
+
+    private function css(string $context = 'page.header.left', bool $uiOn = false): string
     {
         $event = new CustomContentEvent('some_view', $context);
-        (new SegmentFilterSelectorSubscriber())->injectViewCustomContent($event);
+        (new SegmentFilterSelectorSubscriber($this->switch($uiOn)))->injectViewCustomContent($event);
 
         return implode('', $event->getContent());
     }
@@ -67,5 +77,10 @@ class SegmentFilterSelectorSubscriberTest extends TestCase
         foreach (array_filter(explode('}', substr($css, strlen('<style>'), -strlen('</style>')))) as $rule) {
             $this->assertStringStartsWith(self::PANE, $rule);
         }
+    }
+
+    public function testTheOldScreenIsNotInjectedWhenTheNewFilterScreenIsOn(): void
+    {
+        $this->assertSame('', $this->css('page.header.left', true));
     }
 }

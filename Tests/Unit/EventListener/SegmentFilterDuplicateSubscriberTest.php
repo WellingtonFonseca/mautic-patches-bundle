@@ -6,6 +6,8 @@ namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\EventListener;
 
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
+use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use MauticPlugin\MauticPatchesBundle\EventListener\SegmentFilterUiSubscriber;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentFilterDuplicateSubscriber;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -15,10 +17,18 @@ use PHPUnit\Framework\TestCase;
 #[Group('risk:CRITICO')]
 class SegmentFilterDuplicateSubscriberTest extends TestCase
 {
-    private function content(string $context): string
+    private function switch(bool $uiOn): CoreParametersHelper
+    {
+        $helper = $this->createMock(CoreParametersHelper::class);
+        $helper->method('get')->with(SegmentFilterUiSubscriber::PARAMETER)->willReturn($uiOn);
+
+        return $helper;
+    }
+
+    private function content(string $context, bool $uiOn = false): string
     {
         $event = new CustomContentEvent('some_view', $context);
-        (new SegmentFilterDuplicateSubscriber())->injectViewCustomContent($event);
+        (new SegmentFilterDuplicateSubscriber($this->switch($uiOn)))->injectViewCustomContent($event);
 
         return implode('', $event->getContent());
     }
@@ -73,5 +83,10 @@ class SegmentFilterDuplicateSubscriberTest extends TestCase
         $this->assertStringContainsString('Mautic.loadFilterForm', $js);
         $this->assertStringContainsString('draftReloads', $js);
         $this->assertStringContainsString('patches-filter-dock__add', $js);
+    }
+
+    public function testTheOldScreenIsNotInjectedWhenTheNewFilterScreenIsOn(): void
+    {
+        $this->assertSame('', $this->content('page.header.left', true));
     }
 }
