@@ -175,7 +175,12 @@
 
     function remove($panel) {
         // out of the list at once: core removes the panel after its fade, and that is when it renumbers
+        // its value column goes home first: the row is dropped now, the panel (and its inputs) stays in the form until core removes it
+        var $col = $panel.data('patchesValue');
+        if ($col && $col.length && !$col.parent().is(body($panel))) { body($panel).append($col); }
         $panel.attr('data-patches-removing', '1');
+        // a Save before core's removal must not post the filter (disabled inputs are not submitted)
+        $panel.find(':input').prop('disabled', true);
         ctx.changed();
 
         // the click waits for the replies in flight: they must not land on a renumbered panel
