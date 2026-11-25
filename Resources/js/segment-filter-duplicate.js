@@ -129,6 +129,7 @@
         $value.append('<div class="col-xs-12 col-sm-6 padding-none patches-dock-placeholder"><div class="properties-form"><div><div class="row"><div class="form-group col-xs-12"><input type="text" class="form-control" readonly="readonly" placeholder="valor"></div></div></div></div></div>');
         $value.append('<button type="button" class="btn btn-primary btn-nospin patches-filter-dock__add"><i class="ri-add-line" aria-hidden="true"></i> Adicionar</button>');
         $row.append('<div class="' + DOCK + '__draft" hidden></div>');
+        $row.append('<div class="' + DOCK + '__alerts"></div>');
         $('body').append($row);
         adoptSelector($, $row);
     }
@@ -224,8 +225,21 @@
         $('.' + DOCK).toggleClass('patches-dock-off', !$('#filters').hasClass('active'));
     }
 
+    /** The alerts the value widget brings (e.g. the "na lista" hint) float above the bar, with its width; the ones inside the widget are hidden by CSS. */
+    function syncAlerts($) {
+        var $dock = $('.' + DOCK);
+        var $box = $dock.find('.' + DOCK + '__alerts');
+        if (!$box.length) { return; }
+        var $source = $dock.find('.' + DOCK + '__value .alert');
+        var signature = $source.map(function () { return $(this).attr('class') + '|' + $(this).html(); }).get().join('||');
+        if ($box.data('signature') === signature) { return; }
+        $box.data('signature', signature).empty();
+        $source.each(function () { $box.append($(this).clone().removeAttr('id')); });
+    }
+
     function scan($) {
         dock($);
+        syncAlerts($);
         showOnlyOnFiltersTab($);
         reserveSpace($);
         $(FILTERS + ' .segment-filter').each(function () { addButton($, $(this)); });

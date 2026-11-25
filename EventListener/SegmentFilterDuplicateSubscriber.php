@@ -46,6 +46,11 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock__glue>.panel-glue{float:none;width:100%;padding:0;margin:0}'
         .'.patches-filter-dock__glue>.panel-glue.hide{display:block!important;visibility:hidden}'
         .'.patches-filter-dock__draft{display:none}'
+        // the alerts of the value widget: floating above the bar, same width, with a gap (the copy in the widget is hidden)
+        .'.patches-filter-dock__value .alert{display:none}'
+        .'.patches-filter-dock__alerts{position:absolute;left:0;right:0;bottom:100%;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}'
+        .'.patches-filter-dock__alerts:empty{display:none}'
+        .'.patches-filter-dock__alerts .alert{margin:0}'
         // the widgets core loads for the value and the condition bring row / form-group margins: none in the bar, so they sit on the same line as the other fields
         .'.patches-filter-dock__condition .row,.patches-filter-dock__value .row{margin:0}'
         .'.patches-filter-dock__condition .form-group,.patches-filter-dock__value .form-group,.patches-filter-dock__value [class*=col-],.patches-filter-dock__condition [class*=col-]{margin:0;padding:0}'
