@@ -186,12 +186,14 @@
     // The button of the campaign edit page that opens the builder reads "Abrir Construtor de Campanha" (core text, in the pack of
     // the language: it cannot be overridden from the plugin). Its text node is replaced by the plugin's own short text; the icon stays.
     function relabelBuilderButton(text) {
-        var button = root.document.getElementById('campaign_buttons_builder_toolbar');
-        if (!button || !text || button.getAttribute('data-patches-label') === text) { return; }
-        Array.prototype.slice.call(button.childNodes).forEach(function (node) {
-            if (node.nodeType === 3 && node.textContent.trim() !== '') { node.textContent = ' ' + text + ' '; }
+        ['campaign_buttons_builder_toolbar', 'campaign_buttons_builder_toolbar_mobile'].forEach(function (id) {
+            var button = root.document.getElementById(id);
+            if (!button || !text || button.getAttribute('data-patches-label') === text) { return; }
+            Array.prototype.slice.call(button.childNodes).forEach(function (node) {
+                if (node.nodeType === 3 && node.textContent.trim() !== '') { node.textContent = ' ' + text + ' '; }
+            });
+            button.setAttribute('data-patches-label', text);
         });
-        button.setAttribute('data-patches-label', text);
     }
 
     function install(Mautic, cfg) {
