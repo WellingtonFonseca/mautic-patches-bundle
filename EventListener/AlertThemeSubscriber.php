@@ -13,7 +13,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * every theme. Core's themes set --notification-background-* by theme and they do not agree: the plain Dark theme paints
  * all four with the same gray (#262626) while the light ones have a pale yellow, blue, green and red.
  *
- * Light family (light, solarized-light, freire): the pale colors of core's light theme (pale yellow, blue, green, red).
+ * Light family (light, solarized-light, freire): a light yellow, blue, green and red, one step darker than the pale ones of core's light theme.
  * Dark family (dark, solarized-dark): a dark yellow, blue, green and red. Only the four variables change, so the bar, the
  * icon and the text of core keep working. The :root[theme=...] prefix keeps the order of the stylesheets out of the question.
  */
@@ -22,7 +22,7 @@ class AlertThemeSubscriber implements EventSubscriberInterface
     private const LIGHT_THEMES = ['light', 'solarized-light', 'freire'];
     private const DARK_THEMES  = ['dark', 'solarized-dark'];
 
-    private const LIGHT = ['warning' => '#fffbe6', 'info' => '#edf5ff', 'success' => '#defbe6', 'error' => '#fff1f1'];
+    private const LIGHT = ['warning' => '#fbe9a6', 'info' => '#d0e2ff', 'success' => '#a7f0ba', 'error' => '#ffd7d9'];
 
     private const DARK  = ['warning' => '#4a3610', 'info' => '#12304f', 'success' => '#00402b', 'error' => '#46181b'];
 
