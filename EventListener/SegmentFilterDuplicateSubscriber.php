@@ -39,7 +39,7 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock>.panel-body>div{box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
         .'.patches-filter-dock__glue{flex:0 0 calc(8.3333% - 8px)}.patches-filter-dock__field{flex:0 0 calc(33.3333% - 8px)}'
         .'.patches-filter-dock__condition{flex:0 0 calc(16.6667% - 8px)}.patches-filter-dock__value{flex:0 0 calc(41.6667% - 8px);display:flex;align-items:center;gap:8px}'
-        .'.patches-filter-dock__value>input,.patches-filter-dock__value>.col-sm-6{flex:1 1 auto;min-width:0}'
+        .'.patches-filter-dock__value>.col-sm-6{flex:1 1 auto;min-width:0}'
         .'.patches-filter-dock__value>.col-sm-6{float:none;width:auto;padding:0}'
         .'.patches-filter-dock__condition>.col-sm-3{float:none;width:100%;padding:0}'
         .'.patches-filter-dock__glue>.panel-glue{float:none;width:100%;padding:0;margin:0}'
@@ -47,7 +47,7 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock__draft{display:none}'
         // the widgets core loads for the value and the condition bring row / form-group margins: none in the bar, so they sit on the same line as the other fields
         .'.patches-filter-dock__condition .row,.patches-filter-dock__value .row{margin:0}'
-        .'.patches-filter-dock__condition .form-group,.patches-filter-dock__value .form-group,.patches-filter-dock__value [class*=col-]{margin:0;padding-top:0;padding-bottom:0}'
+        .'.patches-filter-dock__condition .form-group,.patches-filter-dock__value .form-group,.patches-filter-dock__value [class*=col-],.patches-filter-dock__condition [class*=col-]{margin:0;padding:0}'
         .'.patches-filter-dock__value .properties-form,.patches-filter-dock__value .properties-form>div{margin:0}'
         // core's select that adds a filter, moved here: it fills the slot and its list opens upwards (the bar sits at the bottom)
         .'.patches-filter-dock__field .available-filters{float:none;width:100%;margin:0!important;padding:0!important}'
