@@ -1,5 +1,5 @@
 /*
- * "Duplicar condição" on every filter of the segment form: a button next to core's copy and remove ones that adds a copy
+ * "Duplicar condição" on every filter of the segment form: a badge (with core's copy and remove ones, all three to the right of the value input) that adds a copy
  * of THAT filter (same field, operator, value and AND / OR) right below it, so the same condition for another value
  * (disciplina not equal XXXX, then YYYY) does not need the field to be searched again. Core's own copy button copies a
  * whole OR group to the end of the list and is hidden on an AND filter, so it does not do this.
@@ -29,7 +29,7 @@
         // the chips of the value are a widget on top of the input: the input stays, the widget is drawn again
         $clone.find('.segment-in-chips').closest('.input-group').remove();
         $clone.find('input[data-in-chips]').removeAttr('data-in-chips').show();
-        $clone.find('.segment-filter-duplicate').remove();
+        $clone.find('.patches-filter-actions').remove();
         // the first filter has its glue hidden; a copy below it needs it (it is AND, so it stays in the group)
         $clone.find('.panel-glue').removeClass('hide');
 
@@ -50,22 +50,43 @@
         return $clone;
     }
 
-    function addButton($, $filter) {
-        var $group = $filter.find('.segment-button').first();
-        if (!$group.length || $group.find('.segment-filter-duplicate').length) { return; }
-        var $button = $('<a href="javascript: void(0);" class="btn btn-ghost btn-icon btn-nospin segment-filter-duplicate" size="md" role="button"></a>')
-            .attr({'aria-label': LABEL, title: LABEL})
-            .append('<i class="ri-add-box-line" aria-hidden="true"></i>');
-        $group.prepend($button);
+    /** The three actions of a filter as icon badges (same order as before: duplicate, core's copy, remove). Core's buttons stay, hidden: a badge clicks its core twin so core's handlers run. */
+    var BADGES = [
+        {key: 'duplicate', icon: 'ri-add-box-line', css: 'patches-badge--flag'},
+        {key: 'copy', icon: 'ri-file-copy-line', css: 'patches-badge--locked', core: '.copy-filter-group'},
+        {key: 'remove', icon: 'ri-delete-bin-line', css: 'patches-badge--failed', core: '.remove-selected'}
+    ];
+
+    function labelOf($core, fallback) {
+        return $.trim($core.attr('aria-label') || $core.attr('title') || $core.text()) || fallback;
     }
 
-    /** The three buttons of a filter (duplicate, core's copy, remove) at the size of the Custom Objects field buttons: md, large icon. */
-    function enlarge($filter) {
-        $filter.find('.segment-button .btn').attr('size', 'md').find('i').addClass('ri-lg');
+    function addButton($, $filter) {
+        var $properties = $filter.find('.properties-form').first();
+        if (!$properties.length) { return; }
+        var $row = $properties.parent('.patches-filter-row');
+        if (!$row.length) { $row = $properties.wrap('<div class="patches-filter-row"></div>').parent(); }
+        var $actions = $row.children('.patches-filter-actions');
+        if (!$actions.length) {
+            $actions = $('<div class="patches-filter-actions"></div>').appendTo($row);
+            BADGES.forEach(function (def) {
+                var $core = def.core ? $filter.find('.segment-button ' + def.core).first() : $();
+                var label = def.core ? labelOf($core, def.key) : LABEL;
+                var $badge = $('<a href="javascript: void(0);" role="button" class="patches-badge patches-filter-badge ' + def.css + '"></a>')
+                    .attr({'aria-label': label, 'data-action': def.key})
+                    .append('<i class="' + def.icon + '" aria-hidden="true"></i>')
+                    .append($('<span class="patches-icon-badge__text"></span>').text(label));
+                if (def.key === 'duplicate') { $badge.addClass('segment-filter-duplicate'); }
+                $actions.append($badge);
+            });
+        }
+        // core hides its copy button on an AND filter: the badge follows it
+        var $coreCopy = $filter.find('.segment-button .copy-filter-group').first();
+        $actions.children('[data-action="copy"]').toggleClass('hide', !$coreCopy.length || $coreCopy.hasClass('hide'));
     }
 
     function scan($) {
-        $(FILTERS + ' .segment-filter').each(function () { addButton($, $(this)); enlarge($(this)); });
+        $(FILTERS + ' .segment-filter').each(function () { addButton($, $(this)); });
     }
 
     function install($, Mautic) {
@@ -76,6 +97,13 @@
         $(document).on('click', FILTERS + ' .segment-filter-duplicate', function (event) {
             event.preventDefault();
             duplicate($, Mautic, $(this).closest('.segment-filter'));
+        });
+
+        // a badge of core's own action clicks the hidden core button (copy a group, remove), which has core's handler
+        $(document).on('click', FILTERS + ' .patches-filter-badge[data-action="copy"], ' + FILTERS + ' .patches-filter-badge[data-action="remove"]', function (event) {
+            event.preventDefault();
+            var core = $(this).attr('data-action') === 'copy' ? '.copy-filter-group' : '.remove-selected';
+            $(this).closest('.segment-filter').find('.segment-button ' + core).first().trigger('click');
         });
 
         var run = function () { scan($); };
@@ -89,7 +117,7 @@
         }
     }
 
-    var api = {install: install, copyOf: copyOf, addButton: addButton, enlarge: enlarge, LABEL: LABEL};
+    var api = {install: install, copyOf: copyOf, addButton: addButton, LABEL: LABEL};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
