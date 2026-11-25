@@ -67,8 +67,8 @@
         // the cells and the badges are one line (main), the alerts of the value go below it
         var $main = $('<div class="patches-sf-main"></div>').appendTo($body);
         // press and hold this badge to move the filter (the only drag handle of the row); on hover it opens and pushes the other cells
-        $main.append($('<a href="javascript: void(0);" role="button" class="patches-badge patches-badge--neutral patches-filter-badge patches-sf-drag" data-action="drag" aria-label="Arrastar"></a>')
-            .append('<i class="ri-expand-up-down-line" aria-hidden="true"></i>').append('<span class="patches-icon-badge__text">Arrastar</span>'));
+        $main.append($('<a href="javascript: void(0);" role="button" class="patches-badge patches-badge--neutral patches-filter-badge patches-sf-drag" data-action="drag" aria-label="Mover"></a>')
+            .append('<i class="ri-expand-up-down-line" aria-hidden="true"></i>').append('<span class="patches-icon-badge__text">Mover</span>'));
         $main.append('<div class="patches-sf-glue"><select class="form-control not-chosen" data-patches-sf="glue"></select></div>');
         $main.append($('<div class="patches-sf-field"></div>').append(fieldCell($, data)));
         $main.append('<div class="patches-sf-operator"><select class="form-control not-chosen" data-patches-sf="operator"></select></div>');
