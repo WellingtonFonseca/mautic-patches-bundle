@@ -31,8 +31,9 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'#leadlist_filters .segment-filter>.panel-body>.col-sm-3.padding-none{flex:0 0 calc(16.6667% - 8px)}'
         .'#leadlist_filters .segment-filter>.panel-body>.col-sm-6{flex:0 0 calc(41.6667% - 8px)}'
         // the floating bar at the bottom centre: the same 12 slots (1 + 4 + 2 + 5) as a filter row; only layout
-        .'.patches-filter-dock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:1000;box-sizing:border-box;width:min(1430px,92vw);margin:0;border:2px solid var(--background-brand,#4e5e9e);border-top-width:6px;border-radius:12px;box-shadow:rgba(0,0,0,.45) 0 8px 28px 0}'
-        .'.patches-filter-dock,.patches-filter-dock>.panel-body{background:color-mix(in srgb,var(--background-brand,#4e5e9e) 22%,var(--background,#fff))!important}'
+        .'.patches-filter-dock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:1000;box-sizing:border-box;width:min(1430px,92vw);margin:0;border:1px solid var(--border-subtle,#e0e0e0);border-radius:12px;box-shadow:none!important}'
+        .'.patches-filter-dock:hover{box-shadow:none!important;transform:translateX(-50%)}'
+        .'.patches-filter-dock,.patches-filter-dock:hover,.patches-filter-dock>.panel-body,.patches-filter-dock:hover>.panel-body{background:var(--background-brand,#4e5e9e)!important}'
         .'.patches-filter-dock>.panel-body{display:flex;align-items:center;padding:12px 8px 12px 16px}'
         .'.patches-filter-dock>.panel-body>div{box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
         .'.patches-filter-dock__glue{flex:0 0 calc(8.3333% - 8px)}.patches-filter-dock__field{flex:0 0 calc(33.3333% - 8px)}'
