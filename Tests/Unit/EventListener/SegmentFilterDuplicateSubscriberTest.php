@@ -38,12 +38,13 @@ class SegmentFilterDuplicateSubscriberTest extends TestCase
         $this->assertArrayHasKey(CoreEvents::VIEW_INJECT_CUSTOM_CONTENT, SegmentFilterDuplicateSubscriber::getSubscribedEvents());
     }
 
-    public function testInjectsTheScriptOnPageHeaderLeftOnly(): void
+    public function testInjectsOnlyTheScriptOnPageHeaderLeft(): void
     {
         $js = $this->content('page.header.left');
 
-        $this->assertStringStartsWith('<style>', $js);
-        $this->assertStringContainsString('</style><script>', $js);
+        // the old screen is core's own form: no <style>, no badges, no dock
+        $this->assertStringStartsWith('<script>', $js);
+        $this->assertStringNotContainsString('<style>', $js);
         $this->assertStringEndsWith('mauticPatchesFilterDuplicateApi.install(mQuery,Mautic);</script>', $js);
         $this->assertSame('', $this->content('something.else'));
     }
@@ -59,30 +60,21 @@ class SegmentFilterDuplicateSubscriberTest extends TestCase
         $this->assertStringContainsString('Duplicar condição', $js);
     }
 
-    public function testCoreButtonsAreHiddenAndTheBadgesPushTheValueInput(): void
+    public function testTheOldScreenKeepsNoRedesignMockup(): void
     {
-        $css = SegmentFilterDuplicateSubscriber::STYLE;
+        $this->assertFalse(defined(SegmentFilterDuplicateSubscriber::class.'::STYLE'));
+        $this->assertFalse(defined(SegmentFilterDuplicateSubscriber::class.'::DOCK_STYLE'));
 
-        // core's three buttons are gone; the badges are flex siblings of the value form (they push it, never overlay it)
-        $this->assertStringContainsString('.segment-filter .segment-button{display:none}', $css);
-        $this->assertStringContainsString('.patches-filter-row{display:flex', $css);
-        $this->assertStringContainsString('.patches-filter-row>.properties-form{flex:1 1 auto;min-width:0}', $css);
-        $this->assertStringContainsString('.patches-filter-actions{flex:none', $css);
-        $this->assertStringNotContainsString('.patches-filter-badge{position:absolute', $css);
-    }
-
-    public function testTheBadgeStyleOfTheListsIsShippedWithTheScript(): void
-    {
-        $this->assertStringContainsString('.patches-badge', $this->content('page.header.left'));
-    }
-
-    public function testTheScriptWaitsForTheValueFormBeforeAdicionar(): void
-    {
         $js = $this->content('page.header.left');
+        foreach (['patches-badge', 'patches-filter-dock', 'patches-filter-row', 'patches-filter-actions', 'draftReloads', 'Mautic.loadFilterForm'] as $gone) {
+            $this->assertStringNotContainsString($gone, $js);
+        }
+    }
 
-        $this->assertStringContainsString('Mautic.loadFilterForm', $js);
-        $this->assertStringContainsString('draftReloads', $js);
-        $this->assertStringContainsString('patches-filter-dock__add', $js);
+    public function testTheDockStyleBelongsToTheNewScreen(): void
+    {
+        $this->assertStringContainsString('.patches-filter-dock{', SegmentFilterUiSubscriber::DOCK_STYLE);
+        $this->assertStringContainsString('.patches-filter-dock__add', SegmentFilterUiSubscriber::DOCK_STYLE);
     }
 
     public function testTheOldScreenIsNotInjectedWhenTheNewFilterScreenIsOn(): void
