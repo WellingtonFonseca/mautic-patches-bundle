@@ -210,6 +210,7 @@
         s.condition.children().not('.patches-dock-placeholder').remove();
         s.value.children('.col-sm-6').not('.patches-dock-placeholder').remove();
         s.draft.empty();
+        draftReloads = 0;
         s.value.children('.patches-filter-dock__add').prop('disabled', false).removeClass('disabled');
         s.condition.children('.patches-dock-placeholder').show();
         s.value.children('.patches-dock-placeholder').show();
@@ -217,8 +218,12 @@
         $select.val('').trigger('chosen:updated');
     }
 
+    /** value-form reloads of the draft in flight (operator change): the old value input is still on screen until the answer replaces it */
+    var draftReloads = 0;
+
     /** "Adicionar" waits for the value form core loads by ajax: committing before it arrives would renumber the draft and the late answer would miss it. */
     function valueReady($) {
+        if (draftReloads > 0) { return false; }
         var s = slots($);
         var $properties = s.value.children('.col-sm-6').not('.patches-dock-placeholder').first();
         return !!s.draft.children('.segment-filter').length && $properties.find('input, select, textarea').length > 0;
@@ -369,6 +374,25 @@
 
             return result;
         };
+        // a draft's value form reloads on operator change: Adicionar waits for that answer too
+        var loadFilterForm = Mautic.loadFilterForm;
+        Mautic.loadFilterForm = function (filterNum, fieldObject, fieldAlias, operator, resultHtml) {
+            var args = Array.prototype.slice.call(arguments);
+            if (Number(filterNum) >= DRAFT_BASE && typeof resultHtml === 'function') {
+                draftReloads++;
+                syncAdd($);
+                args[4] = function () {
+                    draftReloads = Math.max(0, draftReloads - 1);
+                    var out = resultHtml.apply(this, arguments);
+                    syncAdd($);
+
+                    return out;
+                };
+            }
+
+            return loadFilterForm.apply(this, args);
+        };
+        $(document).ajaxError(function () { if (draftReloads) { draftReloads = 0; syncAdd($); } });
         $(document).on('click', '.patches-filter-dock__add', function (event) {
             event.preventDefault();
             commitDraft($, Mautic);
