@@ -6,6 +6,7 @@ namespace MauticPlugin\MauticPatchesBundle\EventListener;
 
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
+use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -24,6 +25,11 @@ class SegmentFilterSelectorSubscriber implements EventSubscriberInterface
 {
     private const PANE = '#filters:has(> .form-group > .available-filters)';
 
+    // optional: the tests build it with no argument; the switch is read only when there is one
+    public function __construct(private ?CoreParametersHelper $coreParametersHelper = null)
+    {
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -34,6 +40,11 @@ class SegmentFilterSelectorSubscriber implements EventSubscriberInterface
     public function injectViewCustomContent(CustomContentEvent $customContentEvent): void
     {
         if ('page.header.left' !== $customContentEvent->getContext()) {
+            return;
+        }
+
+        // the screen drawn by SegmentFilterUiSubscriber replaces this one (kill switch patches_segment_filters_ui)
+        if (SegmentFilterUiSubscriber::enabled($this->coreParametersHelper)) {
             return;
         }
 

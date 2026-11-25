@@ -126,7 +126,7 @@
 
     /** Relative values are typed in the date filters of the segment form only, in a field whose format has a date part. */
     function relativeAllowed(el, fmt) {
-        return !!(el.closest && el.closest('.segment-filter') && /[Ymd]/.test(fmt));
+        return !!(el.closest && el.closest('.segment-filter, .patches-sf-row') && /[Ymd]/.test(fmt));
     }
 
     var TOGGLE_FORMAT = {time: 'H:i', date: 'Y-m-d', datetime: 'Y-m-d H:i'};
@@ -154,7 +154,7 @@
             if (!el || el.tagName !== 'INPUT') { return; }
             // typed by a person: marked at once, before the format is known (the picker starts ~100 ms after the focus, and a fast
             // typist is done by then); the check itself is made when the value is committed (the change event, below)
-            if (el.closest && el.closest('.segment-filter') && isFreeText(el.value)) { el.setAttribute(TOUCHED, '1'); }
+            if (el.closest && el.closest('.segment-filter, .patches-sf-row') && isFreeText(el.value)) { el.setAttribute(TOUCHED, '1'); }
             var fmt = formatOf($, el);
             if (!fmt || !tokens(fmt)) { return; }
             // a relative value is typed as it is, with no digits-only rule

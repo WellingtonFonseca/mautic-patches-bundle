@@ -6,6 +6,7 @@ namespace MauticPlugin\MauticPatchesBundle\EventListener;
 
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
+use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -18,18 +19,8 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
 {
-    // the three action buttons of core are hidden; their icon badges sit to the right of the value input and push it (flex, no overlap); hover opens the word to the right
-    public const STYLE = '#leadlist_filters .segment-filter .segment-button{display:none}'
-        .'#leadlist_filters .segment-filter>.panel-heading{display:none}'
-        // one row on the 12 slots: E/OU 1, field name 4, condition 2, value with the badges 5 (each box keeps an 8px gap inside its slots)
-        .'#leadlist_filters .segment-filter>.panel-body{display:flex;align-items:center}'
-        .'#leadlist_filters .segment-filter>.panel-body::before,#leadlist_filters .segment-filter>.panel-body::after{display:none}'
-        .'#leadlist_filters .segment-filter>.panel-body>div{float:none;box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
-        .'#leadlist_filters .segment-filter>.panel-body>.panel-glue{flex:0 0 calc(8.3333% - 8px);width:auto;padding:0}'
-        .'#leadlist_filters .segment-filter>.panel-body>.panel-glue.hide{display:block!important;visibility:hidden}'
-        .'#leadlist_filters .segment-filter>.panel-body>.field-name{flex:0 0 calc(33.3333% - 8px);padding:0}'
-        .'#leadlist_filters .segment-filter>.panel-body>.col-sm-3.padding-none{flex:0 0 calc(16.6667% - 8px)}'
-        .'#leadlist_filters .segment-filter>.panel-body>.col-sm-6{flex:0 0 calc(41.6667% - 8px)}'
+    // the floating add bar of the segment filters (shared with SegmentFilterUiSubscriber)
+    public const DOCK_STYLE = ''
         // the floating bar at the bottom centre: the same 12 slots (1 + 4 + 2 + 5) as a filter row; only layout
         .'.patches-filter-dock{position:fixed;left:50%;bottom:56px;transform:translateX(-50%);z-index:1000;box-sizing:border-box;width:min(1430px,92vw);margin:0;border:1px solid var(--border-subtle,#e0e0e0);border-radius:12px;box-shadow:none!important}'
         .'.patches-filter-dock.patches-dock-off{display:none!important}'
@@ -66,7 +57,21 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock .segment-in-chips .dropdown-menu{top:auto!important;bottom:100%!important;margin:0 0 2px}'
         .'.patches-filter-dock__add{flex:none;white-space:nowrap}'
         // the Filters tab leaves room for the bar (its height is measured by the script)
-        .'#filters{padding-bottom:var(--patches-dock-space,0)}'
+        .'#filters{padding-bottom:var(--patches-dock-space,0)}';
+
+    // the three action buttons of core are hidden; their icon badges sit to the right of the value input and push it (flex, no overlap); hover opens the word to the right
+    public const STYLE = '#leadlist_filters .segment-filter .segment-button{display:none}'
+        .'#leadlist_filters .segment-filter>.panel-heading{display:none}'
+        // one row on the 12 slots: E/OU 1, field name 4, condition 2, value with the badges 5 (each box keeps an 8px gap inside its slots)
+        .'#leadlist_filters .segment-filter>.panel-body{display:flex;align-items:center}'
+        .'#leadlist_filters .segment-filter>.panel-body::before,#leadlist_filters .segment-filter>.panel-body::after{display:none}'
+        .'#leadlist_filters .segment-filter>.panel-body>div{float:none;box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
+        .'#leadlist_filters .segment-filter>.panel-body>.panel-glue{flex:0 0 calc(8.3333% - 8px);width:auto;padding:0}'
+        .'#leadlist_filters .segment-filter>.panel-body>.panel-glue.hide{display:block!important;visibility:hidden}'
+        .'#leadlist_filters .segment-filter>.panel-body>.field-name{flex:0 0 calc(33.3333% - 8px);padding:0}'
+        .'#leadlist_filters .segment-filter>.panel-body>.col-sm-3.padding-none{flex:0 0 calc(16.6667% - 8px)}'
+        .'#leadlist_filters .segment-filter>.panel-body>.col-sm-6{flex:0 0 calc(41.6667% - 8px)}'
+        .self::DOCK_STYLE
         // the widgets core loads for the value and the condition carry row / form-group margins: none, so every item of the row sits on the same center line
         .'#leadlist_filters .segment-filter>.panel-body .properties-form .row,#leadlist_filters .segment-filter>.panel-body .properties-form>div{margin:0}'
         .'#leadlist_filters .segment-filter>.panel-body .properties-form .form-group,#leadlist_filters .segment-filter>.panel-body>.col-sm-3 .form-group{margin:0}'
@@ -95,6 +100,11 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'#leadlist_filters .patches-filter-badge .patches-icon-badge__text{padding:0 12px 0 0;opacity:0;transition:opacity .15s ease .05s}'
         .'#leadlist_filters .patches-filter-badge:hover .patches-icon-badge__text{opacity:1}';
 
+    // optional: the tests build it with no argument; the switch is read only when there is one
+    public function __construct(private ?CoreParametersHelper $coreParametersHelper = null)
+    {
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -105,6 +115,11 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
     public function injectViewCustomContent(CustomContentEvent $customContentEvent): void
     {
         if ('page.header.left' !== $customContentEvent->getContext()) {
+            return;
+        }
+
+        // the screen drawn by SegmentFilterUiSubscriber replaces this one (kill switch patches_segment_filters_ui)
+        if (SegmentFilterUiSubscriber::enabled($this->coreParametersHelper)) {
             return;
         }
 

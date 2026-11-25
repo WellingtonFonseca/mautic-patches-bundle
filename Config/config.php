@@ -223,6 +223,8 @@ return [
         'segment_prefixes'  => [],
         // The same for campaigns (Configurações > Configurações de campanhas > Prefixos).
         'campaign_prefixes' => [],
+        // Segment filters screen drawn by the plugin over Mautic's hidden form. false = the previous patches (selector order, bar, Duplicar badge) on Mautic's own list.
+        'patches_segment_filters_ui' => true,
     ],
     'author'      => 'Wellington Fonseca',
 ];

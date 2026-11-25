@@ -250,7 +250,7 @@
         root.mauticPatchesInChips = true;
 
         var run = function () { scan($, cfg); };
-        // a filter copied by segment-filter-duplicate.js asks for the same scan
+        // a filter copied by segment-filter-duplicate.js or segment-filter-form.js asks for the same scan
         root.mauticPatchesInChipsScan = run;
         var original = Mautic.onPageLoad;
         Mautic.onPageLoad = function () { var result = original.apply(this, arguments); run(); return result; };
