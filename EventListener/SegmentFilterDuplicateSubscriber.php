@@ -57,6 +57,8 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock .chosen-container-active.chosen-with-drop .chosen-single{border-radius:0 0 4px 4px}'
         .'.patches-filter-dock .dropdown-menu{top:auto;bottom:100%}'
         .'.patches-filter-dock__add{flex:none;white-space:nowrap}'
+        // the Filters tab leaves room for the bar (its height is measured by the script)
+        .'#filters{padding-bottom:var(--patches-dock-space,0)}'
         .'#leadlist_filters .patches-field-input{text-overflow:ellipsis;cursor:default}'
         .'#leadlist_filters .patches-filter-row{display:flex;align-items:flex-start;gap:6px}'
         .'#leadlist_filters .patches-filter-row>.properties-form{flex:1 1 auto;min-width:0}'
