@@ -24,7 +24,7 @@ function el() {
 
 function setup(title) {
     const styles = [];
-    const document = {createElement: () => el(), head: {appendChild: (s) => styles.push(s.textContent)}, addEventListener() {}};
+    const document = {createElement: () => el(), head: {appendChild: (s) => styles.push(s.textContent)}, addEventListener() {}, getElementById: () => null, querySelectorAll: () => []};
     const root = {document};
     const circle = el();
     circle.parentNode = el();
@@ -52,7 +52,7 @@ test('the unlink control is an icon badge with the translated label, not a Boots
     assert.strictEqual(button.title, 'Desconectar');
     assert.strictEqual(button.attrs['aria-label'], 'Desconectar');
     const [icon, text] = button.children;
-    assert.strictEqual(icon.className, 'ri-link-unlink');
+    assert.strictEqual(icon.className, 'ri-subtract-line');
     assert.strictEqual(icon.attrs['aria-hidden'], 'true');
     assert.strictEqual(text.className, 'mautic-patches-trash__text');
     assert.strictEqual(text.textContent, 'Desconectar');

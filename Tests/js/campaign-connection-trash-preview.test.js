@@ -39,6 +39,8 @@ function load(inst) {
         createElement: () => ({style: {}}),
         head: {appendChild: (s) => styles.push(s.textContent)},
         addEventListener() {},
+        getElementById: () => null,
+        querySelectorAll: () => [],
     };
     const root = {document};
     const Mautic = {campaignBuilderInstance: inst, onPageLoad() {}, prepareCampaignCanvas() {}};

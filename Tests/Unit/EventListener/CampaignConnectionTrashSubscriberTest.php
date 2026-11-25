@@ -17,7 +17,11 @@ class CampaignConnectionTrashSubscriberTest extends TestCase
     private function content(string $context = 'page.header.left'): string
     {
         $translator = $this->createMock(TranslatorInterface::class);
-        $translator->method('trans')->with('mautic.patches.campaign.disconnect')->willReturn('Desconectar');
+        $translator->method('trans')->willReturnMap([
+            ['mautic.patches.campaign.disconnect', [], null, null, 'Desconectar'],
+            ['mautic.patches.campaign.connect', [], null, null, 'Conectar'],
+            ['mautic.patches.campaign.builder', [], null, null, 'Construtor'],
+        ]);
 
         $event = new CustomContentEvent('some_view', $context);
         (new CampaignConnectionTrashSubscriber($translator))->injectViewCustomContent($event);
@@ -33,6 +37,8 @@ class CampaignConnectionTrashSubscriberTest extends TestCase
         $this->assertStringContainsString('mauticPatchesConnectionTrash', $content);
         $this->assertStringContainsString('deleteConnection', $content);
         $this->assertStringContainsString('"title":"Desconectar"', $content);
+        $this->assertStringContainsString('"connect":"Conectar"', $content);
+        $this->assertStringContainsString('"builder":"Construtor"', $content);
     }
 
     public function testOnlyThePageHeaderGetsTheScript(): void
