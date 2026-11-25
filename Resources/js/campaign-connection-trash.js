@@ -104,8 +104,7 @@
     }
 
     // The badge of the dots below a node (bottom, yes, no, leadsource): core shows a "+" inside the dot on hover; the "+" is hidden
-    // (style below) and the same animated badge as the disconnect one (green, ri-add) shows just BELOW the dot, its label sliding
-    // down on hover. The badge sits below the dot, never over it: the dot stays free for the mouse, so dragging from it still makes a
+    // (style below) and the same animated badge as the disconnect one (green, ri-add-line) shows just BELOW the dot and opens on hover exactly like the disconnect one. The badge sits below the dot, never over it: the dot stays free for the mouse, so dragging from it still makes a
     // line. A click on the badge fires the click core binds on the endpoint (it opens the event / decision menu, as the "+" did).
     function decorateConnect(endpoint) {
         var circle = endpoint && endpoint.canvas;
@@ -192,10 +191,7 @@
             + '.mautic-patches-trash>i{flex:0 0 29px;width:29px;height:29px;font-size:21px;display:flex;align-items:center;justify-content:center;pointer-events:none;color:#fff}'
             + '.mautic-patches-trash__text{padding:0 12px 0 0;opacity:0;pointer-events:none;transition:opacity .15s ease .05s}'
             + '.mautic-patches-trash:hover .mautic-patches-trash__text{opacity:1}'
-            + '.mautic-patches-connect{background-color:var(--support-success,#43a047);overflow:visible;max-width:29px!important}'
-            + '.mautic-patches-connect:hover{max-width:29px!important}'
-            + '.mautic-patches-connect .mautic-patches-trash__text{position:absolute;top:100%;left:50%;transform:translate(-50%,-6px);padding:2px 10px;margin-top:3px;border-radius:12px;background-color:var(--support-success,#43a047);box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;transition:opacity .15s ease,transform .2s ease}'
-            + '.mautic-patches-connect:hover .mautic-patches-trash__text{transform:translate(-50%,0)}'
+            + '.mautic-patches-connect{background-color:var(--support-success,#43a047)}'
             + '.mautic-patches-connect-dot svg text{display:none!important}'
             + '#preview-container .jtk-endpoint svg{display:block!important}';
         root.document.head.appendChild(style);
