@@ -14,7 +14,7 @@
     'use strict';
 
     var FILTERS = '#leadlist_filters';
-    var LABEL   = 'Duplicar condição';
+    var LABEL   = 'Duplicar';
 
     /** The copy of a filter, ready to be put after it. */
     function copyOf($, $origin) {
@@ -50,11 +50,11 @@
         return $clone;
     }
 
-    /** The three actions of a filter as icon badges (same order as before: duplicate, core's copy, remove). Core's buttons stay, hidden: a badge clicks its core twin so core's handlers run. */
+    /** The three actions of a filter as icon badges (order: core's copy, duplicate, remove). Core's buttons stay, hidden: a badge clicks its core twin so core's handlers run. */
     var BADGES = [
-        {key: 'duplicate', icon: 'ri-add-box-line', css: 'patches-badge--flag'},
         {key: 'copy', icon: 'ri-file-copy-line', css: 'patches-badge--locked', core: '.copy-filter-group'},
-        {key: 'remove', icon: 'ri-delete-bin-line', css: 'patches-badge--failed', core: '.remove-selected'}
+        {key: 'duplicate', icon: 'ri-add-line', css: 'patches-badge--flag'},
+        {key: 'remove', icon: 'ri-subtract-line', css: 'patches-badge--failed', core: '.remove-selected'}
     ];
 
     function labelOf($, $core, fallback) {
