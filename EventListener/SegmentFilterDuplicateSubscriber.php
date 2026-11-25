@@ -69,6 +69,11 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'#leadlist_filters .segment-filter>.panel-body .properties-form .row,#leadlist_filters .segment-filter>.panel-body .properties-form>div{margin:0}'
         .'#leadlist_filters .segment-filter>.panel-body .properties-form .form-group,#leadlist_filters .segment-filter>.panel-body>.col-sm-3 .form-group{margin:0}'
         .'#leadlist_filters .segment-filter>.panel-body .properties-form [class*=col-]{padding-top:0;padding-bottom:0}'
+        // the alerts of a filter of the list: on top of the panel-body, from the field name to the end of the row, 12px above the fields; the one below the value is hidden
+        .'#leadlist_filters .segment-filter>.panel-body{flex-wrap:wrap}'
+        .'#leadlist_filters .segment-filter>.panel-body .properties-form .alert{display:none}'
+        .'#leadlist_filters .patches-filter-alerts{flex:0 0 calc(91.6667% - 8px);margin:0 0 12px calc(8.3333%);display:flex;flex-direction:column;gap:8px}'
+        .'#leadlist_filters .patches-filter-alerts .alert{margin:0}'
         .'#leadlist_filters .patches-field-input{text-overflow:ellipsis;cursor:default}'
         .'#leadlist_filters .patches-filter-row{display:flex;align-items:center;gap:6px}'
         .'#leadlist_filters .patches-filter-row>.properties-form{flex:1 1 auto;min-width:0}'

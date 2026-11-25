@@ -30,6 +30,7 @@
         $clone.find('.segment-in-chips').closest('.input-group').remove();
         $clone.find('input[data-in-chips]').removeAttr('data-in-chips').show();
         $clone.find('.patches-filter-actions').remove();
+        $clone.find('.patches-filter-alerts').remove();
         // the first filter has its glue hidden; a copy below it needs it (it is AND, so it stays in the group)
         $clone.find('.panel-glue').removeClass('hide');
 
@@ -79,9 +80,26 @@
         $name.empty().append($('<input type="text" class="form-control patches-field-input" readonly="readonly">').val(text).attr('title', text));
     }
 
+    /** The alerts of the value widget of a filter of the list go to the top of its panel-body (above the fields, from the field name to the end); the ones below the value are hidden by CSS. */
+    function filterAlerts($, $filter) {
+        var $body = $filter.children('.panel-body').first();
+        if (!$body.length) { return; }
+        var $source = $body.find('.properties-form .alert');
+        var signature = $source.map(function () { return $(this).attr('class') + '|' + $(this).html(); }).get().join('||');
+        var $box = $body.children('.patches-filter-alerts');
+        if (!$box.length) {
+            if (!signature) { return; }
+            $box = $('<div class="patches-filter-alerts"></div>').prependTo($body);
+        }
+        if ($box.data('signature') === signature) { return; }
+        $box.data('signature', signature).empty();
+        $source.each(function () { $box.append($(this).clone().removeAttr('id')); });
+    }
+
     function addButton($, $filter) {
         moveGlue($filter);
         nameInput($, $filter);
+        filterAlerts($, $filter);
         var $properties = $filter.find('.properties-form').first();
         if (!$properties.length) { return; }
         var $row = $properties.parent('.patches-filter-row');
