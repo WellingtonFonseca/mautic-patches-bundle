@@ -41,7 +41,8 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock__condition{flex:0 0 calc(16.6667% - 8px)}.patches-filter-dock__value{flex:0 0 calc(41.6667% - 8px);display:flex;align-items:center;gap:8px}'
         .'.patches-filter-dock__value>input{flex:1 1 auto;min-width:0}'
         // core's select that adds a filter, moved here: it fills the slot and its list opens upwards (the bar sits at the bottom)
-        .'.patches-filter-dock__field .available-filters{float:none;width:100%;margin:0;padding:0}'
+        .'.patches-filter-dock__field .available-filters{float:none;width:100%;margin:0!important;padding:0!important}'
+        .'.patches-filter-dock__field .available-filters>.chosen-container,.patches-filter-dock__field .chosen-container{display:block;margin:0;vertical-align:middle}'
         .'.patches-filter-dock__field .chosen-container{width:100%!important}'
         .'.patches-filter-dock__field .chosen-container .chosen-drop{top:auto;bottom:100%}'
         .'.patches-filter-dock__add{flex:none;white-space:nowrap}'
