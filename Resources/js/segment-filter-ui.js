@@ -150,7 +150,7 @@
     // ---- group headers (the column titles of each group of filters; the one of the group on screen sticks under the top bar until the group ends) ----
 
     function headMarkup() {
-        return '<div class="patches-sf-head" aria-hidden="true"><div class="patches-sf-head__main"><span class="patches-sf-head__move">Mover</span>'
+        return '<div class="patches-sf-head" aria-hidden="true"><div class="patches-sf-head__main"><span class="patches-sf-head__move"></span>'
             + '<span class="patches-sf-head__glue">Operador</span><span class="patches-sf-head__field">Campo</span>'
             + '<span class="patches-sf-head__operator">Condição</span><span class="patches-sf-head__value">Valor</span><span class="patches-sf-head__actions"></span></div></div>';
     }
