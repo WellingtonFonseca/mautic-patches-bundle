@@ -66,9 +66,9 @@
         var $body = $('<div class="panel-body"></div>').appendTo($row);
         // the cells and the badges are one line (main), the alerts of the value go below it
         var $main = $('<div class="patches-sf-main"></div>').appendTo($body);
-        // press and hold this badge to move the filter (the only drag handle of the row); on hover it opens and pushes the other cells
-        $main.append($('<a href="javascript: void(0);" role="button" class="patches-badge patches-badge--neutral patches-filter-badge patches-sf-drag" data-action="drag" aria-label="Mover"></a>')
-            .append('<i class="ri-expand-up-down-line" aria-hidden="true"></i>').append('<span class="patches-icon-badge__text">Mover</span>'));
+        // the column of the move badge (press and hold it to move the filter: the only drag handle of the row); on hover the badge opens and pushes the other cells
+        $main.append($('<div class="patches-sf-move"></div>').append($('<a href="javascript: void(0);" role="button" class="patches-badge patches-badge--neutral patches-filter-badge patches-sf-drag" data-action="drag" aria-label="Mover"></a>')
+            .append('<i class="ri-expand-up-down-line" aria-hidden="true"></i>').append('<span class="patches-icon-badge__text">Mover</span>')));
         $main.append('<div class="patches-sf-glue"><select class="form-control not-chosen" data-patches-sf="glue"></select></div>');
         $main.append($('<div class="patches-sf-field"></div>').append(fieldCell($, data)));
         $main.append('<div class="patches-sf-operator"><select class="form-control not-chosen" data-patches-sf="operator"></select></div>');
@@ -150,7 +150,7 @@
     // ---- group headers (the column titles of each group of filters; the one of the group on screen sticks under the top bar until the group ends) ----
 
     function headMarkup() {
-        return '<div class="patches-sf-head" aria-hidden="true"><div class="patches-sf-head__main"><span class="patches-sf-head__move"></span>'
+        return '<div class="patches-sf-head" aria-hidden="true"><div class="patches-sf-head__main"><span class="patches-sf-head__move">Mover</span>'
             + '<span class="patches-sf-head__glue">Operador</span><span class="patches-sf-head__field">Campo</span>'
             + '<span class="patches-sf-head__operator">Condição</span><span class="patches-sf-head__value">Valor</span><span class="patches-sf-head__actions"></span></div></div>';
     }

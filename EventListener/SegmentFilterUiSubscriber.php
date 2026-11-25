@@ -38,7 +38,7 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         .'.patches-sf-head{box-sizing:border-box;padding:8px 15px;font-size:14px;font-weight:700;line-height:1.3846;border:1px solid color-mix(in srgb,currentColor 28%,transparent);border-bottom-width:0;border-radius:var(--patches-sf-radius,12px) var(--patches-sf-radius,12px) 0 0;background-color:var(--layer-accent)}'
         .'.patches-sf-head__main{display:flex;align-items:center}'
         .'.patches-sf-head__main>span{box-sizing:border-box;min-width:0;margin:0 8px 0 0;overflow:hidden;white-space:nowrap}'
-        .'.patches-sf-head__move{flex:none;width:29px}.patches-sf-head__glue{flex:0 1 calc(8.3333% - 8px)}.patches-sf-head__field{flex:0 1 calc(33.3333% - 8px)}'
+        .'.patches-sf-head__move{flex:none;width:48px}.patches-sf-head__glue{flex:0 1 calc(8.3333% - 8px)}.patches-sf-head__field{flex:0 1 calc(33.3333% - 8px)}'
         .'.patches-sf-head__operator{flex:0 1 calc(16.6667% - 8px)}.patches-sf-head__value{flex:1 1 0}.patches-sf-head__main>.patches-sf-head__actions{flex:none;width:99px;margin:0}'
         .'.patches-sf-head.patches-sf-sticky{position:fixed;z-index:900}'
         .'.patches-sf-main{display:flex;align-items:center;min-width:0}'
@@ -59,9 +59,10 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         .'.patches-sf-row>.panel-body>.patches-sf-alerts{margin:12px 8px 0 calc(8.3333% + 37px);display:flex;flex-direction:column;gap:8px}'
         .'.patches-sf-alerts:empty{display:none}.patches-sf-alerts .alert{margin:0}'
         .'.patches-sf-field .patches-field-input{text-overflow:ellipsis;caret-color:transparent}'
-        // the dock has no drag badge: its left padding is the badge (29px) and its gap (8px) wider, so its cells line up with the rows
-        .'.patches-filter-dock>.panel-body{padding-left:53px}'
-        .'.patches-sf-row .patches-filter-badge.patches-sf-drag{margin:0 8px 0 0;cursor:move;touch-action:none}'
+        // the dock has no move column: its left padding is that column (48px) and its gap (8px) wider, so its cells line up with the rows
+        .'.patches-filter-dock>.panel-body{padding-left:72px}'
+        .'.patches-sf-main>.patches-sf-move{flex:none;min-width:48px;display:flex;align-items:center}'
+        .'.patches-sf-move .patches-filter-badge.patches-sf-drag{margin:0;cursor:move;touch-action:none}'
         .'.patches-sf-row.ui-sortable-helper{box-shadow:0 4px 12px rgba(0,0,0,.3)}'
         .'.patches-sf-field .patches-field-group{display:flex;width:100%}'
         .'.patches-sf-field .patches-field-group .input-group-addon{display:flex;align-items:center;width:auto;white-space:nowrap}'
