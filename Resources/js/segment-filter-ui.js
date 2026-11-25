@@ -173,7 +173,7 @@
         return Math.max(0, bottom);
     }
 
-    /** The header of the group on screen is shown fixed under the top bar; when the last filter of the group reaches it, it leaves with that filter. */
+    /** The header of the group on screen is shown fixed under the top bar; when the last filter of the group reaches it, it rides above that filter and leaves with it (it never covers it). */
     function stickyUpdate($) {
         var $list = $('.patches-sf');
         var $sticky = $('.patches-sf-sticky');
@@ -193,8 +193,9 @@
         }
         var box = $list[0].getBoundingClientRect();
         var height = $sticky.outerHeight();
-        var lastBottom = active.last.getBoundingClientRect().bottom;
-        $sticky.css({left: box.left + 'px', width: box.width + 'px', top: Math.min(top, lastBottom - height) + 'px'});
+        // the header never covers the last filter of its group: it stops above it and leaves with it
+        var lastTop = active.last.getBoundingClientRect().top;
+        $sticky.css({left: box.left + 'px', width: box.width + 'px', top: Math.min(top, lastTop - height) + 'px'});
     }
 
     function safeRender($) {
