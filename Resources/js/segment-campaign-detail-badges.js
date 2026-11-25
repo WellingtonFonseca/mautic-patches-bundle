@@ -209,14 +209,14 @@
         }
 
         // core builds the title after an ajax load from the text of the headings: give it back to the component once core is done
-        if (Mautic && typeof Mautic.generatePageTitle === 'function' && !Mautic.generatePageTitle.patched) {
+        if (Mautic && typeof Mautic.generatePageTitle === 'function' && !Mautic.generatePageTitle.patchedDetail) {
             var coreTitle = Mautic.generatePageTitle;
             Mautic.generatePageTitle = function () {
                 var out = coreTitle.apply(this, arguments), host = root.document.querySelector('.patches-segment-header[data-placed] .patches-modal-name');
                 if (host && isDetailsPath(root.document.location.pathname)) { setPageTitle(root.document, host.textContent); }
                 return out;
             };
-            Mautic.generatePageTitle.patched = true;
+            Mautic.generatePageTitle.patchedDetail = true;
         }
 
         var draw = function () { addDetailBadges(root.document, cfg); }, pending = false;

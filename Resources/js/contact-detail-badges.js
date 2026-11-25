@@ -63,6 +63,12 @@
         }
     }
 
+    /** The tab title as a full load gives it ("<Name> | Mautic"); core's ajax title joins the text of every heading and adds "View |". */
+    function setPageTitle(doc, title) {
+        var want = title.trim() + ' | Mautic';
+        if (doc.title !== want) { doc.title = want; }
+    }
+
     /**
      * The contact page: the header component takes the place of core's heading (h1.page-header-title) and the document title follows it, as on the
      * segment and campaign pages. The badges follow the Do Not Contact labels core prints (core removes one by ajax). Returns whether it changed the page.
@@ -76,14 +82,13 @@
         if (host) {
             var core = Array.prototype.filter.call(doc.querySelectorAll('h1.page-header-title'), function (h) { return !host.contains(h); })[0];
             if (!core || !core.parentNode) { return false; }
-            var title = host.querySelector('.patches-modal-name').textContent, old = core.textContent.trim();
             host.setAttribute('data-placed', '1');
             core.parentNode.replaceChild(host, core);
-            if (old && doc.title.indexOf(title) === -1) { doc.title = doc.title.replace(old, title); }
             changed = true;
         }
 
         var placed = doc.querySelector('.patches-contact-header[data-placed]');
+        if (placed) { setPageTitle(doc, placed.querySelector('.patches-modal-name').textContent); }
 
         return placed ? drawBadges(doc, placed, pageBlockedChannels(doc), cfg) || changed : changed;
     }
@@ -92,6 +97,17 @@
         if (root.mauticPatchesContactDetail) { return; }
         root.mauticPatchesContactDetail = true;
         addStyle(cfg);
+
+        // core builds the title after an ajax load from the text of the headings: give it back to the component once core is done
+        if (Mautic && typeof Mautic.generatePageTitle === 'function' && !Mautic.generatePageTitle.patchedContact) {
+            var coreTitle = Mautic.generatePageTitle;
+            Mautic.generatePageTitle = function () {
+                var out = coreTitle.apply(this, arguments), host = root.document.querySelector('.patches-contact-header[data-placed] .patches-modal-name');
+                if (host && isContactViewPath(root.document.location.pathname)) { setPageTitle(root.document, host.textContent); }
+                return out;
+            };
+            Mautic.generatePageTitle.patchedContact = true;
+        }
 
         var draw = function () { addContactDetailBadges(root.document, cfg); }, pending = false;
         draw();
