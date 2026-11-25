@@ -105,7 +105,7 @@
 
     // The badge of the dots below a node (bottom, yes, no, leadsource): core shows a "+" inside the dot on hover; the "+" is hidden
     // (style below) and the same animated badge as the disconnect one (green, ri-add-line) shows just BELOW the dot and opens on hover exactly like the disconnect one. The badge sits below the dot, never over it: the dot stays free for the mouse, so dragging from it still makes a
-    // line. A click on the badge fires the click core binds on the endpoint (it opens the event / decision menu, as the "+" did).
+    // line. A click on the badge fires the click core binds on the endpoint, with the dot as its target (core reads event.target) (it opens the event / decision menu, as the "+" did).
     function decorateConnect(endpoint) {
         var circle = endpoint && endpoint.canvas;
         if (!circle || !circle.parentNode || endpoint.mauticPatchesConnect) { return; }
@@ -127,7 +127,7 @@
         });
         circle.addEventListener('mouseenter', hover.show);
         circle.addEventListener('mouseleave', hover.hide);
-        bindClick(button, function (e) { endpoint.fire('click', endpoint, e); hideAll(); });
+        bindClick(button, function (e) { endpoint.fire('click', endpoint, {target: circle}); hideAll(); });
     }
 
     function hideAll() { if (shown) { shown(); shown = null; } }
