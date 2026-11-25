@@ -19,6 +19,8 @@
     var ABOVE      = 2;
 
     var shown = null;
+    var CONNECT_ANCHORS = ['bottom', 'yes', 'no', 'leadsource'];
+    var connectTitle = 'Connect';
 
     function makeButton(title) {
         var button = root.document.createElement('a');
@@ -101,6 +103,41 @@
         connection.mauticPatchesCircleTrash = button;
     }
 
+    // The badge of the dots below a node (bottom, yes, no, leadsource): core shows a "+" inside the dot on hover; the "+" is hidden
+    // (style below) and the same animated badge as the disconnect one (green, ri-add) shows just BELOW the dot, its label sliding
+    // down on hover. The badge sits below the dot, never over it: the dot stays free for the mouse, so dragging from it still makes a
+    // line. A click on the badge fires the click core binds on the endpoint (it opens the event / decision menu, as the "+" did).
+    function decorateConnect(endpoint) {
+        var circle = endpoint && endpoint.canvas;
+        if (!circle || !circle.parentNode || endpoint.mauticPatchesConnect) { return; }
+        var details = root.Mautic.campaignBuilderGetEndpointDetails(endpoint);
+        if (CONNECT_ANCHORS.indexOf(details.anchorName) === -1) { return; }
+        endpoint.mauticPatchesConnect = true;
+        circle.className += ' mautic-patches-connect-dot';
+
+        var button = makeButton(connectTitle);
+        button.className = 'mautic-patches-trash mautic-patches-connect';
+        button.firstChild.className = 'ri-add';
+        circle.parentNode.appendChild(button);
+
+        var hover = bindHover(button, function () {
+            button.style.left = (circle.offsetLeft + circle.offsetWidth / 2 - button.offsetWidth / 2) + 'px';
+            button.style.top  = (circle.offsetTop + circle.offsetHeight + ABOVE) + 'px';
+
+            return true;
+        });
+        circle.addEventListener('mouseenter', hover.show);
+        circle.addEventListener('mouseleave', hover.hide);
+        bindClick(button, function (e) { endpoint.fire('click', endpoint, e); hideAll(); });
+    }
+
+    function hideAll() { if (shown) { shown(); shown = null; } }
+
+    function decorateConnects(instance) {
+        if (!instance.selectEndpoint) { return; }
+        instance.selectEndpoint({}).each(decorateConnect);
+    }
+
     // The Preview tab of the campaign page draws its canvas with the same function (core calls prepareCampaignCanvas for it too), but it only
     // shows the campaign: nothing there is disconnected, so its canvas is left as core makes it (its container is inside #preview-container).
     function isPreview(instance) {
@@ -137,12 +174,14 @@
             });
         }
         instance.getAllConnections().forEach(function (connection) { decorate(instance, connection, title); });
+        decorateConnects(instance);
     }
 
     function install(Mautic, cfg) {
         if (root.mauticPatchesConnectionTrash) { return; }
         root.mauticPatchesConnectionTrash = true;
 
+        connectTitle = cfg.connect || connectTitle;
         var style = root.document.createElement('style');
         // the icon badge of the Status column (.patches-badge--failed + ICON_BADGE_STYLE of AbstractListStatusSubscriber): a 29px red circle (22px of the list +30%, asked by Wellington) that opens to the right on hover
         style.textContent = '.mautic-patches-trash{display:inline-flex;align-items:center;justify-content:flex-start;box-sizing:border-box;height:29px;min-width:0;max-width:29px;margin:0;padding:0;gap:0;overflow:hidden;border-radius:14.5px;'
@@ -151,12 +190,28 @@
             + '.mautic-patches-trash>i{flex:0 0 29px;width:29px;height:29px;font-size:21px;display:flex;align-items:center;justify-content:center;pointer-events:none;color:#fff}'
             + '.mautic-patches-trash__text{padding:0 12px 0 0;opacity:0;pointer-events:none;transition:opacity .15s ease .05s}'
             + '.mautic-patches-trash:hover .mautic-patches-trash__text{opacity:1}'
+            + '.mautic-patches-connect{background-color:var(--support-success,#43a047);overflow:visible;max-width:29px!important}'
+            + '.mautic-patches-connect:hover{max-width:29px!important}'
+            + '.mautic-patches-connect .mautic-patches-trash__text{position:absolute;top:100%;left:50%;transform:translate(-50%,-6px);padding:2px 10px;margin-top:3px;border-radius:12px;background-color:var(--support-success,#43a047);box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;transition:opacity .15s ease,transform .2s ease}'
+            + '.mautic-patches-connect:hover .mautic-patches-trash__text{transform:translate(-50%,0)}'
+            + '.mautic-patches-connect-dot svg text{display:none!important}'
             + '#preview-container .jtk-endpoint svg{display:block!important}';
         root.document.head.appendChild(style);
 
         // campaign.js may load after this script, and the canvas is made when the builder opens: the function that makes it
         // is wrapped (once) on every page load, and a canvas that already exists is decorated at once
         function run() {
+            var register = Mautic.campaignBuilderRegisterAnchors;
+            if (register && !register.mauticPatchesConnect) {
+                var wrappedRegister = function (names, el) {
+                    var result = register.apply(this, arguments);
+                    if (Mautic.campaignBuilderInstance && !isPreview(Mautic.campaignBuilderInstance)) { decorateConnects(Mautic.campaignBuilderInstance); }
+
+                    return result;
+                };
+                wrappedRegister.mauticPatchesConnect = true;
+                Mautic.campaignBuilderRegisterAnchors = wrappedRegister;
+            }
             var prepare = Mautic.prepareCampaignCanvas;
             if (prepare && !prepare.mauticPatchesTrash) {
                 var wrapped = function () {

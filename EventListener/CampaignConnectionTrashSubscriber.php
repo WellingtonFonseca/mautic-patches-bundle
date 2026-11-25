@@ -35,7 +35,10 @@ class CampaignConnectionTrashSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $config = ['title' => $this->translator->trans('mautic.patches.campaign.disconnect')];
+        $config = [
+            'title'   => $this->translator->trans('mautic.patches.campaign.disconnect'),
+            'connect' => $this->translator->trans('mautic.patches.campaign.connect'),
+        ];
 
         $customContentEvent->addContent(
             '<script>'.file_get_contents(__DIR__.'/../Resources/js/campaign-connection-trash.js')
