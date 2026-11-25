@@ -122,7 +122,7 @@
         // a core .panel with a .panel-body, like a filter, so the theme of the user paints it the same way
         var $row  = $('<div class="panel ' + DOCK + '" aria-hidden="true"></div>');
         var $body = $('<div class="panel-body"></div>').appendTo($row);
-        $body.append('<div class="' + DOCK + '__glue"><select class="form-control not-chosen patches-dock-placeholder"><option>e</option><option>ou</option></select></div>');
+        $body.append('<div class="' + DOCK + '__glue"><select class="form-control not-chosen patches-dock-placeholder"><option value="and">e</option><option value="or">ou</option></select></div>');
         $body.append('<div class="' + DOCK + '__field"></div>');
         $body.append('<div class="' + DOCK + '__condition"><div class="col-sm-3 padding-none patches-dock-placeholder"><select class="form-control not-chosen" disabled="disabled"><option>condição</option></select></div></div>');
         var $value = $('<div class="' + DOCK + '__value"></div>').appendTo($body);
@@ -234,9 +234,14 @@
         var addFilter = Mautic.addLeadListFilter;
         Mautic.addLeadListFilter = function (elId, elObj) {
             var inBar = $('#available_' + elObj + '_' + elId).closest('.' + DOCK).length > 0;
+            // the e / ou the user chose survives the change of field
+            var glue = inBar ? slots($).glue.find('select:visible, select.glue-select').first().val() : null;
             if (inBar) { clearDraft($); }
             var result = addFilter.apply(this, arguments);
-            if (inBar) { startDraft($, '#available_' + elObj + '_' + elId); }
+            if (inBar) {
+                startDraft($, '#available_' + elObj + '_' + elId);
+                if (glue) { slots($).glue.find('select.glue-select').val(glue); }
+            }
 
             return result;
         };
