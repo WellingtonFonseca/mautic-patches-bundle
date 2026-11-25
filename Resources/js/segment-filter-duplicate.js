@@ -26,6 +26,9 @@
             $option.attr('selected', $option.is(':selected') ? 'selected' : null);
         });
         var $clone = $origin.clone(false);
+        // the name input of the copy would have no typing blockers (events are not cloned): the text comes back and nameInput builds it again
+        var $cloneName = $clone.find('.panel-body .field-name').first();
+        if ($cloneName.attr('data-patches-label') !== undefined) { $cloneName.text($cloneName.attr('data-patches-label')); }
         // the chips of the value are a widget on top of the input: the input stays, the widget is drawn again
         $clone.find('.segment-in-chips').closest('.input-group').remove();
         $clone.find('input[data-in-chips]').removeAttr('data-in-chips').show();
@@ -86,7 +89,7 @@
             .on('paste cut drop beforeinput', function (e) { e.preventDefault(); });
         var $box = $('<div class="input-group patches-field-group"></div>');
         if (group) { $box.append($('<span class="input-group-addon"></span>').append($('<b></b>').text(group))); }
-        $name.empty().append($box.append($input));
+        $name.attr('data-patches-label', label).empty().append($box.append($input));
     }
 
     /** The alerts of the value widget of a filter of the list go to the bottom of its panel-body (below the fields, from the field name to the end); the ones below the value are hidden by CSS. */
@@ -147,7 +150,18 @@
     function dock($) {
         var $dock = $('.' + DOCK);
         if (!$(FILTERS).length) { $dock.remove(); return; }
-        if ($dock.length) { return; }
+        if ($dock.length) {
+            // the form was drawn again (Apply, ajax load): the draft belongs to the old form and the select of the new one is outside the bar
+            var form = $(FILTERS)[0];
+            if ($dock.data('patchesForm') !== form) {
+                $dock.data('patchesForm', form);
+                adoptSelector($, $dock);
+                clearDraft($);
+            } else if (!$dock.find('.available-filters').length) {
+                adoptSelector($, $dock);
+            }
+            return;
+        }
         // a core .panel with a .panel-body, like a filter, so the theme of the user paints it the same way
         var $row  = $('<div class="panel ' + DOCK + '" aria-hidden="true"></div>');
         var $body = $('<div class="panel-body"></div>').appendTo($row);
@@ -160,6 +174,7 @@
         $row.append('<div class="' + DOCK + '__draft" hidden></div>');
         $row.append('<div class="' + DOCK + '__alerts"></div>');
         $('body').append($row);
+        $row.data('patchesForm', $(FILTERS)[0]);
         adoptSelector($, $row);
     }
 
@@ -229,6 +244,8 @@
         $body.children('.field-name').first().after($operator);
         $operator.after($properties);
         $panel.appendTo(FILTERS);
+        // as core: the glue of the first filter is hidden
+        $glue.toggleClass('hide', !$panel.prevAll('.segment-filter').length);
         $glue.find('select').attr('onchange', 'Mautic.updateFilterPositioning(this)');
         Mautic.reorderSegmentFilters();
         Mautic.updateFilterPositioning($glue.find('select').first());
@@ -276,6 +293,10 @@
         $(FILTERS + ' .segment-filter').each(function () { addButton($, $(this)); });
     }
 
+    var DRAFT_BASE = 100000;
+    var draftSeq = 0;
+    var draftNumber = null;
+
     function install($, Mautic) {
         if (root.mauticPatchesFilterDuplicate) { return; }
         root.mauticPatchesFilterDuplicate = true;
@@ -293,6 +314,14 @@
             $(this).closest('.segment-filter').find('.segment-button ' + core).first().trigger('click');
         });
 
+        var segmentFilter = Mautic.segmentFilter;
+        Mautic.segmentFilter = function () {
+            var api = segmentFilter.apply(this, arguments);
+            if (draftNumber !== null) { api.getFilterCount = function () { return draftNumber; }; }
+
+            return api;
+        };
+
         // the bar's select adds a draft, not a filter of the list
         var addFilter = Mautic.addLeadListFilter;
         Mautic.addLeadListFilter = function (elId, elObj) {
@@ -300,7 +329,10 @@
             // the e / ou the user chose survives the change of field
             var glue = inBar ? slots($).glue.find('select:visible, select.glue-select').first().val() : null;
             if (inBar) { clearDraft($); }
-            var result = addFilter.apply(this, arguments);
+            // the draft gets a number no filter of the list has, so its ids, and the answer of its ajax, never meet another filter (a stale answer finds nothing)
+            if (inBar) { draftNumber = DRAFT_BASE + (++draftSeq); }
+            var result;
+            try { result = addFilter.apply(this, arguments); } finally { draftNumber = null; }
             if (inBar) {
                 startDraft($, '#available_' + elObj + '_' + elId);
                 if (glue) { slots($).glue.find('select.glue-select').val(glue); }
