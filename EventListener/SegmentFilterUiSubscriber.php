@@ -31,6 +31,9 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
     // one row on the 12 slots, as the filter of Mautic's list had it: E/OU 1, field name 4, condition 2, value with the badges 5 (each box keeps an 8px gap inside its slots)
     public const STYLE = '#filters.patches-sf-on>#leadlist_filters,#filters.patches-sf-on>.form-group{display:none}'
         .'.patches-sf-row.panel{border:1px solid color-mix(in srgb,currentColor 28%,transparent)}'
+        // a group of AND filters is one frame: the shared edge has no border and is square, and there is no gap between the panels
+        .'.patches-sf-row.patches-sf-join-down{margin-bottom:0;border-bottom-width:0;border-bottom-left-radius:0;border-bottom-right-radius:0}'
+        .'.patches-sf-row.patches-sf-join-up{border-top-width:0;border-top-left-radius:0;border-top-right-radius:0}'
         .'.patches-sf-main{display:flex;align-items:center;min-width:0}'
         .'.patches-sf-row>.panel-body::before,.patches-sf-row>.panel-body::after{display:none}'
         .'.patches-sf-main>div{box-sizing:border-box;min-width:0;margin:0 8px 0 0}'

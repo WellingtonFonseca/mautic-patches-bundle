@@ -132,6 +132,13 @@
             if (!$linked.parent().is($core) || $linked.attr('data-patches-removing')) { $(this).remove(); }
         });
         $panels.each(function (index) { drawRow($, $(this), $list, index); });
+        // an AND filter is glued to the one above it (one frame around the group): the flags only change borders and gaps
+        var $rows = $list.children('.patches-sf-row');
+        $rows.each(function (index) {
+            var up = $(this).hasClass('in-group');
+            var down = $rows.eq(index + 1).hasClass('in-group');
+            $(this).toggleClass('patches-sf-join-up', up).toggleClass('patches-sf-join-down', down);
+        });
         $pane.addClass('patches-sf-on');
     }
 
