@@ -123,6 +123,7 @@
                 .append('<i class="' + def.icon + '" aria-hidden="true"></i>')
                 .append($('<span class="patches-icon-badge__text"></span>').text(def.label || LABEL)));
         });
+        $value.append('<button type="button" class="btn btn-primary patches-filter-dock__add" tabindex="-1"><i class="ri-add-line" aria-hidden="true"></i> Adicionar</button>');
         $('body').append($row);
     }
 
