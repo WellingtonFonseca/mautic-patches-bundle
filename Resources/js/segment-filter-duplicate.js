@@ -68,7 +68,7 @@
     var OWNERS = {lead: 'Contato', company: 'Empresa'};
 
     /**
-     * The field name as a read only input, with its group in bold in front, like the select of the bar: "Contato" | <field>,
+     * The field name as an input that cannot be typed in, with its group in bold in front, like the select of the bar: "Contato" | <field>,
      * "Empresa" | <field>; a Custom Objects field already comes as "<object> : <field>" from its filter label, which is split there.
      */
     function nameInput($, $filter) {
@@ -80,7 +80,10 @@
         var field = label;
         var cut = label.indexOf(' : ');
         if (!group && cut > 0) { group = label.slice(0, cut); field = label.slice(cut + 3); }
-        var $input = $('<input type="text" class="form-control patches-field-input" readonly="readonly">').val(field).attr('title', (group ? group + ': ' : '') + field);
+        var $input = $('<input type="text" class="form-control patches-field-input" autocomplete="off">').val(field).attr('title', (group ? group + ': ' : '') + field);
+        // not readonly (the theme dims a readonly input until it can hardly be read): the typing, the paste, the cut and the drop are blocked instead
+        $input.on('keydown', function (e) { if (!(e.ctrlKey || e.metaKey) && e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Enter') { e.preventDefault(); } })
+            .on('paste cut drop beforeinput', function (e) { e.preventDefault(); });
         var $box = $('<div class="input-group patches-field-group"></div>');
         if (group) { $box.append($('<span class="input-group-addon"></span>').append($('<b></b>').text(group))); }
         $name.empty().append($box.append($input));
