@@ -3,6 +3,9 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-24
+- No construtor de campanhas, os círculos abaixo de cada nó (inferior, sim, não e origem) não mostram mais o "+" dentro deles: ao passar o mouse aparece, logo abaixo do círculo, o selo verde animado com o ícone de mais, que abre mostrando o texto "conectar" e, ao clicar, abre o menu de evento como o "+" abria. Clicar e arrastar o círculo para ligar a outro nó continua funcionando
+- O ícone do selo de desconectar agora é um traço (menos), em vez do ícone de desfazer link
+- Na página de edição da campanha, o botão que abre o construtor agora mostra o texto curto "Construtor"
 - No construtor de campanhas, o botão vermelho de desconectar uma conexão agora é o selo animado do plugin: aparece ao passar o mouse sobre o círculo do nó e, ao passar o mouse sobre o selo, abre para a direita mostrando o texto "desconectar" no idioma do usuário
 - Nas páginas de detalhes de Custom Object e de item de Custom Object, e nas janelas de detalhes deles, o título agora é o cabeçalho (mesmo padrão do segmento, campanha e email): o nome com o selo de status (Publicado ou Não publicado) logo depois
 - Nas páginas de detalhes (campanha, segmento, contato, email, custom object e item de custom object), o cabeçalho agora tem o título com col-sm-7/md-7 e a área do botão Editar com col-sm-5/md-5. As listas de campanhas e segmentos continuam com 8/4
