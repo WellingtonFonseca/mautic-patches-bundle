@@ -22,7 +22,7 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
     public const STYLE = '#leadlist_filters .segment-filter .segment-button{display:none}'
         .'#leadlist_filters .segment-filter>.panel-heading{display:none}'
         // one row on the 12 slots: E/OU 1, field name 4, condition 2, value with the badges 5 (each box keeps an 8px gap inside its slots)
-        .'#leadlist_filters .segment-filter>.panel-body{display:flex;align-items:flex-start}'
+        .'#leadlist_filters .segment-filter>.panel-body{display:flex;align-items:center}'
         .'#leadlist_filters .segment-filter>.panel-body::before,#leadlist_filters .segment-filter>.panel-body::after{display:none}'
         .'#leadlist_filters .segment-filter>.panel-body>div{float:none;box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
         .'#leadlist_filters .segment-filter>.panel-body>.panel-glue{flex:0 0 calc(8.3333% - 8px);width:auto;padding:0}'
@@ -66,7 +66,7 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         // the Filters tab leaves room for the bar (its height is measured by the script)
         .'#filters{padding-bottom:var(--patches-dock-space,0)}'
         .'#leadlist_filters .patches-field-input{text-overflow:ellipsis;cursor:default}'
-        .'#leadlist_filters .patches-filter-row{display:flex;align-items:flex-start;gap:6px}'
+        .'#leadlist_filters .patches-filter-row{display:flex;align-items:center;gap:6px}'
         .'#leadlist_filters .patches-filter-row>.properties-form{flex:1 1 auto;min-width:0}'
         .'#leadlist_filters .patches-filter-actions{flex:none;display:flex;align-items:center;gap:6px;height:34px}'
         .'#leadlist_filters .patches-filter-badge{position:relative;z-index:2;flex:none;display:inline-flex;box-sizing:border-box;height:29px;min-width:0;max-width:29px;margin:0;padding:0;gap:0;'
