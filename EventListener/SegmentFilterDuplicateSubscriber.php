@@ -30,7 +30,7 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'#leadlist_filters .segment-filter>.panel-body>.field-name{flex:0 0 20%}'
         .'#leadlist_filters .patches-field-input{text-overflow:ellipsis;cursor:default}'
         .'#leadlist_filters .segment-filter>.panel-body>.col-sm-3.padding-none{flex:0 0 15.4%}'
-        .'#leadlist_filters .segment-filter>.panel-body>.col-sm-6{flex:1 1 0}'
+        .'#leadlist_filters .segment-filter>.panel-body>.col-sm-6{flex:0 1 calc((100% - 35.4% - 108px) * .7)}'
         .'#leadlist_filters .patches-filter-row{display:flex;align-items:flex-start;gap:6px}'
         .'#leadlist_filters .patches-filter-row>.properties-form{flex:1 1 auto;min-width:0}'
         .'#leadlist_filters .patches-filter-actions{flex:none;display:flex;align-items:center;gap:6px;height:34px}'
