@@ -64,6 +64,9 @@
     function newRow($, $panel, data) {
         var $row = $('<div class="panel patches-sf-row"></div>');
         var $body = $('<div class="panel-body"></div>').appendTo($row);
+        // press and hold this badge to move the filter (the only drag handle of the row)
+        $body.append($('<a href="javascript: void(0);" role="button" class="patches-badge patches-badge--neutral patches-filter-badge patches-sf-drag" data-action="drag" aria-label="Arrastar"></a>')
+            .append('<i class="ri-expand-up-down-line" aria-hidden="true"></i>').append('<span class="patches-icon-badge__text">Arrastar</span>'));
         $body.append('<div class="patches-sf-glue"><select class="form-control not-chosen" data-patches-sf="glue"></select></div>');
         $body.append($('<div class="patches-sf-field"></div>').append(fieldCell($, data)));
         $body.append('<div class="patches-sf-operator"><select class="form-control not-chosen" data-patches-sf="operator"></select></div>');
@@ -146,8 +149,7 @@
         if (!$list.sortable) { return; }
         $list.sortable({
             items: '> .patches-sf-row',
-            handle: '.patches-sf-field',
-            // the handle holds the (read only) field input, which sortable cancels by default
+            handle: '.patches-sf-drag',
             cancel: '',
             tolerance: 'pointer',
             axis: 'y',
