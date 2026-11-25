@@ -104,7 +104,30 @@
         $actions.children('[data-action="copy"]').toggleClass('hide', !$coreCopy.length || $coreCopy.hasClass('hide'));
     }
 
+    var DOCK = 'patches-filter-dock';
+
+    /** A floating bar at the bottom centre of the segment form with the first row of a filter (E/OU, field, condition, value, badges). Only the layout: no field is filled, nothing is searched, no action is bound. */
+    function dock($) {
+        var $dock = $('.' + DOCK);
+        if (!$(FILTERS).length) { $dock.remove(); return; }
+        if ($dock.length) { return; }
+        var $row = $('<div class="' + DOCK + '" aria-hidden="true"></div>');
+        $row.append('<div class="' + DOCK + '__glue"></div>');
+        $row.append('<div class="' + DOCK + '__field"><input type="text" class="form-control" readonly="readonly" placeholder="Contato: campo"></div>');
+        $row.append('<div class="' + DOCK + '__condition"><select class="form-control" disabled="disabled"><option>condição</option></select></div>');
+        var $value = $('<div class="' + DOCK + '__value"></div>').appendTo($row);
+        $value.append('<input type="text" class="form-control" readonly="readonly" placeholder="valor">');
+        var $actions = $('<div class="patches-filter-actions"></div>').appendTo($value);
+        BADGES.forEach(function (def) {
+            $actions.append($('<span class="patches-badge patches-filter-badge ' + def.css + '"></span>')
+                .append('<i class="' + def.icon + '" aria-hidden="true"></i>')
+                .append($('<span class="patches-icon-badge__text"></span>').text(def.label || LABEL)));
+        });
+        $('body').append($row);
+    }
+
     function scan($) {
+        dock($);
         $(FILTERS + ' .segment-filter').each(function () { addButton($, $(this)); });
     }
 
