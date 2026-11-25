@@ -113,7 +113,8 @@
         if ($value.length && !$value.parent().is($cell)) { $cell.append($value); }
         syncAlerts($, $row);
         // moved only when it is not in its place: the observer of the page runs this again after every change of the page
-        if ($list.children().get(index) !== $row[0]) { $list.children().eq(index).before($row); if (!$row.parent().is($list)) { $list.append($row); } }
+        var $rowsNow = $list.children('.patches-sf-row');
+        if ($rowsNow.get(index) !== $row[0]) { if ($rowsNow.eq(index).length) { $rowsNow.eq(index).before($row); } else { $list.append($row); } }
     }
 
     function render($) {
@@ -139,7 +140,61 @@
             var down = $rows.eq(index + 1).hasClass('in-group');
             $(this).toggleClass('patches-sf-join-up', up).toggleClass('patches-sf-join-down', down);
         });
+        heads($, $list, $rows);
+        stickyUpdate($);
         $pane.addClass('patches-sf-on');
+    }
+
+    // ---- group headers (the column titles of each group of filters; the one of the group on screen sticks under the top bar until the group ends) ----
+
+    function headMarkup() {
+        return '<div class="patches-sf-head" aria-hidden="true"><div class="patches-sf-head__main"><span class="patches-sf-head__move"></span>'
+            + '<span class="patches-sf-head__glue">Operador</span><span class="patches-sf-head__field">Campo</span>'
+            + '<span class="patches-sf-head__operator">Condição</span><span class="patches-sf-head__value">Valor</span></div></div>';
+    }
+
+    /** One header before the first filter of every group (a filter that is not AND-glued starts one). Only what differs is touched: the page observer runs this after every change. */
+    function heads($, $list, $rows) {
+        $list.children('.patches-sf-head').each(function () {
+            var $next = $(this).next();
+            if (!$next.hasClass('patches-sf-row') || $next.hasClass('in-group')) { $(this).remove(); }
+        });
+        $rows.each(function () {
+            if (!$(this).hasClass('in-group') && !$(this).prev().hasClass('patches-sf-head')) { $(this).before(headMarkup()); }
+        });
+    }
+
+    var stickyBound = false;
+
+    function topOffset($) {
+        var bar = document.querySelector('.navbar-fixed-top, #app-header, header.app-header, .app-header');
+        var bottom = bar ? bar.getBoundingClientRect().bottom : 48;
+
+        return Math.max(0, bottom);
+    }
+
+    /** The header of the group on screen is shown fixed under the top bar; when the last filter of the group reaches it, it leaves with that filter. */
+    function stickyUpdate($) {
+        var $list = $('.patches-sf');
+        var $sticky = $('.patches-sf-sticky');
+        if (!$list.length || !Form.active($) || !$('#filters').hasClass('active')) { $sticky.remove(); return; }
+        var top = topOffset($);
+        var active = null;
+        $list.children('.patches-sf-head').each(function () {
+            var head = this;
+            var last = $(head).nextUntil('.patches-sf-head', '.patches-sf-row').last()[0];
+            if (!last) { return; }
+            if (head.getBoundingClientRect().top < top && last.getBoundingClientRect().bottom > top) { active = {head: head, last: last}; }
+        });
+        if (!active) { $sticky.remove(); return; }
+        if (!$sticky.length) {
+            $sticky = $(headMarkup()).addClass('patches-sf-sticky').appendTo('body');
+            $sticky.css('background-color', root.getComputedStyle(document.body).backgroundColor);
+        }
+        var box = $list[0].getBoundingClientRect();
+        var height = $sticky.outerHeight();
+        var lastBottom = active.last.getBoundingClientRect().bottom;
+        $sticky.css({left: box.left + 'px', width: box.width + 'px', top: Math.min(top, lastBottom - height) + 'px'});
     }
 
     function safeRender($) {
@@ -363,6 +418,7 @@
         });
 
         $(document).on('keydown paste cut drop beforeinput', '.patches-field-input', blockTyping);
+        if (!stickyBound) { stickyBound = true; root.addEventListener('scroll', function () { stickyUpdate($); }, true); root.addEventListener('resize', function () { stickyUpdate($); }); }
 
         var segmentFilter = Mautic.segmentFilter;
         Mautic.segmentFilter = function () {

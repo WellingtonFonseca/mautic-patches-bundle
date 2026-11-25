@@ -34,6 +34,14 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         // a group of AND filters is one frame: the shared edge has no border and is square, and there is no gap between the panels
         .'.patches-sf-row.patches-sf-join-down{margin-bottom:0;border-bottom-width:0;border-bottom-left-radius:0;border-bottom-right-radius:0}'
         .'.patches-sf-row.patches-sf-join-up{border-top-width:0;border-top-left-radius:0;border-top-right-radius:0}'
+        // the column titles of a group of filters: in the list at the start of the group, and fixed under the top bar while the group is on screen
+        .'.patches-sf-head{box-sizing:border-box;padding:6px 16px;font-size:12px;font-weight:600;opacity:.75}'
+        .'.patches-sf-head__main{display:flex;align-items:center}'
+        .'.patches-sf-head__main>span{box-sizing:border-box;min-width:0;margin:0 8px 0 0;overflow:hidden;white-space:nowrap}'
+        .'.patches-sf-head__move{flex:none;width:29px}.patches-sf-head__glue{flex:0 1 calc(8.3333% - 8px)}.patches-sf-head__field{flex:0 1 calc(33.3333% - 8px)}'
+        .'.patches-sf-head__operator{flex:0 1 calc(16.6667% - 8px)}.patches-sf-head__value{flex:0 1 calc(41.6667% - 8px)}'
+        .'.patches-sf-head.patches-sf-sticky{position:fixed;z-index:900;opacity:1;box-shadow:0 2px 4px -2px rgba(0,0,0,.25)}'
+        .'.patches-sf-head.patches-sf-sticky .patches-sf-head__main{opacity:.75}'
         .'.patches-sf-main{display:flex;align-items:center;min-width:0}'
         .'.patches-sf-row>.panel-body::before,.patches-sf-row>.panel-body::after{display:none}'
         .'.patches-sf-main>div{box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
