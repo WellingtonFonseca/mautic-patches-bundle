@@ -113,7 +113,7 @@ test('addContactDetailBadges: the header takes the place of core\'s heading, the
     assert.deepStrictEqual(bar.children, [host], 'core\'s heading is gone, the header is in its place');
     assert.notStrictEqual(host.children[0], core);
     assert.strictEqual(host.attrs['data-placed'], '1');
-    assert.strictEqual(doc.title, 'Contact · A-100 - Ana Souza | Mautic');
+    assert.strictEqual(doc.title, 'A-100 - Ana Souza | Mautic');
     assert.strictEqual(host.children[0].className, 'patches-modal-name');
     const box = host.children[1];
     assert.strictEqual(box.className, 'patches-details-badges', 'right after the title');
@@ -133,7 +133,7 @@ test('addContactDetailBadges: a blocked email makes only the email badge red; a 
     assert.deepStrictEqual(colors(sms.host.children[1]), ['green', 'red', 'red']);
 });
 
-test('addContactDetailBadges: the document title is not touched when it already holds the title, or when core\'s heading is empty', () => {
+test('addContactDetailBadges: the document title is the component\'s name; one that already holds it is not rewritten, and core\'s empty heading does not matter', () => {
     const same = page([]);
     same.doc.title = 'A-100 - Ana Souza | Mautic';
     api.addContactDetailBadges(same.doc, cfg);
@@ -142,7 +142,7 @@ test('addContactDetailBadges: the document title is not touched when it already 
     const blank = page([], '/s/contacts/view/7', {coreText: ''});
     blank.doc.title = 'Mautic';
     api.addContactDetailBadges(blank.doc, cfg);
-    assert.strictEqual(blank.doc.title, 'Mautic');
+    assert.strictEqual(blank.doc.title, 'A-100 - Ana Souza | Mautic');
 });
 
 test('addContactDetailBadges: a box that is already right is not written again (a write wakes the observer and would loop); the header is placed once', () => {
@@ -176,7 +176,7 @@ test('addContactDetailBadges: the header of the "Ver" modal is excluded: the pag
     assert.deepStrictEqual(bar.children, [host]);
     assert.strictEqual(modalHost.attrs['data-placed'], undefined);
     assert.strictEqual(modalHost.parentNode, undefined, 'the modal header was not moved');
-    assert.strictEqual(doc.title, 'Contact · A-100 - Ana Souza | Mautic', 'the title is the page header\'s, not the modal\'s');
+    assert.strictEqual(doc.title, 'A-100 - Ana Souza | Mautic', 'the title is the page header\'s, not the modal\'s');
 });
 
 test('addContactDetailBadges: only a header in a modal: nothing is placed and the heading of core stays', () => {
