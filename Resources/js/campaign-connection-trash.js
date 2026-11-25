@@ -130,6 +130,8 @@
         });
         circle.addEventListener('mouseenter', hover.show);
         circle.addEventListener('mouseleave', hover.hide);
+        // a click on the dot itself no longer opens the event menu (only the badge does); the press and the drag are untouched
+        circle.addEventListener('click', function (e) { e.stopImmediatePropagation(); }, true);
         bindClick(button, function (e) { endpoint.fire('click', endpoint, {target: circle}); hideAll(); });
     }
 
