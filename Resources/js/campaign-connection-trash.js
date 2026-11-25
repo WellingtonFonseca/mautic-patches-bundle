@@ -29,7 +29,7 @@
         button.title = title;
         button.setAttribute('aria-label', title);
         var icon = root.document.createElement('i'), text = root.document.createElement('span');
-        icon.className = 'ri-link-unlink';
+        icon.className = 'ri-subtract-line';
         icon.setAttribute('aria-hidden', 'true');
         text.className = 'mautic-patches-trash__text';
         text.textContent = title;
