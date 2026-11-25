@@ -21,9 +21,15 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
     // the three action buttons of core are hidden; their icon badges sit to the right of the value input and push it (flex, no overlap); hover opens the word to the right
     public const STYLE = '#leadlist_filters .segment-filter .segment-button{display:none}'
         .'#leadlist_filters .segment-filter>.panel-heading{display:none}'
-        .'#leadlist_filters .field-name{display:flex;align-items:center;gap:8px}'
-        .'#leadlist_filters .field-name>.panel-glue{flex:0 0 84px;float:none;width:84px;padding:0;margin:0}'
-        .'#leadlist_filters .field-name>.panel-glue.hide{display:block!important;visibility:hidden}'
+        // one row: {E/OU} {field name} {condition} {value} {badges}
+        .'#leadlist_filters .segment-filter>.panel-body{display:flex;align-items:flex-start;gap:8px}'
+        .'#leadlist_filters .segment-filter>.panel-body::before,#leadlist_filters .segment-filter>.panel-body::after{display:none}'
+        .'#leadlist_filters .segment-filter>.panel-body>div{float:none;width:auto;min-width:0}'
+        .'#leadlist_filters .segment-filter>.panel-body>.panel-glue{flex:0 0 84px;padding:0;margin:0}'
+        .'#leadlist_filters .segment-filter>.panel-body>.panel-glue.hide{display:block!important;visibility:hidden}'
+        .'#leadlist_filters .segment-filter>.panel-body>.field-name{flex:0 0 20%;align-self:center}'
+        .'#leadlist_filters .segment-filter>.panel-body>.col-sm-3.padding-none{flex:0 0 22%}'
+        .'#leadlist_filters .segment-filter>.panel-body>.col-sm-6{flex:1 1 0}'
         .'#leadlist_filters .patches-filter-row{display:flex;align-items:flex-start;gap:6px}'
         .'#leadlist_filters .patches-filter-row>.properties-form{flex:1 1 auto;min-width:0}'
         .'#leadlist_filters .patches-filter-actions{flex:none;display:flex;align-items:center;gap:6px;height:34px}'

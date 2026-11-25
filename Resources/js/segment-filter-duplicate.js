@@ -57,11 +57,11 @@
         {key: 'remove', icon: 'ri-subtract-line', css: 'patches-badge--failed', label: 'Remover', core: '.remove-selected'}
     ];
 
-    /** The AND / OR select goes from the heading of the filter to the left of the field name (core finds it by class, wherever it is). */
+    /** The AND / OR select goes from the heading of the filter to the first place of the filter row (core finds it by class, wherever it is). */
     function moveGlue($filter) {
-        var $name = $filter.find('.panel-body .field-name').first();
+        var $body = $filter.find('.panel-body').first();
         var $glue = $filter.find('.panel-glue').first();
-        if ($name.length && $glue.length && !$glue.parent().is($name)) { $name.prepend($glue); }
+        if ($body.length && $glue.length && !$glue.parent().is($body)) { $body.prepend($glue); }
     }
 
     function addButton($, $filter) {
