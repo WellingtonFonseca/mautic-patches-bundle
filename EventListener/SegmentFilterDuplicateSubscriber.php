@@ -45,6 +45,10 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock__glue>.panel-glue{float:none;width:100%;padding:0;margin:0}'
         .'.patches-filter-dock__glue>.panel-glue.hide{display:block!important;visibility:hidden}'
         .'.patches-filter-dock__draft{display:none}'
+        // the widgets core loads for the value and the condition bring row / form-group margins: none in the bar, so they sit on the same line as the other fields
+        .'.patches-filter-dock__condition .row,.patches-filter-dock__value .row{margin:0}'
+        .'.patches-filter-dock__condition .form-group,.patches-filter-dock__value .form-group,.patches-filter-dock__value [class*=col-]{margin:0;padding-top:0;padding-bottom:0}'
+        .'.patches-filter-dock__value .properties-form,.patches-filter-dock__value .properties-form>div{margin:0}'
         // core's select that adds a filter, moved here: it fills the slot and its list opens upwards (the bar sits at the bottom)
         .'.patches-filter-dock__field .available-filters{float:none;width:100%;margin:0!important;padding:0!important}'
         .'.patches-filter-dock__field .available-filters>.chosen-container,.patches-filter-dock__field .chosen-container{display:block;margin:0;vertical-align:middle}'

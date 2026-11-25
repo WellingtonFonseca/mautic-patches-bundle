@@ -122,7 +122,7 @@
         // a core .panel with a .panel-body, like a filter, so the theme of the user paints it the same way
         var $row  = $('<div class="panel ' + DOCK + '" aria-hidden="true"></div>');
         var $body = $('<div class="panel-body"></div>').appendTo($row);
-        $body.append('<div class="' + DOCK + '__glue"></div>');
+        $body.append('<div class="' + DOCK + '__glue"><select class="form-control patches-dock-placeholder" disabled="disabled"><option>E</option><option>OU</option></select></div>');
         $body.append('<div class="' + DOCK + '__field"></div>');
         $body.append('<div class="' + DOCK + '__condition"><select class="form-control patches-dock-placeholder" disabled="disabled"><option>condição</option></select></div>');
         var $value = $('<div class="' + DOCK + '__value"></div>').appendTo($body);
@@ -151,7 +151,8 @@
 
     function clearDraft($) {
         var s = slots($);
-        s.glue.empty();
+        s.glue.children().not('.patches-dock-placeholder').remove();
+        s.glue.children('.patches-dock-placeholder').show();
         s.condition.children().not('.patches-dock-placeholder').remove();
         s.value.children('.col-sm-6').remove();
         s.draft.empty();
@@ -169,7 +170,8 @@
         var $body = $panel.children('.panel-body');
         var $glue = $panel.find('.panel-glue').first().removeAttr('onchange');
         $glue.find('select').removeAttr('onchange');
-        $glue.toggleClass('hide', !$(FILTERS).children('.segment-filter').length);
+        $glue.removeClass('hide');
+        s.glue.children('.patches-dock-placeholder').hide();
         s.glue.append($glue);
         var $operator = $body.children('.col-sm-3.padding-none').first();
         s.condition.children('.patches-dock-placeholder').hide();
