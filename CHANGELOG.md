@@ -3,6 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-25
+- Na edição do segmento, a aba Filtros foi redesenhada: cada filtro vira uma linha própria (E/OU, campo, condição, valor) com os selos de mover, clonar, duplicar e remover, os títulos das colunas ficam fixos sob a barra do topo enquanto o grupo está na tela, e a barra flutuante de baixo adiciona um novo filtro. O formulário do Mautic continua escondido por baixo, guardando, conferindo e recalculando o segmento como antes
 - Na edição do segmento, os botões de duplicar, clonar e remover condição saíram do topo de cada filtro: viraram selos animados ao lado direito do campo de valor, na mesma ordem. Os selos empurram o campo de valor (não ficam por cima) e, ao passar o mouse, abrem para a direita mostrando o texto
 - Na edição do segmento, o botão Adicionar da barra flutuante de novo filtro espera o formulário do valor recarregar depois de trocar a condição, para o filtro não ser adicionado com o valor errado
 - No formulário de segmento (novo e edição), os campos da coluna direita (categoria, ativo/inativo, disponível para preferências e visível para outros usuários) agora ficam na aba "Configurações", a primeira das abas e a aberta por padrão; a coluna direita some e o formulário usa a largura toda. Se um desses campos tiver erro de validação, a aba fica vermelha
