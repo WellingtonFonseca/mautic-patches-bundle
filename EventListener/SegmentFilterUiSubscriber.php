@@ -50,7 +50,7 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         .'.patches-sf-alerts:empty{display:none}.patches-sf-alerts .alert{margin:0}'
         .'.patches-sf-field .patches-field-input{text-overflow:ellipsis;caret-color:transparent}'
         .'.patches-sf-row.panel{position:relative}.patches-sf-row>.panel-body{padding-left:47px}.patches-filter-dock>.panel-body{padding-left:31px}'
-        .'.patches-sf-row .patches-filter-badge.patches-sf-drag{position:absolute;left:12px;top:50%;margin-top:-14.5px;cursor:move;touch-action:none}'
+        .'.patches-sf-row .patches-filter-badge.patches-sf-drag{position:absolute;left:12px;top:50%;margin-top:-20px;cursor:move;touch-action:none}'
         .'.patches-sf-row.ui-sortable-helper{box-shadow:0 4px 12px rgba(0,0,0,.3)}'
         .'.patches-sf-field .patches-field-group{display:flex;width:100%}'
         .'.patches-sf-field .patches-field-group .input-group-addon{display:flex;align-items:center;width:auto;white-space:nowrap}'
