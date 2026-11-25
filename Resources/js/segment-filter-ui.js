@@ -189,7 +189,6 @@
         if (!active) { $sticky.remove(); return; }
         if (!$sticky.length) {
             $sticky = $(headMarkup()).addClass('patches-sf-sticky').appendTo('body');
-            $sticky.css('background-color', root.getComputedStyle(document.body).backgroundColor);
         }
         var box = $list[0].getBoundingClientRect();
         var height = $sticky.outerHeight();
