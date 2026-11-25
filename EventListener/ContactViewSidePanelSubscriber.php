@@ -19,7 +19,10 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  *
  * Core's templates are not touched: a script, on the first load and after every Mautic ajax page load (it wraps
  * Mautic.onPageLoad), finds every right column of `#app-content` that has one `.col-md-9` sibling and is not inside a form
- * (the edit forms have a right column too, with the settings), and inserts the button. Each column is handled once (a data
+ * (the edit forms have a right column too, with the settings), and inserts the button. The one form it handles is the
+ * segment form (new and edit; recognised by its `#filters` pane): its right column (category, visible to others,
+ * preference center, published) starts hidden too, and the button reads "Configurações" instead of "Mais". A validation
+ * error inside the hidden column opens it. Each column is handled once (a data
  * flag), so running again on the same page never hides again what the user just showed.
  *
  * Injected the same way as CampaignViewOrderSubscriber
@@ -47,28 +50,30 @@ class ContactViewSidePanelSubscriber implements EventSubscriberInterface
         $customContentEvent->addContent('<script>'.self::script(
             $this->translator->trans('mautic.patches.contact.side_panel.show'),
             $this->translator->trans('mautic.patches.contact.side_panel.hide'),
-            $this->translator->trans('mautic.patches.contact.side_panel.more')
+            $this->translator->trans('mautic.patches.contact.side_panel.more'),
+            $this->translator->trans('mautic.patches.contact.side_panel.settings')
         ).'</script>');
     }
 
-    public static function script(string $showLabel, string $hideLabel, string $moreLabel): string
+    public static function script(string $showLabel, string $hideLabel, string $moreLabel, string $settingsLabel = 'Settings'): string
     {
-        [$show, $hide, $more] = array_map(
+        [$show, $hide, $more, $settings] = array_map(
             static fn (string $label): string => json_encode($label, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP),
-            [$showLabel, $hideLabel, $moreLabel]
+            [$showLabel, $hideLabel, $moreLabel, $settingsLabel]
         );
 
         return '(function(){'
             .'if(window.mauticPatchesContactSidePanel){return;}'
             .'window.mauticPatchesContactSidePanel=true;'
-            .'var showLabel='.$show.',hideLabel='.$hide.',moreLabel='.$more.';'
+            .'var showLabel='.$show.',hideLabel='.$hide.',moreLabel='.$more.',settingsLabel='.$settings.';'
             .'function place($right){'
             .'var $left=$right.siblings(".col-md-9");'
-            .'if($left.length!==1||$right.closest("form").length||$left.data("mauticPatchesSidePanel")){return;}'
+            .'var inForm=$right.closest("form").length>0;'
+            .'if($left.length!==1||$left.data("mauticPatchesSidePanel")||(inForm&&!$left.find("#filters").length)){return;}'
             .'$left.data("mauticPatchesSidePanel",true);'
             // Core's primary text button, like Editar: icon and label (the visible label is always "Mais"; the state is in the aria-label).
             .'var $button=mQuery("<button type=\"button\" class=\"btn btn-primary btn-nospin\"></button>")'
-            .'.append(mQuery("<i class=\"ri-arrow-right-s-line\" aria-hidden=\"true\" focusable=\"false\"></i>"),document.createTextNode(" "),mQuery("<span></span>").text(moreLabel));'
+            .'.append(mQuery("<i class=\"ri-arrow-right-s-line\" aria-hidden=\"true\" focusable=\"false\"></i>"),document.createTextNode(" "),mQuery("<span></span>").text(inForm?settingsLabel:moreLabel));'
             .'function apply(hidden){'
             .'$right.toggle(!hidden);'
             .'$left.css("width",hidden?"100%":"");'
@@ -78,7 +83,7 @@ class ContactViewSidePanelSubscriber implements EventSubscriberInterface
             .'}'
             .'$button.on("click",function(){apply(!$button.data("hidden"));});'
             .'$left.prepend(mQuery("<div class=\"text-right pr-md pt-sm\"></div>").append($button));'
-            .'apply(true);'
+            .'apply(!(inForm&&$right.find(".has-error").length));'
             .'}'
             .'function init(){mQuery("#app-content .col-md-3.bdr-l").each(function(){place(mQuery(this));});}'
             .'var original=Mautic.onPageLoad;'
