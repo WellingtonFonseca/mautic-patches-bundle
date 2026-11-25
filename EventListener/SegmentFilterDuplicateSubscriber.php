@@ -65,6 +65,10 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock__add{flex:none;white-space:nowrap}'
         // the Filters tab leaves room for the bar (its height is measured by the script)
         .'#filters{padding-bottom:var(--patches-dock-space,0)}'
+        // the widgets core loads for the value and the condition carry row / form-group margins: none, so every item of the row sits on the same center line
+        .'#leadlist_filters .segment-filter>.panel-body .properties-form .row,#leadlist_filters .segment-filter>.panel-body .properties-form>div{margin:0}'
+        .'#leadlist_filters .segment-filter>.panel-body .properties-form .form-group,#leadlist_filters .segment-filter>.panel-body>.col-sm-3 .form-group{margin:0}'
+        .'#leadlist_filters .segment-filter>.panel-body .properties-form [class*=col-]{padding-top:0;padding-bottom:0}'
         .'#leadlist_filters .patches-field-input{text-overflow:ellipsis;cursor:default}'
         .'#leadlist_filters .patches-filter-row{display:flex;align-items:center;gap:6px}'
         .'#leadlist_filters .patches-filter-row>.properties-form{flex:1 1 auto;min-width:0}'
