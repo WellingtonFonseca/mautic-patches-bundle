@@ -139,6 +139,12 @@
         return true;
     }
 
+    /** The tab title as a full load gives it ("<PREFIX - Name> | Mautic"); core's ajax title joins the text of every h1.page-header-title and adds "View |". */
+    function setPageTitle(doc, title) {
+        var want = title.trim() + ' | Mautic';
+        if (doc.title !== want) { doc.title = want; }
+    }
+
     /**
      * The segment page: the component takes the place of core's heading (h1.page-header-title) and the document title follows it, as the title
      * script of SegmentTitlePrefixSubscriber would. Returns whether it placed a component.
@@ -158,7 +164,7 @@
             var block = dot.closest('div.mt-md.d-flex.gap-xs');
             if (block && !host.contains(block) && block.parentNode) { block.parentNode.removeChild(block); }
         });
-        if (old && doc.title.indexOf(title) === -1) { doc.title = doc.title.replace(old, title); }
+        if (old) { setPageTitle(doc, title); }
         renderHeader(doc, host, cfg);
 
         return true;
@@ -200,6 +206,17 @@
             var style = root.document.createElement('style');
             style.textContent = cfg.style;
             root.document.head.appendChild(style);
+        }
+
+        // core builds the title after an ajax load from the text of the headings: give it back to the component once core is done
+        if (Mautic && typeof Mautic.generatePageTitle === 'function' && !Mautic.generatePageTitle.patched) {
+            var coreTitle = Mautic.generatePageTitle;
+            Mautic.generatePageTitle = function () {
+                var out = coreTitle.apply(this, arguments), host = root.document.querySelector('.patches-segment-header[data-placed] .patches-modal-name');
+                if (host && isDetailsPath(root.document.location.pathname)) { setPageTitle(root.document, host.textContent); }
+                return out;
+            };
+            Mautic.generatePageTitle.patched = true;
         }
 
         var draw = function () { addDetailBadges(root.document, cfg); }, pending = false;
