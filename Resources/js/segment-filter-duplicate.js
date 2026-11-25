@@ -52,14 +52,10 @@
 
     /** The three actions of a filter as icon badges (order: core's copy, duplicate, remove). Core's buttons stay, hidden: a badge clicks its core twin so core's handlers run. */
     var BADGES = [
-        {key: 'copy', icon: 'ri-file-copy-line', css: 'patches-badge--locked', core: '.copy-filter-group'},
+        {key: 'copy', icon: 'ri-file-copy-line', css: 'patches-badge--locked', label: 'Clone', core: '.copy-filter-group'},
         {key: 'duplicate', icon: 'ri-add-line', css: 'patches-badge--flag'},
-        {key: 'remove', icon: 'ri-subtract-line', css: 'patches-badge--failed', core: '.remove-selected'}
+        {key: 'remove', icon: 'ri-subtract-line', css: 'patches-badge--failed', label: 'Remover', core: '.remove-selected'}
     ];
-
-    function labelOf($, $core, fallback) {
-        return $.trim($core.attr('aria-label') || $core.attr('title') || $core.text()) || fallback;
-    }
 
     function addButton($, $filter) {
         var $properties = $filter.find('.properties-form').first();
@@ -70,8 +66,7 @@
         if (!$actions.length) {
             $actions = $('<div class="patches-filter-actions"></div>').appendTo($row);
             BADGES.forEach(function (def) {
-                var $core = def.core ? $filter.find('.segment-button ' + def.core).first() : $();
-                var label = def.core ? labelOf($, $core, def.key) : LABEL;
+                var label = def.label || LABEL;
                 var $badge = $('<a href="javascript: void(0);" role="button" class="patches-badge patches-filter-badge ' + def.css + '"></a>')
                     .attr({'aria-label': label, 'data-action': def.key})
                     .append('<i class="' + def.icon + '" aria-hidden="true"></i>')
