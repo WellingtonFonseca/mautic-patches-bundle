@@ -107,7 +107,7 @@
         $row.find('.patches-sf-glue').toggleClass('is-first', data.first);
         $row.toggleClass('in-group', data.inGroup);
         $row.attr('data-num', data.num);
-        $row.find('.patches-filter-badge[data-action="copy"]').toggleClass('hide', !data.canCopy);
+        $row.find('.patches-filter-badge[data-action="copy"]').toggleClass('patches-off', !data.canCopy);
         var $cell = $row.find('.patches-sf-valuecell');
         var $value = Form.valueOf($panel);
         if ($value.length && !$value.parent().is($cell)) { $cell.append($value); }
