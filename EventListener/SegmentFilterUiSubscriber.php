@@ -61,7 +61,7 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         .'justify-content:flex-start;overflow:hidden;border-radius:14.5px;font-size:14px;color:#fff;text-decoration:none;transition:max-width .2s ease,box-shadow .2s ease}'
         // the clone badge: the lilac of the test badge of the campaign builder (#patches-steps-container .patches-badge--test)
         .'.patches-badge--test{background-color:#7e57c2}'
-        .'.patches-sf-row .patches-filter-badge.hide{display:none}'
+        .'.patches-sf-row .patches-filter-badge.hide{display:inline-flex;visibility:hidden;pointer-events:none}'
         .'.patches-sf-row .patches-filter-badge:hover{z-index:3;max-width:200px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;color:#fff}'
         .'.patches-sf-row .patches-filter-badge>i{flex:0 0 29px;width:29px;height:29px;font-size:21px;display:flex;align-items:center;justify-content:center}'
         .'.patches-sf-row .patches-filter-badge .patches-icon-badge__text{padding:0 12px 0 0;opacity:0;transition:opacity .15s ease .05s}'
