@@ -75,7 +75,7 @@
         return $row;
     }
 
-    function fillSelect($select, options, value) {
+    function fillSelect($, $select, options, value) {
         var signature = options.map(function (o) { return o.value + '|' + o.text; }).join('||');
         if ($select.data('signature') !== signature) {
             $select.data('signature', signature).empty();
@@ -97,8 +97,8 @@
         var data = Form.readRow($panel);
         var row = rowOf.get($panel[0]);
         var $row = row ? $(row) : newRow($, $panel, data);
-        fillSelect($row.find('select[data-patches-sf="glue"]'), data.glues, data.glue);
-        fillSelect($row.find('select[data-patches-sf="operator"]'), data.operators, data.operator);
+        fillSelect($, $row.find('select[data-patches-sf="glue"]'), data.glues, data.glue);
+        fillSelect($, $row.find('select[data-patches-sf="operator"]'), data.operators, data.operator);
         $row.find('.patches-sf-glue').toggleClass('is-first', data.first);
         $row.toggleClass('in-group', data.inGroup);
         $row.attr('data-num', data.num);
