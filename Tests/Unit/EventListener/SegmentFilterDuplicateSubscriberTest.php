@@ -32,7 +32,8 @@ class SegmentFilterDuplicateSubscriberTest extends TestCase
     {
         $js = $this->content('page.header.left');
 
-        $this->assertStringStartsWith('<script>', $js);
+        $this->assertStringStartsWith('<style>', $js);
+        $this->assertStringContainsString('</style><script>', $js);
         $this->assertStringEndsWith('mauticPatchesFilterDuplicateApi.install(mQuery,Mautic);</script>', $js);
         $this->assertSame('', $this->content('something.else'));
     }
@@ -46,5 +47,31 @@ class SegmentFilterDuplicateSubscriberTest extends TestCase
         $this->assertStringContainsString('Mautic.segmentFilter().attachEvents', $js);
         $this->assertStringContainsString('mauticPatchesInChipsScan', $js);
         $this->assertStringContainsString('Duplicar condição', $js);
+    }
+
+    public function testCoreButtonsAreHiddenAndTheBadgesPushTheValueInput(): void
+    {
+        $css = SegmentFilterDuplicateSubscriber::STYLE;
+
+        // core's three buttons are gone; the badges are flex siblings of the value form (they push it, never overlay it)
+        $this->assertStringContainsString('.segment-filter .segment-button{display:none}', $css);
+        $this->assertStringContainsString('.patches-filter-row{display:flex', $css);
+        $this->assertStringContainsString('.patches-filter-row>.properties-form{flex:1 1 auto;min-width:0}', $css);
+        $this->assertStringContainsString('.patches-filter-actions{flex:none', $css);
+        $this->assertStringNotContainsString('.patches-filter-badge{position:absolute', $css);
+    }
+
+    public function testTheBadgeStyleOfTheListsIsShippedWithTheScript(): void
+    {
+        $this->assertStringContainsString('.patches-badge', $this->content('page.header.left'));
+    }
+
+    public function testTheScriptWaitsForTheValueFormBeforeAdicionar(): void
+    {
+        $js = $this->content('page.header.left');
+
+        $this->assertStringContainsString('Mautic.loadFilterForm', $js);
+        $this->assertStringContainsString('draftReloads', $js);
+        $this->assertStringContainsString('patches-filter-dock__add', $js);
     }
 }
