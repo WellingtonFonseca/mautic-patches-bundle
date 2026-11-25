@@ -3,6 +3,8 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-25
+- Na edição do segmento, os botões de duplicar, clonar e remover condição saíram do topo de cada filtro: viraram selos animados ao lado direito do campo de valor, na mesma ordem. Os selos empurram o campo de valor (não ficam por cima) e, ao passar o mouse, abrem para a direita mostrando o texto
+- Na edição do segmento, o botão Adicionar da barra flutuante de novo filtro espera o formulário do valor recarregar depois de trocar a condição, para o filtro não ser adicionado com o valor errado
 - No formulário de segmento (novo e edição), os campos da coluna direita (categoria, ativo/inativo, disponível para preferências e visível para outros usuários) agora ficam na aba "Configurações", a primeira das abas e a aberta por padrão; a coluna direita some e o formulário usa a largura toda. Se um desses campos tiver erro de validação, a aba fica vermelha
 - Após abrir Detalhes (menu da lista ou janela) por navegação ajax, o título da aba não duplica mais o nome nem começa com "View |": fica igual ao de um F5 ("Nome | Mautic"), em segmento, campanha, email, contato, custom object e item de custom object.
 
