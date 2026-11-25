@@ -80,7 +80,7 @@
         $name.empty().append($('<input type="text" class="form-control patches-field-input" readonly="readonly">').val(text).attr('title', text));
     }
 
-    /** The alerts of the value widget of a filter of the list go to the top of its panel-body (above the fields, from the field name to the end); the ones below the value are hidden by CSS. */
+    /** The alerts of the value widget of a filter of the list go to the bottom of its panel-body (below the fields, from the field name to the end); the ones below the value are hidden by CSS. */
     function filterAlerts($, $filter) {
         var $body = $filter.children('.panel-body').first();
         if (!$body.length) { return; }
@@ -89,7 +89,7 @@
         var $box = $body.children('.patches-filter-alerts');
         if (!$box.length) {
             if (!signature) { return; }
-            $box = $('<div class="patches-filter-alerts"></div>').prependTo($body);
+            $box = $('<div class="patches-filter-alerts"></div>').appendTo($body);
         }
         if ($box.data('signature') === signature) { return; }
         $box.data('signature', signature).empty();
