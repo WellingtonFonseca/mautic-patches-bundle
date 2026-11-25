@@ -57,7 +57,7 @@
         {key: 'remove', icon: 'ri-delete-bin-line', css: 'patches-badge--failed', core: '.remove-selected'}
     ];
 
-    function labelOf($core, fallback) {
+    function labelOf($, $core, fallback) {
         return $.trim($core.attr('aria-label') || $core.attr('title') || $core.text()) || fallback;
     }
 
@@ -71,7 +71,7 @@
             $actions = $('<div class="patches-filter-actions"></div>').appendTo($row);
             BADGES.forEach(function (def) {
                 var $core = def.core ? $filter.find('.segment-button ' + def.core).first() : $();
-                var label = def.core ? labelOf($core, def.key) : LABEL;
+                var label = def.core ? labelOf($, $core, def.key) : LABEL;
                 var $badge = $('<a href="javascript: void(0);" role="button" class="patches-badge patches-filter-badge ' + def.css + '"></a>')
                     .attr({'aria-label': label, 'data-action': def.key})
                     .append('<i class="' + def.icon + '" aria-hidden="true"></i>')
