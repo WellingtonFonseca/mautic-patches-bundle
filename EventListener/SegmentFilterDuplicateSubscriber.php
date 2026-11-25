@@ -21,13 +21,15 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
     // the three action buttons of core are hidden; their icon badges sit to the right of the value input and push it (flex, no overlap); hover opens the word to the right
     public const STYLE = '#leadlist_filters .segment-filter .segment-button{display:none}'
         .'#leadlist_filters .segment-filter>.panel-heading{display:none}'
-        // one row: {E/OU} {field name} {condition} {value} {badges}
-        .'#leadlist_filters .segment-filter>.panel-body{display:flex;align-items:flex-start;gap:8px}'
+        // one row on the 12 slots: E/OU 1, field name 4, condition 2, value with the badges 5 (each box keeps an 8px gap inside its slots)
+        .'#leadlist_filters .segment-filter>.panel-body{display:flex;align-items:flex-start}'
         .'#leadlist_filters .segment-filter>.panel-body::before,#leadlist_filters .segment-filter>.panel-body::after{display:none}'
-        .'#leadlist_filters .segment-filter>.panel-body>div{float:none;width:auto;min-width:0}'
-        .'#leadlist_filters .segment-filter>.panel-body>.panel-glue{flex:0 0 84px;padding:0;margin:0}'
+        .'#leadlist_filters .segment-filter>.panel-body>div{float:none;box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
+        .'#leadlist_filters .segment-filter>.panel-body>.panel-glue{flex:0 0 calc(8.3333% - 8px);width:auto;padding:0}'
         .'#leadlist_filters .segment-filter>.panel-body>.panel-glue.hide{display:block!important;visibility:hidden}'
-        .'#leadlist_filters .segment-filter>.panel-body>.field-name{flex:0 0 26%}'
+        .'#leadlist_filters .segment-filter>.panel-body>.field-name{flex:0 0 calc(33.3333% - 8px);padding:0}'
+        .'#leadlist_filters .segment-filter>.panel-body>.col-sm-3.padding-none{flex:0 0 calc(16.6667% - 8px)}'
+        .'#leadlist_filters .segment-filter>.panel-body>.col-sm-6{flex:0 0 calc(41.6667% - 8px)}'
         .'#leadlist_filters .patches-field-input{text-overflow:ellipsis;cursor:default}'
         .'#leadlist_filters .segment-filter>.panel-body>.col-sm-3.padding-none{flex:0 0 15.4%}'
         .'#leadlist_filters .segment-filter>.panel-body>.col-sm-6{flex:0 1 calc((100% - 35.4% - 108px) * .7)}'
