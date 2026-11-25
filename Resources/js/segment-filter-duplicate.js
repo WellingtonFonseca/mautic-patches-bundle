@@ -209,14 +209,18 @@
         if (typeof root.mauticPatchesInChipsScan === 'function') { root.mauticPatchesInChipsScan(); }
     }
 
-    /** The Filters tab gets a bottom padding a quarter as high as the bar plus its 56px distance from the window bottom, so the bar never covers the last filter. */
+    /** The Filters tab gets a bottom padding a quarter as high as the bar plus its 56px distance from the window bottom and the height of the floating alerts, so the bar never covers the last filter. */
     function reserveSpace($) {
         var $dock = $('.' + DOCK);
-        var height = $dock.length ? Math.ceil($dock.outerHeight() / 4 + 56 + 16) : 0;
+        var $alerts = $dock.find('.' + DOCK + '__alerts');
+        var alertSpace = $alerts.children().length ? $alerts.outerHeight() + 12 : 0;
+        var height = $dock.length ? Math.ceil($dock.outerHeight() / 4 + 56 + 16 + alertSpace) : 0;
         document.documentElement.style.setProperty('--patches-dock-space', height + 'px');
         if ($dock.length && !$dock.data('patchesObserved') && typeof ResizeObserver !== 'undefined') {
             $dock.data('patchesObserved', true);
-            new ResizeObserver(function () { reserveSpace($); }).observe($dock[0]);
+            var observer = new ResizeObserver(function () { reserveSpace($); });
+            observer.observe($dock[0]);
+            observer.observe($dock.find('.' + DOCK + '__alerts')[0]);
         }
     }
 
