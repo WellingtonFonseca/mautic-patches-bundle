@@ -52,7 +52,7 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         // the widgets core loads for the value carry row / form-group margins: none, so every item of the row sits on the same center line
         .'.patches-sf-valuecell .properties-form .row,.patches-sf-valuecell .properties-form>div{margin:0}'
         .'.patches-sf-valuecell .properties-form .form-group{margin:0}'
-        .'.patches-sf-valuecell .properties-form [class*=col-]{padding-top:0;padding-bottom:0}'
+        .'.patches-sf-valuecell .properties-form [class*=col-]{padding:0}'
         // chosen started while its filter was hidden has no width
         .'.patches-sf-valuecell .chosen-container{width:100%!important}'
         .'.patches-sf-valuecell .alert{display:none}'
