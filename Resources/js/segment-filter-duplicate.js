@@ -124,12 +124,86 @@
         var $body = $('<div class="panel-body"></div>').appendTo($row);
         $body.append('<div class="' + DOCK + '__glue"></div>');
         $body.append('<div class="' + DOCK + '__field"></div>');
-        $body.append('<div class="' + DOCK + '__condition"><select class="form-control" disabled="disabled"><option>condição</option></select></div>');
+        $body.append('<div class="' + DOCK + '__condition"><select class="form-control patches-dock-placeholder" disabled="disabled"><option>condição</option></select></div>');
         var $value = $('<div class="' + DOCK + '__value"></div>').appendTo($body);
-        $value.append('<input type="text" class="form-control" readonly="readonly" placeholder="valor">');
-        $value.append('<button type="button" class="btn btn-primary patches-filter-dock__add" tabindex="-1"><i class="ri-add-line" aria-hidden="true"></i> Adicionar</button>');
+        $value.append('<input type="text" class="form-control patches-dock-placeholder" readonly="readonly" placeholder="valor">');
+        $value.append('<button type="button" class="btn btn-primary patches-filter-dock__add"><i class="ri-add-line" aria-hidden="true"></i> Adicionar</button>');
+        $row.append('<div class="' + DOCK + '__draft" hidden></div>');
         $('body').append($row);
         adoptSelector($, $row);
+    }
+
+    /**
+     * The draft: choosing a field in the bar does not add the filter to the list. Core builds the filter as always
+     * (Mautic.addLeadListFilter); that panel is taken out of the list and kept in the bar, and its glue, operator and value
+     * widgets are shown in the slots. "Adicionar" puts the panel back into the list (renumbered by core) and clears the bar.
+     */
+    function slots($) {
+        var $dock = $('.' + DOCK);
+        return {
+            dock: $dock,
+            glue: $dock.find('.' + DOCK + '__glue'),
+            condition: $dock.find('.' + DOCK + '__condition'),
+            value: $dock.find('.' + DOCK + '__value'),
+            draft: $dock.find('.' + DOCK + '__draft')
+        };
+    }
+
+    function clearDraft($) {
+        var s = slots($);
+        s.glue.empty();
+        s.condition.children().not('.patches-dock-placeholder').remove();
+        s.value.children('.col-sm-6').remove();
+        s.draft.empty();
+        s.condition.children('.patches-dock-placeholder').show();
+        s.value.children('.patches-dock-placeholder').show();
+        var $select = s.dock.find('#available_segment_filters');
+        $select.val('').trigger('chosen:updated');
+    }
+
+    function startDraft($, optionSelector) {
+        var s = slots($);
+        var $panel = $(FILTERS).children('.segment-filter').last();
+        if (!s.dock.length || !$panel.length) { return; }
+        $panel.detach();
+        var $body = $panel.children('.panel-body');
+        var $glue = $panel.find('.panel-glue').first().removeAttr('onchange');
+        $glue.find('select').removeAttr('onchange');
+        $glue.toggleClass('hide', !$(FILTERS).children('.segment-filter').length);
+        s.glue.append($glue);
+        var $operator = $body.children('.col-sm-3.padding-none').first();
+        s.condition.children('.patches-dock-placeholder').hide();
+        s.condition.append($operator);
+        var $properties = $body.children('.col-sm-6').first();
+        s.value.children('.patches-dock-placeholder').hide();
+        s.value.children('.patches-filter-dock__add').before($properties);
+        s.draft.append($panel);
+        // core clears the select right after this call: show the chosen field again
+        setTimeout(function () {
+            $(optionSelector).prop('selected', true);
+            s.dock.find('#available_segment_filters').trigger('chosen:updated');
+        }, 0);
+    }
+
+    function commitDraft($, Mautic) {
+        var s = slots($);
+        var $panel = s.draft.children('.segment-filter').first();
+        if (!$panel.length) { return; }
+        var $body = $panel.children('.panel-body');
+        var $glue = s.glue.children('.panel-glue').first();
+        var $operator = s.condition.children('.col-sm-3.padding-none').first();
+        var $properties = s.value.children('.col-sm-6').first();
+        $body.prepend($glue);
+        $body.children('.field-name').first().after($operator);
+        $operator.after($properties);
+        $panel.appendTo(FILTERS);
+        $glue.find('select').attr('onchange', 'Mautic.updateFilterPositioning(this)');
+        Mautic.reorderSegmentFilters();
+        Mautic.updateFilterPositioning($glue.find('select').first());
+        Mautic.segmentFilter().showCopyBasedOnGlue($panel);
+        clearDraft($);
+        scan($);
+        if (typeof root.mauticPatchesInChipsScan === 'function') { root.mauticPatchesInChipsScan(); }
     }
 
     function scan($) {
@@ -154,6 +228,21 @@
             $(this).closest('.segment-filter').find('.segment-button ' + core).first().trigger('click');
         });
 
+        // the bar's select adds a draft, not a filter of the list
+        var addFilter = Mautic.addLeadListFilter;
+        Mautic.addLeadListFilter = function (elId, elObj) {
+            var inBar = $('#available_' + elObj + '_' + elId).closest('.' + DOCK).length > 0;
+            if (inBar) { clearDraft($); }
+            var result = addFilter.apply(this, arguments);
+            if (inBar) { startDraft($, '#available_' + elObj + '_' + elId); }
+
+            return result;
+        };
+        $(document).on('click', '.patches-filter-dock__add', function (event) {
+            event.preventDefault();
+            commitDraft($, Mautic);
+        });
+
         var run = function () { scan($); };
         var original = Mautic.onPageLoad;
         Mautic.onPageLoad = function () { var result = original.apply(this, arguments); run(); return result; };
@@ -165,7 +254,7 @@
         }
     }
 
-    var api = {install: install, copyOf: copyOf, addButton: addButton, moveGlue: moveGlue, nameInput: nameInput, LABEL: LABEL};
+    var api = {install: install, copyOf: copyOf, addButton: addButton, moveGlue: moveGlue, nameInput: nameInput, startDraft: startDraft, commitDraft: commitDraft, clearDraft: clearDraft, LABEL: LABEL};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

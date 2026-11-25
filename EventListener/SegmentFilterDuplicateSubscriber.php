@@ -39,7 +39,12 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock>.panel-body>div{box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
         .'.patches-filter-dock__glue{flex:0 0 calc(8.3333% - 8px)}.patches-filter-dock__field{flex:0 0 calc(33.3333% - 8px)}'
         .'.patches-filter-dock__condition{flex:0 0 calc(16.6667% - 8px)}.patches-filter-dock__value{flex:0 0 calc(41.6667% - 8px);display:flex;align-items:center;gap:8px}'
-        .'.patches-filter-dock__value>input{flex:1 1 auto;min-width:0}'
+        .'.patches-filter-dock__value>input,.patches-filter-dock__value>.col-sm-6{flex:1 1 auto;min-width:0}'
+        .'.patches-filter-dock__value>.col-sm-6{float:none;width:auto;padding:0}'
+        .'.patches-filter-dock__condition>.col-sm-3{float:none;width:100%;padding:0}'
+        .'.patches-filter-dock__glue>.panel-glue{float:none;width:100%;padding:0;margin:0}'
+        .'.patches-filter-dock__glue>.panel-glue.hide{display:block!important;visibility:hidden}'
+        .'.patches-filter-dock__draft{display:none}'
         // core's select that adds a filter, moved here: it fills the slot and its list opens upwards (the bar sits at the bottom)
         .'.patches-filter-dock__field .available-filters{float:none;width:100%;margin:0!important;padding:0!important}'
         .'.patches-filter-dock__field .available-filters>.chosen-container,.patches-filter-dock__field .chosen-container{display:block;margin:0;vertical-align:middle}'
