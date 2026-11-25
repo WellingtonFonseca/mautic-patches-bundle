@@ -120,6 +120,9 @@
         circle.parentNode.appendChild(button);
 
         var hover = bindHover(button, function () {
+            // the event menu (Decisão / Ação / Condição) is open: the badge would sit over it, so it does not show
+            var panel = root.document.getElementById('CampaignEventPanel');
+            if (panel && panel.offsetParent !== null) { return false; }
             button.style.left = (circle.offsetLeft + circle.offsetWidth / 2 - button.offsetWidth / 2) + 'px';
             button.style.top  = (circle.offsetTop + circle.offsetHeight + ABOVE) + 'px';
 
