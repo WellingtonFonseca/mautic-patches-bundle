@@ -64,8 +64,24 @@
         if ($body.length && $glue.length && !$glue.parent().is($body)) { $body.prepend($glue); }
     }
 
+    var OWNERS = {lead: 'Contato', company: 'Empresa'};
+
+    /**
+     * The field name as a read only input: "Contato: <field>", "Empresa: <field>"; a Custom Objects field already comes as
+     * "<object> : <field>" from its filter label, so it stays as it is.
+     */
+    function nameInput($, $filter) {
+        var $name = $filter.find('.panel-body .field-name').first();
+        if (!$name.length || $name.find('.patches-field-input').length) { return; }
+        var label = $.trim($name.text());
+        var object = $filter.find('input[name$="[object]"]').first().val();
+        var text = OWNERS[object] ? OWNERS[object] + ': ' + label : label;
+        $name.empty().append($('<input type="text" class="form-control patches-field-input" readonly="readonly">').val(text).attr('title', text));
+    }
+
     function addButton($, $filter) {
         moveGlue($filter);
+        nameInput($, $filter);
         var $properties = $filter.find('.properties-form').first();
         if (!$properties.length) { return; }
         var $row = $properties.parent('.patches-filter-row');
@@ -120,7 +136,7 @@
         }
     }
 
-    var api = {install: install, copyOf: copyOf, addButton: addButton, moveGlue: moveGlue, LABEL: LABEL};
+    var api = {install: install, copyOf: copyOf, addButton: addButton, moveGlue: moveGlue, nameInput: nameInput, LABEL: LABEL};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
