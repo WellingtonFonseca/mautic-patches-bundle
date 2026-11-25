@@ -111,18 +111,14 @@
         var $dock = $('.' + DOCK);
         if (!$(FILTERS).length) { $dock.remove(); return; }
         if ($dock.length) { return; }
-        var $row = $('<div class="' + DOCK + '" aria-hidden="true"></div>');
-        $row.append('<div class="' + DOCK + '__glue"></div>');
-        $row.append('<div class="' + DOCK + '__field"><input type="text" class="form-control" readonly="readonly" placeholder="Contato: campo"></div>');
-        $row.append('<div class="' + DOCK + '__condition"><select class="form-control" disabled="disabled"><option>condição</option></select></div>');
-        var $value = $('<div class="' + DOCK + '__value"></div>').appendTo($row);
+        // a core .panel with a .panel-body, like a filter, so the theme of the user paints it the same way
+        var $row  = $('<div class="panel ' + DOCK + '" aria-hidden="true"></div>');
+        var $body = $('<div class="panel-body"></div>').appendTo($row);
+        $body.append('<div class="' + DOCK + '__glue"></div>');
+        $body.append('<div class="' + DOCK + '__field"><input type="text" class="form-control" readonly="readonly" placeholder="Contato: campo"></div>');
+        $body.append('<div class="' + DOCK + '__condition"><select class="form-control" disabled="disabled"><option>condição</option></select></div>');
+        var $value = $('<div class="' + DOCK + '__value"></div>').appendTo($body);
         $value.append('<input type="text" class="form-control" readonly="readonly" placeholder="valor">');
-        var $actions = $('<div class="patches-filter-actions"></div>').appendTo($value);
-        BADGES.forEach(function (def) {
-            $actions.append($('<span class="patches-badge patches-filter-badge ' + def.css + '"></span>')
-                .append('<i class="' + def.icon + '" aria-hidden="true"></i>')
-                .append($('<span class="patches-icon-badge__text"></span>').text(def.label || LABEL)));
-        });
         $value.append('<button type="button" class="btn btn-primary patches-filter-dock__add" tabindex="-1"><i class="ri-add-line" aria-hidden="true"></i> Adicionar</button>');
         $('body').append($row);
     }
