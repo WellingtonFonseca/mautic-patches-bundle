@@ -62,6 +62,8 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock .chosen-container .chosen-drop{top:auto;bottom:100%}'
         .'.patches-filter-dock .chosen-container-active.chosen-with-drop .chosen-single{border-radius:0 0 4px 4px}'
         .'.patches-filter-dock .dropdown-menu{top:auto;bottom:100%}'
+        // the suggestions of the including / excluding chips open upwards too (the inline top:100% of the chips needs the !important)
+        .'.patches-filter-dock .segment-in-chips .dropdown-menu{top:auto!important;bottom:100%!important;margin:0 0 2px}'
         .'.patches-filter-dock__add{flex:none;white-space:nowrap}'
         // the Filters tab leaves room for the bar (its height is measured by the script)
         .'#filters{padding-bottom:var(--patches-dock-space,0)}'
