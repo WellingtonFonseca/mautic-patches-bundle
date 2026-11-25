@@ -59,11 +59,13 @@ class CampaignPageHeaderColumnsSubscriber implements EventSubscriberInterface
         if (in_array($route, [
             'mautic_custom_object_view', 'mautic_custom_item_view',
             'mautic_custom_object_edit', 'mautic_custom_object_new', 'mautic_custom_item_edit', 'mautic_custom_item_new',
+            'mautic_custom_object_save', 'mautic_custom_item_save', 'mautic_custom_object_clone', 'mautic_custom_item_clone',
+            'mautic_custom_item_edit_redirect_to_contact', 'mautic_custom_item_new_redirect_to_contact',
         ], true)) {
             return true;
         }
 
-        return in_array($objectAction, ['view', 'edit', 'new'], true) && in_array($route, [
+        return in_array($objectAction, ['view', 'edit', 'new', 'clone'], true) && in_array($route, [
             'mautic_campaign_action',
             'mautic_segment_action',
             'mautic_contact_action',
