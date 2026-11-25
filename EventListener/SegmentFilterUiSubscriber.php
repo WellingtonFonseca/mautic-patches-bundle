@@ -29,6 +29,46 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
     public const ROUTE     = 'mautic_segment_action';
 
     // one row on the 12 slots, as the filter of Mautic's list had it: E/OU 1, field name 4, condition 2, value with the badges 5 (each box keeps an 8px gap inside its slots)
+    // the floating add bar of the segment filters (used by the new screen only)
+    public const DOCK_STYLE = ''
+        // the floating bar at the bottom centre: the same 12 slots (1 + 4 + 2 + 5) as a filter row; only layout
+        .'.patches-filter-dock{position:fixed;left:50%;bottom:56px;transform:translateX(-50%);z-index:1000;box-sizing:border-box;width:min(1430px,92vw);margin:0;border:1px solid var(--border-subtle,#e0e0e0);border-radius:12px;box-shadow:none!important}'
+        .'.patches-filter-dock.patches-dock-off{display:none!important}'
+        .'.patches-filter-dock:hover{box-shadow:none!important;transform:translateX(-50%)}'
+        .'.patches-filter-dock,.patches-filter-dock:hover{background:#2C355A!important}'
+        .'.patches-filter-dock>.panel-body,.patches-filter-dock:hover>.panel-body{background:transparent!important;border-radius:inherit}'
+        .'.patches-filter-dock>.panel-body{display:flex;align-items:center;padding:12px 8px 12px 16px}'
+        .'.patches-filter-dock>.panel-body>div{box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
+        .'.patches-filter-dock__glue{flex:0 0 calc(8.3333% - 8px)}.patches-filter-dock__field{flex:0 0 calc(33.3333% - 8px)}'
+        .'.patches-filter-dock__condition{flex:0 0 calc(16.6667% - 8px)}.patches-filter-dock__value{flex:0 0 calc(41.6667% - 8px);display:flex;align-items:center;gap:8px}'
+        .'.patches-filter-dock__value>.col-sm-6{flex:1 1 auto;min-width:0}'
+        .'.patches-filter-dock__value>.col-sm-6{float:none;width:auto;padding:0}'
+        .'.patches-filter-dock__condition>.col-sm-3{float:none;width:100%;padding:0}'
+        .'.patches-filter-dock__glue>.panel-glue{float:none;width:100%;padding:0;margin:0}'
+        .'.patches-filter-dock__glue>.panel-glue.hide{display:block!important;visibility:hidden}'
+        .'.patches-filter-dock__draft{display:none}'
+        // the alerts of the value widget: floating above the bar, same width, with a gap (the copy in the widget is hidden)
+        .'.patches-filter-dock__value .alert{display:none}'
+        .'.patches-filter-dock__alerts{position:absolute;left:0;right:0;bottom:100%;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}'
+        .'.patches-filter-dock__alerts:empty{display:none}'
+        .'.patches-filter-dock__alerts .alert{margin:0}'
+        // the widgets core loads for the value and the condition bring row / form-group margins: none in the bar, so they sit on the same line as the other fields
+        .'.patches-filter-dock__condition .row,.patches-filter-dock__value .row{margin:0}'
+        .'.patches-filter-dock__condition .form-group,.patches-filter-dock__value .form-group,.patches-filter-dock__value [class*=col-],.patches-filter-dock__condition [class*=col-]{margin:0;padding:0}'
+        .'.patches-filter-dock__value .properties-form,.patches-filter-dock__value .properties-form>div{margin:0}'
+        // core's select that adds a filter, moved here: it fills the slot and its list opens upwards (the bar sits at the bottom)
+        .'.patches-filter-dock__field .available-filters{float:none;width:100%;margin:0!important;padding:0!important}'
+        .'.patches-filter-dock__field .available-filters>.chosen-container,.patches-filter-dock__field .chosen-container{display:block;margin:0;vertical-align:middle}'
+        .'.patches-filter-dock__field .chosen-container{width:100%!important}'
+        .'.patches-filter-dock .chosen-container .chosen-drop{top:auto;bottom:100%}'
+        .'.patches-filter-dock .chosen-container-active.chosen-with-drop .chosen-single{border-radius:0 0 4px 4px}'
+        .'.patches-filter-dock .dropdown-menu{top:auto;bottom:100%}'
+        // the suggestions of the including / excluding chips open upwards too (the inline top:100% of the chips needs the !important)
+        .'.patches-filter-dock .segment-in-chips .dropdown-menu{top:auto!important;bottom:100%!important;margin:0 0 2px}'
+        .'.patches-filter-dock__add{flex:none;white-space:nowrap}'
+        // the Filters tab leaves room for the bar (its height is measured by the script)
+        .'#filters{padding-bottom:var(--patches-dock-space,0)}';
+
     public const STYLE = '#filters.patches-sf-on>#leadlist_filters,#filters.patches-sf-on>.form-group{display:none}'
         .'.patches-sf-row.panel{border:1px solid color-mix(in srgb,currentColor 28%,transparent)}'
         // a group of AND filters is one frame: the shared edge has no border and is square, and there is no gap between the panels
@@ -108,7 +148,7 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         $js = __DIR__.'/../Resources/js/';
 
         $customContentEvent->addContent(
-            '<style>'.AbstractListStatusSubscriber::BADGE_STYLE.SegmentFilterDuplicateSubscriber::DOCK_STYLE.self::STYLE.'</style>'
+            '<style>'.AbstractListStatusSubscriber::BADGE_STYLE.self::DOCK_STYLE.self::STYLE.'</style>'
             .'<script>'.file_get_contents($js.'segment-filter-form.js').file_get_contents($js.'segment-filter-ui.js')
             .';MauticPatchesSegmentFilterUi.install(mQuery,Mautic);</script>'
         );
