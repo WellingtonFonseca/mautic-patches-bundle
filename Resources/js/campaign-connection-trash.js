@@ -117,7 +117,7 @@
 
         var button = makeButton(connectTitle);
         button.className = 'mautic-patches-trash mautic-patches-connect';
-        button.firstChild.className = 'ri-add';
+        button.firstChild.className = 'ri-add-line';
         circle.parentNode.appendChild(button);
 
         var hover = bindHover(button, function () {
@@ -134,8 +134,10 @@
     function hideAll() { if (shown) { shown(); shown = null; } }
 
     function decorateConnects(instance) {
-        if (!instance.selectEndpoint) { return; }
-        instance.selectEndpoint({}).each(decorateConnect);
+        var nodes = root.document.querySelectorAll('[id^="CampaignEvent_"]');
+        Array.prototype.forEach.call(nodes, function (node) {
+            (instance.getEndpoints(node.id) || []).forEach(decorateConnect);
+        });
     }
 
     // The Preview tab of the campaign page draws its canvas with the same function (core calls prepareCampaignCanvas for it too), but it only
