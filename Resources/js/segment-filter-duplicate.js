@@ -52,7 +52,7 @@
 
     /** The three actions of a filter as icon badges (order: core's copy, duplicate, remove). Core's buttons stay, hidden: a badge clicks its core twin so core's handlers run. */
     var BADGES = [
-        {key: 'copy', icon: 'ri-file-copy-line', css: 'patches-badge--locked', label: 'Clone', core: '.copy-filter-group'},
+        {key: 'copy', icon: 'ri-add-line', css: 'patches-badge--test', label: 'Clone', core: '.copy-filter-group'},
         {key: 'duplicate', icon: 'ri-add-line', css: 'patches-badge--flag'},
         {key: 'remove', icon: 'ri-subtract-line', css: 'patches-badge--failed', label: 'Remover', core: '.remove-selected'}
     ];

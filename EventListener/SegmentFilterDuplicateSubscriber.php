@@ -66,6 +66,8 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'#leadlist_filters .patches-filter-actions{flex:none;display:flex;align-items:center;gap:6px;height:34px}'
         .'#leadlist_filters .patches-filter-badge{position:relative;z-index:2;flex:none;display:inline-flex;box-sizing:border-box;height:29px;min-width:0;max-width:29px;margin:0;padding:0;gap:0;'
         .'justify-content:flex-start;overflow:hidden;border-radius:14.5px;font-size:14px;color:#fff;text-decoration:none;transition:max-width .2s ease,box-shadow .2s ease}'
+        // the clone badge: the lilac of the test badge of the campaign builder (#patches-steps-container .patches-badge--test)
+        .'.patches-badge--test{background-color:#7e57c2}'
         .'#leadlist_filters .patches-filter-badge.hide{display:none}'
         .'#leadlist_filters .patches-filter-badge:hover{z-index:3;max-width:200px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;color:#fff}'
         .'#leadlist_filters .patches-filter-badge>i{flex:0 0 29px;width:29px;height:29px;font-size:21px;display:flex;align-items:center;justify-content:center}'
