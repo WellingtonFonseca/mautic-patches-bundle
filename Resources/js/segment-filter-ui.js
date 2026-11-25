@@ -72,7 +72,9 @@
         $main.append('<div class="patches-sf-glue"><select class="form-control not-chosen" data-patches-sf="glue"></select></div>');
         $main.append($('<div class="patches-sf-field"></div>').append(fieldCell($, data)));
         $main.append('<div class="patches-sf-operator"><select class="form-control not-chosen" data-patches-sf="operator"></select></div>');
-        $main.append($('<div class="patches-sf-value"><div class="patches-sf-valuecell"></div></div>').append(badges($)));
+        $main.append('<div class="patches-sf-value"><div class="patches-sf-valuecell"></div></div>');
+        // the badges have a column of their own (three badges and their gaps wide), after the value
+        $main.append(badges($));
         $body.append('<div class="patches-sf-alerts"></div>');
         $row[0].patchesPanel = $panel[0];
         rowOf.set($panel[0], $row[0]);
@@ -150,7 +152,7 @@
     function headMarkup() {
         return '<div class="patches-sf-head" aria-hidden="true"><div class="patches-sf-head__main"><span class="patches-sf-head__move"></span>'
             + '<span class="patches-sf-head__glue">Operador</span><span class="patches-sf-head__field">Campo</span>'
-            + '<span class="patches-sf-head__operator">Condição</span><span class="patches-sf-head__value">Valor</span></div></div>';
+            + '<span class="patches-sf-head__operator">Condição</span><span class="patches-sf-head__value">Valor</span><span class="patches-sf-head__actions"></span></div></div>';
     }
 
     /** One header before the first filter of every group (a filter that is not AND-glued starts one). Only what differs is touched: the page observer runs this after every change. */
