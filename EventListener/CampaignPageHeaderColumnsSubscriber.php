@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * campaign or segment route a small script swaps the column classes of the `.page-header` (the header is
  * rendered on every ajax page load too, so the script runs each time). Other pages and bundles keep core's columns.
  *
- * The detail (view) pages of the campaign, segment, contact, email, custom object and custom item use 7/5 instead
+ * The detail (view) and form (edit, new) pages of the campaign, segment, contact, email, custom object and custom item use 7/5 instead
  * (title col-sm-7 col-md-7, toolbar col-sm-5 col-md-5); the campaign and segment list pages keep 8/4.
  *
  * Injected the same way as CampaignViewOrderSubscriber (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left').
@@ -56,11 +56,14 @@ class CampaignPageHeaderColumnsSubscriber implements EventSubscriberInterface
 
     public static function isDetailPage(string $route, string $objectAction): bool
     {
-        if (in_array($route, ['mautic_custom_object_view', 'mautic_custom_item_view'], true)) {
+        if (in_array($route, [
+            'mautic_custom_object_view', 'mautic_custom_item_view',
+            'mautic_custom_object_edit', 'mautic_custom_object_new', 'mautic_custom_item_edit', 'mautic_custom_item_new',
+        ], true)) {
             return true;
         }
 
-        return 'view' === $objectAction && in_array($route, [
+        return in_array($objectAction, ['view', 'edit', 'new'], true) && in_array($route, [
             'mautic_campaign_action',
             'mautic_segment_action',
             'mautic_contact_action',
