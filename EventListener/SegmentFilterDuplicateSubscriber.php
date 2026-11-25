@@ -72,7 +72,7 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         // the alerts of a filter of the list: on top of the panel-body, from the field name to the end of the row, 12px above the fields; the one below the value is hidden
         .'#leadlist_filters .segment-filter>.panel-body{flex-wrap:wrap}'
         .'#leadlist_filters .segment-filter>.panel-body .properties-form .alert{display:none}'
-        .'#leadlist_filters .patches-filter-alerts{flex:0 0 calc(91.6667% - 8px);margin:0 0 12px calc(8.3333%);display:flex;flex-direction:column;gap:8px}'
+        .'#leadlist_filters .segment-filter>.panel-body>.patches-filter-alerts{flex:0 0 calc(91.6667% - 8px);margin:0 8px 12px 8.3333%;display:flex;flex-direction:column;gap:8px}'
         .'#leadlist_filters .patches-filter-alerts .alert{margin:0}'
         .'#leadlist_filters .patches-field-input{text-overflow:ellipsis;cursor:default}'
         .'#leadlist_filters .patches-filter-row{display:flex;align-items:center;gap:6px}'
