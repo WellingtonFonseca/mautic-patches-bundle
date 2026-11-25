@@ -71,6 +71,8 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'#leadlist_filters .segment-filter>.panel-body .properties-form [class*=col-]{padding-top:0;padding-bottom:0}'
         // the alerts of a filter of the list: at the bottom of the panel-body, from the field name to the end of the row, 12px below the fields; the one below the value is hidden
         .'#leadlist_filters .segment-filter>.panel-body{flex-wrap:wrap}'
+        // the panel that holds the conditions of a filter: 2px border, lighter than the theme's (a soft mix of the text color)
+        .'#leadlist_filters .segment-filter.panel{border:2px solid color-mix(in srgb,currentColor 28%,transparent)}'
         .'#leadlist_filters .segment-filter>.panel-body .properties-form .alert{display:none}'
         .'#leadlist_filters .segment-filter>.panel-body>.patches-filter-alerts{flex:0 0 calc(91.6667% - 8px);margin:12px 8px 0 8.3333%;display:flex;flex-direction:column;gap:8px}'
         .'#leadlist_filters .patches-filter-alerts .alert{margin:0}'
