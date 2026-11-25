@@ -24,7 +24,7 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
         .'#leadlist_filters .patches-filter-row>.properties-form{flex:1 1 auto;min-width:0}'
         .'#leadlist_filters .patches-filter-actions{flex:none;display:flex;align-items:center;gap:6px;height:34px}'
         .'#leadlist_filters .patches-filter-badge{position:relative;z-index:2;flex:none;display:inline-flex;box-sizing:border-box;height:28px;min-width:0;max-width:28px;margin:0;padding:0;gap:0;'
-        .'justify-content:flex-start;overflow:hidden;color:#fff;text-decoration:none;transition:max-width .2s ease,box-shadow .2s ease}'
+        .'justify-content:flex-start;overflow:hidden;border-radius:14px;color:#fff;text-decoration:none;transition:max-width .2s ease,box-shadow .2s ease}'
         .'#leadlist_filters .patches-filter-badge.hide{display:none}'
         .'#leadlist_filters .patches-filter-badge:hover{z-index:3;max-width:200px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;color:#fff}'
         .'#leadlist_filters .patches-filter-badge>i{flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}'
