@@ -56,6 +56,7 @@ Several values in ONE criterion instead of one criterion per value joined by OR 
   "deploy": "the plugin's main (MauticPatchesBundle) on the server, then cache:clear. No migration, no new table.",
   "settings": "Configuration > Contact Settings: pick the columns and their order (inst_alias, enro_academic_record, name, email, id). It is the `contact_columns` parameter; the segment and campaign tables follow it, and so does the contact list. Nothing is read from the repo.",
   "including / excluding": "the plugin's main, then cache:clear (no migration). The Custom Objects plugin must be deployed too (its mautic5-base) for the in / !in operators and suggestions on Custom Object fields; without it contact and company fields still work.",
+  "tab title after ajax": "Trap: after an ajax navigation core builds document.title in Mautic.generatePageTitle from the text of EVERY .page-header h1 and adds \"View |\", so the title doubles. Resources/js/segment-campaign-detail-badges.js and contact-detail-badges.js wrap generatePageTitle (once, flag on the function) and set `<header name> | Mautic` after core runs, as a full load gives it. Covers segment, campaign, email, contact, custom object and custom item.",
   "routes": "the bundle's routes replace core's mautic_segment_contacts. If a Mautic upgrade changes that name or the controller's constructor, run the live test scripts/5/test-contacts-tables.sh (or open the tab)."
 }
 ```

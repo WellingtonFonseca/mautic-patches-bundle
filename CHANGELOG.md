@@ -2,6 +2,9 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-25
+- Após abrir Detalhes (menu da lista ou janela) por navegação ajax, o título da aba não duplica mais o nome nem começa com "View |": fica igual ao de um F5 ("Nome | Mautic"), em segmento, campanha, email, contato, custom object e item de custom object.
+
 ## 2026-11-24
 - Ao clicar em Editar na janela de detalhes da campanha, o construtor agora abre com as linhas de conexão e o botão Cancelar fecha o construtor normalmente (antes as linhas sumiam e o Cancelar ficava carregando sem parar)
 - No construtor de campanhas, os círculos abaixo de cada nó (inferior, sim, não e origem) não mostram mais o "+" dentro deles: ao passar o mouse aparece, logo abaixo do círculo, o selo verde animado com o ícone de mais, que abre mostrando o texto "conectar" e, ao clicar, abre o menu de evento como o "+" abria. Clicar e arrastar o círculo para ligar a outro nó continua funcionando
