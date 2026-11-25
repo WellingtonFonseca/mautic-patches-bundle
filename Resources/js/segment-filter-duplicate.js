@@ -127,7 +127,7 @@
         $body.append('<div class="' + DOCK + '__condition"><div class="col-sm-3 padding-none patches-dock-placeholder"><select class="form-control not-chosen" disabled="disabled"><option>condição</option></select></div></div>');
         var $value = $('<div class="' + DOCK + '__value"></div>').appendTo($body);
         $value.append('<div class="col-xs-12 col-sm-6 padding-none patches-dock-placeholder"><div class="properties-form"><div><div class="row"><div class="form-group col-xs-12"><input type="text" class="form-control" readonly="readonly" placeholder="valor"></div></div></div></div></div>');
-        $value.append('<button type="button" class="btn btn-primary patches-filter-dock__add"><i class="ri-add-line" aria-hidden="true"></i> Adicionar</button>');
+        $value.append('<button type="button" class="btn btn-primary btn-nospin patches-filter-dock__add"><i class="ri-add-line" aria-hidden="true"></i> Adicionar</button>');
         $row.append('<div class="' + DOCK + '__draft" hidden></div>');
         $('body').append($row);
         adoptSelector($, $row);
@@ -193,8 +193,8 @@
         if (!$panel.length) { return; }
         var $body = $panel.children('.panel-body');
         var $glue = s.glue.children('.panel-glue').first();
-        var $operator = s.condition.children('.col-sm-3.padding-none').first();
-        var $properties = s.value.children('.col-sm-6').first();
+        var $operator = s.condition.children('.col-sm-3.padding-none').not('.patches-dock-placeholder').first();
+        var $properties = s.value.children('.col-sm-6').not('.patches-dock-placeholder').first();
         $body.prepend($glue);
         $body.children('.field-name').first().after($operator);
         $operator.after($properties);
