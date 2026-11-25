@@ -105,6 +105,8 @@
     }
 
     var DOCK = 'patches-filter-dock';
+    // room kept for the floating alert (about two lines, 60px) and its 12px gap: fixed, whether an alert is showing or not
+    var ALERT_SPACE = 72;
 
     /** The select that adds a filter (core's .available-filters, with its chosen) lives in the field slot of the bar: core finds it by id and class, wherever it is. */
     function adoptSelector($, $dock) {
@@ -209,18 +211,16 @@
         if (typeof root.mauticPatchesInChipsScan === 'function') { root.mauticPatchesInChipsScan(); }
     }
 
-    /** The Filters tab gets a bottom padding a quarter as high as the bar plus its 56px distance from the window bottom and the height of the floating alerts, so the bar never covers the last filter. */
+    /** The Filters tab gets a bottom padding a quarter as high as the bar plus its 56px distance from the window bottom and a fixed room (72px) for the floating alert, so the bar never covers the last filter. */
     function reserveSpace($) {
         var $dock = $('.' + DOCK);
-        var $alerts = $dock.find('.' + DOCK + '__alerts');
-        var alertSpace = $alerts.children().length ? $alerts.outerHeight() + 12 : 0;
+        var alertSpace = ALERT_SPACE;
         var height = $dock.length ? Math.ceil($dock.outerHeight() / 4 + 56 + 16 + alertSpace) : 0;
         document.documentElement.style.setProperty('--patches-dock-space', height + 'px');
         if ($dock.length && !$dock.data('patchesObserved') && typeof ResizeObserver !== 'undefined') {
             $dock.data('patchesObserved', true);
             var observer = new ResizeObserver(function () { reserveSpace($); });
             observer.observe($dock[0]);
-            observer.observe($dock.find('.' + DOCK + '__alerts')[0]);
         }
     }
 
