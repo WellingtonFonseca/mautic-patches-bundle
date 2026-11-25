@@ -3,6 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-25
+- No formulário de segmento (novo e edição), os campos da coluna direita (categoria, ativo/inativo, disponível para preferências e visível para outros usuários) agora ficam na aba "Configurações", a primeira das abas e a aberta por padrão; a coluna direita some e o formulário usa a largura toda. Se um desses campos tiver erro de validação, a aba fica vermelha
 - Após abrir Detalhes (menu da lista ou janela) por navegação ajax, o título da aba não duplica mais o nome nem começa com "View |": fica igual ao de um F5 ("Nome | Mautic"), em segmento, campanha, email, contato, custom object e item de custom object.
 
 ## 2026-11-24
