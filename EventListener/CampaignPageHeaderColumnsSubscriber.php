@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticPatchesBundle\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomContentEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -40,20 +41,54 @@ class CampaignPageHeaderColumnsSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // Forwarded sub-requests (custom item save/apply) carry no _route: read the main request.
-        $request = $this->requestStack->getMainRequest();
-        $route   = (string) $request?->attributes->get('_route');
-        if (self::isDetailPage($route, (string) $request?->attributes->get('objectAction'))) {
+        $layout = $this->layoutFor($this->requestStack->getCurrentRequest()) ?? $this->layoutFor($this->requestStack->getMainRequest());
+        if ('detail' === $layout) {
             $customContentEvent->addContent('<script>'.self::script(7, 5).'</script>');
 
             return;
         }
 
-        if (!str_starts_with($route, 'mautic_campaign_') && !str_starts_with($route, 'mautic_segment_')) {
+        if ('list' !== $layout) {
             return;
         }
 
         $customContentEvent->addContent('<script>'.self::script().'</script>');
+    }
+
+    /**
+     * 'detail' (7/5), 'list' (8/4), 'core' (untouched) or null (request carries neither _route nor _controller).
+     * A forwarded sub-request (ajax Save&Close/Cancel, custom item save) has no _route: its _controller decides.
+     */
+    private function layoutFor(?Request $request): ?string
+    {
+        if (null === $request) {
+            return null;
+        }
+
+        $route = (string) $request->attributes->get('_route');
+        if ('' !== $route) {
+            if (self::isDetailPage($route, (string) $request->attributes->get('objectAction'))) {
+                return 'detail';
+            }
+
+            return str_starts_with($route, 'mautic_campaign_') || str_starts_with($route, 'mautic_segment_') ? 'list' : 'core';
+        }
+
+        $controller = $request->attributes->get('_controller');
+        if (!is_string($controller) || !str_contains($controller, '::')) {
+            return null;
+        }
+
+        [$class, $method] = explode('::', $controller, 2);
+        if (in_array($method, ['viewAction', 'editAction', 'newAction', 'cloneAction'], true)) {
+            return 'detail';
+        }
+
+        if ('indexAction' === $method && 1 === preg_match('/\\\\(Campaign|Segment|ListController)/', $class)) {
+            return 'list';
+        }
+
+        return 'core';
     }
 
     public static function isDetailPage(string $route, string $objectAction): bool
