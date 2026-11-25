@@ -77,7 +77,9 @@ class CampaignPageHeaderColumnsSubscriberTest extends TestCase
         yield 'custom item view' => ['mautic_custom_item_view', '', true];
         foreach (['campaign', 'segment', 'contact', 'email'] as $name) {
             yield $name.' view' => ['mautic_'.$name.'_action', 'view', true];
-            yield $name.' edit' => ['mautic_'.$name.'_action', 'edit', false];
+            yield $name.' edit' => ['mautic_'.$name.'_action', 'edit', true];
+            yield $name.' new' => ['mautic_'.$name.'_action', 'new', true];
+            yield $name.' clone' => ['mautic_'.$name.'_action', 'clone', true];
             yield $name.' no action' => ['mautic_'.$name.'_action', '', false];
         }
         yield 'campaign list' => ['mautic_campaign_index', '', false];
@@ -107,14 +109,10 @@ class CampaignPageHeaderColumnsSubscriberTest extends TestCase
         yield ['mautic_segment_action', 'view'];
         yield ['mautic_contact_action', 'view'];
         yield ['mautic_email_action', 'view'];
-    }
-
-    public function testCampaignEditKeepsEightFour(): void
-    {
-        $content = $this->content('mautic_campaign_action', 'page.header.left', 'edit');
-
-        $this->assertStringContainsString('col-sm-8 col-md-8 va-m', $content);
-        $this->assertStringNotContainsString('col-md-7 va-m"', $content);
+        yield ['mautic_campaign_action', 'edit'];
+        yield ['mautic_segment_action', 'edit'];
+        yield ['mautic_contact_action', 'edit'];
+        yield ['mautic_email_action', 'edit'];
     }
 
     public function testOtherRoutesAndContextsAreUntouched(): void
