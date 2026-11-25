@@ -112,7 +112,7 @@
     }
 
     function render($) {
-        if (!Form.active($)) { return; }
+        if (!Form.active($) || dragging) { return; }
         var $core = $(Form.LIST);
         var $pane = $core.parent();
         var $list = $core.prev('.patches-sf');
@@ -139,14 +139,22 @@
         }
     }
 
+    // while a row is dragged the list holds the helper and the placeholder: nothing is drawn then
+    var dragging = false;
+
     function sortable($, $list) {
         if (!$list.sortable) { return; }
         $list.sortable({
             items: '> .patches-sf-row',
             handle: '.patches-sf-field',
+            // the handle holds the (read only) field input, which sortable cancels by default
+            cancel: '',
+            tolerance: 'pointer',
             axis: 'y',
             scroll: true,
+            start: function () { dragging = true; },
             stop: function () {
+                dragging = false;
                 var elements = $list.children('.patches-sf-row').map(function () { return this.patchesPanel; }).get();
                 Form.order(elements);
             }
