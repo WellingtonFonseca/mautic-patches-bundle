@@ -9,15 +9,20 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * The alerts (.alert-info / -success / -warning / -danger and the toasts that use the same variables) of the two dark
- * themes. Core's themes set --notification-background-* by theme and they do not agree: the plain Dark theme paints all
- * four with the same gray (#262626). Both dark themes (dark, solarized-dark) get a dark yellow, blue, green and red.
- * The light themes are left as core has them. Only the four variables change, so the bar, the icon and the text of core
- * keep working. The :root[theme=...] prefix keeps the order of the stylesheets out of the question.
+ * One look for every alert (.alert-info / -success / -warning / -danger and the toasts that use the same variables) in
+ * every theme. Core's themes set --notification-background-* by theme and they do not agree: the plain Dark theme paints
+ * all four with the same gray (#262626) while the light ones have a pale yellow, blue, green and red.
+ *
+ * Light family (light, solarized-light, freire): the pale colors of core's light theme (pale yellow, blue, green, red).
+ * Dark family (dark, solarized-dark): a dark yellow, blue, green and red. Only the four variables change, so the bar, the
+ * icon and the text of core keep working. The :root[theme=...] prefix keeps the order of the stylesheets out of the question.
  */
 class AlertThemeSubscriber implements EventSubscriberInterface
 {
+    private const LIGHT_THEMES = ['light', 'solarized-light', 'freire'];
     private const DARK_THEMES  = ['dark', 'solarized-dark'];
+
+    private const LIGHT = ['warning' => '#fffbe6', 'info' => '#edf5ff', 'success' => '#defbe6', 'error' => '#fff1f1'];
 
     private const DARK  = ['warning' => '#4a3610', 'info' => '#12304f', 'success' => '#00402b', 'error' => '#46181b'];
 
@@ -34,7 +39,7 @@ class AlertThemeSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $css = $this->rules(self::DARK_THEMES, self::DARK);
+        $css = $this->rules(self::LIGHT_THEMES, self::LIGHT).$this->rules(self::DARK_THEMES, self::DARK);
 
         $customContentEvent->addContent('<style>'.$css.'</style>');
     }
