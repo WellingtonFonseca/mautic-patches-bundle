@@ -122,9 +122,9 @@
         // a core .panel with a .panel-body, like a filter, so the theme of the user paints it the same way
         var $row  = $('<div class="panel ' + DOCK + '" aria-hidden="true"></div>');
         var $body = $('<div class="panel-body"></div>').appendTo($row);
-        $body.append('<div class="' + DOCK + '__glue"><select class="form-control patches-dock-placeholder"><option>E</option><option>OU</option></select></div>');
+        $body.append('<div class="' + DOCK + '__glue"><select class="form-control not-chosen patches-dock-placeholder"><option>E</option><option>OU</option></select></div>');
         $body.append('<div class="' + DOCK + '__field"></div>');
-        $body.append('<div class="' + DOCK + '__condition"><div class="col-sm-3 padding-none patches-dock-placeholder"><select class="form-control" disabled="disabled"><option>condição</option></select></div></div>');
+        $body.append('<div class="' + DOCK + '__condition"><div class="col-sm-3 padding-none patches-dock-placeholder"><select class="form-control not-chosen" disabled="disabled"><option>condição</option></select></div></div>');
         var $value = $('<div class="' + DOCK + '__value"></div>').appendTo($body);
         $value.append('<div class="col-xs-12 col-sm-6 padding-none patches-dock-placeholder"><div class="properties-form"><div><div class="row"><div class="form-group col-xs-12"><input type="text" class="form-control" readonly="readonly" placeholder="valor"></div></div></div></div></div>');
         $value.append('<button type="button" class="btn btn-primary patches-filter-dock__add"><i class="ri-add-line" aria-hidden="true"></i> Adicionar</button>');
