@@ -40,8 +40,10 @@ class CampaignPageHeaderColumnsSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $route = (string) $this->requestStack->getCurrentRequest()?->attributes->get('_route');
-        if (self::isDetailPage($route, (string) $this->requestStack->getCurrentRequest()?->attributes->get('objectAction'))) {
+        // Forwarded sub-requests (custom item save/apply) carry no _route: read the main request.
+        $request = $this->requestStack->getMainRequest();
+        $route   = (string) $request?->attributes->get('_route');
+        if (self::isDetailPage($route, (string) $request?->attributes->get('objectAction'))) {
             $customContentEvent->addContent('<script>'.self::script(7, 5).'</script>');
 
             return;
