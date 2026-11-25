@@ -183,6 +183,17 @@
         decorateConnects(instance);
     }
 
+    // The button of the campaign edit page that opens the builder reads "Abrir Construtor de Campanha" (core text, in the pack of
+    // the language: it cannot be overridden from the plugin). Its text node is replaced by the plugin's own short text; the icon stays.
+    function relabelBuilderButton(text) {
+        var button = root.document.getElementById('campaign_buttons_builder_toolbar');
+        if (!button || !text || button.getAttribute('data-patches-label') === text) { return; }
+        Array.prototype.slice.call(button.childNodes).forEach(function (node) {
+            if (node.nodeType === 3 && node.textContent.trim() !== '') { node.textContent = ' ' + text + ' '; }
+        });
+        button.setAttribute('data-patches-label', text);
+    }
+
     function install(Mautic, cfg) {
         if (root.mauticPatchesConnectionTrash) { return; }
         root.mauticPatchesConnectionTrash = true;
@@ -204,6 +215,7 @@
         // campaign.js may load after this script, and the canvas is made when the builder opens: the function that makes it
         // is wrapped (once) on every page load, and a canvas that already exists is decorated at once
         function run() {
+            relabelBuilderButton(cfg.builder);
             var register = Mautic.campaignBuilderRegisterAnchors;
             if (register && !register.mauticPatchesConnect) {
                 var wrappedRegister = function (names, el) {
