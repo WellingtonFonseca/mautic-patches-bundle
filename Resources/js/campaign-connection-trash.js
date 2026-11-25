@@ -23,10 +23,17 @@
     function makeButton(title) {
         var button = root.document.createElement('a');
         button.href = 'javascript:void(0);';
-        button.className = 'btn btn-danger btn-xs btn-nospin mautic-patches-trash';
+        button.className = 'mautic-patches-trash';
         button.title = title;
-        button.innerHTML = '<i class="ri-link-unlink ri-lg"></i>';
-        button.style.cssText = 'display:none;position:absolute;z-index:1100;color:#fff;padding:4px 8px;line-height:1;cursor:pointer;transition:none;margin:0';
+        button.setAttribute('aria-label', title);
+        var icon = root.document.createElement('i'), text = root.document.createElement('span');
+        icon.className = 'ri-link-unlink';
+        icon.setAttribute('aria-hidden', 'true');
+        text.className = 'mautic-patches-trash__text';
+        text.textContent = title;
+        button.appendChild(icon);
+        button.appendChild(text);
+        button.style.cssText = 'display:none;position:absolute;z-index:1100;cursor:pointer';
 
         return button;
     }
@@ -137,7 +144,14 @@
         root.mauticPatchesConnectionTrash = true;
 
         var style = root.document.createElement('style');
-        style.textContent = '.mautic-patches-trash i{pointer-events:none;color:#fff}#preview-container .jtk-endpoint svg{display:block!important}';
+        // the icon badge of the Status column (.patches-badge--failed + ICON_BADGE_STYLE of AbstractListStatusSubscriber): a 22px red circle that opens to the right on hover
+        style.textContent = '.mautic-patches-trash{display:inline-flex;align-items:center;justify-content:flex-start;box-sizing:border-box;height:22px;min-width:0;max-width:22px;margin:0;padding:0;gap:0;overflow:hidden;border-radius:11px;'
+            + 'background-color:#e53935;color:#fff;font-size:13px;font-weight:600;line-height:normal;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;text-decoration:none;transition:max-width .2s ease,box-shadow .2s ease}'
+            + '.mautic-patches-trash:hover{max-width:140px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;color:#fff;text-decoration:none}'
+            + '.mautic-patches-trash>i{flex:0 0 22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;pointer-events:none;color:#fff}'
+            + '.mautic-patches-trash__text{padding:0 10px 0 0;opacity:0;pointer-events:none;transition:opacity .15s ease .05s}'
+            + '.mautic-patches-trash:hover .mautic-patches-trash__text{opacity:1}'
+            + '#preview-container .jtk-endpoint svg{display:block!important}';
         root.document.head.appendChild(style);
 
         // campaign.js may load after this script, and the canvas is made when the builder opens: the function that makes it
