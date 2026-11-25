@@ -64,13 +64,15 @@
     function newRow($, $panel, data) {
         var $row = $('<div class="panel patches-sf-row"></div>');
         var $body = $('<div class="panel-body"></div>').appendTo($row);
-        // press and hold this badge to move the filter (the only drag handle of the row)
-        $body.append($('<a href="javascript: void(0);" role="button" class="patches-badge patches-badge--neutral patches-filter-badge patches-sf-drag" data-action="drag" aria-label="Arrastar"></a>')
+        // the cells and the badges are one line (main), the alerts of the value go below it
+        var $main = $('<div class="patches-sf-main"></div>').appendTo($body);
+        // press and hold this badge to move the filter (the only drag handle of the row); on hover it opens and pushes the other cells
+        $main.append($('<a href="javascript: void(0);" role="button" class="patches-badge patches-badge--neutral patches-filter-badge patches-sf-drag" data-action="drag" aria-label="Arrastar"></a>')
             .append('<i class="ri-expand-up-down-line" aria-hidden="true"></i>').append('<span class="patches-icon-badge__text">Arrastar</span>'));
-        $body.append('<div class="patches-sf-glue"><select class="form-control not-chosen" data-patches-sf="glue"></select></div>');
-        $body.append($('<div class="patches-sf-field"></div>').append(fieldCell($, data)));
-        $body.append('<div class="patches-sf-operator"><select class="form-control not-chosen" data-patches-sf="operator"></select></div>');
-        $body.append($('<div class="patches-sf-value"><div class="patches-sf-valuecell"></div></div>').append(badges($)));
+        $main.append('<div class="patches-sf-glue"><select class="form-control not-chosen" data-patches-sf="glue"></select></div>');
+        $main.append($('<div class="patches-sf-field"></div>').append(fieldCell($, data)));
+        $main.append('<div class="patches-sf-operator"><select class="form-control not-chosen" data-patches-sf="operator"></select></div>');
+        $main.append($('<div class="patches-sf-value"><div class="patches-sf-valuecell"></div></div>').append(badges($)));
         $body.append('<div class="patches-sf-alerts"></div>');
         $row[0].patchesPanel = $panel[0];
         rowOf.set($panel[0], $row[0]);

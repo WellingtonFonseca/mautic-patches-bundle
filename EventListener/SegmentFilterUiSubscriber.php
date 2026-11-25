@@ -31,12 +31,12 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
     // one row on the 12 slots, as the filter of Mautic's list had it: E/OU 1, field name 4, condition 2, value with the badges 5 (each box keeps an 8px gap inside its slots)
     public const STYLE = '#filters.patches-sf-on>#leadlist_filters,#filters.patches-sf-on>.form-group{display:none}'
         .'.patches-sf-row.panel{border:1px solid color-mix(in srgb,currentColor 28%,transparent)}'
-        .'.patches-sf-row>.panel-body{display:flex;align-items:center;flex-wrap:wrap}'
+        .'.patches-sf-main{display:flex;align-items:center;min-width:0}'
         .'.patches-sf-row>.panel-body::before,.patches-sf-row>.panel-body::after{display:none}'
-        .'.patches-sf-row>.panel-body>div{box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
-        .'.patches-sf-glue{flex:0 0 calc(8.3333% - 8px)}.patches-sf-glue.is-first{visibility:hidden}'
-        .'.patches-sf-field{flex:0 0 calc(33.3333% - 8px)}.patches-sf-operator{flex:0 0 calc(16.6667% - 8px)}'
-        .'.patches-sf-value{flex:0 0 calc(41.6667% - 8px);display:flex;align-items:center;gap:6px}'
+        .'.patches-sf-main>div{box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
+        .'.patches-sf-glue{flex:0 1 calc(8.3333% - 8px)}.patches-sf-glue.is-first{visibility:hidden}'
+        .'.patches-sf-field{flex:0 1 calc(33.3333% - 8px)}.patches-sf-operator{flex:0 1 calc(16.6667% - 8px)}'
+        .'.patches-sf-value{flex:0 1 calc(41.6667% - 8px);display:flex;align-items:center;gap:6px}'
         .'.patches-sf-valuecell{flex:1 1 auto;min-width:0}'
         .'.patches-sf-valuecell>.col-sm-6{float:none;width:auto;padding:0}'
         // the widgets core loads for the value carry row / form-group margins: none, so every item of the row sits on the same center line
@@ -46,11 +46,12 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         // chosen started while its filter was hidden has no width
         .'.patches-sf-valuecell .chosen-container{width:100%!important}'
         .'.patches-sf-valuecell .alert{display:none}'
-        .'.patches-sf-row>.panel-body>.patches-sf-alerts{flex:0 0 calc(91.6667% - 8px);margin:12px 8px 0 8.3333%;display:flex;flex-direction:column;gap:8px}'
+        .'.patches-sf-row>.panel-body>.patches-sf-alerts{margin:12px 8px 0 calc(8.3333% + 37px);display:flex;flex-direction:column;gap:8px}'
         .'.patches-sf-alerts:empty{display:none}.patches-sf-alerts .alert{margin:0}'
         .'.patches-sf-field .patches-field-input{text-overflow:ellipsis;caret-color:transparent}'
-        .'.patches-sf-row.panel{position:relative}.patches-sf-row>.panel-body{padding-left:47px}.patches-filter-dock>.panel-body{padding-left:31px}'
-        .'.patches-sf-row .patches-filter-badge.patches-sf-drag{position:absolute;left:12px;top:50%;margin-top:-20px;cursor:move;touch-action:none}'
+        // the dock has no drag badge: its left padding is the badge (29px) and its gap (8px) wider, so its cells line up with the rows
+        .'.patches-filter-dock>.panel-body{padding-left:53px}'
+        .'.patches-sf-row .patches-filter-badge.patches-sf-drag{margin:0 8px 0 0;cursor:move;touch-action:none}'
         .'.patches-sf-row.ui-sortable-helper{box-shadow:0 4px 12px rgba(0,0,0,.3)}'
         .'.patches-sf-field .patches-field-group{display:flex;width:100%}'
         .'.patches-sf-field .patches-field-group .input-group-addon{display:flex;align-items:center;width:auto;white-space:nowrap}'
