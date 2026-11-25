@@ -57,7 +57,15 @@
         {key: 'remove', icon: 'ri-subtract-line', css: 'patches-badge--failed', label: 'Remover', core: '.remove-selected'}
     ];
 
+    /** The AND / OR select goes from the heading of the filter to the left of the field name (core finds it by class, wherever it is). */
+    function moveGlue($filter) {
+        var $name = $filter.find('.panel-body .field-name').first();
+        var $glue = $filter.find('.panel-glue').first();
+        if ($name.length && $glue.length && !$glue.parent().is($name)) { $name.prepend($glue); }
+    }
+
     function addButton($, $filter) {
+        moveGlue($filter);
         var $properties = $filter.find('.properties-form').first();
         if (!$properties.length) { return; }
         var $row = $properties.parent('.patches-filter-row');
@@ -112,7 +120,7 @@
         }
     }
 
-    var api = {install: install, copyOf: copyOf, addButton: addButton, LABEL: LABEL};
+    var api = {install: install, copyOf: copyOf, addButton: addButton, moveGlue: moveGlue, LABEL: LABEL};
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;

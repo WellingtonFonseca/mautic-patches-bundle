@@ -20,6 +20,10 @@ class SegmentFilterDuplicateSubscriber implements EventSubscriberInterface
 {
     // the three action buttons of core are hidden; their icon badges sit to the right of the value input and push it (flex, no overlap); hover opens the word to the right
     public const STYLE = '#leadlist_filters .segment-filter .segment-button{display:none}'
+        .'#leadlist_filters .segment-filter>.panel-heading{display:none}'
+        .'#leadlist_filters .field-name{display:flex;align-items:center;gap:8px}'
+        .'#leadlist_filters .field-name>.panel-glue{flex:0 0 84px;float:none;width:84px;padding:0;margin:0}'
+        .'#leadlist_filters .field-name>.panel-glue.hide{display:block!important;visibility:hidden}'
         .'#leadlist_filters .patches-filter-row{display:flex;align-items:flex-start;gap:6px}'
         .'#leadlist_filters .patches-filter-row>.properties-form{flex:1 1 auto;min-width:0}'
         .'#leadlist_filters .patches-filter-actions{flex:none;display:flex;align-items:center;gap:6px;height:34px}'
