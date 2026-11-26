@@ -50,7 +50,7 @@ class MauticPatchesIntegration extends AbstractIntegration
     }
 
     /**
-     * The Features tab of the settings modal: the switch (and its info alert, the help of the field) of the segment rebuild by contact id (Service/SegmentRebuild).
+     * The Features tab of the settings modal: the switch of the segment rebuild by contact id (Service/SegmentRebuild).
      *
      * @param \Symfony\Component\Form\FormBuilderInterface $builder
      * @param array<mixed>                                  $data
@@ -64,9 +64,6 @@ class MauticPatchesIntegration extends AbstractIntegration
         $builder->add(KeysetRebuildSetting::FIELD, YesNoButtonGroupType::class, [
             'label' => 'mautic.patches.settings.keyset_rebuild',
             'data'  => (bool) ($data[KeysetRebuildSetting::FIELD] ?? true),
-            // one feature = one row: the switch in 2 of 12 columns, the info alert in the other 10 (CSS in PluginSettingsTabsSubscriber: the form group that holds an alert help)
-            'help'      => 'mautic.patches.settings.keyset_rebuild.note',
-            'help_attr' => ['class' => 'alert alert-info'],
         ]);
     }
 
@@ -78,6 +75,10 @@ class MauticPatchesIntegration extends AbstractIntegration
      */
     public function getFormNotes($section)
     {
+        if ('features' === $section) {
+            return ['mautic.patches.settings.keyset_rebuild.note', 'info'];
+        }
+
         if ('custom' !== $section) {
             return parent::getFormNotes($section);
         }
