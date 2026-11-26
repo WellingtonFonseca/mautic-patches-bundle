@@ -17,7 +17,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * (the main column takes the whole width on the others). The "Mais >" button of the segment page is gone (ContactViewSidePanelSubscriber skips it).
  *
  * Core's template is not touched: a script, once per page (first load and after every Mautic ajax page load), acts on a page that has `#segment-details`
- * and `#contacts-container`. The tab is first in the tab bar; Filtros (SegmentFiltersTabSubscriber) stays the active one.
+ * and `#contacts-container`. The tab is first in the tab bar and the active one when the page opens (Filtros, SegmentFiltersTabSubscriber, would otherwise be).
  *
  * Injected on 'page.header.left', like the other page scripts.
  */
@@ -64,8 +64,10 @@ class SegmentDetailsTabSubscriber implements EventSubscriberInterface
             .'$details.hide();mQuery(".hr-expand",$left).hide();'
             .'$contacts.parent().prepend($pane);'
             .'var $li=mQuery("<li>").append(mQuery("<a>",{href:"#segment-details-container",role:"tab","data-toggle":"tab"}).text('.json_encode($title, JSON_UNESCAPED_UNICODE).'));'
-            .'function order(){$nav.prepend($li);}'
-            .'order();setTimeout(order,0);setTimeout(order,100);'
+            // Detalhes is the tab the page opens on. Filtros (SegmentFiltersTabSubscriber) makes itself the active one in the same load, so this runs again after it, until the user clicks a tab.
+            .'var touched=false;$nav.on("click","a",function(e){if(e.originalEvent){touched=true;}});'
+            .'function order(){$nav.prepend($li);if(!touched&&!$pane.hasClass("active")){$li.children("a").tab("show");}}'
+            .'order();setTimeout(order,0);setTimeout(order,150);setTimeout(order,500);'
             // the read-only column, on top of the right column
             .'var $col=mQuery("<div>");$right.prepend($col);'
             .'mQuery.get('.json_encode($settingsBase, JSON_UNESCAPED_SLASHES).'+$id.val()).done(function(html){$col.html(html);});'
