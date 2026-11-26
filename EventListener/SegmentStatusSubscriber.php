@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticPatchesBundle\EventListener;
 
+use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\LeadBundle\Entity\LeadList;
+use MauticPlugin\MauticPatchesBundle\Service\SegmentDistinctStore;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * A usability change: the active / inactive toggle of the segment list was a small icon right before the name, easy to hit by
@@ -38,7 +41,16 @@ class SegmentStatusSubscriber extends AbstractListStatusSubscriber
         .'a[data-segment-status-action="deactivate"]:hover{background-color:var(--support-error)!important}'
         .'a[data-segment-status-action="activate"]:hover{background-color:var(--support-success)!important}'
         .'a[data-segment-status-action]:hover *{color:inherit!important}'
+        .'.patches-badge--distinct{background-color:#fb8c00}'
         .'li:has(>a[hidden][href*="/s/segment-rebuild/"]){display:none!important}'; // Update of an inactive segment, shown by the script on activation
+
+    public function __construct(
+        TranslatorInterface $translator,
+        CorePermissions $security,
+        private ?SegmentDistinctStore $distinctStore = null
+    ) {
+        parent::__construct($translator, $security);
+    }
 
     protected function key(): string
     {
@@ -77,6 +89,9 @@ class SegmentStatusSubscriber extends AbstractListStatusSubscriber
 
     protected function labelAttributes(object $item): string
     {
-        return sprintf(' data-alias="%s"', htmlspecialchars((string) $item->getAlias(), ENT_QUOTES));
+        // the Distinct badge (the script draws it after the flags) for a segment that has the setting on
+        $distinct = true === $this->distinctStore?->get($item->getId())?->enabled ? ' data-distinct="1"' : '';
+
+        return sprintf(' data-alias="%s"', htmlspecialchars((string) $item->getAlias(), ENT_QUOTES)).$distinct;
     }
 }

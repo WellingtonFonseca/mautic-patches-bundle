@@ -399,7 +399,10 @@
             // a label that is spinning (core is working) is painted by paint() when the work ends
             if (status === 'published' || status === 'unpublished') { fillLabel(label, view(status, cfg)); }
             if (label.getAttribute('data-restart') === '1') { box.appendChild(restartBadge(doc, cfg.restart)); }
-            if (spec.kind === 'segment') { moveSegmentFlags(doc, rows[k], box, cfg); }
+            if (spec.kind === 'segment') {
+                moveSegmentFlags(doc, rows[k], box, cfg);
+                if (label.getAttribute('data-distinct') === '1') { box.appendChild(extraBadge(doc, {icon: 'ri-number-1', text: cfg.distinct, modifier: 'distinct'})); }
+            }
             if (spec.kind === 'email') { moveEmailFlags(doc, rows[k], box, cfg); }
         }
 
