@@ -9,7 +9,7 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Adds the "DISTINCT" tab to the segment edit form, right after "Filters", and moves into it the three rows of
+ * Adds the "Distinct" tab to the segment edit form, right after "Filters", and moves into it the three rows of
  * SegmentDistinctFormExtension (core's template does not list them, so form_end() renders them at the bottom).
  * The fields are the real ones, with their own errors: only their place changes. The tab label turns red (text-danger)
  * when a row inside has an error.
@@ -46,7 +46,7 @@ class SegmentDistinctTabSubscriber implements EventSubscriberInterface
             .'if(!$on.length||!$link.length||!$pane.length||$on.data("moved")||mQuery("#distinct").length){return;}'
             .'$on.data("moved",true);'
             .'var $rows=mQuery("#leadlist_distinct_enabled_1,#leadlist_distinct_remove_empty_1,#leadlist_distinct_fields").closest(".form-group");'
-            .'var $tab=mQuery("<li><a href=\"#distinct\" data-toggle=\"tab\">DISTINCT</a></li>").insertAfter($link.closest("li"));'
+            .'var $tab=mQuery("<li><a href=\"#distinct\" data-toggle=\"tab\">Distinct</a></li>").insertAfter($link.closest("li"));'
             .'var $new=mQuery("<div class=\"tab-pane fade bdr-w-0\" id=\"distinct\"><div class=\"pa-md\"></div></div>").insertAfter($pane);'
             .'$rows.appendTo($new.children());'
             .'if($rows.filter(".has-error").length){$tab.find("a").addClass("text-danger");}'
