@@ -10,7 +10,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Puts the "Distinct" block in the right column of the segment edit form (the one with Categoria, Publicado, Global, Ativo): a title
- * and the three rows of SegmentDistinctFormExtension (core's template does not list them, so form_end() renders them at the bottom).
+ * and the three rows (each in a `.row`, like core's rows there) of SegmentDistinctFormExtension (core's template does not list them, so form_end() renders them at the bottom).
  * The fields are the real ones, with their own errors: only their place changes.
  *
  * It acts on a page that has `#leadlist_distinct_enabled_1` and that column, once, on the first load and after every Mautic ajax page
@@ -46,8 +46,8 @@ class SegmentDistinctTabSubscriber implements EventSubscriberInterface
             .'if(!$on.length||!$side.length||$on.data("moved")){return;}'
             .'$on.data("moved",true);'
             .'var $rows=mQuery("#leadlist_distinct_enabled_1,#leadlist_distinct_remove_empty_1,#leadlist_distinct_fields").closest(".form-group");'
-            .'var $box=mQuery("<div class=\"patches-segment-distinct\"><div class=\"form-group col-xs-12\"><h4 class=\"fw-sb\">"+'.json_encode(self::TITLE).'+"</h4></div></div>").appendTo($side);'
-            .'$rows.appendTo($box);'
+            .'mQuery("<div class=\"form-group col-xs-12\"><h4 class=\"fw-sb\">"+'.json_encode(self::TITLE).'+"</h4></div>").appendTo($side).wrap("<div class=\"row\"></div>");'
+            .'$rows.appendTo($side).wrap("<div class=\"row\"></div>");'
             .'}'
             .'var original=Mautic.onPageLoad;'
             .'Mautic.onPageLoad=function(){var result=original.apply(this,arguments);build();return result;};'
