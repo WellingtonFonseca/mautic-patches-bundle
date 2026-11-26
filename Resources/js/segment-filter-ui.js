@@ -64,7 +64,7 @@
     function newRow($, $panel, data) {
         var $row = $('<div class="panel patches-sf-row"></div>');
         var $body = $('<div class="panel-body"></div>').appendTo($row);
-        // the cells and the badges are one line (main), the alerts of the value go below it
+        // the cells and the badges are one line (main), the alerts sit in the value column, below the value field
         var $main = $('<div class="patches-sf-main"></div>').appendTo($body);
         // the column of the move badge (press and hold it to move the filter: the only drag handle of the row); on hover the badge opens and pushes the other cells
         $main.append($('<div class="patches-sf-move"></div>').append($('<a href="javascript: void(0);" role="button" class="patches-badge patches-badge--neutral patches-filter-badge patches-sf-drag" data-action="drag" aria-label="Mover"></a>')
@@ -72,10 +72,9 @@
         $main.append('<div class="patches-sf-glue"><select class="form-control not-chosen" data-patches-sf="glue"></select></div>');
         $main.append($('<div class="patches-sf-field"></div>').append(fieldCell($, data)));
         $main.append('<div class="patches-sf-operator"><select class="form-control not-chosen" data-patches-sf="operator"></select></div>');
-        $main.append('<div class="patches-sf-value"><div class="patches-sf-valuecell"></div></div>');
+        $main.append('<div class="patches-sf-value"><div class="patches-sf-valuecell"></div><div class="patches-sf-alerts"></div></div>');
         // the badges have a column of their own (three badges and their gaps wide), after the value
         $main.append(badges($));
-        $body.append('<div class="patches-sf-alerts"></div>');
         $row[0].patchesPanel = $panel[0];
         rowOf.set($panel[0], $row[0]);
 
