@@ -2,6 +2,9 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-26
+- Na edição do segmento, nova aba Distinct: ao ativar e escolher campos (só campos com índice), fica só o contato de menor ID entre os que têm o mesmo valor nesses campos; os outros saem do segmento e das campanhas que o usam. A opção Remover vazios define se contato com campo vazio sai ou fica fora do Distinct. O valor numérico 0 conta como valor. A lista de campos mostra "Nome (alias)", e a lista de segmentos e os detalhes da campanha mostram um selo laranja Distinct nos segmentos com a opção ativa
+
 ## 2026-11-25
 - Na edição do segmento, o aviso de uma condição agora aparece colado embaixo do campo de valor, dentro da coluna do valor, sem espaço entre os dois; as células da linha ficam alinhadas pelo topo
 - Com o parâmetro patches_segment_filters_ui desligado, a edição do segmento volta a mostrar a tela antiga do filtro do Mautic de verdade (sem o visual do protótipo: sem selos animados, sem barra flutuante). O botão Duplicar condição continua, como botão ao lado dos botões de copiar e remover do filtro
