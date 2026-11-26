@@ -64,7 +64,7 @@ class MauticPatchesIntegration extends AbstractIntegration
         $builder->add(KeysetRebuildSetting::FIELD, FeatureSwitchType::class, [
             'label' => 'mautic.patches.settings.keyset_rebuild',
             'data'  => (bool) ($data[KeysetRebuildSetting::FIELD] ?? true),
-            'help'      => 'mautic.patches.settings.keyset_rebuild.note',
+            'alert'     => 'mautic.patches.settings.keyset_rebuild.note',
         ]);
     }
 
