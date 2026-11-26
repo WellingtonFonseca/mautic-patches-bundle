@@ -7,6 +7,8 @@ namespace MauticPlugin\MauticPatchesBundle\Integration;
 use Mautic\PluginBundle\Entity\Integration;
 use Mautic\PluginBundle\Integration\AbstractIntegration;
 use MauticPlugin\MauticPatchesBundle\Service\Changelog;
+use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuild\KeysetRebuildSetting;
+use Mautic\CoreBundle\Form\Type\YesNoButtonGroupType;
 
 /**
  * Gives the plugin its tile on Settings > Plugins and a settings modal with no keys and no features: the modal exists to show the "Sobre" tab
@@ -48,6 +50,24 @@ class MauticPatchesIntegration extends AbstractIntegration
     }
 
     /**
+     * The Features tab of the settings modal: the switch of the segment rebuild by contact id (Service/SegmentRebuild).
+     *
+     * @param \Symfony\Component\Form\FormBuilderInterface $builder
+     * @param array<mixed>                                  $data
+     */
+    public function appendToForm(&$builder, $data, $formArea): void
+    {
+        if ('features' !== $formArea) {
+            return;
+        }
+
+        $builder->add(KeysetRebuildSetting::FIELD, YesNoButtonGroupType::class, [
+            'label' => 'mautic.patches.settings.keyset_rebuild',
+            'data'  => (bool) ($data[KeysetRebuildSetting::FIELD] ?? true),
+        ]);
+    }
+
+    /**
      * The About block and the change log under the fields of the first tab (core draws the 'custom' note there).
      * Core asks for the other sections too, and wants its own [text, type] pair for them.
      *
@@ -55,6 +75,10 @@ class MauticPatchesIntegration extends AbstractIntegration
      */
     public function getFormNotes($section)
     {
+        if ('features' === $section) {
+            return ['mautic.patches.settings.keyset_rebuild.note', 'info'];
+        }
+
         if ('custom' !== $section) {
             return parent::getFormNotes($section);
         }

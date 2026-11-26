@@ -225,8 +225,6 @@ return [
         'campaign_prefixes' => [],
         // Segment filters screen drawn by the plugin over Mautic's hidden form. false = the previous patches (selector order, bar, Duplicar badge) on Mautic's own list.
         'patches_segment_filters_ui' => true,
-        // Segment rebuild (mautic:segments:update) in batches by contact id: each batch continues after the last id of the previous one. false = core's batches.
-        'patches_segment_keyset_rebuild' => true,
     ],
     'author'      => 'Wellington Fonseca',
 ];
