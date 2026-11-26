@@ -18,6 +18,7 @@ use MauticPlugin\CustomObjectsBundle\Model\CustomObjectModel;
 use MauticPlugin\CustomObjectsBundle\Segment\SegmentItemResolver;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitDateResolver;
 use MauticPlugin\MauticPatchesBundle\Service\RelativeWait\RelativeWaitItemSelector;
+use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuild\KeysetContactSegmentService;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuildLauncher;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\MauticRoleUserGateway;
 use MauticPlugin\MauticPatchesBundle\Service\RoleUserClone\RoleUserGateway;
@@ -33,9 +34,9 @@ return function (ContainerConfigurator $configurator): void {
         ->public();
 
     // Integration/MauticPatchesIntegration.php is registered in Config/config.php (services.integrations) with core's service ids, as every
-    // Mautic Integration is, so autowiring does not load it.
+    // Mautic Integration is, so autowiring does not load it. The keyset segment service is registered below as a decorator of core's service.
     $services->load('MauticPlugin\\MauticPatchesBundle\\', '../')
-        ->exclude('../{'.implode(',', array_merge(MauticCoreExtension::DEFAULT_EXCLUDES, ['Integration/MauticPatchesIntegration.php'])).'}');
+        ->exclude('../{'.implode(',', array_merge(MauticCoreExtension::DEFAULT_EXCLUDES, ['Integration/MauticPatchesIntegration.php', 'Service/SegmentRebuild/KeysetContactSegmentService.php'])).'}');
 
     // The one gateway of the roles / users clone; the tests use an in-memory one.
     $services->alias(RoleUserGateway::class, MauticRoleUserGateway::class);
@@ -61,6 +62,17 @@ return function (ContainerConfigurator $configurator): void {
         ->autowire()
         ->autoconfigure()
         ->public();
+
+    // The segment rebuild batches continue by contact id: core's service is replaced by ours (flag patches_segment_keyset_rebuild).
+    // Core's own definition is merged after this file, so the service decorates it (same id, our class, the same arguments).
+    $services->set(KeysetContactSegmentService::class)
+        ->decorate('mautic.lead.model.lead_segment_service')
+        ->args([
+            service('mautic.lead.model.lead_segment_filter_factory'),
+            service('mautic.lead.repository.lead_segment_query_builder'),
+            service('monolog.logger.mautic'),
+            '%mautic.patches_segment_keyset_rebuild%',
+        ]);
 
     // Core's relative date service has the id `mautic.lead.model.relative_date`, not its class name, so it is not autowired (the translator
     // gives the same keywords in English).
