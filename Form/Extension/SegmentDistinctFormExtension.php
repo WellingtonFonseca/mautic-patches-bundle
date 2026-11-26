@@ -59,14 +59,14 @@ class SegmentDistinctFormExtension extends AbstractTypeExtension
             'data'     => $current->enabled,
             'label'    => 'mautic.patches.segment.distinct.enabled',
             'required' => false,
-            'attr'     => ['tooltip' => 'mautic.patches.segment.distinct.enabled.help'],
+            'attr'     => ['data-distinct-help' => $this->translator->trans('mautic.patches.segment.distinct.enabled.help')],
         ]);
         $builder->add('distinct_remove_empty', YesNoButtonGroupType::class, [
             'mapped'   => false,
             'data'     => $current->removeEmpty,
             'label'    => 'mautic.patches.segment.distinct.remove_empty',
             'required' => false,
-            'attr'     => ['tooltip' => 'mautic.patches.segment.distinct.remove_empty.help'],
+            'attr'     => ['data-distinct-help' => $this->translator->trans('mautic.patches.segment.distinct.remove_empty.help')],
         ]);
         $builder->add('distinct_fields', ChoiceType::class, [
             'mapped'     => false,
