@@ -89,10 +89,3 @@ Same idea as the segment's Update, for campaigns (core has no such button, only 
   "production": "the web user must be able to write var/logs (marker folder is created on demand) and run php bin/console; cache:clear after deploying. No migration."
 }
 ```
-
-## Segment rebuild by contact id (switch "Segmentos por id")
-
-Plugin settings, Features tab, field `keyset_rebuild` (Service/SegmentRebuild/KeysetRebuildSetting; not saved yet = ON). ON: `KeysetContactSegmentService` reads the contacts in batches ordered by id, each batch continues from the last id of the previous one. OFF: core batches. If the first batch fails, the rebuild falls back to core's own query.
-
-- Default is ON, but there is NO proven speed gain: on 10k/20k seeded contacts the time was about the same as core (the time is `addLead` per member). One run: email segment 20k ON 226s vs OFF 182s (+24%); the other cases equal or faster. Do not promise speed in the UI or changelog.
-- Members must be equal ON and OFF. Test: `scripts/5/test-segment-keyset-perf.sh` (default size 2000; `KEYSET_PERF_SIZES='10000 20000'` for the real timing, about 2 hours). It seeds and deletes its own data, checks members ON = OFF, a second run changes nothing, a low id that starts matching is found, manual add/remove stays, campaign members = segment members. Exit 1 on failure, WARN when ON is more than 2x slower.

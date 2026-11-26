@@ -2,9 +2,6 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
-## 2026-11-26
-- Nas configurações do plugin (aba Recursos) há uma nova chave "Reconstrução de segmento por id do contato", ligada por padrão: a reconstrução do segmento (comando, botão Atualizar e API) lê os contatos em lotes por id, cada lote continuando do último id do anterior. Com os dados de teste (10 mil e 20 mil contatos) o tempo ficou parecido com o do Mautic, sem ganho comprovado; desligue a chave para voltar aos lotes do próprio Mautic
-
 ## 2026-11-25
 - Na edição do segmento, o aviso de uma condição agora aparece colado embaixo do campo de valor, dentro da coluna do valor, sem espaço entre os dois; as células da linha ficam alinhadas pelo topo
 - Com o parâmetro patches_segment_filters_ui desligado, a edição do segmento volta a mostrar a tela antiga do filtro do Mautic de verdade (sem o visual do protótipo: sem selos animados, sem barra flutuante). O botão Duplicar condição continua, como botão ao lado dos botões de copiar e remover do filtro
