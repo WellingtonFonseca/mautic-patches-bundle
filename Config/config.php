@@ -109,6 +109,13 @@ return [
                 'method'       => 'GET',
                 'requirements' => ['id' => '\\d+'],
             ],
+            // The read-only right column (Configurações + Distinct) of the segment page.
+            'mautic_patches_segment_settings' => [
+                'path'         => '/segment-settings/{id}',
+                'controller'   => 'MauticPlugin\\MauticPatchesBundle\\Controller\\SegmentSettingsController::settingsAction',
+                'method'       => 'GET',
+                'requirements' => ['id' => '\\d+'],
+            ],
             // The suggestions of the including / excluding chips of the segment form, for a contact or company text field.
             'mautic_patches_segment_filter_values' => [
                 'path'       => '/segment-filter-values',

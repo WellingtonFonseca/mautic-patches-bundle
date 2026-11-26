@@ -10,6 +10,7 @@ use Mautic\LeadBundle\Security\Permissions\LeadPermissions;
 use Mautic\LeadBundle\Segment\Stat\SegmentCampaignShare;
 use MauticPlugin\MauticPatchesBundle\EventListener\SegmentCampaignDetailStatusSubscriber;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentFilterPresenter;
+use MauticPlugin\MauticPatchesBundle\Service\SegmentSettingsColumn;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -20,7 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class SegmentDetailsController extends CommonController
 {
-    public function detailsAction(ListModel $listModel, SegmentFilterPresenter $presenter, SegmentCampaignShare $campaignShare, SegmentCampaignDetailStatusSubscriber $head, int $id): Response
+    public function detailsAction(ListModel $listModel, SegmentFilterPresenter $presenter, SegmentCampaignShare $campaignShare, SegmentCampaignDetailStatusSubscriber $head, SegmentSettingsColumn $settings, int $id): Response
     {
         $segment = $listModel->getEntity($id);
 
@@ -39,6 +40,7 @@ class SegmentDetailsController extends CommonController
                 'rows'          => $presenter->present($segment->getFilters(), $listModel->getChoiceFields()),
                 'campaignStats' => $campaignShare->getCampaignList($segment->getId()),
                 'headHtml'      => $head->modalHeadHtml($segment),
+                'settingsHtml'  => $settings->html($segment),
                 'canEdit'       => $this->security->hasEntityAccess(LeadPermissions::LISTS_EDIT_OWN, LeadPermissions::LISTS_EDIT_OTHER, $segment->getCreatedBy()),
             ],
             'contentTemplate' => '@MauticPatches/Segment/details_modal.html.twig',

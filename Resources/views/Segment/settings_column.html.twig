@@ -1,0 +1,22 @@
+{#
+  The read-only twin of the right column of the segment edit form (SegmentDistinctTabSubscriber builds the edit one with JS): same
+  classes, so the same look (badge styles come from that subscriber's <style>, present on every page). Fed by SegmentSettingsColumn from the saved
+  data: no form, no inputs. Used by the segment page (SegmentSettingsController) and the details modal.
+#}
+{% macro title(icon, modifier, text) %}
+    <div class="row"><div class="form-group col-xs-12 patches-segment-distinct-title"><span class="patches-badge patches-badge--{{ modifier }} patches-icon-badge patches-extra-badge"><i class="{{ icon }}" aria-hidden="true"></i><span class="patches-icon-badge__text">{{ text }}</span></span></div></div>
+{% endmacro %}
+{% macro toggle(item) %}
+    <div class="row">
+        <div class="col-xs-5"><div class="form-group"><label class="control-label">{{ item.label }}</label><div class="choice-wrapper"><span class="patches-segment-settings-value">{{ item.value }}</span></div></div></div>
+        {% if item.help %}<div class="col-xs-7"><div class="alert alert-info">{{ item.help }}</div></div>{% endif %}
+    </div>
+{% endmacro %}
+<div class="pr-lg pl-lg pt-md pb-md patches-segment-settings">
+    {{ _self.title('ri-settings-3-line', 'settings', 'mautic.patches.segment.settings'|trans) }}
+    <div class="row"><div class="form-group col-xs-12"><label class="control-label">{{ 'mautic.core.category'|trans }}</label><div class="choice-wrapper"><span class="patches-segment-settings-value">{{ category ?: ('mautic.core.form.uncategorized'|trans) }}</span></div></div></div>
+    {% for item in toggles %}{{ _self.toggle(item) }}{% endfor %}
+    {{ _self.title('ri-number-1', 'distinct', 'mautic.patches.segment.distinct.badge'|trans) }}
+    {% for item in distinct %}{{ _self.toggle(item) }}{% endfor %}
+    <div class="row"><div class="form-group col-xs-12"><label class="control-label">{{ fieldsLabel }}</label><div class="choice-wrapper">{% if fields %}{% for field in fields %}<span class="label label-gray patches-segment-settings-field" style="display: inline-block; margin: 0 4px 4px 0; padding: 4px 8px; font-size: 12px; font-weight: normal; white-space: normal; text-align: left;">{{ field }}</span>{% endfor %}{% else %}<span class="patches-segment-settings-value">-</span>{% endif %}</div></div></div>
+</div>

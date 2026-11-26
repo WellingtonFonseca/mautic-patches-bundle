@@ -26,6 +26,8 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * is active, and the main column uses the whole width on the other tabs. Each column is handled once (a data
  * flag), so running again on the same page never hides again what the user just showed.
  *
+ * The segment details page (it has `#segment-details`) gets no button either: its right column shows with the Detalhes tab (SegmentDetailsTabSubscriber).
+ *
  * Injected the same way as CampaignViewOrderSubscriber
  * (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left').
  */
@@ -69,6 +71,8 @@ class ContactViewSidePanelSubscriber implements EventSubscriberInterface
             .'function place($right){'
             .'var $left=$right.siblings(".col-md-9");'
             .'if($left.length!==1||$right.closest("form").length||$left.data("mauticPatchesSidePanel")){return;}'
+            // the segment page has no button: its right column belongs to its Detalhes tab (SegmentDetailsTabSubscriber)
+            .'if($left.find("#segment-details").length){return;}'
             .'$left.data("mauticPatchesSidePanel",true);'
             // Core's primary text button, like Editar: icon and label (the visible label is always "Mais"; the state is in the aria-label).
             .'var $button=mQuery("<button type=\"button\" class=\"btn btn-primary btn-nospin\"></button>")'

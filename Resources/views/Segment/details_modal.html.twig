@@ -7,6 +7,8 @@
 {{ include('@MauticPatches/Contact/contacts_modal_width.html.twig', {'modalClass': 'mautic-patches-segment-details'}) }}
 <div class="mautic-patches-segment-details" data-segment-id="{{ list.id }}">
     {{ headHtml|raw }}
+    <div class="box-layout">
+    <div class="col-md-9 height-auto patches-segment-details-main">
     <ul class="nav nav-tabs nav-tabs-contained" role="tablist">
         <li class="active"><a href="#patches-segment-details" role="tab" data-toggle="tab">{{ 'mautic.core.details'|trans }}</a></li>
         <li><a href="#patches-segment-filters" role="tab" data-toggle="tab">{{ 'mautic.core.filters'|trans }}</a></li>
@@ -62,6 +64,19 @@
             </table>
         </div>
     </div>
+
+    </div>
+    {# The read-only right column (Configurações + Distinct), outside the tabs and shown only on Detalhes (script below). #}
+    <div class="col-md-3 bdr-l height-auto patches-segment-details-side">{{ settingsHtml|raw }}</div>
+    </div>
+    <script>
+        (function () {
+            var $root = mQuery('.mautic-patches-segment-details').last(), $side = $root.find('.patches-segment-details-side'), $main = $root.find('.patches-segment-details-main');
+            function sync() { var on = $root.find('#patches-segment-details').hasClass('active'); $side.toggle(on); $main.css('width', on ? '' : '100%'); }
+            $root.on('shown.bs.tab', sync);
+            sync();
+        })();
+    </script>
 
     <div class="bottom-form-buttons">
         {% if canEdit %}
