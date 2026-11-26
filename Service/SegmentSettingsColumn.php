@@ -25,9 +25,9 @@ class SegmentSettingsColumn
 
     public function html(LeadList $segment): string
     {
-        $config  = $this->store->get($segment->getId());
-        $labels  = $this->indexedFields->all();
-        $fields  = [];
+        $config = $this->store->get($segment->getId());
+        $labels = $this->indexedFields->all();
+        $fields = [];
         foreach ($config->fields ?? [] as $alias) {
             $fields[] = isset($labels[$alias]) ? $labels[$alias].' ('.$alias.')' : $alias;
         }
