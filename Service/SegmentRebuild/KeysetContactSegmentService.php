@@ -12,7 +12,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Segment rebuild with keyset pagination by contact id: each batch of ListModel::rebuildListLeads() starts after the last id of the
- * previous batch (core re-runs the whole filter query from the first contact on every batch). Switch off (KeysetRebuildSetting), a run that is not
+ * previous batch (core re-runs the whole filter query from the first contact on every batch). Flag off, a run that is not
  * ListModel's, or a failing first batch = core's behaviour.
  */
 class KeysetContactSegmentService extends ContactSegmentService
@@ -28,7 +28,7 @@ class KeysetContactSegmentService extends ContactSegmentService
         ContactSegmentFilterFactory $contactSegmentFilterFactory,
         ContactSegmentQueryBuilder $contactSegmentQueryBuilder,
         private LoggerInterface $keysetLogger,
-        private KeysetRebuildSetting $setting
+        private bool $keysetEnabled
     ) {
         parent::__construct($contactSegmentFilterFactory, $contactSegmentQueryBuilder, $keysetLogger);
     }
@@ -53,7 +53,7 @@ class KeysetContactSegmentService extends ContactSegmentService
     {
         $segmentId = (int) $segment->getId();
 
-        if (!$this->setting->isEnabled()
+        if (!$this->keysetEnabled
             || empty($batchLimiters['dateTime'])
             || isset($batchLimiters['lead_id'])
             || isset($batchLimiters['minId'])
