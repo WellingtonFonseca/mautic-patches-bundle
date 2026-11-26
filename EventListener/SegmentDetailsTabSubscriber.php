@@ -12,9 +12,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * A "Detalhes" tab on the segment page (like the details modal of the segment list): core's details table (the one behind the "Mais >"
- * / arrow toggle, `#segment-details`) moves into the pane, and the page's right column gets the read-only Configurações + Distinct
- * component (SegmentSettingsColumn, GET /s/segment-settings/{id}) on top. The column shows only while Detalhes is the active tab
- * (the main column takes the whole width on the others). The "Mais >" button of the segment page is gone (ContactViewSidePanelSubscriber skips it).
+ * / arrow toggle, `#segment-details`) moves into the pane, followed by the read-only Configurações + Distinct
+ * component (SegmentSettingsColumn, GET /s/segment-settings/{id}). The page's right column (usage of the segment) shows only while Detalhes
+ * is the active tab (the main column takes the whole width on the others). The "Mais >" button of the segment page is gone (ContactViewSidePanelSubscriber skips it).
  *
  * Core's template is not touched: a script, once per page (first load and after every Mautic ajax page load), acts on a page that has `#segment-details`
  * and `#contacts-container`. The tab is first in the tab bar and the active one when the page opens (Filtros, SegmentFiltersTabSubscriber, would otherwise be).
@@ -68,8 +68,8 @@ class SegmentDetailsTabSubscriber implements EventSubscriberInterface
             .'var touched=false;$nav.on("click","a",function(e){if(e.originalEvent){touched=true;}});'
             .'function order(){$nav.prepend($li);if(!touched&&!$pane.hasClass("active")){$li.children("a").tab("show");}}'
             .'order();setTimeout(order,0);setTimeout(order,150);setTimeout(order,500);'
-            // the read-only column, on top of the right column
-            .'var $col=mQuery("<div>");$right.prepend($col);'
+            // the read-only Configurações + Distinct component, under the details table
+            .'var $col=mQuery("<div>");$pane.append($col);'
             .'mQuery.get('.json_encode($settingsBase, JSON_UNESCAPED_SLASHES).'+$id.val()).done(function(html){$col.html(html);});'
             .'function sync(){'
             .'var on=$pane.hasClass("active");'
