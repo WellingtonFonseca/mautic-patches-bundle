@@ -65,6 +65,8 @@
             var count = f.key === 'rebuild' ? marker.rebuild : marker.slow;
             badges.push({icon: f.icon, text: f.holder ? cfg[f.word].replace('%count%', count) : cfg[f.word], modifier: f.modifier, wide: !!f.holder});
         });
+        // only the details page has it: the segment has the Distinct setting on (orange)
+        if (marker.flags.indexOf('distinct') !== -1) { badges.push({icon: 'ri-fingerprint-line', text: cfg.distinct, modifier: 'distinct'}); }
 
         return badges;
     }

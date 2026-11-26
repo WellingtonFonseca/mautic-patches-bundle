@@ -37,6 +37,7 @@ final class StatusScript
             'filters'    => $translator->trans('mautic.patches.segment.filters'),
             'rebuild'    => $translator->trans('mautic.patches.segment.not_rebuilt'),
             'slow'       => $translator->trans('mautic.patches.segment.slow_build'),
+            'distinct'   => $translator->trans('mautic.patches.segment.distinct.badge'),
             'contactEmail'   => $translator->trans('mautic.patches.contact.status.email'),
             'contactSms'     => $translator->trans('mautic.patches.contact.status.sms'),
             'contactHsm'     => $translator->trans('mautic.patches.contact.status.hsm'),

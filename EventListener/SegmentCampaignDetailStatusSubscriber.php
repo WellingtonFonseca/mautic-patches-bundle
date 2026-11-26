@@ -17,6 +17,7 @@ use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Model\ListModel;
 use MauticPlugin\MauticPatchesBundle\Service\CampaignPrefixStore;
 use MauticPlugin\MauticPatchesBundle\Service\LocalizedDateFormatter;
+use MauticPlugin\MauticPatchesBundle\Service\SegmentDistinctStore;
 use MauticPlugin\MauticPatchesBundle\Service\SegmentPrefixStore;
 use MauticPlugin\MauticPatchesBundle\Service\StatusScript;
 use MauticPlugin\MauticPatchesBundle\Service\UpdatingIndicator;
@@ -45,6 +46,8 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         .'.patches-count-badge.patches-badge--info{background-color:rgba(30,136,229,.16);color:#1e88e5;box-shadow:inset 0 0 0 1px rgba(30,136,229,.45)}'
         .'.patches-count-badge.patches-badge--neutral{background-color:rgba(120,120,120,.16);color:var(--text-secondary,#6f6f6f);box-shadow:inset 0 0 0 1px rgba(120,120,120,.4)}'
         .'.patches-count-badge.patches-badge--warning{background-color:rgba(251,140,0,.16);color:#fb8c00;box-shadow:inset 0 0 0 1px rgba(251,140,0,.45)}'
+        // the Distinct badge of a segment that has the setting on (orange, like the pending one)
+        .'.patches-badge--distinct{background-color:#fb8c00}'
         .'.patches-count-badge>svg{display:block;flex:none;margin:0!important;vertical-align:baseline!important}'
         .'.patches-count-badge>.mautic-patches-updating-text{display:inline;animation:none;line-height:inherit}'
         .'.patches-segment-updated{display:block;margin:4px 0 0;font-size:14px;text-align:right}'
@@ -62,7 +65,8 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         private RouterInterface $router,
         private Environment $twig,
         private SegmentPrefixStore $prefixes,
-        private CampaignPrefixStore $campaignPrefixes
+        private CampaignPrefixStore $campaignPrefixes,
+        private ?SegmentDistinctStore $distinctStore = null
     ) {
     }
 
@@ -233,6 +237,9 @@ class SegmentCampaignDetailStatusSubscriber implements EventSubscriberInterface
         }
         if (!empty($list->getFilters())) {
             $flags[] = 'filters';
+        }
+        if (true === $this->distinctStore?->get($list->getId())?->enabled) {
+            $flags[] = 'distinct';
         }
 
         $count      = (int) $this->listModel->getRepository()->getLeadCount($list->getId());
