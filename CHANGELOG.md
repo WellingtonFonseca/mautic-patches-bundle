@@ -3,6 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-25
+- Na edição do segmento, o aviso de uma condição agora aparece colado embaixo do campo de valor, dentro da coluna do valor, sem espaço entre os dois; as células da linha ficam alinhadas pelo topo
 - Com o parâmetro patches_segment_filters_ui desligado, a edição do segmento volta a mostrar a tela antiga do filtro do Mautic de verdade (sem o visual do protótipo: sem selos animados, sem barra flutuante). O botão Duplicar condição continua, como botão ao lado dos botões de copiar e remover do filtro
 - Na edição do segmento, a aba Filtros foi redesenhada: cada filtro vira uma linha própria (E/OU, campo, condição, valor) com os selos de mover, clonar, duplicar e remover, os títulos das colunas ficam fixos sob a barra do topo enquanto o grupo está na tela, e a barra flutuante de baixo adiciona um novo filtro. O formulário do Mautic continua escondido por baixo, guardando, conferindo e recalculando o segmento como antes
 - Na edição do segmento, os botões de duplicar, clonar e remover condição saíram do topo de cada filtro: viraram selos animados ao lado direito do campo de valor, na mesma ordem. Os selos empurram o campo de valor (não ficam por cima) e, ao passar o mouse, abrem para a direita mostrando o texto
