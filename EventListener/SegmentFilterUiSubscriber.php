@@ -96,7 +96,11 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         // chosen started while its filter was hidden has no width
         .'.patches-sf-valuecell .chosen-container{width:100%!important}'
         .'.patches-sf-valuecell .alert{display:none}'
-        .'.patches-sf-value>.patches-sf-alerts{margin:12px 0 0;display:flex;flex-direction:column;gap:8px}'
+        .'.patches-sf-value>.patches-sf-alerts{margin:0;display:flex;flex-direction:column;gap:0}'
+        // the alert is glued to the value field: straight bottom corners on the field, straight top corners on the alert, and the warning yellow on the left edge of the field
+        .'.patches-sf-value:has(>.patches-sf-alerts:not(:empty)) .patches-sf-valuecell :is(.form-control,.chosen-single,.chosen-choices,.input-group-addon){border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0}'
+        .'.patches-sf-value:has(>.patches-sf-alerts:not(:empty)) .patches-sf-valuecell :is(.form-control,.chosen-single,.chosen-choices){border-left:4px solid #FDB933}'
+        .'.patches-sf-value>.patches-sf-alerts .alert{border-top-left-radius:0;border-top-right-radius:0;border-top-width:0;border-left:4px solid #FDB933}'
         .'.patches-sf-alerts:empty{display:none}.patches-sf-alerts .alert{margin:0}'
         .'.patches-sf-field .patches-field-input{text-overflow:ellipsis;caret-color:transparent}'
         // the dock has no move column: its left padding is that column (48px) and its gap (8px) wider, so its cells line up with the rows
