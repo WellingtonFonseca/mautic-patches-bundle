@@ -100,4 +100,27 @@ class ContactViewSidePanelSubscriberTest extends TestCase
     {
         $this->assertStringContainsString('if(window.mauticPatchesContactSidePanel){return;}', $this->content());
     }
+
+    public function testSegmentFormIsRecognisedByItsTabPanesAndHandledOnce(): void
+    {
+        $js = $this->content();
+
+        $this->assertStringContainsString('function placeForm($right)', $js);
+        $this->assertStringContainsString('!$left.find("#details").length||!$left.find("#filters").length', $js);
+        $this->assertStringContainsString('if($r.closest("form").length){placeForm($r);}else{place($r);}', $js);
+        $this->assertStringContainsString('$left.data("mauticPatchesSidePanel",true);', $js);
+    }
+
+    public function testSegmentFormHasNoButtonAndRightColumnShowsOnlyOnDetailsTab(): void
+    {
+        $js = $this->content();
+        $form = substr($js, (int) strpos($js, 'function placeForm'), (int) strpos($js, 'function init') - (int) strpos($js, 'function placeForm'));
+
+        $this->assertStringNotContainsString('button', $form);
+        $this->assertStringContainsString('var onDetails=$left.find("#details").hasClass("active");', $form);
+        $this->assertStringContainsString('$right.toggle(onDetails);', $form);
+        $this->assertStringContainsString('$left.css("width",onDetails?"":"100%");', $form);
+        $this->assertStringContainsString('$left.on("shown.bs.tab",sync);', $form);
+        $this->assertStringContainsString('sync();', $form);
+    }
 }

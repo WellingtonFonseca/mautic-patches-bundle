@@ -30,6 +30,16 @@ class RoutesTest extends TestCase
         $this->assertSame(['id' => '\\d+'], $route['requirements']);
     }
 
+    public function testTheSegmentSettingsRouteIsAGetByNumericId(): void
+    {
+        $route = $this->config()['routes']['main']['mautic_patches_segment_settings'];
+
+        $this->assertSame('/segment-settings/{id}', $route['path']);
+        $this->assertSame('GET', $route['method']);
+        $this->assertSame('MauticPlugin\\MauticPatchesBundle\\Controller\\SegmentSettingsController::settingsAction', $route['controller']);
+        $this->assertSame(['id' => '\\d+'], $route['requirements']);
+    }
+
     public function testTheStatusPathIsTheRebuildPathPlusStatusWhichIsWhatTheScriptBuilds(): void
     {
         $routes = $this->config()['routes']['main'];

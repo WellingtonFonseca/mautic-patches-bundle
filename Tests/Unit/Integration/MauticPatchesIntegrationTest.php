@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticPatchesBundle\Tests\Unit\Integration;
 
 use Mautic\PluginBundle\Entity\Integration;
-use MauticPlugin\MauticPatchesBundle\Form\Type\FeatureSwitchType;
-use MauticPlugin\MauticPatchesBundle\Service\SegmentRebuild\KeysetRebuildSetting;
-use Symfony\Component\Form\FormBuilderInterface;
 use MauticPlugin\MauticPatchesBundle\Integration\MauticPatchesIntegration;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -99,51 +96,5 @@ class MauticPatchesIntegrationTest extends TestCase
 
         $this->assertSame(MauticPatchesIntegration::class, $entry['class']);
         $this->assertCount(16, $entry['arguments'], 'AbstractIntegration takes 16 services');
-    }
-
-    /** @return array<string, array{mixed, bool}> */
-    public static function savedSwitch(): array
-    {
-        return ['not saved yet = on' => [null, true], 'saved off' => [0, false], 'saved on' => [1, true]];
-    }
-
-    #[\PHPUnit\Framework\Attributes\DataProvider('savedSwitch')]
-    public function testTheFeaturesTabHasTheKeysetSwitchWithTheSavedValue(mixed $saved, bool $expected): void
-    {
-        $builder = $this->createMock(FormBuilderInterface::class);
-        $builder->expects($this->once())->method('add')->with(
-            KeysetRebuildSetting::FIELD,
-            FeatureSwitchType::class,
-            $this->callback(fn (array $o) => $o['data'] === $expected
-                && 'mautic.patches.settings.keyset_rebuild' === $o['label']
-                && 'mautic.patches.settings.keyset_rebuild.note' === $o['alert'])
-        );
-        $data = null === $saved ? [] : [KeysetRebuildSetting::FIELD => $saved];
-
-        $this->integration()->appendToForm($builder, $data, 'features');
-    }
-
-    /** @return array<string, array{string}> */
-    public static function otherAreas(): array
-    {
-        return ['keys' => ['keys'], 'authorization' => ['authorization'], 'custom' => ['custom']];
-    }
-
-    #[\PHPUnit\Framework\Attributes\DataProvider('otherAreas')]
-    public function testOtherTabsGetNoField(string $area): void
-    {
-        $builder = $this->createMock(FormBuilderInterface::class);
-        $builder->expects($this->never())->method('add');
-
-        $this->integration()->appendToForm($builder, [], $area);
-    }
-
-    public function testTheSwitchTextsExistInBothLanguages(): void
-    {
-        foreach (['en_US', 'pt_BR'] as $lang) {
-            $ini = (string) file_get_contents(__DIR__.'/../../../Translations/'.$lang.'/messages.ini');
-            $this->assertMatchesRegularExpression('/^mautic\.patches\.settings\.keyset_rebuild="[^"]+"/m', $ini, $lang);
-            $this->assertMatchesRegularExpression('/^mautic\.patches\.settings\.keyset_rebuild\.note="[^"]+"/m', $ini, $lang);
-        }
     }
 }
