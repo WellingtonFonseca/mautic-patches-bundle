@@ -62,7 +62,7 @@ class SegmentDetailsTabSubscriber implements EventSubscriberInterface
             // core\'s collapsible details (and its arrow) move into a pane of their own
             .'var $pane=mQuery("<div>",{"class":"tab-pane bdr-w-0",id:"segment-details-container"});'
             // two halves, like the details modal: core\'s details table on the left, the read-only component on the right
-            .'var $row=mQuery("<div class=\\"row\\"><div class=\\"col-md-6\\"></div></div>").appendTo($pane);$row.children().append($details.find(".panel").first());'
+            .'var $row=mQuery("<div class=\\"row\\"><div class=\\"col-md-7\\"></div></div>").appendTo($pane);$row.children().append($details.find(".panel").first());'
             .'$details.hide();mQuery(".hr-expand",$left).hide();'
             .'$contacts.parent().prepend($pane);'
             .'var $li=mQuery("<li>").append(mQuery("<a>",{href:"#segment-details-container",role:"tab","data-toggle":"tab"}).text('.json_encode($title, JSON_UNESCAPED_UNICODE).'));'
@@ -71,7 +71,7 @@ class SegmentDetailsTabSubscriber implements EventSubscriberInterface
             .'function order(){$nav.prepend($li);if(!touched&&!$pane.hasClass("active")){$li.children("a").tab("show");}}'
             .'order();setTimeout(order,0);setTimeout(order,150);setTimeout(order,500);'
             // the read-only Configurações + Distinct component, in the right half
-            .'var $col=mQuery("<div class=\\"col-md-6 bdr-l\\"></div>").appendTo($row);'
+            .'var $col=mQuery("<div class=\\"col-md-5 bdr-l\\"></div>").appendTo($row);'
             .'mQuery.get('.json_encode($settingsBase, JSON_UNESCAPED_SLASHES).'+$id.val()).done(function(html){$col.html(html);});'
             .'function sync(){'
             .'var on=$pane.hasClass("active");'
