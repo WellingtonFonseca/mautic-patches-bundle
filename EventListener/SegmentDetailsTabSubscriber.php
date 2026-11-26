@@ -12,7 +12,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * A "Detalhes" tab on the segment page (like the details modal of the segment list): core's details table (the one behind the "Mais >"
- * / arrow toggle, `#segment-details`) moves into the pane, followed by the read-only Configurações + Distinct
+ * / arrow toggle, `#segment-details`) moves into the pane, next to the read-only Configurações + Distinct
  * component (SegmentSettingsColumn, GET /s/segment-settings/{id}). The page's right column (usage of the segment) shows only while Detalhes
  * is the active tab (the main column takes the whole width on the others). The "Mais >" button of the segment page is gone (ContactViewSidePanelSubscriber skips it).
  *
@@ -60,7 +60,9 @@ class SegmentDetailsTabSubscriber implements EventSubscriberInterface
             .'$details.data("mauticPatchesDetailsTab",true);'
             .'var $left=$details.closest(".col-md-9"),$right=$left.siblings(".col-md-3.bdr-l").first();'
             // core\'s collapsible details (and its arrow) move into a pane of their own
-            .'var $pane=mQuery("<div>",{"class":"tab-pane bdr-w-0",id:"segment-details-container"}).append($details.find(".panel").first());'
+            .'var $pane=mQuery("<div>",{"class":"tab-pane bdr-w-0",id:"segment-details-container"});'
+            // two halves, like the details modal: core\'s details table on the left, the read-only component on the right
+            .'var $row=mQuery("<div class=\\"row\\"><div class=\\"col-md-6\\"></div></div>").appendTo($pane);$row.children().append($details.find(".panel").first());'
             .'$details.hide();mQuery(".hr-expand",$left).hide();'
             .'$contacts.parent().prepend($pane);'
             .'var $li=mQuery("<li>").append(mQuery("<a>",{href:"#segment-details-container",role:"tab","data-toggle":"tab"}).text('.json_encode($title, JSON_UNESCAPED_UNICODE).'));'
@@ -68,8 +70,8 @@ class SegmentDetailsTabSubscriber implements EventSubscriberInterface
             .'var touched=false;$nav.on("click","a",function(e){if(e.originalEvent){touched=true;}});'
             .'function order(){$nav.prepend($li);if(!touched&&!$pane.hasClass("active")){$li.children("a").tab("show");}}'
             .'order();setTimeout(order,0);setTimeout(order,150);setTimeout(order,500);'
-            // the read-only Configurações + Distinct component, under the details table
-            .'var $col=mQuery("<div>");$pane.append($col);'
+            // the read-only Configurações + Distinct component, in the right half
+            .'var $col=mQuery("<div class=\\"col-md-6 bdr-l\\"></div>").appendTo($row);'
             .'mQuery.get('.json_encode($settingsBase, JSON_UNESCAPED_SLASHES).'+$id.val()).done(function(html){$col.html(html);});'
             .'function sync(){'
             .'var on=$pane.hasClass("active");'

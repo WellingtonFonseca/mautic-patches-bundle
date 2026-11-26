@@ -8,7 +8,7 @@
 {% endmacro %}
 {% macro toggle(item) %}
     <div class="row">
-        <div class="col-xs-5"><div class="form-group"><label class="control-label">{{ item.label }}</label><div class="choice-wrapper"><span class="patches-segment-settings-value">{{ item.value }}</span></div></div></div>
+        <div class="col-xs-5"><div class="form-group"><label class="control-label" style="white-space: normal; overflow: visible; text-overflow: clip;">{{ item.label }}</label><div class="choice-wrapper"><span class="patches-segment-settings-value">{{ item.value }}</span></div></div></div>
         {% if item.help %}<div class="col-xs-7"><div class="alert alert-info">{{ item.help }}</div></div>{% endif %}
     </div>
 {% endmacro %}
