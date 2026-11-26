@@ -58,4 +58,15 @@ class IndexedLeadFields
             [MAUTIC_TABLE_PREFIX.'leads', $column]
         );
     }
+
+    /**
+     * Whether the column holds text (only then is '' a possible "empty" value; numeric/boolean columns cast '' to 0).
+     */
+    public function isTextColumn(string $column): bool
+    {
+        return (bool) $this->em->getConnection()->fetchOne(
+            "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? AND DATA_TYPE IN ('char', 'varchar', 'tinytext', 'text', 'mediumtext', 'longtext')",
+            [MAUTIC_TABLE_PREFIX.'leads', $column]
+        );
+    }
 }

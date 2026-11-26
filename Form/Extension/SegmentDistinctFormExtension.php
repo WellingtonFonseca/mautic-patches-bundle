@@ -47,7 +47,10 @@ class SegmentDistinctFormExtension extends AbstractTypeExtension
         $segment = $options['data'] ?? null;
         $current = ($segment instanceof LeadList ? $this->store->get($segment->getId()) : null) ?? new SegmentDistinctConfig();
 
-        $choices = array_flip($this->indexedFields->all());
+        $choices = [];
+        foreach ($this->indexedFields->all() as $alias => $label) {
+            $choices[$label.' ('.$alias.')'] = $alias;
+        }
         foreach ($current->fields as $field) {
             if (!in_array($field, $choices, true)) {
                 $choices[$field.' '.$this->translator->trans('mautic.patches.segment.distinct.no_index')] = $field;
