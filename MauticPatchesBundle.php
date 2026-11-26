@@ -13,6 +13,7 @@ use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\OverridingTran
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\RelativeWaitPass;
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\SortableListThemePass;
 use MauticPlugin\MauticPatchesBundle\Entity\CampaignPrefixValue;
+use MauticPlugin\MauticPatchesBundle\Entity\SegmentDistinctValue;
 use MauticPlugin\MauticPatchesBundle\Entity\SegmentPrefixValue;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -49,6 +50,10 @@ class MauticPatchesBundle extends PluginBundleBase
         // The campaign prefix table, added in 0.5.0.
         if (!empty($metadata[CampaignPrefixValue::class]) && (null === $installedSchema || !$installedSchema->hasTable(CampaignPrefixValue::TABLE_NAME))) {
             self::installPluginSchema([$metadata[CampaignPrefixValue::class]], $factory);
+        }
+        // The segment DISTINCT table, added in 0.7.0.
+        if (!empty($metadata[SegmentDistinctValue::class]) && (null === $installedSchema || !$installedSchema->hasTable(SegmentDistinctValue::TABLE_NAME))) {
+            self::installPluginSchema([$metadata[SegmentDistinctValue::class]], $factory);
         }
     }
 }
