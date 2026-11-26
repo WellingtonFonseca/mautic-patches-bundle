@@ -1,0 +1,17 @@
+{#
+  One feature of the plugin settings modal (Features tab), the row of Form/Type/FeatureSwitchType: the switch in 2 of the 12 columns, the info alert
+  (the `help` of the field) in the other 10, so a tall alert only pushes the next feature down. Registered as a form theme by
+  DependencyInjection/Compiler/FeatureSwitchThemePass.
+#}
+{% block patches_feature_switch_row %}
+<div class="row">
+    <div class="col-sm-2">
+        {{ form_label(form, label) }}
+        {{ form_widget(form) }}
+        {{ form_errors(form) }}
+    </div>
+    <div class="col-sm-10">
+        <div class="alert alert-info">{{ help|trans }}</div>
+    </div>
+</div>
+{% endblock %}

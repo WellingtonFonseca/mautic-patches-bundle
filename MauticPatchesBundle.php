@@ -9,6 +9,7 @@ use Mautic\CoreBundle\Factory\MauticFactory;
 use Mautic\PluginBundle\Bundle\PluginBundleBase;
 use Mautic\PluginBundle\Entity\Plugin;
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\CoreTemplateOverridePass;
+use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\FeatureSwitchThemePass;
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\OverridingTranslationLoaderPass;
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\RelativeWaitPass;
 use MauticPlugin\MauticPatchesBundle\DependencyInjection\Compiler\SortableListThemePass;
@@ -24,6 +25,9 @@ class MauticPatchesBundle extends PluginBundleBase
 
         // the downloaded translation pack gets a text wrong ("Voltar ao %alvo%"): core's loader is replaced by one that fixes it
         $container->addCompilerPass(new OverridingTranslationLoaderPass());
+
+        // the row of the switches of the plugin settings modal (switch and info alert side by side)
+        $container->addCompilerPass(new FeatureSwitchThemePass());
 
         // the campaign scheduler gets the wait with a date per contact ("Wait", patches.wait_relative)
         $container->addCompilerPass(new RelativeWaitPass());

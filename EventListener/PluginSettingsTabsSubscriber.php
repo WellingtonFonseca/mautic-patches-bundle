@@ -48,7 +48,6 @@ class PluginSettingsTabsSubscriber implements EventSubscriberInterface
             // the plugin's settings modal is core's 600px: widened to 780px, and only the modal that holds the About block
             '<style>.modal-dialog:has(.patches-about-block){width:780px;max-width:95vw}'
             .'.patches-about{padding:24px 16px}.patches-about__icon{height:160px;margin:0 auto 16px}.patches-about__title{margin:0 0 8px}.patches-about__text{max-width:520px;margin:0 auto}'
-            .'#features-container .form-group:has(>.help-block.alert){display:grid;grid-template-columns:16.66% 1fr;column-gap:15px;align-items:start}#features-container .form-group:has(>.help-block.alert)>.help-block{grid-column:2;grid-row:1 / span 2;margin:0}'
             .'.patches-changelog{max-height:60vh;overflow-y:auto}.patches-changelog__day{margin-bottom:12px}'
             .'.patches-changelog__day ul{margin:4px 0 0;padding-left:20px}</style>'
             .'<script>'.$scripts.'</script>'
