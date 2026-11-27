@@ -32,7 +32,7 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
     // the floating add bar of the segment filters (used by the new screen only)
     public const DOCK_STYLE = ''
         // the floating bar at the bottom centre: the same 12 slots (1 + 4 + 2 + 5) as a filter row; only layout
-        .'.patches-filter-dock{position:fixed;left:50%;bottom:56px;transform:translateX(-50%);z-index:1000;box-sizing:border-box;width:min(1430px,92vw);margin:0;border:1px solid var(--border-subtle,#e0e0e0);border-radius:12px;box-shadow:none!important}'
+        .'.patches-filter-dock{position:fixed;left:50%;bottom:56px;transform:translateX(-50%);z-index:1000;box-sizing:border-box;width:min(1609px,98vw);margin:0;border:1px solid var(--border-subtle,#e0e0e0);border-radius:12px;box-shadow:none!important}'
         .'.patches-filter-dock.patches-dock-off{display:none!important}'
         .'.patches-filter-dock:hover{box-shadow:none!important;transform:translateX(-50%)}'
         .'.patches-filter-dock,.patches-filter-dock:hover{background:#2C355A!important}'
@@ -40,11 +40,8 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock>.panel-body{display:flex;flex-direction:column;gap:8px;padding:12px 64px 12px 72px}'
         .'.patches-filter-dock__main{display:flex;align-items:center;min-width:0}'
         .'.patches-filter-dock__main>div{box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
-        // the date builder: the Tipo select on the line above, starting where the value starts (after the glue, field and condition slots: 58.3333%); its error under the row
-        .'.patches-filter-dock__type,.patches-filter-dock__error{box-sizing:border-box;padding-left:58.3333%;min-width:0}'
-        .'.patches-filter-dock__type{display:flex;align-items:center;gap:8px}.patches-filter-dock__type:empty,.patches-filter-dock__error:empty{display:none}'
-        .'.patches-filter-dock__type .patches-date__label{color:#c9cfe6;font-size:12px}'
-        .'.patches-filter-dock__error{color:#ff8389;font-size:12px}'
+        // the date builder: Tipo and the value inputs are on the same line as the other cells (as in a filter row); its error is under the row
+        .'.patches-filter-dock__error{box-sizing:border-box;padding-left:58.3333%;min-width:0;color:#ff8389;font-size:12px}.patches-filter-dock__error:empty{display:none}'
         .'.patches-filter-dock .patches-date__check{color:#fff}'
         .'.patches-filter-dock__glue{flex:0 0 calc(8.3333% - 8px)}.patches-filter-dock__field{flex:0 0 calc(33.3333% - 8px)}'
         .'.patches-filter-dock__condition{flex:0 0 calc(16.6667% - 8px)}.patches-filter-dock__value{flex:0 0 calc(41.6667% - 8px);display:flex;align-items:center;gap:8px}'

@@ -357,7 +357,7 @@
      * filter, takes it down when the field is not a date, the value form was replaced, or the operator has no value (empty / not empty).
      * A stored value that is none of the four kinds is left untouched, as core's plain input.
      */
-    function dateSync($, $panel, $cell, operator, $typeHost, $errorHost) {
+    function dateSync($, $panel, $cell, operator, $errorHost) {
         var st = $panel.data('patchesDate');
         var $input = $cell.find('.properties-form input.form-control:not([type=checkbox])');
         if (!$cell.length || !dateKind($panel) || $input.length !== 1) { dateTeardown($panel); return; }
@@ -368,10 +368,10 @@
             if (!parsed) { return; }
             st = {mode: parsed.mode, $input: $input, $cell: $cell, $core: $input.closest('.properties-form'), $errorHost: $errorHost || null, noValue: noValue, valid: true};
             st.$wrap = dateWrap($, st, parsed);
-            st.$type = $('<span class="patches-date__typebox"></span>').append($typeHost ? '<span class="patches-date__label">Tipo</span>' : '')
+            st.$type = $('<span class="patches-date__typebox"></span>')
                 .append($('<select class="form-control not-chosen patches-date__type" aria-label="Tipo"></select>').append(options($, MODES, st.mode)));
             $cell.addClass('patches-date-on').prepend(st.$wrap);
-            if ($typeHost) { $typeHost.empty().append(st.$type); } else { $cell.prepend(st.$type); }
+            $cell.prepend(st.$type);
             $panel.data('patchesDate', st);
             st.$type.on('change', 'select', function () {
                 st.mode = $(this).val();
@@ -384,24 +384,20 @@
         }
         if (st.noValue !== noValue) { st.noValue = noValue; }
         dateShow($, st);
-        // the draft's select is in the bar's top line: the row's is inline
         if (st.mode === 'fixed') { st.valid = $input.val().trim() !== ''; }
     }
 
     function dateSyncAll($) {
         var s = slots($);
         var $draft = s.draft.children('.segment-filter').first();
-        var $type = s.dock.find('.' + DOCK + '__type');
         if ($draft.length) {
             var $cell = s.value.children('.col-sm-6').not('.patches-dock-placeholder').first();
             var $op = s.condition.children('.col-sm-3').not('.patches-dock-placeholder').find('select').first();
-            dateSync($, $draft, $cell, $op.val(), $type, s.dock.find('.' + DOCK + '__error'));
-        } else {
-            $type.empty();
+            dateSync($, $draft, $cell, $op.val(), s.dock.find('.' + DOCK + '__error'));
         }
         Form.panels($).each(function () {
             var row = rowOf.get(this);
-            if (row) { dateSync($, $(this), Form.valueOf($(this)), Form.operatorOf($(this)).val(), null, null); }
+            if (row) { dateSync($, $(this), Form.valueOf($(this)), Form.operatorOf($(this)).val(), null); }
         });
     }
 
@@ -433,7 +429,6 @@
         // a core .panel with a .panel-body, like a filter, so the theme of the user paints it the same way
         var $row = $('<div class="panel ' + DOCK + '" aria-hidden="true"></div>');
         var $outer = $('<div class="panel-body"></div>').appendTo($row);
-        $outer.append('<div class="' + DOCK + '__type"></div>');
         var $body = $('<div class="' + DOCK + '__main"></div>').appendTo($outer);
         $body.append('<div class="' + DOCK + '__glue"><select class="form-control not-chosen patches-dock-placeholder"><option value="and">e</option><option value="or">ou</option></select></div>');
         $body.append('<div class="' + DOCK + '__field"></div>');
