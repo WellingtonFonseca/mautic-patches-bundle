@@ -2,7 +2,7 @@
  * The node buttons of the campaign builder (Clonar, Editar, Remover: `.campaign-event-buttons`, top right of a node) become icon badges
  * like the disconnect badge of campaign-connection-trash.js: a 29px circle with the icon that opens to show its label on hover. The
  * buttons are core's own links and stay in place (same order, same colors, same handlers: ajax / ajaxmodal); only a class and a label
- * span are added, so nothing of core is reimplemented. The label opens inside the flex row of the buttons and pushes its neighbours.
+ * span are added, so nothing of core is reimplemented. The buttons stand in a column at the right side of the node (the padding keeps the node :hover while the mouse crosses to them); the icon stays and only the right side of the badge opens to the right.
  * Nodes made later (a clone, a new node) are decorated as they come into the page.
  */
 (function (root) {
@@ -10,7 +10,7 @@
 
     var KINDS = {'btn-clone': 'clone', 'btn-edit': 'edit', 'btn-delete': 'remove'};
 
-    var STYLE = '.campaign-event-buttons{display:flex;width:max-content;align-items:center;gap:4px;white-space:nowrap}'
+    var STYLE = '.campaign-event-buttons{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:max-content;top:0;right:auto;left:100%;padding-left:6px;white-space:nowrap}'
         + '.campaign-event-buttons.hide{display:none}'
         + '.campaign-event-buttons .patches-node-badge{display:inline-flex;align-items:center;justify-content:flex-start;box-sizing:border-box;flex:0 0 auto;width:29px;height:29px;min-width:0;margin:0;padding:0;gap:0;overflow:hidden;border-radius:14.5px;'
         + 'font-size:14px;font-weight:600;line-height:normal;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;text-decoration:none;transition:width .2s ease,box-shadow .2s ease}'
