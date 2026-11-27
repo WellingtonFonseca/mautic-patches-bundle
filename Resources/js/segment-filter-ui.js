@@ -236,10 +236,23 @@
     var UNITS = [['day', 'dias'], ['week', 'semanas'], ['month', 'meses'], ['year', 'anos']];
     var NUMBER_ERROR = 'Informe um número inteiro maior ou igual a 1.';
 
+    // core's relative keywords by internal key, in the user's language (installed from the server: core matches the stored text exactly)
+    var RELATIVE = {};
+
+    /** The text core's segment filter understands for a period key ("esta semana" in pt_BR; english when the server sent none). */
+    function periodText(key) {
+        if (RELATIVE[key]) { return RELATIVE[key]; }
+        var m = /^(week|month|year)_(this|next|last)$/.exec(key);
+
+        return m ? m[2] + ' ' + m[1] : key;
+    }
+
     function periodKey(value) {
         var low = value.toLowerCase();
         var found = null;
-        PERIODS.forEach(function (p) { if (p[0] === low || p[1] === low) { found = p[0]; } });
+        PERIODS.forEach(function (p) {
+            if (p[0] === low || p[1] === low || (RELATIVE[p[0]] || '').toLowerCase() === low) { found = p[0]; }
+        });
         // the english words core's list uses ("this week", "last month", ...)
         var en = /^(this|next|last) (week|month|year)$/.exec(low);
 
@@ -254,6 +267,7 @@
         var key = periodKey(v);
         if (key) { return {mode: 'period', key: key}; }
         if ((m = /^([+-])\s*(\d+)\s*(day|week|month|year)s?$/i.exec(v))) { return {mode: 'relative', dir: m[1], num: m[2], unit: m[3].toLowerCase()}; }
+        if (v.toLowerCase() === (RELATIVE.anniversary || '').toLowerCase()) { return {mode: 'birthday', slack: false, num: ''}; }
         if ((m = /^(?:birthday|anniversary)(?:\s*\+\s*(\d+)\s*days?)?$/i.exec(v))) { return {mode: 'birthday', slack: m[1] !== undefined, num: m[1] || ''}; }
 
         return null;
@@ -285,15 +299,15 @@
 
             return {value: $w.find('.patches-date__dir').val() + n + ' ' + unit + (n === 1 ? '' : 's')};
         }
-        if (st.mode === 'period') { return {value: $w.find('.patches-date__period').val()}; }
+        if (st.mode === 'period') { return {value: periodText($w.find('.patches-date__period').val())}; }
         if (st.mode === 'birthday') {
             var slack = $w.find('.patches-date__slack').val() === '1';
             $w.find('.patches-date__num').last().prop('disabled', !slack);
-            if (!slack) { return {value: 'birthday'}; }
+            if (!slack) { return {value: RELATIVE.anniversary || 'anniversary'}; }
             var b = positiveInt($w.find('.patches-date__num').last());
             if (b === null) { return {error: NUMBER_ERROR, field: $w.find('.patches-date__num').last()}; }
 
-            return {value: 'birthday +' + b + ' day' + (b === 1 ? '' : 's')};
+            return {value: 'anniversary +' + b + ' day' + (b === 1 ? '' : 's')};
         }
 
         return {};
@@ -336,7 +350,8 @@
         if (st.mode === 'fixed') {
             st.valid = typed !== '';
         } else {
-            write(built.value || '');
+            // an invalid number keeps the last valid value in core's input (a saved row is not wiped); "valid" blocks the draft's Adicionar
+            if (built.value) { write(built.value); }
             st.valid = !!built.value;
         }
         st.$wrap.find('.is-invalid').removeClass('is-invalid');
@@ -582,7 +597,8 @@
     var draftSeq = 0;
     var draftNumber = null;
 
-    function install($, Mautic) {
+    function install($, Mautic, relative) {
+        RELATIVE = relative || {};
         if (root.mauticPatchesSegmentFilterUi) { return; }
         root.mauticPatchesSegmentFilterUi = true;
         Form = root.MauticPatchesSegmentFilterForm;

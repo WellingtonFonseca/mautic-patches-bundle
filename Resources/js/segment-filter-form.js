@@ -141,6 +141,10 @@
         // the chips of the value are a widget on top of the input: the input stays, the widget is drawn again
         $clone.find('.segment-in-chips').closest('.input-group').remove();
         $clone.find('input[data-in-chips]').removeAttr('data-in-chips').show();
+        // the date builder is drawn again for the copy (its markup here has no handlers and would double the Tipo select)
+        $clone.find('.patches-date, .patches-date__typebox').remove();
+        $clone.find('.patches-date-on').removeClass('patches-date-on');
+        $clone.find('.patches-date-core-off').removeClass('patches-date-core-off');
         // the first filter has its glue hidden; a copy below it needs it (it is AND, so it stays in the group)
         $clone.find('.panel-glue').removeClass('hide');
 

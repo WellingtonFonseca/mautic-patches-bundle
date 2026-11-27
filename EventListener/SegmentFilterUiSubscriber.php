@@ -9,6 +9,7 @@ use Mautic\CoreBundle\Event\CustomContentEvent;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * The Filtros tab of the segment form drawn by the plugin: its own list of rows (E / OU, field, condition, value, badges)
@@ -128,7 +129,7 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         .'.patches-sf-row .patches-filter-badge .patches-icon-badge__text{padding:0 12px 0 0;opacity:0;transition:opacity .15s ease .05s}'
         .'.patches-sf-row .patches-filter-badge:hover .patches-icon-badge__text{opacity:1}';
 
-    public function __construct(private ?CoreParametersHelper $coreParametersHelper = null, private ?RequestStack $requestStack = null)
+    public function __construct(private ?CoreParametersHelper $coreParametersHelper = null, private ?RequestStack $requestStack = null, private ?TranslatorInterface $translator = null)
     {
     }
 
@@ -160,7 +161,22 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         $customContentEvent->addContent(
             '<style>'.AbstractListStatusSubscriber::BADGE_STYLE.self::DOCK_STYLE.self::STYLE.'</style>'
             .'<script>'.file_get_contents($js.'segment-filter-form.js').file_get_contents($js.'segment-filter-ui.js')
-            .';MauticPatchesSegmentFilterUi.install(mQuery,Mautic);</script>'
+            .';MauticPatchesSegmentFilterUi.install(mQuery,Mautic,'.json_encode($this->relativeDates(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE).');</script>'
         );
+    }
+
+    /**
+     * Core's relative keywords in the user's language, by the key the builder uses: core matches the stored filter text against them.
+     *
+     * @return array<string, string>
+     */
+    private function relativeDates(): array
+    {
+        $dates = [];
+        foreach (['today', 'tomorrow', 'yesterday', 'week_this', 'week_next', 'week_last', 'month_this', 'month_next', 'month_last', 'year_this', 'year_next', 'year_last', 'anniversary'] as $key) {
+            $dates[$key] = $this->translator ? $this->translator->trans('mautic.lead.list.'.$key) : $key;
+        }
+
+        return $dates;
     }
 }
