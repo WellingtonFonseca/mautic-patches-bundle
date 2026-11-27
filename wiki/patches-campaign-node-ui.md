@@ -30,5 +30,6 @@ The small layout rules of a campaign node: the counts (done / waiting) of the Pr
 ## Traps
 
 - The clone button of a node of a campaign made through the API answers 200 and adds no node on the page in Playwright: a spec cannot count nodes after a clone. To test late buttons, append the markup to `#CampaignCanvas` by `page.evaluate`.
+- `#CampaignEventPanel` is `position:fixed` (the plugin moves it), so its `offsetParent` is always null: never test its visibility with it; use the `hide` class / computed display.
 - Padrão: [ui-tooltip.md](ui-tooltip.md) (how to reproduce a tooltip bug).
 - A change of the injected style or script needs `cache:clear` and `apachectl graceful` (../wiki/docker-mautic5.md), or the page still carries the old one.
