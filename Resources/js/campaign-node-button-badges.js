@@ -46,6 +46,11 @@
         + '#CampaignEventPanel{position:fixed!important;left:50%!important;top:auto!important;bottom:24px;margin:0!important;transform:translateX(-50%);max-width:calc(100vw - 20px);border:1px solid var(--border-subtle,#e0e0e0);box-shadow:none!important}'
         // the step that follows (the list of events, a Chosen select that opens downward) keeps 440px under its top, so the open list is on the screen
         + '#CampaignEventPanel:has(#CampaignEventPanelLists:not(.hide)){top:max(10px,calc(100vh - 440px))!important;bottom:auto}'
+        // the back badge of the list of each group has the colour of the heading of the card of that group
+        + '#DecisionGroupList .patches-node-badge{background-color:var(--support-info);color:#fff}'
+        + '#ActionGroupList .patches-node-badge{background-color:var(--background-brand);color:#fff}'
+        + '#ConditionGroupList .patches-node-badge{background-color:#fb8c00;color:var(--text-primary)}'
+        + '#ConditionGroupList .patches-node-badge>i{color:var(--text-primary)}'
         // the heading of the Condition card is orange (the colour of the "paused" status badge)
         + '#ConditionGroupSelector>.panel>.panel-heading{background-color:#fb8c00}'
         + '#CampaignEventPanelGroups #CampaignPasteContainer .panel-body{flex:1 1 auto}'
