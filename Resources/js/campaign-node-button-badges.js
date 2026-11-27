@@ -3,11 +3,15 @@
  * like the disconnect badge of campaign-connection-trash.js: a 29px circle with the icon that opens to show its label on hover. The
  * buttons are core's own links and stay in place (same order, same colors, same handlers: ajax / ajaxmodal); only a class and a label
  * span are added, so nothing of core is reimplemented. The buttons stand in a column at the right side of the node (half of each badge inside the node, centred on its right edge); the icon stays and only the right side of the badge opens to the right.
- * Nodes made later (a clone, a new node) are decorated as they come into the page.
+ * Nodes made later (a clone, a new node) are decorated as they come into the page. The same file dresses the panel that opens when a
+ * connection point is clicked: the back button of its lists is a badge too, the card of the cloned event gets a heading, the footer of
+ * each card is the button, and the panel is fixed at the bottom centre of the screen.
  */
 (function (root) {
     'use strict';
 
+    // the badges stand in the node buttons and in the list of events of the panel
+    var BADGE = ':is(.campaign-event-buttons,#CampaignEventPanelLists) .patches-node-badge';
     var KINDS = {'btn-clone': 'clone', 'btn-edit': 'edit', 'btn-delete': 'remove'};
 
     var STYLE = '.campaign-event-buttons{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:max-content;top:50%;right:auto;left:calc(100% - 14.5px);transform:translateY(-50%);white-space:nowrap}'
@@ -59,16 +63,16 @@
         + '#CampaignEventPanel:has(#CampaignEventPanelGroups.groups-enabled-1:not(.hide) #CampaignPasteContainer:not(.hide)){width:333px!important}'
         + '#CampaignEventPanel:has(#CampaignEventPanelGroups.groups-enabled-2:not(.hide) #CampaignPasteContainer:not(.hide)){width:500px!important}'
         + '#CampaignEventPanel:has(#CampaignEventPanelGroups.groups-enabled-3:not(.hide) #CampaignPasteContainer:not(.hide)){width:667px!important}'
-        + ':is(.campaign-event-buttons,#CampaignEventPanelLists) .patches-node-badge{display:inline-flex;align-items:center;justify-content:flex-start;box-sizing:border-box;flex:0 0 auto;width:29px;height:29px;min-width:0;margin:0;padding:0;gap:0;overflow:hidden;border-radius:14.5px;'
+        + BADGE + '{display:inline-flex;align-items:center;justify-content:flex-start;box-sizing:border-box;flex:0 0 auto;width:29px;height:29px;min-width:0;margin:0;padding:0;gap:0;overflow:hidden;border-radius:14.5px;'
         + 'font-size:14px;font-weight:600;line-height:normal;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;text-decoration:none;transition:width .2s ease,box-shadow .2s ease}'
-        + ':is(.campaign-event-buttons,#CampaignEventPanelLists) .patches-node-badge:hover{box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;transform:none;text-decoration:none}'
-        + ':is(.campaign-event-buttons,#CampaignEventPanelLists) .patches-node-badge>i{order:0;flex:0 0 29px;width:29px;height:29px;font-size:17px;display:flex;align-items:center;justify-content:center;pointer-events:none}'
-        + ':is(.campaign-event-buttons,#CampaignEventPanelLists) .patches-node-badge__text{padding:0 12px 0 0;opacity:0;pointer-events:none;transition:opacity .15s ease .05s}'
-        + ':is(.campaign-event-buttons,#CampaignEventPanelLists) .patches-node-badge:hover .patches-node-badge__text{opacity:1}';
+        + BADGE + ':hover{box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;transform:none;text-decoration:none}'
+        + BADGE + '>i{order:0;flex:0 0 29px;width:29px;height:29px;font-size:17px;display:flex;align-items:center;justify-content:center;pointer-events:none}'
+        + BADGE + '__text{padding:0 12px 0 0;opacity:0;pointer-events:none;transition:opacity .15s ease .05s}'
+        + BADGE + ':hover .patches-node-badge__text{opacity:1}';
 
     // `#CampaignCanvas` has a transform (the zoom), and a transformed box is the reference of its `position:fixed` children: the panel goes to
     // `#campaign-builder`, outside the canvas (core finds it by id, so nothing else changes)
-    function moveSelector(doc) {
+    function movePanel(doc) {
         var panel = doc.getElementById('CampaignEventPanel');
         var host = doc.getElementById('campaign-builder');
         if (panel && host && panel.parentNode !== host) { host.appendChild(panel); }
@@ -143,7 +147,7 @@
         });
 
         var timer = null;
-        function run() { decorate(doc, labels, doc); decoratePaste(doc, labels); moveSelector(doc); }
+        function run() { decorate(doc, labels, doc); decoratePaste(doc, labels); movePanel(doc); }
         run();
         if (win.MutationObserver) {
             new win.MutationObserver(function (mutations) {
