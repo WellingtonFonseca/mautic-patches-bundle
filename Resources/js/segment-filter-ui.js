@@ -382,7 +382,7 @@
             st.$wrap.on('input change', 'input, select', function () { dateApply($, $panel, st); });
             $input.on('input change', function () { if (st.mode === 'fixed') { st.valid = $input.val().trim() !== ''; syncAdd($); } });
         }
-        if (st.noValue !== noValue) { st.noValue = noValue; }
+        st.noValue = noValue;
         dateShow($, st);
         if (st.mode === 'fixed') { st.valid = $input.val().trim() !== ''; }
     }
