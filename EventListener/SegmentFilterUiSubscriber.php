@@ -112,7 +112,7 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         .'.patches-date__pane{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px}.patches-date__pane>.form-control{width:auto;flex:1 1 0;min-width:0}'
         .'.patches-date__pane>.patches-date__num{flex:0 0 80px}.patches-date__type{width:auto;flex:none}'
         .'.patches-date__check{display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:400;white-space:nowrap}.patches-date__check input{margin:0}'
-        .'.patches-date-on{display:flex;align-items:center;gap:8px}.patches-date-on>.properties-form{flex:1 1 0;min-width:0}.patches-date-core-off{display:none!important}'
+        .'.patches-date-on{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:8px}.patches-date__typebox{display:inline-flex;flex:none;align-items:center;gap:8px}.patches-date__pane>.patches-date__dir{flex:1.5 1 0}.patches-date-on>.properties-form{flex:1 1 0;min-width:0}.patches-date-core-off{display:none!important}'
         .'.patches-date .is-invalid{border-color:#da1e28;box-shadow:0 0 0 1px #da1e28}'
         .'.patches-sf-field .patches-field-input{text-overflow:ellipsis;caret-color:transparent}'
         // the dock has no move column: its left padding is that column (48px) and its gap (8px) wider, so its cells line up with the rows

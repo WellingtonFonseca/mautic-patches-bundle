@@ -345,7 +345,7 @@
         syncAdd($);
     }
 
-    function dateShow(st) {
+    function dateShow($, st) {
         st.$wrap.children('.patches-date__pane').each(function () { $(this).toggle($(this).attr('data-mode') === st.mode); });
         st.$core.toggleClass('patches-date-core-off', st.mode !== 'fixed' || st.noValue);
         st.$wrap.toggle(st.mode !== 'fixed' && !st.noValue);
@@ -376,14 +376,14 @@
             st.$type.on('change', 'select', function () {
                 st.mode = $(this).val();
                 if (st.mode === 'fixed' && !/^\d{4}-\d{2}-\d{2}/.test($input.val())) { $input.val('').trigger('change'); }
-                dateShow(st);
+                dateShow($, st);
                 dateApply($, $panel, st);
             });
             st.$wrap.on('input change', 'input, select', function () { dateApply($, $panel, st); });
             $input.on('input change', function () { if (st.mode === 'fixed') { st.valid = $input.val().trim() !== ''; syncAdd($); } });
         }
         if (st.noValue !== noValue) { st.noValue = noValue; }
-        dateShow(st);
+        dateShow($, st);
         // the draft's select is in the bar's top line: the row's is inline
         if (st.mode === 'fixed') { st.valid = $input.val().trim() !== ''; }
     }
