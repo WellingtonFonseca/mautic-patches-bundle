@@ -42,14 +42,10 @@
         + '#CampaignEventPanelGroups .panel-footer{cursor:pointer;transition:background-color .11s ease}'
         + '#CampaignEventPanelGroups .panel-footer:hover,#CampaignEventPanelGroups .panel-footer:hover .btn-ghost{color:var(--link-primary-hover);background-color:var(--background-hover);border-color:var(--background-hover)}'
         + '#CampaignEventPanelGroups .panel-footer:hover .btn-ghost i{color:var(--link-primary-hover)}'
-        // the panel has 20px at the sides and 10px above and below (core): the sides get the 10px too (below)
-        + '#CampaignEventPanel{padding:10px}'
         // the panel opens fixed at the bottom centre of the screen (like the filter dock of the segment), not next to the clicked point: core puts left / top inline, so they are overridden
         + '#CampaignEventPanel{position:fixed!important;left:50%!important;top:auto!important;bottom:24px;margin:0!important;transform:translateX(-50%);max-width:calc(100vw - 20px);border:1px solid var(--border-subtle,#e0e0e0);box-shadow:none!important}'
         // the step that follows (the list of events, a Chosen select that opens downward) keeps 440px under its top, so the open list is on the screen
         + '#CampaignEventPanel:has(#CampaignEventPanelLists:not(.hide)){top:max(10px,calc(100vh - 440px))!important;bottom:auto}'
-        // the cards have 5px at each side inside their column: the row of cards is pulled out by that, so the gap to the edge is 10px at the sides too
-        + '#CampaignEventPanelGroups{margin-left:-5px;margin-right:-5px}'
         // the heading of the Condition card is orange (the colour of the "paused" status badge)
         + '#ConditionGroupSelector>.panel>.panel-heading{background-color:#fb8c00}'
         + '#CampaignEventPanelGroups #CampaignPasteContainer .panel-body{flex:1 1 auto}'
