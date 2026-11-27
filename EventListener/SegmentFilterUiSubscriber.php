@@ -42,7 +42,6 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         .'.patches-filter-dock__main>div{box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
         // the date builder: Tipo and the value inputs are on the same line as the other cells (as in a filter row); its error is under the row
         .'.patches-filter-dock__error{box-sizing:border-box;padding-left:58.3333%;min-width:0;color:#ff8389;font-size:12px}.patches-filter-dock__error:empty{display:none}'
-        .'.patches-filter-dock .patches-date__check{color:#fff}'
         .'.patches-filter-dock__glue{flex:0 0 calc(8.3333% - 8px)}.patches-filter-dock__field{flex:0 0 calc(33.3333% - 8px)}'
         .'.patches-filter-dock__condition{flex:0 0 calc(16.6667% - 8px)}.patches-filter-dock__value{flex:0 0 calc(41.6667% - 8px);display:flex;align-items:center;gap:8px}'
         .'.patches-filter-dock__value>.col-sm-6{flex:1 1 auto;min-width:0}'
@@ -108,7 +107,6 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         .'.patches-date{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px}.patches-date:empty{display:none}'
         .'.patches-date__pane{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px}.patches-date__pane>.form-control{width:auto;flex:1 1 0;min-width:0}'
         .'.patches-date__pane>.patches-date__num{flex:0 0 80px}.patches-date__type{width:auto;flex:none}'
-        .'.patches-date__check{display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:400;white-space:nowrap}.patches-date__check input{margin:0}'
         .'.patches-date-on{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:8px}.patches-date__typebox{display:inline-flex;flex:none;align-items:center;gap:8px}.patches-date__pane>.patches-date__dir{flex:1.5 1 0}.patches-date-on>.properties-form{flex:1 1 0;min-width:0}.patches-date-core-off{display:none!important}'
         .'.patches-date .is-invalid{border-color:#da1e28;box-shadow:0 0 0 1px #da1e28}'
         .'.patches-sf-field .patches-field-input{text-overflow:ellipsis;caret-color:transparent}'

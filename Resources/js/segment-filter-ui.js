@@ -287,7 +287,7 @@
         }
         if (st.mode === 'period') { return {value: $w.find('.patches-date__period').val()}; }
         if (st.mode === 'birthday') {
-            var slack = $w.find('.patches-date__slack').prop('checked');
+            var slack = $w.find('.patches-date__slack').val() === '1';
             $w.find('.patches-date__num').last().prop('disabled', !slack);
             if (!slack) { return {value: 'birthday'}; }
             var b = positiveInt($w.find('.patches-date__num').last());
@@ -309,7 +309,7 @@
         var $per = $('<div class="patches-date__pane" data-mode="period"></div>')
             .append($('<select class="form-control not-chosen patches-date__period" aria-label="Período"></select>').append(options($, PERIODS, parsed.key || 'today')));
         var $bd = $('<div class="patches-date__pane" data-mode="birthday"></div>')
-            .append($('<label class="patches-date__check"></label>').append($('<input type="checkbox" class="patches-date__slack">').prop('checked', !!parsed.slack)).append(' com folga'))
+            .append($('<select class="form-control not-chosen patches-date__slack" aria-label="Folga"></select>').append(options($, [['0', 'sem folga'], ['1', 'com folga']], parsed.slack ? '1' : '0')))
             .append($('<input type="number" min="1" step="1" class="form-control patches-date__num" aria-label="Dias de folga">').val(parsed.slack ? parsed.num : '7').prop('disabled', !parsed.slack))
             .append('<span class="patches-date__unit-text">dias</span>');
 
