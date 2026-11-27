@@ -42,6 +42,10 @@
         + '#CampaignEventPanelGroups .panel-footer{cursor:pointer;transition:background-color .11s ease}'
         + '#CampaignEventPanelGroups .panel-footer:hover,#CampaignEventPanelGroups .panel-footer:hover .btn-ghost{color:var(--link-primary-hover);background-color:var(--background-hover);border-color:var(--background-hover)}'
         + '#CampaignEventPanelGroups .panel-footer:hover .btn-ghost i{color:var(--link-primary-hover)}'
+        // the panel has 20px at the sides and 10px above and below (core): the sides get the 10px too (below)
+        + '#CampaignEventPanel{padding:10px}'
+        // the cards have 5px at each side inside their column: the row of cards is pulled out by that, so the gap to the edge is 10px at the sides too
+        + '#CampaignEventPanelGroups{margin-left:-5px;margin-right:-5px}'
         // the heading of the Condition card is orange (the colour of the "paused" status badge)
         + '#ConditionGroupSelector>.panel>.panel-heading{background-color:#fb8c00}'
         + '#CampaignEventPanelGroups #CampaignPasteContainer .panel-body{flex:1 1 auto}'
