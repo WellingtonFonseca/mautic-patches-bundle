@@ -54,12 +54,12 @@
         + '#CampaignEventPanel:has(#CampaignEventPanelGroups.groups-enabled-1:not(.hide) #CampaignPasteContainer:not(.hide)){width:333px!important}'
         + '#CampaignEventPanel:has(#CampaignEventPanelGroups.groups-enabled-2:not(.hide) #CampaignPasteContainer:not(.hide)){width:500px!important}'
         + '#CampaignEventPanel:has(#CampaignEventPanelGroups.groups-enabled-3:not(.hide) #CampaignPasteContainer:not(.hide)){width:667px!important}'
-        + '.campaign-event-buttons .patches-node-badge{display:inline-flex;align-items:center;justify-content:flex-start;box-sizing:border-box;flex:0 0 auto;width:29px;height:29px;min-width:0;margin:0;padding:0;gap:0;overflow:hidden;border-radius:14.5px;'
+        + ':is(.campaign-event-buttons,#CampaignEventPanelLists) .patches-node-badge{display:inline-flex;align-items:center;justify-content:flex-start;box-sizing:border-box;flex:0 0 auto;width:29px;height:29px;min-width:0;margin:0;padding:0;gap:0;overflow:hidden;border-radius:14.5px;'
         + 'font-size:14px;font-weight:600;line-height:normal;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;text-decoration:none;transition:width .2s ease,box-shadow .2s ease}'
-        + '.campaign-event-buttons .patches-node-badge:hover{box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;transform:none;text-decoration:none}'
-        + '.campaign-event-buttons .patches-node-badge>i{order:0;flex:0 0 29px;width:29px;height:29px;font-size:17px;display:flex;align-items:center;justify-content:center;pointer-events:none}'
-        + '.campaign-event-buttons .patches-node-badge__text{padding:0 12px 0 0;opacity:0;pointer-events:none;transition:opacity .15s ease .05s}'
-        + '.campaign-event-buttons .patches-node-badge:hover .patches-node-badge__text{opacity:1}';
+        + ':is(.campaign-event-buttons,#CampaignEventPanelLists) .patches-node-badge:hover{box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;transform:none;text-decoration:none}'
+        + ':is(.campaign-event-buttons,#CampaignEventPanelLists) .patches-node-badge>i{order:0;flex:0 0 29px;width:29px;height:29px;font-size:17px;display:flex;align-items:center;justify-content:center;pointer-events:none}'
+        + ':is(.campaign-event-buttons,#CampaignEventPanelLists) .patches-node-badge__text{padding:0 12px 0 0;opacity:0;pointer-events:none;transition:opacity .15s ease .05s}'
+        + ':is(.campaign-event-buttons,#CampaignEventPanelLists) .patches-node-badge:hover .patches-node-badge__text{opacity:1}';
 
     // `#CampaignCanvas` has a transform (the zoom), and a transformed box is the reference of its `position:fixed` children: the panel goes to
     // `#campaign-builder`, outside the canvas (core finds it by id, so nothing else changes)
@@ -81,18 +81,24 @@
         card.insertBefore(heading, card.firstChild);
     }
 
-    function openBadge() { this.style.width = (29 + this.querySelector('.patches-node-badge__text').scrollWidth) + 'px'; }
+    function openBadge() { this.style.width = (29 + this.querySelector('.patches-node-badge__text').scrollWidth + 4) + 'px'; }
     function closeBadge() { this.style.width = ''; }
 
     // Decorates every node button inside `scope` that is not decorated yet. Returns how many it decorated.
     function decorate(scope, labels, doc) {
-        var links = scope.querySelectorAll('.campaign-event-buttons > a.btn');
+        var links = scope.querySelectorAll('.campaign-event-buttons > a.btn, #CampaignEventPanelLists h4 > .btn');
         var done = 0;
         for (var i = 0; i < links.length; i++) {
             var link = links[i];
             if (link.classList.contains('patches-node-badge')) { continue; }
             var kind = null;
             for (var cls in KINDS) { if (link.classList.contains(cls)) { kind = KINDS[cls]; } }
+            // the button that goes back from the list of events to the cards of the panel (core: an icon only, in the colour of its group)
+            if (!kind && link.matches('#CampaignEventPanelLists h4 > .btn')) {
+                kind = 'back';
+                var icon = link.querySelector('i');
+                if (icon) { icon.className = 'ri-arrow-go-back-line'; }
+            }
             if (!kind) { continue; }
             var span = doc.createElement('span');
             span.className = 'patches-node-badge__text';

@@ -10,7 +10,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * A usability change: the node buttons of the campaign builder (Clonar, Editar, Remover) become icon badges that open their label on hover,
+ * A usability change: the node buttons of the campaign builder (Clonar, Editar, Remover) and the button that goes back from the list of events to the cards of the panel (Voltar) become icon badges that open their label on hover,
  * like the disconnect badge. The buttons stay core's (same handlers and colors). See Resources/js/campaign-node-button-badges.js for how.
  *
  * Injected the same way as the other page scripts (CoreEvents::VIEW_INJECT_CUSTOM_CONTENT on 'page.header.left').
@@ -38,6 +38,7 @@ class CampaignNodeButtonBadgeSubscriber implements EventSubscriberInterface
             'clone'  => $this->translator->trans('mautic.patches.campaign.node.clone'),
             'edit'   => $this->translator->trans('mautic.patches.campaign.node.edit'),
             'remove' => $this->translator->trans('mautic.patches.campaign.node.remove'),
+            'back'   => $this->translator->trans('mautic.patches.campaign.node.back'),
         ];
 
         $customContentEvent->addContent(
