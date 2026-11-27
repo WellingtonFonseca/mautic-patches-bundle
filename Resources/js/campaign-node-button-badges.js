@@ -44,22 +44,34 @@
         + '#CampaignEventPanelGroups .panel-footer:hover .btn-ghost i{color:var(--link-primary-hover)}'
         // the panel has 20px at the sides and 10px above and below (core): the sides get the 10px too (below)
         + '#CampaignEventPanel{padding:10px}'
+        // the panel opens fixed at the bottom centre of the screen (like the filter dock of the segment), not next to the clicked point: core puts left / top inline, so they are overridden
+        + '#CampaignEventPanel{position:fixed!important;left:50%!important;top:auto!important;bottom:24px;margin:0!important;transform:translateX(-50%);max-width:calc(100vw - 20px);border:1px solid var(--border-subtle,#e0e0e0);box-shadow:none!important}'
+        // the step that follows (the list of events, a Chosen select that opens downward) keeps 440px under its top, so the open list is on the screen
+        + '#CampaignEventPanel:has(#CampaignEventPanelLists:not(.hide)){top:max(10px,calc(100vh - 440px))!important;bottom:auto}'
         // the cards have 5px at each side inside their column: the row of cards is pulled out by that, so the gap to the edge is 10px at the sides too
         + '#CampaignEventPanelGroups{margin-left:-5px;margin-right:-5px}'
         // the heading of the Condition card is orange (the colour of the "paused" status badge)
         + '#ConditionGroupSelector>.panel>.panel-heading{background-color:#fb8c00}'
         + '#CampaignEventPanelGroups #CampaignPasteContainer .panel-body{flex:1 1 auto}'
         + '#CampaignEventPanelGroups #CampaignPasteContainer .panel-body>div{max-width:none;white-space:normal;overflow:visible;text-overflow:clip}'
-        // and the panel is one column wider (core sets 167px per group inline), centred on the same point as before
-        + '#CampaignEventPanel:has(#CampaignEventPanelGroups.groups-enabled-1:not(.hide) #CampaignPasteContainer:not(.hide)){width:333px!important;margin-left:-83px}'
-        + '#CampaignEventPanel:has(#CampaignEventPanelGroups.groups-enabled-2:not(.hide) #CampaignPasteContainer:not(.hide)){width:500px!important;margin-left:-83px}'
-        + '#CampaignEventPanel:has(#CampaignEventPanelGroups.groups-enabled-3:not(.hide) #CampaignPasteContainer:not(.hide)){width:667px!important;margin-left:-83px}'
+        // and the panel is one column wider (core sets 167px per group inline)
+        + '#CampaignEventPanel:has(#CampaignEventPanelGroups.groups-enabled-1:not(.hide) #CampaignPasteContainer:not(.hide)){width:333px!important}'
+        + '#CampaignEventPanel:has(#CampaignEventPanelGroups.groups-enabled-2:not(.hide) #CampaignPasteContainer:not(.hide)){width:500px!important}'
+        + '#CampaignEventPanel:has(#CampaignEventPanelGroups.groups-enabled-3:not(.hide) #CampaignPasteContainer:not(.hide)){width:667px!important}'
         + '.campaign-event-buttons .patches-node-badge{display:inline-flex;align-items:center;justify-content:flex-start;box-sizing:border-box;flex:0 0 auto;width:29px;height:29px;min-width:0;margin:0;padding:0;gap:0;overflow:hidden;border-radius:14.5px;'
         + 'font-size:14px;font-weight:600;line-height:normal;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;text-decoration:none;transition:width .2s ease,box-shadow .2s ease}'
         + '.campaign-event-buttons .patches-node-badge:hover{box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;transform:none;text-decoration:none}'
         + '.campaign-event-buttons .patches-node-badge>i{order:0;flex:0 0 29px;width:29px;height:29px;font-size:17px;display:flex;align-items:center;justify-content:center;pointer-events:none}'
         + '.campaign-event-buttons .patches-node-badge__text{padding:0 12px 0 0;opacity:0;pointer-events:none;transition:opacity .15s ease .05s}'
         + '.campaign-event-buttons .patches-node-badge:hover .patches-node-badge__text{opacity:1}';
+
+    // `#CampaignCanvas` has a transform (the zoom), and a transformed box is the reference of its `position:fixed` children: the panel goes to
+    // `#campaign-builder`, outside the canvas (core finds it by id, so nothing else changes)
+    function moveSelector(doc) {
+        var panel = doc.getElementById('CampaignEventPanel');
+        var host = doc.getElementById('campaign-builder');
+        if (panel && host && panel.parentNode !== host) { host.appendChild(panel); }
+    }
 
     // The heading of the card "Insert cloned event here": core has none, the other three cards have one (title + icon). Added once.
     function decoratePaste(doc, labels) {
@@ -103,7 +115,7 @@
     function hasButtons(nodes) {  // buttons of a node, or the card of the cloned event, came into the page
         for (var i = 0; i < nodes.length; i++) {
             var node = nodes[i];
-            if (node.nodeType === 1 && (node.matches('.campaign-event-buttons, #CampaignPasteContainer') || node.querySelector('.campaign-event-buttons, #CampaignPasteContainer'))) { return true; }
+            if (node.nodeType === 1 && (node.matches('.campaign-event-buttons, #CampaignPasteContainer, #CampaignEventPanel') || node.querySelector('.campaign-event-buttons, #CampaignPasteContainer, #CampaignEventPanel'))) { return true; }
         }
 
         return false;
@@ -124,7 +136,7 @@
         });
 
         var timer = null;
-        function run() { decorate(doc, labels, doc); decoratePaste(doc, labels); }
+        function run() { decorate(doc, labels, doc); decoratePaste(doc, labels); moveSelector(doc); }
         run();
         if (win.MutationObserver) {
             new win.MutationObserver(function (mutations) {
