@@ -32,6 +32,14 @@
         + '#CampaignEventPanelGroups:has(#CampaignPasteContainer:not(.hide))>.row:last-child{flex:1 1 0}'
         + '#CampaignEventPanelGroups:has(#CampaignPasteContainer:not(.hide))>.row{min-width:0}'
         + '#CampaignEventPanelGroups #CampaignPasteContainer{height:100%;display:flex;flex-direction:column}'
+        // dressed like the cards of Decision / Action / Condition: a heading (lilac, the colour of the "test" status badge, the icon of the clone badge), no coloured top bar, a footer without the white left border
+        + '#CampaignPasteContainer::before{display:none}'
+        + '#CampaignEventPanelGroups .campaign-group-container.mt-xs{margin-top:0!important}'
+        + '#CampaignPasteContainer>.panel-heading{color:#fff;background-color:#7e57c2;border-color:transparent}'
+        + '#CampaignPasteContainer>.panel-heading .panel-title,#CampaignPasteContainer>.panel-heading i{color:#fff}'
+        + '#CampaignEventPanelGroups #CampaignPasteContainer .panel-footer{display:block;width:auto;min-width:0;border-left:0;text-align:center}'
+        // the heading of the Condition card is orange (the colour of the "paused" status badge)
+        + '#ConditionGroupSelector>.panel>.panel-heading{background-color:#fb8c00}'
         + '#CampaignEventPanelGroups #CampaignPasteContainer .panel-body{flex:1 1 auto}'
         + '#CampaignEventPanelGroups #CampaignPasteContainer .panel-body>div{max-width:none;white-space:normal;overflow:visible;text-overflow:clip}'
         // and the panel is one column wider (core sets 167px per group inline), centred on the same point as before
@@ -44,6 +52,18 @@
         + '.campaign-event-buttons .patches-node-badge>i{order:0;flex:0 0 29px;width:29px;height:29px;font-size:17px;display:flex;align-items:center;justify-content:center;pointer-events:none}'
         + '.campaign-event-buttons .patches-node-badge__text{padding:0 12px 0 0;opacity:0;pointer-events:none;transition:opacity .15s ease .05s}'
         + '.campaign-event-buttons .patches-node-badge:hover .patches-node-badge__text{opacity:1}';
+
+    // The heading of the card "Insert cloned event here": core has none, the other three cards have one (title + icon). Added once.
+    function decoratePaste(doc, labels) {
+        var card = doc.getElementById('CampaignPasteContainer');
+        if (!card || card.querySelector(':scope > .panel-heading')) { return; }
+        var heading = doc.createElement('div');
+        heading.className = 'panel-heading';
+        heading.innerHTML = '<div class="col-xs-8 col-sm-10 np"><h3 class="panel-title"></h3></div>'
+            + '<div class="col-xs-4 col-sm-2 pl-0 pr-0 pt-10 pb-10 text-right"><i class="hidden-xs ri-file-copy-line ri-lg"></i></div>';
+        heading.querySelector('.panel-title').textContent = labels.clone || '';
+        card.insertBefore(heading, card.firstChild);
+    }
 
     function openBadge() { this.style.width = (29 + this.querySelector('.patches-node-badge__text').scrollWidth) + 'px'; }
     function closeBadge() { this.style.width = ''; }
@@ -72,10 +92,10 @@
         return done;
     }
 
-    function hasButtons(nodes) {
+    function hasButtons(nodes) {  // buttons of a node, or the card of the cloned event, came into the page
         for (var i = 0; i < nodes.length; i++) {
             var node = nodes[i];
-            if (node.nodeType === 1 && (node.matches('.campaign-event-buttons') || node.querySelector('.campaign-event-buttons'))) { return true; }
+            if (node.nodeType === 1 && (node.matches('.campaign-event-buttons, #CampaignPasteContainer') || node.querySelector('.campaign-event-buttons, #CampaignPasteContainer'))) { return true; }
         }
 
         return false;
@@ -88,7 +108,7 @@
         doc.head.appendChild(style);
 
         var timer = null;
-        function run() { decorate(doc, labels, doc); }
+        function run() { decorate(doc, labels, doc); decoratePaste(doc, labels); }
         run();
         if (win.MutationObserver) {
             new win.MutationObserver(function (mutations) {
