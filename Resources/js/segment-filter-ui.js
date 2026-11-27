@@ -228,6 +228,183 @@
         });
     }
 
+    // ---- the date value builder (date / datetime filters): the user picks instead of typing "-20 weeks" -------------------
+
+    var MODES = [['fixed', 'Data fixa'], ['relative', 'Relativo'], ['period', 'Período'], ['birthday', 'Aniversário']];
+    var PERIODS = [['today', 'hoje'], ['tomorrow', 'amanhã'], ['yesterday', 'ontem'], ['week_this', 'esta semana'], ['week_next', 'próxima semana'], ['week_last', 'semana anterior'],
+        ['month_this', 'este mês'], ['month_next', 'próximo mês'], ['month_last', 'mês anterior'], ['year_this', 'este ano'], ['year_next', 'próximo ano'], ['year_last', 'ano anterior']];
+    var UNITS = [['day', 'dias'], ['week', 'semanas'], ['month', 'meses'], ['year', 'anos']];
+    var NUMBER_ERROR = 'Informe um número inteiro maior ou igual a 1.';
+
+    function periodKey(value) {
+        var low = value.toLowerCase();
+        var found = null;
+        PERIODS.forEach(function (p) { if (p[0] === low || p[1] === low) { found = p[0]; } });
+        // the english words core's list uses ("this week", "last month", ...)
+        var en = /^(this|next|last) (week|month|year)$/.exec(low);
+
+        return found || (en ? en[2] + '_' + en[1] : null);
+    }
+
+    /** The stored value as the builder's state; null when the value is none of the four kinds (it is then left untouched). */
+    function parseDate(value) {
+        var v = (value || '').trim();
+        var m;
+        if (v === '' || /^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$/.test(v)) { return {mode: 'fixed'}; }
+        var key = periodKey(v);
+        if (key) { return {mode: 'period', key: key}; }
+        if ((m = /^([+-])\s*(\d+)\s*(day|week|month|year)s?$/i.exec(v))) { return {mode: 'relative', dir: m[1], num: m[2], unit: m[3].toLowerCase()}; }
+        if ((m = /^(?:birthday|anniversary)(?:\s*\+\s*(\d+)\s*days?)?$/i.exec(v))) { return {mode: 'birthday', slack: m[1] !== undefined, num: m[1] || ''}; }
+
+        return null;
+    }
+
+    function positiveInt($input) {
+        var v = $input.val().trim();
+
+        return /^\d+$/.test(v) && parseInt(v, 10) >= 1 ? parseInt(v, 10) : null;
+    }
+
+    function options($, list, selected) {
+        return list.map(function (o) { return $('<option></option>').val(o[0]).text(o[1]).prop('selected', o[0] === selected); });
+    }
+
+    function dateKind($panel) {
+        var type = $panel.children('.panel-body').children('input[id$="_type"]').val();
+
+        return type === 'date' || type === 'datetime' ? type : '';
+    }
+
+    /** What the inputs of the builder say: {value, error, field}; mode "fixed" has no value of its own (core's input is the picker). */
+    function buildDate($, st) {
+        var $w = st.$wrap;
+        if (st.mode === 'relative') {
+            var n = positiveInt($w.find('.patches-date__num').first());
+            if (n === null) { return {error: NUMBER_ERROR, field: $w.find('.patches-date__num').first()}; }
+            var unit = $w.find('.patches-date__unit').val();
+
+            return {value: $w.find('.patches-date__dir').val() + n + ' ' + unit + (n === 1 ? '' : 's')};
+        }
+        if (st.mode === 'period') { return {value: $w.find('.patches-date__period').val()}; }
+        if (st.mode === 'birthday') {
+            var slack = $w.find('.patches-date__slack').prop('checked');
+            $w.find('.patches-date__num').last().prop('disabled', !slack);
+            if (!slack) { return {value: 'birthday'}; }
+            var b = positiveInt($w.find('.patches-date__num').last());
+            if (b === null) { return {error: NUMBER_ERROR, field: $w.find('.patches-date__num').last()}; }
+
+            return {value: 'birthday +' + b + ' day' + (b === 1 ? '' : 's')};
+        }
+
+        return {};
+    }
+
+    function dateWrap($, st, parsed) {
+        var $wrap = $('<div class="patches-date"></div>');
+        var $fixed = $('<div class="patches-date__pane" data-mode="fixed"></div>');
+        var $rel = $('<div class="patches-date__pane" data-mode="relative"></div>')
+            .append($('<select class="form-control not-chosen patches-date__dir" aria-label="Direção"></select>').append(options($, [['-', 'antes de hoje'], ['+', 'depois de hoje']], parsed.dir || '-')))
+            .append($('<input type="number" min="1" step="1" class="form-control patches-date__num" aria-label="Quantidade">').val(parsed.mode === 'relative' ? parsed.num : '1'))
+            .append($('<select class="form-control not-chosen patches-date__unit" aria-label="Unidade"></select>').append(options($, UNITS, parsed.unit || 'day')));
+        var $per = $('<div class="patches-date__pane" data-mode="period"></div>')
+            .append($('<select class="form-control not-chosen patches-date__period" aria-label="Período"></select>').append(options($, PERIODS, parsed.key || 'today')));
+        var $bd = $('<div class="patches-date__pane" data-mode="birthday"></div>')
+            .append($('<label class="patches-date__check"></label>').append($('<input type="checkbox" class="patches-date__slack">').prop('checked', !!parsed.slack)).append(' com folga'))
+            .append($('<input type="number" min="1" step="1" class="form-control patches-date__num" aria-label="Dias de folga">').val(parsed.slack ? parsed.num : '7').prop('disabled', !parsed.slack))
+            .append('<span class="patches-date__unit-text">dias</span>');
+
+        return $wrap.append($fixed, $rel, $per, $bd);
+    }
+
+    function dateTeardown($panel) {
+        var st = $panel.data('patchesDate');
+        if (!st) { return; }
+        st.$wrap.remove();
+        st.$type.remove();
+        st.$core.removeClass('patches-date-core-off');
+        st.$cell.removeClass('patches-date-on');
+        $panel.removeData('patchesDate');
+        if (st.$errorHost) { st.$errorHost.empty(); }
+    }
+
+    /** The core value input receives the built string; the draft's "Adicionar" and the red message follow what is valid. */
+    function dateApply($, $panel, st) {
+        var built = buildDate($, st);
+        var $input = st.$input;
+        var typed = $input.val().trim();
+        var write = function (v) { if ($input.val() !== v) { $input.val(v).trigger('input').trigger('change'); } };
+        if (st.mode === 'fixed') {
+            st.valid = typed !== '';
+        } else {
+            write(built.value || '');
+            st.valid = !!built.value;
+        }
+        st.$wrap.find('.is-invalid').removeClass('is-invalid');
+        if (built.field) { built.field.addClass('is-invalid'); }
+        if (st.$errorHost) { st.$errorHost.text(built.error || ''); } else if (built.field) { built.field.attr('title', built.error); }
+        syncAdd($);
+    }
+
+    function dateShow(st) {
+        st.$wrap.children('.patches-date__pane').each(function () { $(this).toggle($(this).attr('data-mode') === st.mode); });
+        st.$core.toggleClass('patches-date-core-off', st.mode !== 'fixed' || st.noValue);
+        st.$wrap.toggle(st.mode !== 'fixed' && !st.noValue);
+        st.$type.toggle(!st.noValue);
+    }
+
+    /**
+     * Idempotent (the page observer calls it after every change): builds the date builder in the value cell of a date / datetime
+     * filter, takes it down when the field is not a date, the value form was replaced, or the operator has no value (empty / not empty).
+     * A stored value that is none of the four kinds is left untouched, as core's plain input.
+     */
+    function dateSync($, $panel, $cell, operator, $typeHost, $errorHost) {
+        var st = $panel.data('patchesDate');
+        var $input = $cell.find('.properties-form input.form-control:not([type=checkbox])');
+        if (!$cell.length || !dateKind($panel) || $input.length !== 1) { dateTeardown($panel); return; }
+        if (st && st.$input[0] !== $input[0]) { dateTeardown($panel); st = null; }
+        var noValue = operator === 'empty' || operator === '!empty';
+        if (!st) {
+            var parsed = parseDate($input.val());
+            if (!parsed) { return; }
+            st = {mode: parsed.mode, $input: $input, $cell: $cell, $core: $input.closest('.properties-form'), $errorHost: $errorHost || null, noValue: noValue, valid: true};
+            st.$wrap = dateWrap($, st, parsed);
+            st.$type = $('<span class="patches-date__typebox"></span>').append($typeHost ? '<span class="patches-date__label">Tipo</span>' : '')
+                .append($('<select class="form-control not-chosen patches-date__type" aria-label="Tipo"></select>').append(options($, MODES, st.mode)));
+            $cell.addClass('patches-date-on').prepend(st.$wrap);
+            if ($typeHost) { $typeHost.empty().append(st.$type); } else { $cell.prepend(st.$type); }
+            $panel.data('patchesDate', st);
+            st.$type.on('change', 'select', function () {
+                st.mode = $(this).val();
+                if (st.mode === 'fixed' && !/^\d{4}-\d{2}-\d{2}/.test($input.val())) { $input.val('').trigger('change'); }
+                dateShow(st);
+                dateApply($, $panel, st);
+            });
+            st.$wrap.on('input change', 'input, select', function () { dateApply($, $panel, st); });
+            $input.on('input change', function () { if (st.mode === 'fixed') { st.valid = $input.val().trim() !== ''; syncAdd($); } });
+        }
+        if (st.noValue !== noValue) { st.noValue = noValue; }
+        dateShow(st);
+        // the draft's select is in the bar's top line: the row's is inline
+        if (st.mode === 'fixed') { st.valid = $input.val().trim() !== ''; }
+    }
+
+    function dateSyncAll($) {
+        var s = slots($);
+        var $draft = s.draft.children('.segment-filter').first();
+        var $type = s.dock.find('.' + DOCK + '__type');
+        if ($draft.length) {
+            var $cell = s.value.children('.col-sm-6').not('.patches-dock-placeholder').first();
+            var $op = s.condition.children('.col-sm-3').not('.patches-dock-placeholder').find('select').first();
+            dateSync($, $draft, $cell, $op.val(), $type, s.dock.find('.' + DOCK + '__error'));
+        } else {
+            $type.empty();
+        }
+        Form.panels($).each(function () {
+            var row = rowOf.get(this);
+            if (row) { dateSync($, $(this), Form.valueOf($(this)), Form.operatorOf($(this)).val(), null, null); }
+        });
+    }
+
     // ---- the add bar (draft) ------------------------------------------------------------------------------------
 
     /** The select that adds a filter (core's .available-filters, with its chosen) lives in the field slot of the bar: core finds it by id and class, wherever it is. */
@@ -255,13 +432,16 @@
         }
         // a core .panel with a .panel-body, like a filter, so the theme of the user paints it the same way
         var $row = $('<div class="panel ' + DOCK + '" aria-hidden="true"></div>');
-        var $body = $('<div class="panel-body"></div>').appendTo($row);
+        var $outer = $('<div class="panel-body"></div>').appendTo($row);
+        $outer.append('<div class="' + DOCK + '__type"></div>');
+        var $body = $('<div class="' + DOCK + '__main"></div>').appendTo($outer);
         $body.append('<div class="' + DOCK + '__glue"><select class="form-control not-chosen patches-dock-placeholder"><option value="and">e</option><option value="or">ou</option></select></div>');
         $body.append('<div class="' + DOCK + '__field"></div>');
         $body.append('<div class="' + DOCK + '__condition"><div class="col-sm-3 padding-none patches-dock-placeholder"><select class="form-control not-chosen" disabled="disabled"><option>condição</option></select></div></div>');
         var $value = $('<div class="' + DOCK + '__value"></div>').appendTo($body);
         $value.append('<div class="col-xs-12 col-sm-6 padding-none patches-dock-placeholder"><div class="properties-form"><div><div class="row"><div class="form-group col-xs-12"><input type="text" class="form-control" readonly="readonly" placeholder="valor"></div></div></div></div></div>');
         $value.append('<button type="button" class="btn btn-primary btn-nospin patches-filter-dock__add"><i class="ri-add-line" aria-hidden="true"></i> Adicionar</button>');
+        $outer.append('<div class="' + DOCK + '__error" role="alert"></div>');
         $row.append('<div class="' + DOCK + '__draft" hidden></div>');
         $row.append('<div class="' + DOCK + '__alerts"></div>');
         $('body').append($row);
@@ -287,6 +467,7 @@
 
     function clearDraft($) {
         var s = slots($);
+        dateTeardown(s.draft.children('.segment-filter').first());
         s.glue.children().not('.patches-dock-placeholder').remove();
         s.glue.children('.patches-dock-placeholder').show();
         s.condition.children().not('.patches-dock-placeholder').remove();
@@ -303,6 +484,10 @@
         if (Form.draftPending()) { return false; }
         var s = slots($);
         var $properties = s.value.children('.col-sm-6').not('.patches-dock-placeholder').first();
+        var date = s.draft.children('.segment-filter').first().data('patchesDate');
+        // a date filter waits for a valid built value (a number below 1 or no date chosen)
+        if (date && !date.noValue && !date.valid) { return false; }
+
         return !!s.draft.children('.segment-filter').length && $properties.find('input, select, textarea').length > 0;
     }
 
@@ -342,6 +527,7 @@
         var s = slots($);
         var $panel = s.draft.children('.segment-filter').first();
         if (!$panel.length || !valueReady($)) { return; }
+        dateTeardown($panel);
         var $body = $panel.children('.panel-body');
         var $glue = s.glue.children('.panel-glue').first();
         var $operator = s.condition.children('.col-sm-3.padding-none').not('.patches-dock-placeholder').first();
@@ -391,6 +577,7 @@
         if (!Form.active($)) { $('.' + DOCK).remove(); return; }
         dock($);
         syncDockAlerts($);
+        dateSyncAll($);
         syncAdd($);
         showOnlyOnFiltersTab($);
         reserveSpace($);
