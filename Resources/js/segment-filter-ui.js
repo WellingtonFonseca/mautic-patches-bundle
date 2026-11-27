@@ -268,7 +268,7 @@
         if (key) { return {mode: 'period', key: key}; }
         if ((m = /^([+-])\s*(\d+)\s*(day|week|month|year)s?$/i.exec(v))) { return {mode: 'relative', dir: m[1], num: m[2], unit: m[3].toLowerCase()}; }
         if (v.toLowerCase() === (RELATIVE.anniversary || '').toLowerCase()) { return {mode: 'birthday', slack: false, num: ''}; }
-        if ((m = /^(?:birthday|anniversary)(?:\s*\+\s*(\d+)\s*days?)?$/i.exec(v))) { return {mode: 'birthday', slack: m[1] !== undefined, num: m[1] || ''}; }
+        if ((m = /^\+\s*(\d+)\s*days?\s+(?:birthday|anniversary)$/i.exec(v)) || (m = /^(?:birthday|anniversary)(?:\s*\+\s*(\d+)\s*days?)?$/i.exec(v))) { return {mode: 'birthday', slack: m[1] !== undefined, num: m[1] || ''}; }
 
         return null;
     }
@@ -307,7 +307,8 @@
             var b = positiveInt($w.find('.patches-date__num').last());
             if (b === null) { return {error: NUMBER_ERROR, field: $w.find('.patches-date__num').last()}; }
 
-            return {value: 'anniversary +' + b + ' day' + (b === 1 ? '' : 's')};
+            // leading "+": core's datetime save keeps such a text as is (anything else is parsed as a date); DateAnniversary strips the word and applies the rest
+            return {value: '+' + b + ' day' + (b === 1 ? '' : 's') + ' anniversary'};
         }
 
         return {};
