@@ -38,6 +38,10 @@
         + '#CampaignPasteContainer>.panel-heading{color:#fff;background-color:#7e57c2;border-color:transparent}'
         + '#CampaignPasteContainer>.panel-heading .panel-title,#CampaignPasteContainer>.panel-heading i{color:#fff}'
         + '#CampaignEventPanelGroups #CampaignPasteContainer .panel-footer{display:block;width:auto;min-width:0;border-left:0;text-align:center}'
+        // the whole footer of the four cards is the button: it has the hover of the button (see install(): the click goes to the button)
+        + '#CampaignEventPanelGroups .panel-footer{cursor:pointer;transition:background-color .11s ease}'
+        + '#CampaignEventPanelGroups .panel-footer:hover,#CampaignEventPanelGroups .panel-footer:hover .btn-ghost{color:var(--link-primary-hover);background-color:var(--background-hover);border-color:var(--background-hover)}'
+        + '#CampaignEventPanelGroups .panel-footer:hover .btn-ghost i{color:var(--link-primary-hover)}'
         // the heading of the Condition card is orange (the colour of the "paused" status badge)
         + '#ConditionGroupSelector>.panel>.panel-heading{background-color:#fb8c00}'
         + '#CampaignEventPanelGroups #CampaignPasteContainer .panel-body{flex:1 1 auto}'
@@ -106,6 +110,14 @@
         var style = doc.createElement('style');
         style.textContent = STYLE;
         doc.head.appendChild(style);
+
+        // a click on the footer of a card (Decision / Action / Condition / the cloned event) outside the button is the click of the button
+        doc.addEventListener('click', function (event) {
+            var footer = event.target.closest && event.target.closest('#CampaignEventPanelGroups .panel-footer');
+            if (!footer || event.target.closest('.btn')) { return; }
+            var button = footer.querySelector('.btn');
+            if (button) { button.click(); }
+        });
 
         var timer = null;
         function run() { decorate(doc, labels, doc); decoratePaste(doc, labels); }
