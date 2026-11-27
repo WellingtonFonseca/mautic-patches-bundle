@@ -2,7 +2,7 @@
  * The node buttons of the campaign builder (Clonar, Editar, Remover: `.campaign-event-buttons`, top right of a node) become icon badges
  * like the disconnect badge of campaign-connection-trash.js: a 29px circle with the icon that opens to show its label on hover. The
  * buttons are core's own links and stay in place (same order, same colors, same handlers: ajax / ajaxmodal); only a class and a label
- * span are added, so nothing of core is reimplemented. The buttons stand in a column at the right side of the node (overlapping the node by 6px, as much as the connection dot does, and centred on it); the icon stays and only the right side of the badge opens to the right.
+ * span are added, so nothing of core is reimplemented. The buttons stand in a column at the right side of the node (inside the node, in a strip made for them, centred on it); the icon stays and only the right side of the badge opens to the right.
  * Nodes made later (a clone, a new node) are decorated as they come into the page.
  */
 (function (root) {
@@ -10,10 +10,13 @@
 
     var KINDS = {'btn-clone': 'clone', 'btn-edit': 'edit', 'btn-delete': 'remove'};
 
-    var STYLE = '.campaign-event-buttons{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:max-content;top:50%;right:auto;left:calc(100% - 6px);transform:translateY(-50%);white-space:nowrap}'
+    var STYLE = '.campaign-event-buttons{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:max-content;top:50%;right:auto;left:calc(100% - 38px);transform:translateY(-50%);white-space:nowrap}'
         + '.campaign-event-buttons.hide{display:none}'
         // the icon of a node with buttons is 30% bigger (60px -> 78px, 20px -> 26px) so the node is tall enough for the column of three badges
         + '.list-campaign-event:has(.campaign-event-buttons) .campaign-event-icon{height:78px;font-size:26px}'
+        // the strip of the badges: core's 260px minimum width is 40px wider and the text keeps off the strip, so a long text widens the node instead of going under the badges
+        + '.list-campaign-event:has(.campaign-event-buttons){min-width:300px}'
+        + '.list-campaign-event:has(.campaign-event-buttons) .campaign-event-content{padding-right:40px}'
         + '.campaign-event-buttons .patches-node-badge{display:inline-flex;align-items:center;justify-content:flex-start;box-sizing:border-box;flex:0 0 auto;width:29px;height:29px;min-width:0;margin:0;padding:0;gap:0;overflow:hidden;border-radius:14.5px;'
         + 'font-size:14px;font-weight:600;line-height:normal;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;text-decoration:none;transition:width .2s ease,box-shadow .2s ease}'
         + '.campaign-event-buttons .patches-node-badge:hover{box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;transform:none;text-decoration:none}'
