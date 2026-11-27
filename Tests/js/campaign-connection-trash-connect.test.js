@@ -27,7 +27,7 @@ function setup(anchorName, {panelOpen = false} = {}) {
     circle.parentNode = el();
     const fired = [];
     const endpoint = {canvas: circle, fire: (n, ep, ev) => fired.push({n, ev})};
-    const panel = {offsetParent: panelOpen ? {} : null};
+    const panel = {classList: {contains: (c) => c === 'hide' && !panelOpen}};
     const textNode = {nodeType: 3, textContent: ' Abrir Construtor de Campanha '};
     const toolbar = el();
     toolbar.childNodes = [textNode];
@@ -38,7 +38,7 @@ function setup(anchorName, {panelOpen = false} = {}) {
         getElementById: (id) => (id === 'CampaignEventPanel' ? panel : id === 'campaign_buttons_builder_toolbar' ? toolbar : null),
         querySelectorAll: () => [{id: 'CampaignEvent_1'}],
     };
-    const root = {document, setTimeout, clearTimeout};
+    const root = {document, setTimeout, clearTimeout, getComputedStyle: () => ({display: 'block'})};
     const inst = {
         getContainer: () => ({closest: () => null}),
         getAllConnections: () => [],
