@@ -3,6 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-27
+- Nos filtros do segmento, campos de data ganharam um seletor Tipo na barra flutuante (Data fixa, Relativo, Período, Aniversário) que monta o valor sem digitar texto (ex.: 5 dias depois de hoje, aniversário com folga de 3 dias)
 - Nos filtros do segmento, o rótulo do campo (à esquerda do campo de valor) agora ocupa no mínimo um terço da largura; se o nome for maior, o rótulo cresce
 
 ## 2026-11-26
