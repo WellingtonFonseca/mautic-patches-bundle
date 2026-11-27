@@ -32,12 +32,12 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
     // the floating add bar of the segment filters (used by the new screen only)
     public const DOCK_STYLE = ''
         // the floating bar at the bottom centre: the same 12 slots (1 + 4 + 2 + 5) as a filter row; only layout
-        .'.patches-filter-dock{position:fixed;left:50%;bottom:56px;transform:translateX(-50%);z-index:1000;box-sizing:border-box;width:min(1609px,98vw);margin:0;border:1px solid var(--border-subtle,#e0e0e0);border-radius:12px;box-shadow:none!important}'
+        .'.patches-filter-dock{position:fixed;left:50%;bottom:56px;transform:translateX(-50%);z-index:1000;box-sizing:border-box;width:min(1535px,98vw);margin:0;border:1px solid var(--border-subtle,#e0e0e0);border-radius:12px;box-shadow:none!important}'
         .'.patches-filter-dock.patches-dock-off{display:none!important}'
         .'.patches-filter-dock:hover{box-shadow:none!important;transform:translateX(-50%)}'
         .'.patches-filter-dock,.patches-filter-dock:hover{background:#2C355A!important}'
         .'.patches-filter-dock>.panel-body,.patches-filter-dock:hover>.panel-body{background:transparent!important;border-radius:inherit}'
-        .'.patches-filter-dock>.panel-body{display:flex;flex-direction:column;gap:8px;padding:12px 64px 12px 72px}'
+        .'.patches-filter-dock>.panel-body{display:flex;flex-direction:column;gap:8px;padding:12px 28px 12px 36px}'
         .'.patches-filter-dock__main{display:flex;align-items:center;min-width:0}'
         .'.patches-filter-dock__main>div{box-sizing:border-box;min-width:0;margin:0 8px 0 0}'
         // the date builder: Tipo and the value inputs are on the same line as the other cells (as in a filter row); its error is under the row
