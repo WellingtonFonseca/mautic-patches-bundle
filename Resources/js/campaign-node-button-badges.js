@@ -17,6 +17,11 @@
         // the strip of the badges: core's 260px minimum width is 20px wider and the text keeps off the strip, so a long text widens the node instead of going under the badges
         + '.list-campaign-event:has(.campaign-event-buttons){min-width:280px}'
         + '.list-campaign-event:has(.campaign-event-buttons) .campaign-event-content{padding-right:24px}'
+        // the status badge of the n8n action card (top-left, n8n-dispatch plugin) gets the size of these badges: 29px circle, same opening and label
+        + '.list-campaign-event .n8ndispatch-status-badge{height:29px;max-width:29px;border-radius:14.5px}'
+        + '.list-campaign-event .n8ndispatch-status-badge:hover{max-width:160px}'
+        + '.list-campaign-event .n8ndispatch-status-badge i{flex:0 0 29px;width:29px;height:29px;font-size:17px}'
+        + '.list-campaign-event .n8ndispatch-status-badge__label{font-size:14px;padding:0 12px 0 0}'
         + '.campaign-event-buttons .patches-node-badge{display:inline-flex;align-items:center;justify-content:flex-start;box-sizing:border-box;flex:0 0 auto;width:29px;height:29px;min-width:0;margin:0;padding:0;gap:0;overflow:hidden;border-radius:14.5px;'
         + 'font-size:14px;font-weight:600;line-height:normal;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;text-decoration:none;transition:width .2s ease,box-shadow .2s ease}'
         + '.campaign-event-buttons .patches-node-badge:hover{box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;transform:none;text-decoration:none}'
