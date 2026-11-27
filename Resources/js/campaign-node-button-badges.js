@@ -10,14 +10,17 @@
 
     var KINDS = {'btn-clone': 'clone', 'btn-edit': 'edit', 'btn-delete': 'remove'};
 
-    var STYLE = '.campaign-event-buttons{display:flex;align-items:center;gap:4px;white-space:nowrap}'
+    var STYLE = '.campaign-event-buttons{display:flex;width:max-content;align-items:center;gap:4px;white-space:nowrap}'
         + '.campaign-event-buttons.hide{display:none}'
-        + '.campaign-event-buttons .patches-node-badge{display:inline-flex;align-items:center;justify-content:flex-start;box-sizing:border-box;height:29px;min-width:0;max-width:29px;margin:0;padding:0;gap:0;overflow:hidden;border-radius:14.5px;'
-        + 'font-size:14px;font-weight:600;line-height:normal;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;text-decoration:none;transition:max-width .2s ease,box-shadow .2s ease}'
-        + '.campaign-event-buttons .patches-node-badge:hover{max-width:160px;box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;transform:none;text-decoration:none}'
-        + '.campaign-event-buttons .patches-node-badge>i{flex:0 0 29px;width:29px;height:29px;font-size:17px;display:flex;align-items:center;justify-content:center;pointer-events:none}'
+        + '.campaign-event-buttons .patches-node-badge{display:inline-flex;align-items:center;justify-content:flex-start;box-sizing:border-box;flex:0 0 auto;width:29px;height:29px;min-width:0;margin:0;padding:0;gap:0;overflow:hidden;border-radius:14.5px;'
+        + 'font-size:14px;font-weight:600;line-height:normal;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;text-decoration:none;transition:width .2s ease,box-shadow .2s ease}'
+        + '.campaign-event-buttons .patches-node-badge:hover{box-shadow:rgba(0,0,0,.2) 0 1px 4px 0;transform:none;text-decoration:none}'
+        + '.campaign-event-buttons .patches-node-badge>i{order:0;flex:0 0 29px;width:29px;height:29px;font-size:17px;display:flex;align-items:center;justify-content:center;pointer-events:none}'
         + '.campaign-event-buttons .patches-node-badge__text{padding:0 12px 0 0;opacity:0;pointer-events:none;transition:opacity .15s ease .05s}'
         + '.campaign-event-buttons .patches-node-badge:hover .patches-node-badge__text{opacity:1}';
+
+    function openBadge() { this.style.width = (29 + this.querySelector('.patches-node-badge__text').scrollWidth) + 'px'; }
+    function closeBadge() { this.style.width = ''; }
 
     // Decorates every node button inside `scope` that is not decorated yet. Returns how many it decorated.
     function decorate(scope, labels, doc) {
@@ -34,6 +37,9 @@
             span.textContent = labels[kind] || (link.getAttribute('aria-label') || '').trim();
             link.classList.add('patches-node-badge');
             link.appendChild(span);
+            // core's `.btn span` rules make the intrinsic width of the link just the icon, so the opening is an explicit width, measured when the mouse comes in
+            link.addEventListener('mouseenter', openBadge);
+            link.addEventListener('mouseleave', closeBadge);
             done++;
         }
 
