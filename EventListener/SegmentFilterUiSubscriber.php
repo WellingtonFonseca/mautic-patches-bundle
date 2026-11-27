@@ -108,7 +108,7 @@ class SegmentFilterUiSubscriber implements EventSubscriberInterface
         .'.patches-sf-move .patches-filter-badge.patches-sf-drag{margin:0;cursor:move;touch-action:none}'
         .'.patches-sf-row.ui-sortable-helper{box-shadow:0 4px 12px rgba(0,0,0,.3)}'
         .'.patches-sf-field .patches-field-group{display:flex;width:100%}'
-        .'.patches-sf-field .patches-field-group .input-group-addon{display:flex;align-items:center;width:auto;white-space:nowrap}'
+        .'.patches-sf-field .patches-field-group .input-group-addon{display:flex;align-items:center;flex:none;box-sizing:border-box;width:auto;min-width:33.333%;white-space:nowrap}'
         .'.patches-sf-field .patches-field-group .patches-field-input{flex:1 1 auto;min-width:0;width:100%}'
         .'.patches-sf-main>.patches-filter-actions{flex:none;margin:0;display:flex;align-items:center;gap:6px;height:34px}'
         .'.patches-sf-row .patches-filter-badge{position:relative;z-index:2;flex:none;display:inline-flex;box-sizing:border-box;height:29px;min-width:0;max-width:29px;margin:0;padding:0;gap:0;'
