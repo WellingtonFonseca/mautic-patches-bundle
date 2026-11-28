@@ -2,6 +2,9 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
+## 2026-11-28
+- Na aba Sobre da janela do plugin, o nome agora aparece como Mautic Patches • versão (a versão instalada, lida de Config/config.php)
+
 ## 2026-11-27
 - No canvas da campanha, os botões Clonar, Editar e Remover de cada bloco viraram selos com ícone que abrem o texto ao passar o mouse, na mesma ordem e cores, em coluna na borda direita do bloco. O painel que abre ao clicar num ponto de conexão fica fixo embaixo, no centro da tela, com selo Voltar nas listas, título no cartão do evento clonado e o rodapé de cada cartão inteiro clicável
 - No canvas da campanha, o selo Desconectar não aparece mais por cima do painel de eventos aberto
