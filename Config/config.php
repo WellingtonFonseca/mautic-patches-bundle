@@ -188,6 +188,11 @@ return [
                 'method'       => 'POST',
                 'requirements' => ['id' => '\\d+'],
             ],
+            'mautic_patches_api_plugins_installed' => [
+                'path'       => '/plugins-installed',
+                'controller' => 'MauticPlugin\\MauticPatchesBundle\\Controller\\Api\\PluginsInstalledApiController::listAction',
+                'method'     => 'GET',
+            ],
         ],
     ],
     'menu' => [
