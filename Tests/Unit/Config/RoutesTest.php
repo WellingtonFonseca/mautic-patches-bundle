@@ -113,4 +113,13 @@ class RoutesTest extends TestCase
             $this->assertSame(['kind' => 'roles|users'], $routes[$name]['requirements'], $name);
         }
     }
+
+    public function testThePluginsInstalledApiRouteIsAGetOnTheApiFirewall(): void
+    {
+        $route = $this->config()['routes']['api']['mautic_patches_api_plugins_installed'];
+
+        $this->assertSame('GET', $route['method']);
+        $this->assertSame('/plugins-installed', $route['path']);
+        $this->assertStringEndsWith('PluginsInstalledApiController::listAction', $route['controller']);
+    }
 }
