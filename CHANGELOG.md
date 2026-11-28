@@ -3,6 +3,7 @@
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
 ## 2026-11-28 · v0.7.1
+<!-- v0.8.0 -->
 - Nova rota da API GET /api/plugins-installed (somente leitura, permissão plugin:plugins:manage): retorna a versão do Mautic e a lista de plugins instalados (nome, bundle, versão, ausente, publicado)
 - Na aba Sobre da janela do plugin, o nome agora aparece como Mautic Patches • versão (a versão instalada, lida de Config/config.php)
 
