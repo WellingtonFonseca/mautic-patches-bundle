@@ -7,7 +7,7 @@ use MauticPlugin\MauticPatchesBundle\Integration\MauticPatchesIntegration;
 return [
     'name'        => 'Mautic Patches',
     'description' => 'Small, targeted fixes for Mautic core UI bugs, applied without editing core files.',
-    'version'     => '0.7.0',
+    'version'     => '0.7.1',
     'routes'      => [
         // Session-authenticated target of the "Update" button in the segment list. Not under
         // /segments/..., which core's /s/segments/{objectAction}/{objectId} would match first.

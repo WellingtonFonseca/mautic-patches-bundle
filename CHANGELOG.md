@@ -2,7 +2,7 @@
 
 Um bloco por dia, do mais novo para o mais antigo. Formato fixo: `## AAAA-MM-DD` e uma linha `- ` por mudança (a tela do plugin lê este arquivo).
 
-## 2026-11-28
+## 2026-11-28 · v0.7.1
 - Na aba Sobre da janela do plugin, o nome agora aparece como Mautic Patches • versão (a versão instalada, lida de Config/config.php)
 
 ## 2026-11-27
