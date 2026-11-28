@@ -1,12 +1,12 @@
 {#
   The "Sobre" block: the plugin icon, its name and one sentence about the plugin, centered. Resources/js/plugin-about-tab.js moves it into the FIRST tab.
-  Needs: icon (the path of the plugin icon, as core's integration tile gets it).
+  Needs: icon (the path of the plugin icon, as core's integration tile gets it), version (from Config/config.php).
 #}
 
 <div class="patches-about-block" data-tab-label="{{ 'mautic.patches.settings.about'|trans }}" data-onload-callback="patchesAboutTab">
     <div class="patches-about text-center">
         <img class="img img-responsive patches-about__icon" src="{{ getAssetUrl(icon) }}" alt="" />
-        <h4 class="patches-about__title">Mautic Patches</h4>
+        <h4 class="patches-about__title">Mautic Patches{% if version %} • {{ version }}{% endif %}</h4>
         <p class="patches-about__text text-muted">{{ 'mautic.patches.settings.about.text'|trans }}</p>
     </div>
 </div>

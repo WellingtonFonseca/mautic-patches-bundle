@@ -62,7 +62,17 @@ class MauticPatchesIntegration extends AbstractIntegration
         return [
             'custom'     => true,
             'template'   => '@MauticPatches/Integration/_settings_tabs.html.twig',
-            'parameters' => ['days' => Changelog::days(), 'icon' => self::ICON],
+            'parameters' => ['days' => Changelog::days(), 'icon' => self::ICON, 'version' => self::version()],
         ];
+    }
+
+    /**
+     * The installed version, read from Config/config.php so it is never repeated here.
+     */
+    private static function version(): string
+    {
+        $config = require __DIR__.'/../Config/config.php';
+
+        return (string) ($config['version'] ?? '');
     }
 }
